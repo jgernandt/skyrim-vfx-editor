@@ -26,6 +26,8 @@
 #undef max
 #include "widgets.h"
 
+constexpr const wchar_t* wversion = L"alpha 1";
+
 app::VFXEditor::VFXEditor(HINSTANCE hInstance, int nCmdShow) : 
     D3D10Window(hInstance, nCmdShow), m_fileMenu("File"), m_helpMenu("Help")
 {
@@ -201,10 +203,13 @@ void app::VFXEditor::saveAs()
 
 void app::VFXEditor::about()
 {
+    std::wstring s(L"VFX Editor\nVersion ");
+    s.append(wversion);
+    s.append(L"\nCopyright 2021 Jonas Gernandt.\n\nThis software is published under the GNU General Public License. \
+        It is free, and you are welcome to redistribute it under certain conditions.See the included copy of the license or https://www.gnu.org/licenses/ for details.");
     int msgboxID = MessageBox(
         m_hwnd,
-        L"VFX Editor\nVersion alpha 1\nCopyright 2021 Jonas Gernandt.\n\nThis software is published under the GNU General Public License. \
-It is free, and you are welcome to redistribute it under certain conditions. See the included copy of the license or https://www.gnu.org/licenses/ for details.",
+        s.c_str(),
         L"About VFX Editor",
         MB_OK | MB_DEFBUTTON1
     );
