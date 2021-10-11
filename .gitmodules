@@ -1,3 +1,6 @@
 [submodule "nif/niflib"]
 	path = nif/niflib
 	url = https://github.com/jgernandt/niflib.git
+[submodule "gui/imgui"]
+	path = gui/imgui
+	url = https://github.com/ocornut/imgui.git
