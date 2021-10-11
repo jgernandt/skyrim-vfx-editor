@@ -1,0 +1,3 @@
+[submodule "nif/niflib"]
+	path = nif/niflib
+	url = https://github.com/jgernandt/niflib.git
