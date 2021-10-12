@@ -206,7 +206,7 @@ void app::VFXEditor::about()
     std::wstring s(L"VFX Editor\nVersion ");
     s.append(wversion);
     s.append(L"\nCopyright 2021 Jonas Gernandt.\n\nThis software is published under the GNU General Public License. \
-        It is free, and you are welcome to redistribute it under certain conditions.See the included copy of the license or https://www.gnu.org/licenses/ for details.");
+        It is free, and you are welcome to redistribute it under certain conditions. See the included copy of the license or https://www.gnu.org/licenses/ for details.");
     int msgboxID = MessageBox(
         m_hwnd,
         s.c_str(),

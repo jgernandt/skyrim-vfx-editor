@@ -180,7 +180,7 @@ void gui::SimpleHandles::frame()
 			//Apparently, there are Push/PopID functions to replace this
 			SetCursorScreenPos({ p.x - buttonSize / 2.0f, p.y - buttonSize / 2.0f });
 			char buf[16];
-			snprintf(buf, sizeof(buf), "##point%d", i);
+			snprintf(buf, sizeof(buf), "##point%d", static_cast<int>(i));
 			InvisibleButton(buf, { buttonSize, buttonSize }, ImGuiButtonFlags_MouseButtonLeft);
 
 			bool highlight = false;

@@ -386,21 +386,19 @@ namespace ImGui
         // We are only allowed to access the state if we are already the active widget.
         ImGuiInputTextState* state = GetInputTextState(id);
 
-        const bool focus_requested_by_code = (item_status_flags & ImGuiItemStatusFlags_FocusedByCode) != 0;
-        const bool focus_requested_by_tabbing = (item_status_flags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
+        const bool input_requested_by_tabbing = (item_status_flags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
+        const bool input_requested_by_nav = (g.ActiveId != id) && ((g.NavActivateInputId == id) || (g.NavActivateId == id && g.NavInputSource == ImGuiInputSource_Keyboard));
 
         const bool user_clicked = hovered && io.MouseClicked[0];
-        const bool user_nav_input_start = (g.ActiveId != id) && (g.NavActivateInputId == id || g.NavActivateId == id);
         const bool user_scroll_finish = is_multiline && state != NULL && g.ActiveId == 0 && g.ActiveIdPreviousFrame == GetWindowScrollbarID(draw_window, ImGuiAxis_Y);
         const bool user_scroll_active = is_multiline && state != NULL && g.ActiveId == GetWindowScrollbarID(draw_window, ImGuiAxis_Y);
-
         bool clear_active_id = false;
-        bool select_all = (g.ActiveId != id) && ((flags & ImGuiInputTextFlags_AutoSelectAll) != 0 || user_nav_input_start) && (!is_multiline);
+        bool select_all = false;
 
         float scroll_y = is_multiline ? draw_window->Scroll.y : FLT_MAX;
 
         const bool init_changed_specs = (state != NULL && state->Stb.single_line != !is_multiline);
-        const bool init_make_active = (user_clicked || user_scroll_finish || user_nav_input_start || focus_requested_by_code || focus_requested_by_tabbing);
+        const bool init_make_active = (user_clicked || user_scroll_finish || input_requested_by_nav || input_requested_by_tabbing);
         const bool init_state = (init_make_active || user_scroll_active);
         if ((init_state && g.ActiveId != id) || init_changed_specs)
         {
@@ -436,13 +434,20 @@ namespace ImGui
                 state->ID = id;
                 state->ScrollX = 0.0f;
                 stb_textedit_initialize_state(&state->Stb, !is_multiline);
-                if (!is_multiline && focus_requested_by_code)
+            }
+
+            if (!is_multiline)
+            {
+                if (flags & ImGuiInputTextFlags_AutoSelectAll)
+                    select_all = true;
+                if (input_requested_by_nav && (!recycle_state || !(g.NavActivateFlags & ImGuiActivateFlags_TryToPreserveState)))
+                    select_all = true;
+                if (input_requested_by_tabbing || (user_clicked && io.KeyCtrl))
                     select_all = true;
             }
+
             if (flags & ImGuiInputTextFlags_AlwaysOverwrite)
                 state->Stb.insert_mode = 1; // stb field name is indeed incorrect (see #2863)
-            if (!is_multiline && (focus_requested_by_tabbing || (user_clicked && io.KeyCtrl)))
-                select_all = true;
         }
 
         if (g.ActiveId != id && init_make_active)
@@ -475,7 +480,7 @@ namespace ImGui
 
         // Lock the decision of whether we are going to take the path displaying the cursor or selection
         const bool render_cursor = (g.ActiveId == id) || (state && user_scroll_active);
-        bool render_selection = state && state->HasSelection() && (RENDER_SELECTION_WHEN_INACTIVE || render_cursor);
+        bool render_selection = state && (state->HasSelection() || select_all) && (RENDER_SELECTION_WHEN_INACTIVE || render_cursor);
         bool value_changed = false;
         bool enter_pressed = false;
 
@@ -576,7 +581,7 @@ namespace ImGui
             // We ignore CTRL inputs, but need to allow ALT+CTRL as some keyboards (e.g. German) use AltGR (which _is_ Alt+Ctrl) to input certain characters.
             if (io.InputQueueCharacters.Size > 0)
             {
-                if (!ignore_char_inputs && !is_readonly && !user_nav_input_start)
+                if (!ignore_char_inputs && !is_readonly && !input_requested_by_nav)
                     for (int n = 0; n < io.InputQueueCharacters.Size; n++)
                     {
                         // Insert character if they pass filtering
@@ -1110,7 +1115,7 @@ namespace ImGui
             LogRenderedText(&draw_pos, buf_display, buf_display_end);
         }
 
-        //JG: This right here is our only edit
+        //JG: removing this is our only edit
         //if (label_size.x > 0)
         //    RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
 
@@ -1127,7 +1132,7 @@ namespace ImGui
     bool JGTempInputText(const ImRect& bb, ImGuiID id, const char* label, char* buf, int buf_size, ImGuiInputTextFlags flags)
     {
         // On the first frame, g.TempInputTextId == 0, then on subsequent frames it becomes == id.
-        // We clear ActiveID on the first frame to allow the InputText() taking it back.
+    // We clear ActiveID on the first frame to allow the InputText() taking it back.
         ImGuiContext& g = *GImGui;
         const bool init = (g.TempInputId != id);
         if (init)
@@ -1225,17 +1230,17 @@ namespace ImGui
         bool temp_input_is_active = temp_input_allowed && TempInputIsActive(id);
         if (!temp_input_is_active)
         {
-            const bool focus_requested = temp_input_allowed && (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Focused) != 0;
+            const bool input_requested_by_tabbing = temp_input_allowed && (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
             const bool clicked = (hovered && g.IO.MouseClicked[0]);
             const bool double_clicked = (hovered && g.IO.MouseDoubleClicked[0]);
-            if (focus_requested || clicked || double_clicked || g.NavActivateId == id || g.NavActivateInputId == id)
+            if (input_requested_by_tabbing || clicked || double_clicked || g.NavActivateId == id || g.NavActivateInputId == id)
             {
                 SetActiveID(id, window);
                 SetFocusID(id, window);
                 FocusWindow(window);
                 g.ActiveIdUsingNavDirMask = (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right);
                 if (temp_input_allowed)
-                    if (focus_requested || (clicked && g.IO.KeyCtrl) || double_clicked || g.NavActivateInputId == id)
+                    if (input_requested_by_tabbing || (clicked && g.IO.KeyCtrl) || double_clicked || g.NavActivateInputId == id)
                         temp_input_is_active = true;
             }
 
