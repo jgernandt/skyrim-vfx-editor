@@ -64,16 +64,15 @@ namespace node
 			nif::NiStringExtraData s1;
 			root.extraData().add(s1);
 
-			//Disallow connecting to Node for now. I've never seen that done in practice.
-			//nif::NiNode n1;
-			//root.children().add(n1);
-			//nif::NiStringExtraData s2;
-			//n1.extraData().add(s2);
+			nif::NiNode n1;
+			root.children().add(n1);
+			nif::NiStringExtraData s2;
+			n1.extraData().add(s2);
 
 			//Multitarget extra data should be allowed (but not necessarily meaningful)
-			//nif::NiStringExtraData s3;
-			//root.extraData().add(s3);
-			//n1.extraData().add(s3);
+			nif::NiStringExtraData s3;
+			root.extraData().add(s3);
+			n1.extraData().add(s3);
 
 			//Special types
 			nif::NiStringExtraData weaponTypes[7];
@@ -94,22 +93,22 @@ namespace node
 			Constructor c;
 			c.makeRoot(&root.getNative());
 
-			Assert::IsTrue(c.size() == 9);
+			Assert::IsTrue(c.size() == 12);
 
 			TestRoot nodeRoot;
 			c.extractNodes(nodeRoot);
 
 			//Were the correct nodes created?
 			Root* root_node = findNode<Root>(nodeRoot.getChildren(), root);
-			//Node* n1_node = findNode<Node>(nodeRoot.getChildren(), n1);
+			Node* n1_node = findNode<Node>(nodeRoot.getChildren(), n1);
 			StringData* s1_node = findNode<StringData>(nodeRoot.getChildren(), s1);
-			//StringData* s2_node = findNode<StringData>(nodeRoot.getChildren(), s2);
-			//StringData* s3_node = findNode<StringData>(nodeRoot.getChildren(), s3);
+			StringData* s2_node = findNode<StringData>(nodeRoot.getChildren(), s2);
+			StringData* s3_node = findNode<StringData>(nodeRoot.getChildren(), s3);
 			Assert::IsNotNull(root_node);
-			//Assert::IsNotNull(n1_node);
+			Assert::IsNotNull(n1_node);
 			Assert::IsNotNull(s1_node);
-			//Assert::IsNotNull(s2_node);
-			//Assert::IsNotNull(s3_node);
+			Assert::IsNotNull(s2_node);
+			Assert::IsNotNull(s3_node);
 
 			WeaponTypeData* wtype_nodes[7];
 			for (int i = 0; i < 7; i++) {
@@ -119,16 +118,16 @@ namespace node
 
 			//Were they connected?
 			Assert::IsTrue(areConnected(root_node->getField(Node::EXTRA_DATA)->connector, s1_node->getField(ExtraData::TARGET)->connector));
-			//Assert::IsTrue(areConnected(n1_node->getField(Node::EXTRA_DATA)->connector, s2_node->getField(ExtraData::TARGET)->connector));
-			//Assert::IsTrue(areConnected(root_node->getField(Node::EXTRA_DATA)->connector, s3_node->getField(ExtraData::TARGET)->connector));
-			//Assert::IsTrue(areConnected(n1_node->getField(Node::EXTRA_DATA)->connector, s3_node->getField(ExtraData::TARGET)->connector));
+			Assert::IsTrue(areConnected(n1_node->getField(Node::EXTRA_DATA)->connector, s2_node->getField(ExtraData::TARGET)->connector));
+			Assert::IsTrue(areConnected(root_node->getField(Node::EXTRA_DATA)->connector, s3_node->getField(ExtraData::TARGET)->connector));
+			Assert::IsTrue(areConnected(n1_node->getField(Node::EXTRA_DATA)->connector, s3_node->getField(ExtraData::TARGET)->connector));
 
 			for (int i = 0; i < 7; i++)
 				Assert::IsTrue(areConnected(root_node->getField(Node::EXTRA_DATA)->connector, wtype_nodes[i]->getField(ExtraData::TARGET)->connector));
 
 			//Did we mess up the backend?
-			Assert::IsTrue(root.getNative().GetExtraData().size() == 8);
-			//Assert::IsTrue(n1.getNative().GetExtraData().size() == 2);
+			Assert::IsTrue(root.getNative().GetExtraData().size() == 9);
+			Assert::IsTrue(n1.getNative().GetExtraData().size() == 2);
 		}
 
 		TEST_METHOD(ParticleSystem_regular)

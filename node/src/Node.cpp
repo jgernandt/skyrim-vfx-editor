@@ -55,7 +55,7 @@ node::Node::Node(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj)
 	setTitle("Node");
 
 	newField<NameField>(NAME, *this);
-	//newField<ExtraDataField>(EXTRA_DATA, *this);
+	newField<ExtraDataField>(EXTRA_DATA, *this);
 	newField<ChildField>(CHILDREN, *this);
 	newField<ObjectField<nif::NiNode>>(OBJECT, *this, object());
 
