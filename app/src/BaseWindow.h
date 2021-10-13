@@ -35,7 +35,6 @@ namespace app
 	protected:
 		virtual LRESULT wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-		std::wstring m_title{ L"VFX Editor" };
 		HWND m_hwnd{ NULL };
 	};
 

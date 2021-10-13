@@ -26,12 +26,15 @@
 #undef max
 #include "widgets.h"
 
-constexpr const wchar_t* wversion = L"alpha 1";
+//Move to resource file?
+constexpr const wchar_t* wversion = L"0.1";
 
 app::VFXEditor::VFXEditor(HINSTANCE hInstance, int nCmdShow) : 
     D3D10Window(hInstance, nCmdShow), m_fileMenu("File"), m_helpMenu("Help")
 {
     assert(m_hwnd && m_d3dDevice);//guaranteed by true return from D3D10Window::initD3D
+    SetWindowText(m_hwnd, L"VFX Editor");
+
     m_guiEngine.initWin32Window(m_hwnd);
     m_guiEngine.initDX10Window(m_d3dDevice);
 
@@ -96,7 +99,7 @@ int app::VFXEditor::run()
         }
     }*/
 
-    return msg.wParam;
+    return static_cast<int>(msg.wParam);
 }
 
 namespace ImGui

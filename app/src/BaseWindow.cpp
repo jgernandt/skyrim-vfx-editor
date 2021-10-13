@@ -27,7 +27,7 @@ app::BaseWindow::BaseWindow(HINSTANCE hInstance, int nCmdShow)
         throw std::runtime_error("Failed to initialise COM");
 
     RegisterWinClass(hInstance);
-    CreateWindowW(s_className.c_str(), m_title.c_str(), WS_OVERLAPPEDWINDOW,
+    CreateWindowW(s_className.c_str(), L"New window", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, reinterpret_cast<void*>(this));
 
     //Create message sets m_hwnd
