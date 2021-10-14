@@ -65,7 +65,7 @@ app::VFXEditor::VFXEditor(HINSTANCE hInstance, int nCmdShow) :
     m_fileMenu.addChild(std::make_unique<gui::MenuItem>("Exit", std::bind(&VFXEditor::quit, this)));
 
     m_helpMenu.addChild(std::make_unique<gui::Separator>());
-    m_helpMenu.addChild(std::make_unique<gui::MenuItem>("About VFX Editor", std::bind(&VFXEditor::about, this)));
+    m_helpMenu.addChild(std::make_unique<gui::MenuItem>("About SVFX Editor", std::bind(&VFXEditor::about, this)));
 }
 
 app::VFXEditor::~VFXEditor()

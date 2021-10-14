@@ -51,3 +51,5 @@
 
 #include "obj/BSEffectShaderProperty.h"
 #include "obj/NiAlphaProperty.h"
+
+#include "obj/NiControllerManager.h"

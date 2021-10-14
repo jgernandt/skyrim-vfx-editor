@@ -35,6 +35,12 @@ void node::Constructor::makeRoot(const nif::ni_ptr<nif::native::NiObject>& root)
 	}
 	else {
 		EP_process(static_cast<Niflib::NiAVObject*>(root.get()));
+		for (auto&& ctlr : static_cast<Niflib::NiObjectNET*>(root.get())->GetControllers()) {
+			if (Niflib::DynamicCast<Niflib::NiControllerManager>(ctlr)) {
+				m_warnings.push_back("This file contains behaviour-controlled animations. This functionality is not yet supported, and any edit to this file may break it.");
+				break;
+			}
+		}
 	}
 }
 
