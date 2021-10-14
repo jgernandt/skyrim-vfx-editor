@@ -1,19 +1,19 @@
 //Copyright 2021 Jonas Gernandt
 //
-//This file is part of VFX Editor.
+//This file is part of SVFX Editor.
 //
-//VFX Editor is free software: you can redistribute it and/or modify
+//SVFX Editor is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//VFX Editor is distributed in the hope that it will be useful,
+//SVFX Editor is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with VFX Editor. If not, see <https://www.gnu.org/licenses/>.
+//along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
 #include "VFXEditor.h"
@@ -33,7 +33,7 @@ app::VFXEditor::VFXEditor(HINSTANCE hInstance, int nCmdShow) :
     D3D10Window(hInstance, nCmdShow), m_fileMenu("File"), m_helpMenu("Help")
 {
     assert(m_hwnd && m_d3dDevice);//guaranteed by true return from D3D10Window::initD3D
-    SetWindowText(m_hwnd, L"VFX Editor");
+    SetWindowText(m_hwnd, L"SVFX Editor");
 
     m_guiEngine.initWin32Window(m_hwnd);
     m_guiEngine.initDX10Window(m_d3dDevice);
@@ -206,14 +206,14 @@ void app::VFXEditor::saveAs()
 
 void app::VFXEditor::about()
 {
-    std::wstring s(L"VFX Editor\nVersion ");
+    std::wstring s(L"SVFX Editor\nVersion ");
     s.append(wversion);
     s.append(L"\nCopyright 2021 Jonas Gernandt.\n\nThis software is published under the GNU General Public License. \
         It is free, and you are welcome to redistribute it under certain conditions. See the included copy of the license or https://www.gnu.org/licenses/ for details.");
     int msgboxID = MessageBox(
         m_hwnd,
         s.c_str(),
-        L"About VFX Editor",
+        L"About SVFX Editor",
         MB_OK | MB_DEFBUTTON1
     );
 }
