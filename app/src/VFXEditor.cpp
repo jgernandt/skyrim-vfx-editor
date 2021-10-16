@@ -21,19 +21,17 @@
 #include "GUIEngine.h"
 #include "Timer.h"
 #include "CallWrapper.h"
+#include "version.h"
 
 #undef min
 #undef max
 #include "widgets.h"
 
-//Move to resource file?
-constexpr const wchar_t* wversion = L"0.1";
-
 app::VFXEditor::VFXEditor(HINSTANCE hInstance, int nCmdShow) : 
     D3D10Window(hInstance, nCmdShow), m_fileMenu("File"), m_helpMenu("Help")
 {
     assert(m_hwnd && m_d3dDevice);//guaranteed by true return from D3D10Window::initD3D
-    SetWindowText(m_hwnd, L"SVFX Editor");
+    SetWindowText(m_hwnd, APP_WNAME);
 
     m_guiEngine.initWin32Window(m_hwnd);
     m_guiEngine.initDX10Window(m_d3dDevice);
@@ -65,7 +63,7 @@ app::VFXEditor::VFXEditor(HINSTANCE hInstance, int nCmdShow) :
     m_fileMenu.addChild(std::make_unique<gui::MenuItem>("Exit", std::bind(&VFXEditor::quit, this)));
 
     m_helpMenu.addChild(std::make_unique<gui::Separator>());
-    m_helpMenu.addChild(std::make_unique<gui::MenuItem>("About SVFX Editor", std::bind(&VFXEditor::about, this)));
+    m_helpMenu.addChild(std::make_unique<gui::MenuItem>(std::string("About ") + APP_NAME, std::bind(&VFXEditor::about, this)));
 }
 
 app::VFXEditor::~VFXEditor()
@@ -102,21 +100,22 @@ int app::VFXEditor::run()
     return static_cast<int>(msg.wParam);
 }
 
-namespace ImGui
-{
-    void ShowDemoWindow(bool* p_open = NULL);
-}
-
 void app::VFXEditor::frame()
 {
     m_guiEngine.beginFrame();//frame N
 
     try {
-        //ImGui::ShowDemoWindow();
         m_fileMenu.frame();
         if (m_current)
             m_current->frame();
         m_helpMenu.frame();
+        if (m_aboutBox) {
+            if (!m_aboutBox->isOpen())
+                m_aboutBox->open();
+            m_aboutBox->frame();
+            if (!m_aboutBox->isOpen())
+                m_aboutBox.reset();
+        }
     }
     catch (const std::exception& e) {
         switch (frameErrorMessage(e.what()))
@@ -206,16 +205,8 @@ void app::VFXEditor::saveAs()
 
 void app::VFXEditor::about()
 {
-    std::wstring s(L"SVFX Editor\nVersion ");
-    s.append(wversion);
-    s.append(L"\nCopyright 2021 Jonas Gernandt.\n\nThis software is published under the GNU General Public License. \
-        It is free, and you are welcome to redistribute it under certain conditions. See the included copy of the license or https://www.gnu.org/licenses/ for details.");
-    int msgboxID = MessageBox(
-        m_hwnd,
-        s.c_str(),
-        L"About SVFX Editor",
-        MB_OK | MB_DEFBUTTON1
-    );
+    if (!m_aboutBox)
+        m_aboutBox = std::make_unique<AboutBox>();
 }
 
 void app::VFXEditor::undo()

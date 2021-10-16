@@ -34,6 +34,7 @@
 #include "Popup.h"
 #include "Selector.h"
 #include "Separator.h"
+#include "Subwindow.h"
 #include "Switch.h"
 #include "Text.h"
 #include "TextInput.h"

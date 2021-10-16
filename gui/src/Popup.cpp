@@ -20,10 +20,13 @@
 #include "CallWrapper.h"
 
 #include "Button.h"
+#include "Item.h"
 #include "Text.h"
 #include "CompositionActions.h"
 #include "IInvoker.h"
 
+//We need to rework this open/close mechanism, since imgui requires the open call to be in immediate vicinity of the begin call.
+//Our call to OpenPopup should be moved to frame.
 void gui::PopupBase::open()
 {
 	m_isOpen = true;
@@ -56,7 +59,7 @@ void gui::Modal::frame()
 		ImGui::SetNextWindowSize({ m_size[0], m_size[1] });
 	}
 
-	if (ImGui::BeginPopupModal(m_id[0].c_str())) {
+	if (ImGui::BeginPopupModal(m_id[0].c_str(), nullptr, ImGuiWindowFlags_NoResize)) {
 		util::CallWrapper end(&ImGui::EndPopup);
 
 		ImGui::PushItemWidth(-std::numeric_limits<float>::min());
@@ -87,7 +90,9 @@ gui::MessageBox::MessageBox(const std::string& title, const std::string& msg) :
 	m_size = { 200.0f, 0.0f };
 	auto text = newChild<Text>(msg);
 	text->setWrap();
-	addChild(std::make_unique<Button>("Ok", std::bind(&gui::MessageBox::close, this)));
+	auto item = std::make_unique<Item>(std::make_unique<RightAlign>());
+	item->newChild<Button>("Ok", std::bind(&gui::MessageBox::close, this));
+	addChild(std::move(item));
 }
 
 void gui::MessageBox::frame()

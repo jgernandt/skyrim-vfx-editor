@@ -186,6 +186,9 @@
     <ClInclude Include="src\SetProperty.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Subwindow.h">
+      <Filter>Header Files\Widgets</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Visitor.cpp">
@@ -298,6 +301,9 @@
     </ClCompile>
     <ClCompile Include="src\DragInputImGui.cpp">
       <Filter>Source Files\Backend</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Subwindow.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

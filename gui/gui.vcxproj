@@ -57,6 +57,7 @@
     <ClInclude Include="src\Selector.h" />
     <ClInclude Include="src\Separator.h" />
     <ClInclude Include="src\SetProperty.h" />
+    <ClInclude Include="src\Subwindow.h" />
     <ClInclude Include="src\Switch.h" />
     <ClInclude Include="src\Text.h" />
     <ClInclude Include="src\TextInput.h" />
@@ -144,6 +145,7 @@
     <ClCompile Include="src\Popup.cpp" />
     <ClCompile Include="src\Selector.cpp" />
     <ClCompile Include="src\Separator.cpp" />
+    <ClCompile Include="src\Subwindow.cpp" />
     <ClCompile Include="src\Switch.cpp" />
     <ClCompile Include="src\Text.cpp" />
     <ClCompile Include="src\TextInput.cpp" />

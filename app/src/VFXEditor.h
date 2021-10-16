@@ -22,6 +22,7 @@
 #include "BaseWindow.h"
 #include "GUIEngine.h"
 #include "Menu.h"
+#include "AboutBox.h"
 
 namespace app
 {
@@ -59,10 +60,13 @@ namespace app
 		int frameErrorMessage(const char* what);
 		void fatalError(const wchar_t* what);
 
+		//class AboutBox;
+
 	private:
 		gui::MainMenu m_fileMenu;
 		gui::MainMenu m_helpMenu;
 		std::unique_ptr<Document> m_current;
+		std::unique_ptr<AboutBox> m_aboutBox;
 
 		gui::backend::ImGuiWinD3D10 m_guiEngine;
 	};

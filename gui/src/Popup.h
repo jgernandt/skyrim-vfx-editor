@@ -30,6 +30,7 @@ namespace gui
         virtual ~PopupBase() {}
 
         void open();
+        bool isOpen() const { return m_isOpen; }
 
     protected:
         UniqueLabel<1> m_id;
@@ -54,7 +55,7 @@ namespace gui
         virtual ~Modal() {}
         virtual void frame() override;
 
-        void close();
+        virtual void close();
     };
 
     //Temporary modal popup showing a message
@@ -66,7 +67,7 @@ namespace gui
         virtual ~MessageBox() {}
         virtual void frame() override;
 
-        void close();
+        virtual void close() override;
 
     };
 }
