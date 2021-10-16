@@ -114,10 +114,14 @@ nif::native::NiPSysPositionModifier& nif::NiPSysPositionModifier::getNative() co
 nif::NiPSysRotationModifier::NiPSysRotationModifier() : NiPSysRotationModifier(new Niflib::NiPSysRotationModifier) {}
 nif::NiPSysRotationModifier::NiPSysRotationModifier(native::NiPSysRotationModifier* obj) : 
 	NiPSysModifier(obj),
-	m_speed(&getNative(), &native::NiPSysRotationModifier::GetRotationSpeed, &native::NiPSysRotationModifier::SetRotationSpeed),
-	m_speedVar(&getNative(), &native::NiPSysRotationModifier::GetRotationSpeedVar, &native::NiPSysRotationModifier::SetRotationSpeedVar),
-	m_angle(&getNative(), &native::NiPSysRotationModifier::GetRotationAngle, &native::NiPSysRotationModifier::SetRotationAngle),
-	m_angleVar(&getNative(), &native::NiPSysRotationModifier::GetRotationAngleVar, &native::NiPSysRotationModifier::SetRotationAngleVar),
+	m_speed(*this),
+	m_speedVar(*this),
+	m_angle(*this),
+	m_angleVar(*this),
+	//m_speed(&getNative(), &native::NiPSysRotationModifier::GetRotationSpeed, &native::NiPSysRotationModifier::SetRotationSpeed),
+	//m_speedVar(&getNative(), &native::NiPSysRotationModifier::GetRotationSpeedVar, &native::NiPSysRotationModifier::SetRotationSpeedVar),
+	//m_angle(&getNative(), &native::NiPSysRotationModifier::GetRotationAngle, &native::NiPSysRotationModifier::SetRotationAngle),
+	//m_angleVar(&getNative(), &native::NiPSysRotationModifier::GetRotationAngleVar, &native::NiPSysRotationModifier::SetRotationAngleVar),
 	m_randomSign(&getNative(), &native::NiPSysRotationModifier::GetRandomSpeedSign, &native::NiPSysRotationModifier::SetRandomSpeedSign)
 {}
 
@@ -162,4 +166,56 @@ nif::native::BSPSysSimpleColorModifier& nif::BSPSysSimpleColorModifier::getNativ
 {
 	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::BSPSysSimpleColorModifier::TYPE));
 	return static_cast<native::BSPSysSimpleColorModifier&>(*m_ptr);
+}
+
+float nif::NiPSysRotationModifier::Speed::get() const
+{
+	return static_cast<math::deg>(math::rad(m_super.getNative().GetRotationSpeed())).value;
+}
+
+void nif::NiPSysRotationModifier::Speed::set(const float& f)
+{
+	if (f != get()) {
+		m_super.getNative().SetRotationSpeed(static_cast<math::rad>(math::deg(f)).value);
+		notify(f);
+	}
+}
+
+float nif::NiPSysRotationModifier::SpeedVar::get() const
+{
+	return static_cast<math::deg>(math::rad(m_super.getNative().GetRotationSpeedVar())).value;
+}
+
+void nif::NiPSysRotationModifier::SpeedVar::set(const float& f)
+{
+	if (f != get()) {
+		m_super.getNative().SetRotationSpeedVar(static_cast<math::rad>(math::deg(f)).value);
+		notify(f);
+	}
+}
+
+float nif::NiPSysRotationModifier::Angle::get() const
+{
+	return static_cast<math::deg>(math::rad(m_super.getNative().GetRotationAngle())).value;
+}
+
+void nif::NiPSysRotationModifier::Angle::set(const float& f)
+{
+	if (f != get()) {
+		m_super.getNative().SetRotationAngle(static_cast<math::rad>(math::deg(f)).value);
+		notify(f);
+	}
+}
+
+float nif::NiPSysRotationModifier::AngleVar::get() const
+{
+	return static_cast<math::deg>(math::rad(m_super.getNative().GetRotationAngleVar())).value;
+}
+
+void nif::NiPSysRotationModifier::AngleVar::set(const float& f)
+{
+	if (f != get()) {
+		m_super.getNative().SetRotationAngleVar(static_cast<math::rad>(math::deg(f)).value);
+		notify(f);
+	}
 }

@@ -257,8 +257,11 @@ void PropertyTest(
 			}
 		}
 	}
-	else
+	else {
 		static_assert(false, "PropertyTest not defined for this type");
+	}
+
+	prop.removeListener(l);
 }
 
 inline void StringPropertyTest(IProperty<std::string>& p)
@@ -376,6 +379,8 @@ void SequenceTest(ISequence<T>& seq)
 	Assert::IsTrue(seq.size() == 1);
 	Assert::IsTrue(seq.erase(0) == -1);
 	Assert::IsTrue(seq.size() == 0);
+
+	seq.removeListener(l);
 }
 
 //Test that a Set does in fact add and remove objects passed to it.
@@ -466,6 +471,8 @@ void SetTest(ISet<T>& set)
 	Assert::IsTrue(set.size() == initialSize);
 	Assert::IsTrue(l.wasAdded() == nullptr);
 	Assert::IsTrue(l.wasRemoved() == &o2);
+
+	set.removeListener(l);
 }
 
 inline bool areConnected(gui::Connector* c1, gui::Connector* c2)

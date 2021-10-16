@@ -169,6 +169,7 @@ namespace nif
 
 	//Somewhat annoying to have to do this just because we cannot inject this conversion into our current Property template.
 	//We should be able to fix that, but it only comes into play in a few places right now.
+	//Edit: This fails the get/set tests in some release builds. Can't see an obvious reason. Ignore this design for now.
 	template<typename T, typename ObjType>
 	class DegRadConverter final : public PropertyBase<T>
 	{
@@ -221,10 +222,56 @@ namespace nif
 		IProperty<bool>& randomSign() { return m_randomSign; }
 
 	private:
-		DegRadConverter<float, native::NiPSysRotationModifier> m_speed;
-		DegRadConverter<float, native::NiPSysRotationModifier> m_speedVar;
-		DegRadConverter<float, native::NiPSysRotationModifier> m_angle;
-		DegRadConverter<float, native::NiPSysRotationModifier> m_angleVar;
+		struct Speed : PropertyBase<float>
+		{
+			Speed(NiPSysRotationModifier& super) : m_super{ super } {}
+
+			virtual float get() const override;
+			virtual void set(const float& f) override;
+
+			NiPSysRotationModifier& m_super;
+
+		};
+		struct SpeedVar : PropertyBase<float>
+		{
+			SpeedVar(NiPSysRotationModifier& super) : m_super{ super } {}
+
+			virtual float get() const override;
+			virtual void set(const float& f) override;
+
+			NiPSysRotationModifier& m_super;
+
+		};
+		struct Angle : PropertyBase<float>
+		{
+			Angle(NiPSysRotationModifier& super) : m_super{ super } {}
+
+			virtual float get() const override;
+			virtual void set(const float& f) override;
+
+			NiPSysRotationModifier& m_super;
+
+		};
+		struct AngleVar : PropertyBase<float>
+		{
+			AngleVar(NiPSysRotationModifier& super) : m_super{ super } {}
+
+			virtual float get() const override;
+			virtual void set(const float& f) override;
+
+			NiPSysRotationModifier& m_super;
+
+		};
+
+		Speed m_speed;
+		SpeedVar m_speedVar;
+		Angle m_angle;
+		AngleVar m_angleVar;
+
+		//DegRadConverter<float, native::NiPSysRotationModifier> m_speed;
+		//DegRadConverter<float, native::NiPSysRotationModifier> m_speedVar;
+		//DegRadConverter<float, native::NiPSysRotationModifier> m_angle;
+		//DegRadConverter<float, native::NiPSysRotationModifier> m_angleVar;
 		Property<bool> m_randomSign;
 	};
 

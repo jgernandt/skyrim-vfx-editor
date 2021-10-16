@@ -24,7 +24,7 @@ namespace test
 					//perturb the data
 					for (size_t i = 0; i < N; i++)
 						data[i] += data[i] * delta(engine) * (sign(engine) ? 1.0f : -1.0f);
-					notify(data);
+					this->notify(data);
 				}
 			}
 
