@@ -1,6 +1,7 @@
 //Copyright 2021 Jonas Gernandt
 //
-//This file is part of SVFX Editor.
+//This file is part of SVFX Editor, a program for creating visual effects
+//in the NetImmerse format.
 //
 //SVFX Editor is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
