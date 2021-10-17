@@ -123,6 +123,14 @@ void node::Constructor::EP_process(nif::native::NiAVObject* obj)
 std::unique_ptr<node::NodeShared> node::Constructor::process(nif::native::NiNode* obj)
 {
 	assert(obj);
+
+	//We can't handle destruction of skin instances right now, since we disconnect the bones (potentially destroying them)
+	//before destroying the skin instance (incompatible with niflib). It makes no sense to show the bones as regular nodes
+	//anyway, since it would be an error to remove (or even edit) them. 
+	//Until we can provide a proper interface for skinned meshes, we disallow them.
+	if (obj->IsSkeletonRoot())
+		throw std::runtime_error("Skinned meshes are not supported. File will not be loaded.");
+
 	std::unique_ptr<NodeShared> node;
 	if (!obj->GetParent())
 		node = std::make_unique<Root>(std::make_unique<nif::NiNode>(obj));
