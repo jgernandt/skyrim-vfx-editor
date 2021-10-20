@@ -28,7 +28,7 @@ namespace gui
 	public:
 		Panel() {}
 		virtual ~Panel() {}
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 		//virtual void setSizeHint(const Floats<2>& size) override;
 
 		//No one can be referencing this popup, as it may be arbitrarily deleted by us.

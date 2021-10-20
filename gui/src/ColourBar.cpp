@@ -22,7 +22,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
-void gui::ColourBar::frame()
+void gui::ColourBar::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 	m_size = { m_sizeHint[0] > 0.0f ? m_sizeHint[0] : CalcItemWidth(), m_sizeHint[1] > 0.0f ? m_sizeHint[1] : GetFrameHeight() };

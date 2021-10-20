@@ -19,12 +19,12 @@
 #include "pch.h"
 #include "Separator.h"
 
-void gui::Separator::frame()
+void gui::Separator::frame(FrameDrawer& fd)
 {
 	ImGui::Separator();
 }
 
-void gui::VerticalSpacing::frame()
+void gui::VerticalSpacing::frame(FrameDrawer& fd)
 {
 	for (int i = 0; i < m_N; i++)
 		ImGui::Spacing();

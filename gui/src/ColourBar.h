@@ -37,7 +37,7 @@ namespace gui
 		ColourBar(std::unique_ptr<ColourGradient>&& gradient) : m_gradient{ std::move(gradient) } {}
 		virtual ~ColourBar() = default;
 
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 	private:
 		std::unique_ptr<ColourGradient> m_gradient;

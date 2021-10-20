@@ -50,7 +50,7 @@ void gui::Window::accept(Visitor& v)
 	v.visit(*this);
 }
 
-void gui::Window::frame()
+void gui::Window::frame(FrameDrawer& fd)
 {
 
 	using namespace ImGui;
@@ -82,7 +82,7 @@ void gui::Window::frame()
 
 		m_position = gui_type_conversion<Floats<2>>::from(GetWindowPos());
 
-		Composite::frame();
+		Composite::frame(fd);
 
 		//Doesn't give me the actual size?
 		//m_size = gui_type_conversion<Floats<2>>::from(GetWindowSize());

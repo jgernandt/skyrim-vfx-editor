@@ -31,7 +31,7 @@ namespace gui
             Activatable(action), m_label(label) {}
         virtual ~Button() = default;
 
-        virtual void frame() override;
+        virtual void frame(FrameDrawer& fd) override;
         virtual Floats<2> getSizeHint() const override;
 
     private:

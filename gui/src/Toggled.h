@@ -28,7 +28,7 @@ namespace gui
 		Toggled(ComponentPtr&& c, const std::function<bool()>& cdn) : 
 			ComponentDecorator(std::move(c)), m_condition{ cdn } {}
 
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 		virtual Floats<2> getSizeHint() const override;
 
 	private:

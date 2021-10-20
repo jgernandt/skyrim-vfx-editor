@@ -38,7 +38,7 @@ constexpr gui::MouseButton imguiToGuiButton(int button)
 }
 
 //This is made specifically for the scale mod. We'll make it more general as we go.
-void gui::PlotArea::frame()
+void gui::PlotArea::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 
@@ -107,7 +107,7 @@ void gui::PlotArea::frame()
 		curve->draw(d);
 	}
 
-	Composite::frame();
+	Composite::frame(fd);
 
 	//Scrolling
 	SetCursorScreenPos(TLSS);
@@ -159,8 +159,11 @@ void gui::SimpleCurve::draw(Drawer& d) const
 	d.end();
 }
 
-void gui::SimpleHandles::frame()
+void gui::SimpleHandles::frame(FrameDrawer& fd)
 {
+	//NOTE: with the FrameDrawer, we no longer need to know about the plot area. 
+	//It can send its transform down to us instead.
+
 	using namespace ImGui;
 
 	float buttonSize = m_size + 10.0f;

@@ -37,7 +37,7 @@ constexpr gui::MouseButton imguiToGuiButton(int button)
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
-void gui::Handle::frame()
+void gui::Handle::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 

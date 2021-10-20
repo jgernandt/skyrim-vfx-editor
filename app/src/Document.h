@@ -35,7 +35,7 @@ namespace app
 	public:
 		Document();
 		Document(const std::filesystem::path& path);
-		virtual void frame() override;
+		virtual void frame(gui::FrameDrawer& fd) override;
 		virtual void setSize(const gui::Floats<2>& size) override;
 		virtual gui::IInvoker* getInvoker() override { return &m_invoker; }
 

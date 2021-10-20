@@ -22,7 +22,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"//for ImVec operators
 
-void gui::Button::frame()
+void gui::Button::frame(FrameDrawer& fd)
 {
 	if (ImGui::Button(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(m_size)))
 		onActivate();

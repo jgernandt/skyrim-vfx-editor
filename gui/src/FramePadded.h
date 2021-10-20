@@ -28,7 +28,7 @@ namespace gui
 	public:
 		FramePadded(ComponentPtr&& c) : ComponentDecorator(std::move(c)) {}
 
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 		virtual Floats<2> getSizeHint() const override;
 
 	};

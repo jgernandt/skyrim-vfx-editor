@@ -46,7 +46,7 @@ namespace gui
 		Selector(PropertyType& prop, const std::string& label, ItemList&& items) :
 			m_property{ prop }, m_label(label), m_items{ std::move(items) } {}
 
-		virtual void frame() override
+		virtual void frame(FrameDrawer& fd) override
 		{
 			T data = util::type_conversion<T, ConverterType<T>>::from(util::property_traits<PropertyType>::get(m_property));
 
@@ -83,7 +83,7 @@ namespace gui
 		StringSelector(PropertyType& prop, const std::string& label, ItemList&& items) :
 			m_property{ prop }, m_label(label), m_items{ std::move(items) } {}
 
-		virtual void frame() override
+		virtual void frame(FrameDrawer& fd) override
 		{
 			std::string str = util::property_traits<PropertyType>::get(m_property);
 
@@ -122,7 +122,7 @@ namespace gui
 		FlagSelector(FieldType& prop, const std::string& label, ItemList&& items) :
 			m_property{ prop }, m_label{ "" }, m_preview{ label }, m_items{ std::move(items) } {}
 
-		virtual void frame() override
+		virtual void frame(FrameDrawer& fd) override
 		{
 			if (auto&& result = backend::Selector(m_label[0], m_preview)) {
 				for (auto&& item : m_items) {

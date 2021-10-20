@@ -79,7 +79,7 @@ static inline bool IsWindowContentHoverable(ImGuiWindow* window, ImGuiHoveredFla
 	return true;
 }
 
-void gui::Connector::frame()
+void gui::Connector::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 

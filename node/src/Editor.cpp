@@ -102,9 +102,9 @@ node::Editor::~Editor()
 {
 }
 
-void node::Editor::frame()
+void node::Editor::frame(gui::FrameDrawer& fd)
 {
-	gui::Drawer drawer;
+	gui::Drawer drawer;//do we just use the FrameDrawer instead?
 	drawer.setTargetLayer(gui::Layer::BACKGROUND);
 	drawer.begin();
 	//Rectangle should always go from (0, 0) to size
@@ -120,7 +120,7 @@ void node::Editor::frame()
 		drawer.line({ tl[0], tl[1] + y }, { br[0], tl[1] + y }, { 0.3f, 0.3f, 0.3f, 1.0f });
 	drawer.end();
 
-	ConnectionHandler::frame();
+	ConnectionHandler::frame(fd);
 }
 
 void node::Editor::setProjectName(const std::string& name)

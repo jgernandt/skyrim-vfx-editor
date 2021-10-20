@@ -42,6 +42,7 @@ namespace gui
 			void beginFrame();
 			void endFrame();
 
+			//These two don't really seem to belong here; they should be properties of the composition
 			bool handle(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 			bool isCapturingKeyboard();
 

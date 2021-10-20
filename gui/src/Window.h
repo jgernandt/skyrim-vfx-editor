@@ -48,7 +48,7 @@ namespace gui
 		virtual ~Window() {}
 
 		virtual void accept(Visitor& v) override;
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 		virtual Floats<2> getGlobalPosition() const override;
 
 		virtual void onClose();

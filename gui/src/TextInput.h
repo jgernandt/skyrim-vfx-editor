@@ -42,7 +42,7 @@ namespace gui
 		static_assert(std::is_assignable<std::string&, typename util::property_traits<PropertyType>::get_type>::value,
 			"TextInput needs a std::string");
 
-		virtual void frame() override
+		virtual void frame(FrameDrawer& fd) override
 		{
 			std::string s = util::property_traits<PropertyType>::get(m_property);
 

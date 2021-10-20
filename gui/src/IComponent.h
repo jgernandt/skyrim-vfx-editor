@@ -25,6 +25,15 @@ namespace gui
 {
 	class Visitor;
 
+	//We need some object to track certain state as we traverse the composition. Things like clip regions, current transforms.
+	//Come to think of it, this object might actually be the same thing as what we have so far called a GUIEngine. It's purpose
+	//is to translate our composition into vertex buffers.
+	//In any way, sending (an interface to) such an object to frame seems like the way to go.
+	class FrameDrawer 
+	{
+
+	};
+
 	class IComponent
 	{
 	public:
@@ -38,12 +47,14 @@ namespace gui
 		virtual std::unique_ptr<IComponent> removeChild(IComponent*) = 0;
 		virtual void clearChildren() = 0;
 
-		virtual void frame() = 0;
+		virtual void frame(FrameDrawer&) = 0;
 
 		//Actual position of component. Decided at runtime.
 		virtual Floats<2> getPosition() const = 0;
 		virtual void setPosition(const Floats<2>&) = 0;
 		virtual Floats<2> getGlobalPosition() const = 0;
+		//if we allow scaling of components, we need to pass the local pos to get a global
+		//virtual Floats<2> getGlobalPosition(const Floats<2>& local) const = 0;
 
 		//Actual size of component. Decided at runtime.
 		virtual Floats<2> getSize() const = 0;

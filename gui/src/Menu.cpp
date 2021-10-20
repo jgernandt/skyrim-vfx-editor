@@ -20,13 +20,13 @@
 #include "Menu.h"
 #include "CallWrapper.h"
 
-void gui::MenuItem::frame()
+void gui::MenuItem::frame(FrameDrawer& fd)
 {
 	if (ImGui::MenuItem(m_label.c_str()))
 		onActivate();
 }
 
-void gui::Menu::frame()
+void gui::Menu::frame(FrameDrawer& fd)
 {
 	if (ImGui::BeginMenu(m_label.c_str())) {
 		util::CallWrapper endMenu(&ImGui::EndMenu);
@@ -40,14 +40,14 @@ void gui::Menu::frame()
 			//adding the return to our children.
 		}
 
-		Composite::frame();
+		Composite::frame(fd);
 	}
 }
 
-void gui::MainMenu::frame()
+void gui::MainMenu::frame(FrameDrawer& fd)
 {
 	if (ImGui::BeginMainMenuBar()) {
 		util::CallWrapper endMain(&ImGui::EndMainMenuBar);
-		Menu::frame();
+		Menu::frame(fd);
 	}
 }

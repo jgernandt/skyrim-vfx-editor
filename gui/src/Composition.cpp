@@ -54,11 +54,11 @@ gui::Composite::~Composite()
 	}
 }
 
-void gui::Composite::frame()
+void gui::Composite::frame(FrameDrawer& fd)
 {
 	for (auto& c : m_children) {
 		assert(c);
-		c->frame();
+		c->frame(fd);
 	}
 }
 
@@ -133,10 +133,10 @@ void gui::ComponentDecorator::clearChildren()
 	m_component->clearChildren();
 }
 
-void gui::ComponentDecorator::frame()
+void gui::ComponentDecorator::frame(FrameDrawer& fd)
 {
 	assert(m_component);
-	m_component->frame();
+	m_component->frame(fd);
 }
 
 gui::Floats<2> gui::ComponentDecorator::getPosition() const

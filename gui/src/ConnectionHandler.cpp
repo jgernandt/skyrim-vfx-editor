@@ -34,9 +34,9 @@ void gui::ConnectionHandler::accept(Visitor& v)
 	v.visit(*this);
 }
 
-void gui::ConnectionHandler::frame()
+void gui::ConnectionHandler::frame(FrameDrawer& fd)
 {
-	Composite::frame();
+	Composite::frame(fd);
 
 	//Currently held connector
 	if (m_seeker) {

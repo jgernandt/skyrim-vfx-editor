@@ -37,7 +37,7 @@ namespace gui
 		virtual IComponent* getParent() const override { return m_parent; }
 		virtual void setParent(IComponent* c) override { m_parent = c; }
 
-		virtual void frame() override {}
+		virtual void frame(FrameDrawer&) override {}
 
 		virtual Floats<2> getPosition() const override { return m_position; }
 		virtual void setPosition(const Floats<2>& pos) override { m_position = pos; }
@@ -90,7 +90,7 @@ namespace gui
 		Composite() {}
 		virtual ~Composite();
 
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 		virtual void accept(Visitor& v) override;
 
@@ -125,7 +125,7 @@ namespace gui
 		virtual ComponentPtr removeChild(IComponent* c) final override;
 		virtual void clearChildren() final override;
 
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 		virtual Floats<2> getPosition() const override;
 		virtual void setPosition(const Floats<2>& pos) override;

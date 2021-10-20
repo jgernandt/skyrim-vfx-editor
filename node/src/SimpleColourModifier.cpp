@@ -302,14 +302,14 @@ private:
 			m_size = { 10.0f, 10.0f }; 
 		}
 
-		virtual void frame() override
+		virtual void frame(gui::FrameDrawer& fd) override
 		{
 			gui::Floats<2> grad_pos = m_gradient.getPosition();
 			gui::Floats<2> grad_size = m_gradient.getSize();
 			//assumes we are a sibling of the gradient
 			setPosition({ grad_pos[0] + m_props[m_index]->get() * grad_size[0] - 0.5f * m_size[0], grad_pos[1] + grad_size[1] });
 
-			Handle::frame();
+			Handle::frame(fd);
 
 			//draw
 			auto globalPos = getGlobalPosition();
@@ -359,14 +359,14 @@ private:
 			m_size = { 10.0f, 10.0f };
 		}
 
-		virtual void frame() override
+		virtual void frame(gui::FrameDrawer& fd) override
 		{
 			gui::Floats<2> grad_pos = m_gradient.getPosition();
 			gui::Floats<2> grad_size = m_gradient.getSize();
 			//assumes we are a sibling of the gradient
 			setPosition({ grad_pos[0] + m_props[m_index]->get() * grad_size[0] - 0.5f * m_size[0], grad_pos[1] - m_size[1] });
 
-			Handle::frame();
+			Handle::frame(fd);
 
 			//draw
 			auto globalPos = getGlobalPosition();

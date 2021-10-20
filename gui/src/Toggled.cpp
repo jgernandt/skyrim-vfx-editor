@@ -19,10 +19,10 @@
 #include "pch.h"
 #include "Toggled.h"
 
-void gui::Toggled::frame()
+void gui::Toggled::frame(FrameDrawer& fd)
 {
 	if (m_condition && m_condition())
-		m_component->frame();
+		m_component->frame(fd);
 	else {
 		//Should we move the cursor, reset next item width, or something like that?
 		//What would you expect if you use a decorator like this?

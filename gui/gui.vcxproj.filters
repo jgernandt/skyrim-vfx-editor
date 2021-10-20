@@ -233,24 +233,6 @@
     <ClCompile Include="src\Window.cpp">
       <Filter>Source Files\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="src\Checkbox.cpp">
-      <Filter>Source Files\Backend</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ColourInput.cpp">
-      <Filter>Source Files\Backend</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DragInput.cpp">
-      <Filter>Source Files\Backend</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Selector.cpp">
-      <Filter>Source Files\Backend</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Number.cpp">
-      <Filter>Source Files\Backend</Filter>
-    </ClCompile>
-    <ClCompile Include="src\TextInput.cpp">
-      <Filter>Source Files\Backend</Filter>
-    </ClCompile>
     <ClCompile Include="src\Menu.cpp">
       <Filter>Source Files\Widgets</Filter>
     </ClCompile>
@@ -304,6 +286,24 @@
     </ClCompile>
     <ClCompile Include="src\Subwindow.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Number.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Selector.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TextInput.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DragInput.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ColourInput.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Checkbox.cpp">
+      <Filter>Source Files\Widgets</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

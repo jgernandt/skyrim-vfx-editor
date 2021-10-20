@@ -44,7 +44,7 @@ namespace gui
     public:
         Popup() : PopupBase(std::string()) {}
         virtual ~Popup() {}
-        virtual void frame() override;
+        virtual void frame(FrameDrawer& fd) override;
 
     };
 
@@ -54,7 +54,7 @@ namespace gui
     public:
         Modal(const std::string& title) : PopupBase(title) {}
         virtual ~Modal() {}
-        virtual void frame() override;
+        virtual void frame(FrameDrawer& fd) override;
 
         virtual void close();
     };
@@ -66,7 +66,7 @@ namespace gui
     public:
         MessageBox(const std::string& title, const std::string& msg);
         virtual ~MessageBox() {}
-        virtual void frame() override;
+        virtual void frame(FrameDrawer& fd) override;
 
         virtual void close() override;
 

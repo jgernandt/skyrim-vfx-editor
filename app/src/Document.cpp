@@ -118,9 +118,9 @@ app::Document::Document(const std::filesystem::path& path) : m_targetPath{ path 
 	}
 }
 
-void app::Document::frame()
+void app::Document::frame(gui::FrameDrawer& fd)
 {
-	Composite::frame();
+	Composite::frame(fd);
 	m_invoker.invoke();
 }
 

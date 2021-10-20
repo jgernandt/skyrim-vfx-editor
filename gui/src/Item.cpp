@@ -33,7 +33,7 @@ gui::Item::Item(std::unique_ptr<LayoutOperator> layout) : m_layout{ std::move(la
 	m_sizeHint = { -1.0f, -1.0f };
 }
 
-void gui::Item::frame()
+void gui::Item::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 
@@ -57,7 +57,7 @@ void gui::Item::frame()
 		//SetNextItemWidth(layout[i].GetWidth());
 		PushItemWidth(layout[i].GetWidth());
 		assert(getChildren()[i]);
-		getChildren()[i]->frame();
+		getChildren()[i]->frame(fd);
 		PopItemWidth();
 	}
 

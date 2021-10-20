@@ -27,7 +27,7 @@ namespace gui
 	{
 	public:
 
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 		virtual Floats<2> getSizeHint() const override;
 		virtual void print(char* buf, size_t N) const = 0;
 	};

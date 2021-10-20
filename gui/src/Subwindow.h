@@ -26,7 +26,7 @@ namespace gui
 	{
 	public:
 		Subwindow(const std::string& name = std::string()) : m_label(name) {}
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 	private:
 		UniqueLabel<1> m_label;

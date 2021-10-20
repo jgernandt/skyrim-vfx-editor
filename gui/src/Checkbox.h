@@ -38,7 +38,7 @@ namespace gui
     {
     public:
         SimpleCheckbox(bool* ptr, const std::string& label) : m_ptr{ ptr }, m_labels{ label } {}
-        virtual void frame() override
+        virtual void frame(FrameDrawer& fd) override
         {
             backend::Checkbox(m_labels[0], m_ptr);
         }
@@ -70,7 +70,7 @@ namespace gui
         Checkbox(PropertyType& p, const std::string& label) : m_property{ p }, m_labels(label) {}
         Checkbox(PropertyType& p, const std::array<std::string, N>& labels) : m_property{ p }, m_labels(labels) {}
 
-        virtual void frame() override
+        virtual void frame(FrameDrawer& fd) override
         {
             T data = util::type_conversion<T, ConverterType<T>>::from(
                 util::property_traits<PropertyType>::get(m_property));

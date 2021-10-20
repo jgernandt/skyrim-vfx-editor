@@ -31,7 +31,7 @@ namespace gui
 		Handle() = default;
 		virtual ~Handle() = default;
 
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 		virtual void onClick(MouseButton) = 0;
 		virtual void onMove(const Floats<2>& delta) = 0;

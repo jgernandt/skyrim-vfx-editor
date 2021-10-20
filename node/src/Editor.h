@@ -33,7 +33,7 @@ namespace node
 		Editor(const nif::File& file);
 		~Editor();
 
-		virtual void frame() override;
+		virtual void frame(gui::FrameDrawer& fd) override;
 
 		void setProjectName(const std::string& name);
 
