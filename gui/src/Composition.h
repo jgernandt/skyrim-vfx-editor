@@ -39,8 +39,10 @@ namespace gui
 
 		virtual void frame(FrameDrawer&) override {}
 
-		virtual Floats<2> getPosition() const override { return m_position; }
-		virtual void setPosition(const Floats<2>& pos) override { m_position = pos; }
+		virtual Floats<2> getTranslation() const override { return m_translation; }
+		virtual void setTranslation(const Floats<2>& t) override { m_translation = t; }
+		virtual Floats<2> getScale() const override { return m_scale; }
+		virtual void setScale(const Floats<2>& s) override { m_scale = s; }
 		virtual Floats<2> getGlobalPosition() const override;
 
 		virtual Floats<2> getSize() const override { return m_size; }
@@ -74,7 +76,8 @@ namespace gui
 		}
 
 	protected:
-		Floats<2> m_position{ 0.0f, 0.0f };
+		Floats<2> m_translation{ 0.0f, 0.0f };
+		Floats<2> m_scale{ 1.0f, 1.0f };
 		Floats<2> m_size{ 0.0f, 0.0f };
 		Floats<2> m_sizeHint{ 0.0f, 0.0f };
 
@@ -127,8 +130,10 @@ namespace gui
 
 		virtual void frame(FrameDrawer& fd) override;
 
-		virtual Floats<2> getPosition() const override;
-		virtual void setPosition(const Floats<2>& pos) override;
+		virtual Floats<2> getTranslation() const override;
+		virtual void setTranslation(const Floats<2>& t) override;
+		virtual Floats<2> getScale() const override;
+		virtual void setScale(const Floats<2>& s) override;
 		virtual Floats<2> getGlobalPosition() const override;
 
 		virtual Floats<2> getSize() const override;

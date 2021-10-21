@@ -47,7 +47,7 @@ void gui::ConnectionHandler::frame(FrameDrawer& fd)
 		}
 		else {
 			ImGui::GetForegroundDrawList()->
-				AddLine(gui_type_conversion<ImVec2>::from(m_seeker->getPosition()), ImGui::GetMousePos(), { 0xc0ffffff }, 3.0f);
+				AddLine(gui_type_conversion<ImVec2>::from(m_seeker->getGlobalPosition()), ImGui::GetMousePos(), { 0xc0ffffff }, 3.0f);
 		}
 	}
 
@@ -58,8 +58,8 @@ void gui::ConnectionHandler::frame(FrameDrawer& fd)
 	for (auto& e : m_incidence) {
 		assert(e.first && e.second);
 		ImGui::GetBackgroundDrawList()->
-			AddLine(gui_type_conversion<ImVec2>::from(e.first->getPosition()),
-				gui_type_conversion<ImVec2>::from(e.second->getPosition()),
+			AddLine(gui_type_conversion<ImVec2>::from(e.first->getGlobalPosition()),
+				gui_type_conversion<ImVec2>::from(e.second->getGlobalPosition()),
 				{ 0xc0ffffff }, 3.0f);
 	}
 }

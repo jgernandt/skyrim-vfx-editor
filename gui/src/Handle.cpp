@@ -42,7 +42,7 @@ void gui::Handle::frame(FrameDrawer& fd)
 	using namespace ImGui;
 
 	ImVec2 start_pos = GetCursorPos();//we should probably reset this when we're done
-	SetCursorPos(gui_type_conversion<ImVec2>::from(m_position));
+	SetCursorPos(gui_type_conversion<ImVec2>::from(m_translation));
 
 	InvisibleButton(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(m_size), ImGuiButtonFlags_MouseButtonLeft);
 

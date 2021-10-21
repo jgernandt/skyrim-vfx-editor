@@ -50,6 +50,46 @@ gui::backend::ImGuiWinD3D10::~ImGuiWinD3D10()
 	ImGui::DestroyContext();
 }
 
+void gui::backend::ImGuiWinD3D10::pushTransform(const Floats<2>& translation, const Floats<2>& scale)
+{
+	if (m_transform.empty())
+		m_transform.push({ translation[0], translation[1], scale[0], scale[1] });
+	else {
+		auto&& T = m_transform.top();
+		m_transform.push({
+			T[0] + T[2] * translation[0],
+			T[1] + T[3] * translation[1],
+			T[2] * scale[0],
+			T[3] * scale[1] });
+	}
+}
+
+void gui::backend::ImGuiWinD3D10::popTransform()
+{
+	if (!m_transform.empty())
+		m_transform.pop();
+}
+
+gui::Floats<2> gui::backend::ImGuiWinD3D10::toGlobal(const Floats<2>& local) const
+{
+	if (m_transform.empty())
+		return local;
+	else {
+		auto&& T = m_transform.top();
+		return { T[0] + T[2] * local[0], T[1] + T[3] * local[1] };
+	}
+}
+
+gui::Floats<2> gui::backend::ImGuiWinD3D10::toLocal(const Floats<2>& global) const
+{
+	if (m_transform.empty())
+		return global;
+	else {
+		auto&& T = m_transform.top();
+		return { (global[0] - T[0]) / T[2], (global[1] - T[1]) / T[3] };
+	}
+}
+
 void gui::backend::ImGuiWinD3D10::initWin32Window(HWND hwnd)
 {
 	ImGui_ImplWin32_Init(hwnd);

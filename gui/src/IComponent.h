@@ -28,10 +28,22 @@ namespace gui
 	//We need some object to track certain state as we traverse the composition. Things like clip regions, current transforms.
 	//Come to think of it, this object might actually be the same thing as what we have so far called a GUIEngine. It's purpose
 	//is to translate our composition into vertex buffers.
-	//In any way, sending (an interface to) such an object to frame seems like the way to go.
+	//There will also be considerable overlap with the Drawer we already have. Should be combinable somehow.
+	//In any case, sending (an interface to) such an object to frame seems like the way to go.
 	class FrameDrawer 
 	{
+	public:
+		virtual ~FrameDrawer() = default;
 
+		virtual void pushClipArea(const Floats<2>& xlims, const Floats<2>& ylims, bool intersect = true) = 0;
+		virtual void popClipArea() = 0;
+
+		virtual void pushTransform(const Floats<2>& translation, const Floats<2>& scale) = 0;
+		virtual void popTransform() = 0;
+
+		//Apply our currently pushed transform to a point
+		virtual Floats<2> toGlobal(const Floats<2>&) const = 0;
+		virtual Floats<2> toLocal(const Floats<2>&) const = 0;
 	};
 
 	class IComponent
@@ -43,18 +55,24 @@ namespace gui
 		//Not for public use! Parenting should be done via add/removeChild.
 		virtual void setParent(IComponent*) = 0;
 
+		//Pass ownership of a component to us, and add it as a child
 		virtual void addChild(std::unique_ptr<IComponent>&&) = 0;
+		//Remove a child from us, and return ownership of it to the caller
 		virtual std::unique_ptr<IComponent> removeChild(IComponent*) = 0;
+		//Remove all our children and release their resources
 		virtual void clearChildren() = 0;
 
+		//Process input and draw a frame. This is somewhat ImGui-specific. It could be replaced by some general event handling system.
 		virtual void frame(FrameDrawer&) = 0;
 
-		//Actual position of component. Decided at runtime.
-		virtual Floats<2> getPosition() const = 0;
-		virtual void setPosition(const Floats<2>&) = 0;
+		//Local translation from our parent component
+		virtual Floats<2> getTranslation() const = 0;
+		virtual void setTranslation(const Floats<2>&) = 0;
+		//Our local scale
+		virtual Floats<2> getScale() const = 0;
+		virtual void setScale(const Floats<2>&) = 0;
+		//Our position in the coordinates of the native window
 		virtual Floats<2> getGlobalPosition() const = 0;
-		//if we allow scaling of components, we need to pass the local pos to get a global
-		//virtual Floats<2> getGlobalPosition(const Floats<2>& local) const = 0;
 
 		//Actual size of component. Decided at runtime.
 		virtual Floats<2> getSize() const = 0;

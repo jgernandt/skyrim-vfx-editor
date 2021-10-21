@@ -26,7 +26,7 @@ void gui::ColourBar::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 	m_size = { m_sizeHint[0] > 0.0f ? m_sizeHint[0] : CalcItemWidth(), m_sizeHint[1] > 0.0f ? m_sizeHint[1] : GetFrameHeight() };
-	m_position = { GetCursorPosX(), GetCursorPosY() };//Assumes we are child of the window, which is absolutely not how we're supposed to do this
+	m_translation = { GetCursorPosX(), GetCursorPosY() };//Assumes we are child of the window, which is absolutely not how we're supposed to do this
 	ImVec2 size = gui_type_conversion<ImVec2>::from(m_size);
 	ImVec2 TLSS{ GetCursorScreenPos() };
 	ImVec2 BRSS{ TLSS + size };

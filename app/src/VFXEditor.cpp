@@ -106,17 +106,14 @@ void app::VFXEditor::frame()
     m_guiEngine.beginFrame();//frame N
 
     try {
-        //It may be that this is an object we keep permanently (replacing GUIEngine):
-        gui::FrameDrawer fd;
-
-        m_fileMenu.frame(fd);
+        m_fileMenu.frame(m_guiEngine);
         if (m_current)
-            m_current->frame(fd);
-        m_helpMenu.frame(fd);
+            m_current->frame(m_guiEngine);
+        m_helpMenu.frame(m_guiEngine);
         if (m_aboutBox) {
             if (!m_aboutBox->isOpen())
                 m_aboutBox->open();
-            m_aboutBox->frame(fd);
+            m_aboutBox->frame(m_guiEngine);
             if (!m_aboutBox->isOpen())
                 m_aboutBox.reset();
         }

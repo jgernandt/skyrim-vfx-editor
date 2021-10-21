@@ -19,7 +19,9 @@
 #pragma once
 #include <filesystem>
 #include <memory>
+#include <stack>
 #include <windows.h>
+#include "IComponent.h"
 
 struct ID3D10Device;
 
@@ -27,11 +29,22 @@ namespace gui
 {
 	namespace backend
 	{
-		class ImGuiWinD3D10
+		//I'm not sure this is how we want to do it, but lump this up with FrameDrawer for now
+		//(feels like this class is turning into some general abstraction for all of Dear ImGui)
+		class ImGuiWinD3D10 : public FrameDrawer
 		{
 		public:
 			ImGuiWinD3D10();
 			~ImGuiWinD3D10();
+
+			virtual void pushClipArea(const Floats<2>& xlims, const Floats<2>& ylims, bool intersect = true) override {}
+			virtual void popClipArea() override {}
+
+			virtual void pushTransform(const Floats<2>& translation, const Floats<2>& scale) override;
+			virtual void popTransform() override;
+
+			virtual Floats<2> toGlobal(const Floats<2>& local) const override;
+			virtual Floats<2> toLocal(const Floats<2>& global) const override;
 
 			void initWin32Window(HWND hwnd);
 			void initDX10Window(ID3D10Device* device);
@@ -47,6 +60,10 @@ namespace gui
 			bool isCapturingKeyboard();
 
 			void setStyleColours();
+
+		private:
+			std::stack<Floats<4>> m_clipArea;
+			std::stack<Floats<4>> m_transform;
 		};
 
 	}

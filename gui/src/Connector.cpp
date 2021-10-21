@@ -83,11 +83,11 @@ void gui::Connector::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 
-	ImVec2 cursorPos = GetCursorScreenPos();
+	ImVec2 cursorPos = GetCursorPos();
 	float frameH = ImGui::GetFrameHeight();
 	Floats<2> hint = { cursorPos.x, cursorPos.y + 0.5f * frameH };
-	m_position = m_ctlr ? m_ctlr->place(hint) : hint;
-	ImVec2 imPos = gui_type_conversion<ImVec2>::from(m_position);
+	m_translation = m_ctlr ? m_ctlr->place(hint) : hint;
+	ImVec2 imPos = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation));
 
 	ImVec2 size = ImVec2(GetFrameHeight(), GetFrameHeight());
 	ImRect bb(imPos - size * 0.5f, imPos + size * 0.5f);

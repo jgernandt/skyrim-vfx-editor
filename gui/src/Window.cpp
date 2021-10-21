@@ -80,7 +80,7 @@ void gui::Window::frame(FrameDrawer& fd)
 		PushItemWidth(-std::numeric_limits<float>::min());
 		util::CallWrapper popItemWidth(&PopItemWidth);
 
-		m_position = gui_type_conversion<Floats<2>>::from(GetWindowPos());
+		m_translation = fd.toLocal(gui_type_conversion<Floats<2>>::from(GetWindowPos()));
 
 		Composite::frame(fd);
 
@@ -99,10 +99,4 @@ void gui::Window::frame(FrameDrawer& fd)
 void gui::Window::onClose()
 {
 	asyncInvoke<RemoveChild>(this, getParent(), false);//default to irreversible deletion. Bad idea?
-}
-
-gui::Floats<2> gui::Window::getGlobalPosition() const
-{
-	//getting window pos from imgui gives screen coords
-	return m_position;
 }
