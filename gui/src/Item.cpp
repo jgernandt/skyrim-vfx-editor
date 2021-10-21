@@ -52,7 +52,7 @@ void gui::Item::frame(FrameDrawer& fd)
 
 	ImVec2 origin = GetCursorPos();
 
-	for (int i = 0; i < getChildren().size(); i++) {
+	for (int i = 0; i < static_cast<int>(getChildren().size()); i++) {
 		SetCursorPos(origin + layout[i].GetTL());
 		//SetNextItemWidth(layout[i].GetWidth());
 		PushItemWidth(layout[i].GetWidth());
@@ -79,7 +79,7 @@ std::vector<float> gui::LayoutBase::calculateWidths(const std::vector<ImVec2>& s
 	std::vector<int> adaptive;//to hold indices to negative widths
 	float total = 0.0f;
 	float totalAdaptive = 0.0f;
-	for (int i = 0; i < widths.size(); i++) {
+	for (int i = 0; i < static_cast<int>(widths.size()); i++) {
 		widths[i] = sizes[i].x;
 		if (widths[i] < 0.0f) {
 			adaptive.push_back(i);
@@ -98,7 +98,7 @@ std::vector<float> gui::LayoutBase::calculateWidths(const std::vector<ImVec2>& s
 		//total = space;
 	}
 
-	return std::move(widths);
+	return widths;
 }
 
 std::vector<ImRect> gui::LeftAlign::layout(const std::vector<ImVec2>& sizes, const ImVec2& area) const
@@ -126,7 +126,7 @@ std::vector<ImRect> gui::LeftAlign::layout(const std::vector<ImVec2>& sizes, con
 
 		//---
 
-		for (int i = 0; i < ret.size(); i++) {
+		for (int i = 0; i < static_cast<int>(ret.size()); i++) {
 			if (i > 0)
 				ret[i].Min.x = ret[i - 1].Max.x + GetStyle().ItemInnerSpacing.x;
 			else
@@ -138,7 +138,7 @@ std::vector<ImRect> gui::LeftAlign::layout(const std::vector<ImVec2>& sizes, con
 		}
 	}
 
-	return std::move(ret);
+	return ret;
 }
 
 std::vector<ImRect> gui::MarginAlign::layout(const std::vector<ImVec2>& sizes, const ImVec2& area) const
@@ -166,7 +166,7 @@ std::vector<ImRect> gui::MarginAlign::layout(const std::vector<ImVec2>& sizes, c
 			totalWidth += w;
 		float spacing = (area.x - totalWidth) / (sizes.size() - 1);
 
-		for (int i = 0; i < ret.size(); i++) {
+		for (int i = 0; i < static_cast<int>(ret.size()); i++) {
 			if (i > 0)
 				ret[i].Min.x = ret[i - 1].Max.x + spacing;
 			else
@@ -177,7 +177,7 @@ std::vector<ImRect> gui::MarginAlign::layout(const std::vector<ImVec2>& sizes, c
 		}
 	}
 
-	return std::move(ret);
+	return ret;
 }
 
 std::vector<ImRect> gui::RightAlign::layout(const std::vector<ImVec2>& sizes, const ImVec2& area) const
@@ -216,5 +216,5 @@ std::vector<ImRect> gui::RightAlign::layout(const std::vector<ImVec2>& sizes, co
 		}
 	}
 
-	return std::move(ret);
+	return ret;
 }
