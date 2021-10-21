@@ -48,6 +48,7 @@
     <ClInclude Include="src\FramePadded.h" />
     <ClInclude Include="src\IComponent.h" />
     <ClInclude Include="src\IInvoker.h" />
+    <ClInclude Include="src\input.h" />
     <ClInclude Include="src\Item.h" />
     <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\Number.h" />
@@ -132,6 +133,7 @@
     <ClCompile Include="src\GUIEngine.cpp" />
     <ClCompile Include="src\gui_types.cpp" />
     <ClCompile Include="src\Handle.cpp" />
+    <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\Item.cpp" />
     <ClCompile Include="src\Menu.cpp" />
     <ClCompile Include="src\Number.cpp" />

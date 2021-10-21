@@ -90,6 +90,17 @@ gui::Floats<2> gui::backend::ImGuiWinD3D10::toLocal(const Floats<2>& global) con
 	}
 }
 
+bool gui::backend::ImGuiWinD3D10::isMouseDown(MouseButton btn) const
+{
+	return ImGui::IsMouseDown(guiToImGuiButton(btn));
+}
+
+gui::Floats<2> gui::backend::ImGuiWinD3D10::getMouseMove() const
+{
+	Floats<2> mousePos = gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos);
+	return { mousePos[0] - m_lastMousePos[0], mousePos[1] - m_lastMousePos[1] };
+}
+
 void gui::backend::ImGuiWinD3D10::initWin32Window(HWND hwnd)
 {
 	ImGui_ImplWin32_Init(hwnd);
@@ -121,6 +132,7 @@ bool gui::backend::ImGuiWinD3D10::loadFont(const std::filesystem::path& path)
 
 void gui::backend::ImGuiWinD3D10::beginFrame()
 {
+	m_lastMousePos = gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos);
 	ImGui_ImplDX10_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();

@@ -56,6 +56,7 @@ void gui::Window::frame(FrameDrawer& fd)
 	using namespace ImGui;
 
 	SetNextWindowSize(gui_type_conversion<ImVec2>::from(m_size));
+	SetNextWindowPos(gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation)));
 	PushStyleColor(ImGuiCol_TitleBg, gui_type_conversion<ImVec4>::from(m_colours[COL_TITLE]));
 	PushStyleColor(ImGuiCol_TitleBgActive, gui_type_conversion<ImVec4>::from(m_colours[COL_TITLE_ACTIVE]));
 	PushStyleColor(ImGuiCol_TitleBgCollapsed, gui_type_conversion<ImVec4>::from(m_colours[COL_TITLE]));

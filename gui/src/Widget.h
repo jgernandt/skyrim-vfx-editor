@@ -27,16 +27,6 @@ namespace gui
 
 	//Meanwhile, let's just use this header as a general dump for temporary fixes and vague ideas.
 
-	enum class MouseButton
-	{
-		NONE,
-		LEFT,
-		MIDDLE,
-		RIGHT,
-		EXTRA1,
-		EXTRA2,
-	};
-
 	class Popup;//for setContextMenu
 
 	constexpr unsigned int WIDGET_ACTIVATED = 1;

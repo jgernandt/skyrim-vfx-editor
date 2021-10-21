@@ -23,20 +23,6 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
-constexpr gui::MouseButton imguiToGuiButton(int button)
-{
-	switch (button) {
-	case ImGuiButtonFlags_MouseButtonLeft:
-		return gui::MouseButton::LEFT;
-	case ImGuiButtonFlags_MouseButtonMiddle:
-		return gui::MouseButton::MIDDLE;
-	case ImGuiButtonFlags_MouseButtonRight:
-		return gui::MouseButton::RIGHT;
-	default:
-		return gui::MouseButton::NONE;
-	}
-}
-
 //This is made specifically for the scale mod. We'll make it more general as we go.
 void gui::PlotArea::frame(FrameDrawer& fd)
 {
@@ -190,7 +176,7 @@ void gui::SimpleHandles::frame(FrameDrawer& fd)
 			bool highlight = false;
 
 			if (IsItemActivated())
-				onClick(i, imguiToGuiButton(ImGuiButtonFlags_MouseButtonLeft));
+				onClick(i, MouseButton::LEFT);
 
 			if (IsItemActive()) {
 				highlight = true;
@@ -210,7 +196,7 @@ void gui::SimpleHandles::frame(FrameDrawer& fd)
 			}
 
 			if (IsItemDeactivated())
-				onRelease(i, imguiToGuiButton(ImGuiButtonFlags_MouseButtonLeft));
+				onRelease(i, MouseButton::LEFT);
 
 			if (!highlight && IsItemHovered())
 				highlight = true;

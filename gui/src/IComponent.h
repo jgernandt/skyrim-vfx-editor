@@ -19,6 +19,7 @@
 #pragma once
 #include <memory>
 #include "IInvoker.h"
+#include "input.h"
 #include "gui_types.h"
 
 namespace gui
@@ -44,6 +45,10 @@ namespace gui
 		//Apply our currently pushed transform to a point
 		virtual Floats<2> toGlobal(const Floats<2>&) const = 0;
 		virtual Floats<2> toLocal(const Floats<2>&) const = 0;
+
+		//Ok, this REALLY shouldn't be a part of us. Makes no sense here at all.
+		virtual bool isMouseDown(MouseButton) const = 0;
+		virtual Floats<2> getMouseMove() const = 0;
 	};
 
 	class IComponent

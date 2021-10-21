@@ -189,6 +189,9 @@
     <ClInclude Include="src\Subwindow.h">
       <Filter>Header Files\Widgets</Filter>
     </ClInclude>
+    <ClInclude Include="src\input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Visitor.cpp">
@@ -304,6 +307,9 @@
     </ClCompile>
     <ClCompile Include="src\Checkbox.cpp">
       <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\input.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

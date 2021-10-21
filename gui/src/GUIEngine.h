@@ -46,6 +46,9 @@ namespace gui
 			virtual Floats<2> toGlobal(const Floats<2>& local) const override;
 			virtual Floats<2> toLocal(const Floats<2>& global) const override;
 
+			virtual bool isMouseDown(MouseButton btn) const override;
+			virtual Floats<2> getMouseMove() const override;
+
 			void initWin32Window(HWND hwnd);
 			void initDX10Window(ID3D10Device* device);
 
@@ -64,6 +67,7 @@ namespace gui
 		private:
 			std::stack<Floats<4>> m_clipArea;
 			std::stack<Floats<4>> m_transform;
+			Floats<2> m_lastMousePos{ 0.0f, 0.0f };
 		};
 
 	}

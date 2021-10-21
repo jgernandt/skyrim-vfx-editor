@@ -104,20 +104,26 @@ node::Editor::~Editor()
 
 void node::Editor::frame(gui::FrameDrawer& fd)
 {
+	//pan
+	if (fd.isMouseDown(gui::MouseButton::MIDDLE)) {
+		gui::Floats<2> delta = fd.getMouseMove();
+		m_workAreaT[0] += delta[0];
+		m_workAreaT[1] += delta[1];
+	}
+
 	gui::Drawer drawer;//do we just use the FrameDrawer instead?
 	drawer.setTargetLayer(gui::Layer::BACKGROUND);
 	drawer.begin();
-	//Rectangle should always go from (0, 0) to size
+	//Rectangle should always go from (0, 0) to size (actually from position to position + parent_scale * size)
 	drawer.rectangle({ 0.0f, 0.0f }, m_size, { 0.2f, 0.2f, 0.2f, 1.0f });
 	//But if we add panning, the grid lines might have a different origin (and scale, if we add zoom):
-	gui::Floats<2> tl{ 0.0f, 0.0f };
 	float scale = 1.0f;
-	gui::Floats<2> br{ tl[0] + m_size[0] / scale, tl[1] + m_size[1] / scale };
+	gui::Floats<2> br{ m_workAreaT[0] + m_size[0] / scale, m_workAreaT[1] + m_size[1] / scale };
 	float step = 64.0f;
-	for (float x = fmodf(tl[0], step); x < br[0]; x += step)
-		drawer.line({ tl[0] + x, tl[1] }, { tl[0] + x, br[1] }, { 0.3f, 0.3f, 0.3f, 1.0f });
-	for (float y = fmodf(tl[1], step); y < br[1]; y += step)
-		drawer.line({ tl[0], tl[1] + y }, { br[0], tl[1] + y }, { 0.3f, 0.3f, 0.3f, 1.0f });
+	for (float x = fmodf(m_workAreaT[0], step); x < br[0]; x += step)
+		drawer.line({ m_workAreaT[0] + x, m_workAreaT[1] }, { m_workAreaT[0] + x, br[1] }, { 0.3f, 0.3f, 0.3f, 1.0f });
+	for (float y = fmodf(m_workAreaT[1], step); y < br[1]; y += step)
+		drawer.line({ m_workAreaT[0], m_workAreaT[1] + y }, { br[0], m_workAreaT[1] + y }, { 0.3f, 0.3f, 0.3f, 1.0f });
 	drawer.end();
 
 	ConnectionHandler::frame(fd);

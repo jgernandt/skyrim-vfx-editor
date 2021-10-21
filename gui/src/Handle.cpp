@@ -20,20 +20,6 @@
 #include "Handle.h"
 #include "Drawer.h"
 
-constexpr gui::MouseButton imguiToGuiButton(int button)
-{
-	switch (button) {
-	case ImGuiButtonFlags_MouseButtonLeft:
-		return gui::MouseButton::LEFT;
-	case ImGuiButtonFlags_MouseButtonMiddle:
-		return gui::MouseButton::MIDDLE;
-	case ImGuiButtonFlags_MouseButtonRight:
-		return gui::MouseButton::RIGHT;
-	default:
-		return gui::MouseButton::NONE;
-	}
-}
-
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
@@ -47,7 +33,7 @@ void gui::Handle::frame(FrameDrawer& fd)
 	InvisibleButton(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(m_size), ImGuiButtonFlags_MouseButtonLeft);
 
 	if (IsItemActivated())
-		onClick(imguiToGuiButton(ImGuiButtonFlags_MouseButtonLeft));
+		onClick(MouseButton::LEFT);
 
 	if (IsItemActive()) {
 		m_active = true;
@@ -57,7 +43,7 @@ void gui::Handle::frame(FrameDrawer& fd)
 
 	if (IsItemDeactivated()) {
 		m_active = false;
-		onRelease(imguiToGuiButton(ImGuiButtonFlags_MouseButtonLeft));
+		onRelease(MouseButton::LEFT);
 	}
 
 	//Might be weird to always register as hovered when active. We'll see.
