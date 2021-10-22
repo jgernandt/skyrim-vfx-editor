@@ -36,7 +36,7 @@ namespace gui
 	public:
 		virtual ~FrameDrawer() = default;
 
-		virtual void pushClipArea(const Floats<2>& xlims, const Floats<2>& ylims, bool intersect = true) = 0;
+		virtual void pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) = 0;
 		virtual void popClipArea() = 0;
 
 		virtual void pushTransform(const Floats<2>& translation, const Floats<2>& scale) = 0;

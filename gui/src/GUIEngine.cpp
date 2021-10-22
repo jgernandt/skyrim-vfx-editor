@@ -27,6 +27,11 @@
 #include <d3d10.h>
 #include <tchar.h>
 
+#undef min
+#undef max
+
+#include "imgui_internal.h"
+
 gui::backend::ImGuiWinD3D10::ImGuiWinD3D10()
 {
 	IMGUI_CHECKVERSION();
@@ -48,6 +53,19 @@ gui::backend::ImGuiWinD3D10::~ImGuiWinD3D10()
 	ImGui_ImplDX10_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+}
+
+void gui::backend::ImGuiWinD3D10::pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect)
+{
+	Floats<2> min = toGlobal({ std::min(p1[0], p2[0]), std::min(p1[1], p2[1]) });
+	Floats<2> max = toGlobal({ std::max(p1[0], p2[0]), std::max(p1[1], p2[1]) });
+	ImGui::PushClipRect({ min[0], min[1] }, { max[0], max[1] }, intersect);
+	auto vp = ImGui::GetMainViewport();
+}
+
+void gui::backend::ImGuiWinD3D10::popClipArea()
+{
+	ImGui::PopClipRect();
 }
 
 void gui::backend::ImGuiWinD3D10::pushTransform(const Floats<2>& translation, const Floats<2>& scale)
@@ -150,6 +168,9 @@ void gui::backend::ImGuiWinD3D10::beginFrame()
 
 void gui::backend::ImGuiWinD3D10::endFrame()
 {
+	//This seems like a reliable way to keep the main menu bar on top. Haven't noticed any side effects yet.
+	ImGui::BringWindowToDisplayFront(ImGui::FindWindowByName("##MainMenuBar"));
+
 	ImGui::Render();
 	ImGui_ImplDX10_RenderDrawData(ImGui::GetDrawData());
 }
