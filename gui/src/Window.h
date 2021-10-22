@@ -49,6 +49,7 @@ namespace gui
 
 		virtual void accept(Visitor& v) override;
 		virtual void frame(FrameDrawer& fd) override;
+		virtual void setTranslation(const Floats<2>& t) override;
 
 		virtual void onClose();
 
@@ -61,5 +62,7 @@ namespace gui
 		ColRGBA m_colours[COL_SIZE]{ ColRGBA() };
 		unsigned int m_style{ 0 };
 		bool m_closable{ false };
+
+		Floats<2> m_lastGlobalPos{ 0.0f, 0.0f };
 	};
 }

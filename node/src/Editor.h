@@ -20,13 +20,14 @@
 #include "ConnectionHandler.h"
 #include "NiNode.h"
 #include "File.h"
+#include "widgets.h"
 
 namespace node
 {
 	class Root;
 
 	class Editor final :
-		public gui::ConnectionHandler
+		public gui::Composite
 	{
 	public:
 		Editor();
@@ -38,12 +39,21 @@ namespace node
 		void setProjectName(const std::string& name);
 
 	private:
-		std::unique_ptr<IComponent> createAddMenu(IComponent& parent);
+		//static std::unique_ptr<IComponent> createAddMenu(IComponent& parent);
 		Root* findRootNode() const;
 
-		template<typename T> void addNode();
 
 	private:
+		class WorkArea final : public gui::ConnectionHandler
+		{
+		public:
+			WorkArea();
+			virtual void frame(gui::FrameDrawer& fd) override;
+
+			std::unique_ptr<IComponent> createAddMenu();
+			template<typename T> void addNode();
+		};
+
 		const nif::File::Version m_niVersion;
 
 		//Transform of the work area, for panning and zooming. Or should it be a child component, between us and the nodes?

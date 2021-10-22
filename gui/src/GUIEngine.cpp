@@ -70,6 +70,16 @@ void gui::backend::ImGuiWinD3D10::popTransform()
 		m_transform.pop();
 }
 
+gui::Floats<2> gui::backend::ImGuiWinD3D10::getCurrentTranslation() const
+{
+	return m_transform.empty() ? Floats<2> { 0.0f, 0.0f } : m_transform.top().head(2);
+}
+
+gui::Floats<2> gui::backend::ImGuiWinD3D10::getCurrentScale() const
+{
+	return m_transform.empty() ? Floats<2> { 1.0f, 1.0f } : m_transform.top().tail(2);
+}
+
 gui::Floats<2> gui::backend::ImGuiWinD3D10::toGlobal(const Floats<2>& local) const
 {
 	if (m_transform.empty())

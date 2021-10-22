@@ -42,6 +42,9 @@ namespace gui
 		virtual void pushTransform(const Floats<2>& translation, const Floats<2>& scale) = 0;
 		virtual void popTransform() = 0;
 
+		virtual Floats<2> getCurrentTranslation() const = 0;
+		virtual Floats<2> getCurrentScale() const = 0;
+
 		//Apply our currently pushed transform to a point
 		virtual Floats<2> toGlobal(const Floats<2>&) const = 0;
 		virtual Floats<2> toLocal(const Floats<2>&) const = 0;

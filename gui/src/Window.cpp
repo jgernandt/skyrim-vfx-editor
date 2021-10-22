@@ -50,13 +50,27 @@ void gui::Window::accept(Visitor& v)
 	v.visit(*this);
 }
 
+#include "imgui_internal.h"
 void gui::Window::frame(FrameDrawer& fd)
 {
 
 	using namespace ImGui;
 
 	SetNextWindowSize(gui_type_conversion<ImVec2>::from(m_size));
+
+	//Position
+	//ImGui handles dragging windows during Begin/EndFrame. We need to pull out the current position of 
+	//our window from imgui now, before we start tampering with it.
+	//But how to distinguish dragging the window with the mouse from transforming an ancestor?
+
+	if (ImGuiWindow* window = FindWindowByName(m_title[0].c_str())) {
+		//Floats<2> currentGlobal = gui_type_conversion<Floats<2>>::from(window->Pos);//not accounting for new ancestor transforms
+		//Floats<2> translation_from_dragging = currentGlobal - m_lastGlobalPos;//in global scale
+		m_translation += (gui_type_conversion<Floats<2>>::from(window->Pos) - m_lastGlobalPos) * fd.getCurrentScale();
+	}
+
 	SetNextWindowPos(gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation)));
+
 	PushStyleColor(ImGuiCol_TitleBg, gui_type_conversion<ImVec4>::from(m_colours[COL_TITLE]));
 	PushStyleColor(ImGuiCol_TitleBgActive, gui_type_conversion<ImVec4>::from(m_colours[COL_TITLE_ACTIVE]));
 	PushStyleColor(ImGuiCol_TitleBgCollapsed, gui_type_conversion<ImVec4>::from(m_colours[COL_TITLE]));
@@ -81,7 +95,7 @@ void gui::Window::frame(FrameDrawer& fd)
 		PushItemWidth(-std::numeric_limits<float>::min());
 		util::CallWrapper popItemWidth(&PopItemWidth);
 
-		m_translation = fd.toLocal(gui_type_conversion<Floats<2>>::from(GetWindowPos()));
+		m_lastGlobalPos = gui_type_conversion<Floats<2>>::from(GetWindowPos());
 
 		Composite::frame(fd);
 
@@ -95,6 +109,12 @@ void gui::Window::frame(FrameDrawer& fd)
 
 	if (!keepOpen)
 		onClose();
+}
+
+void gui::Window::setTranslation(const Floats<2>& t)
+{
+	m_translation = t;
+	m_lastGlobalPos = getGlobalPosition();
 }
 
 void gui::Window::onClose()

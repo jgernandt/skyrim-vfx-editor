@@ -43,6 +43,9 @@ namespace gui
 			virtual void pushTransform(const Floats<2>& translation, const Floats<2>& scale) override;
 			virtual void popTransform() override;
 
+			virtual Floats<2> getCurrentTranslation() const override;
+			virtual Floats<2> getCurrentScale() const override;
+
 			virtual Floats<2> toGlobal(const Floats<2>& local) const override;
 			virtual Floats<2> toLocal(const Floats<2>& global) const override;
 

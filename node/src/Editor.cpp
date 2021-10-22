@@ -37,7 +37,7 @@ public:
 };
 
 template<typename T>
-void node::Editor::addNode()
+void node::Editor::WorkArea::addNode()
 {
 	try {
 		asyncInvoke<gui::AddChild>(std::make_unique<T>(), this, true);
@@ -62,40 +62,46 @@ node::Editor::Editor(const nif::File& file) : m_niVersion{ file.getVersion() }
 
 	if (c) {
 		try {
+			auto workArea = newChild<WorkArea>();
+
 			//Nodes
 			c->makeRoot(file.getRoot());
-			c->extractNodes(*this);
+			c->extractNodes(*workArea);
 
 			for (auto&& warning : c->warnings())
 				newChild<gui::MessageBox>("Warning", std::move(warning));
 
-			//Background interactions
+			//Context menu
 			auto panel = newChild<gui::Panel>();
-			panel->setSize(m_size);
-
 			auto context = std::make_unique<gui::Popup>();
-			context->addChild(createAddMenu(*this));
+			context->addChild(workArea->createAddMenu());
 			panel->setContextMenu(std::move(context));
 
 			//Main menu additions
 			//Strange to add to main menu from here, no? Strictly speaking, we don't even know that there is a main menu.
 			auto main = std::make_unique<gui::MainMenu>("Add");
-			main->addChild(createAddMenu(*this));
+			main->addChild(workArea->createAddMenu());
 			addChild(std::move(main));
-
-			auto help = std::make_unique<gui::MainMenu>("Help");
-			help->newChild<gui::MenuItem>("Block types", 
-				[this]() { asyncInvoke<gui::AddChild>(std::make_unique<HelpWindow>(), this, false); });
-			addChild(std::move(help));
 		}
 		catch (const std::exception& e) {
 			clearChildren();
+			auto workArea = newChild<WorkArea>();
 			newChild<gui::MessageBox>("Error", e.what());
+
+			//Now we have the appearance we should have, but no way to add nodes. It wouldn't make sense to. 
+			//better to force the user to open another file.
+			//Still, I can't shake the feeling that this whole setup is a bit stupid.
 		}
 	}
 	else {
 		newChild<gui::MessageBox>("Error", "File version not supported");
 	}
+
+	//Main menu additions
+	auto help = std::make_unique<gui::MainMenu>("Help");
+	help->newChild<gui::MenuItem>("Block info",
+		[this]() { asyncInvoke<gui::AddChild>(std::make_unique<HelpWindow>(), this, false); });
+	addChild(std::move(help));
 }
 
 node::Editor::~Editor()
@@ -105,28 +111,30 @@ node::Editor::~Editor()
 void node::Editor::frame(gui::FrameDrawer& fd)
 {
 	//pan
-	if (fd.isMouseDown(gui::MouseButton::MIDDLE)) {
-		gui::Floats<2> delta = fd.getMouseMove();
-		m_workAreaT[0] += delta[0];
-		m_workAreaT[1] += delta[1];
+	/*if (fd.isMouseDown(gui::MouseButton::MIDDLE)) {
+		m_workAreaT += fd.getMouseMove();
 	}
 
 	gui::Drawer drawer;//do we just use the FrameDrawer instead?
 	drawer.setTargetLayer(gui::Layer::BACKGROUND);
 	drawer.begin();
-	//Rectangle should always go from (0, 0) to size (actually from position to position + parent_scale * size)
-	drawer.rectangle({ 0.0f, 0.0f }, m_size, { 0.2f, 0.2f, 0.2f, 1.0f });
+	//Rectangle should always go from (0, 0) to size (actually from fd.toGlobal(m_translation) to fd.toGlobal(m_translation + m_scale * m_size))
+	gui::Floats<2> rectTL = fd.toGlobal(m_translation);
+	gui::Floats<2> rectBR = fd.toGlobal(m_translation + m_scale * m_size);
+	drawer.rectangle(rectTL, rectBR, { 0.2f, 0.2f, 0.2f, 1.0f });
 	//But if we add panning, the grid lines might have a different origin (and scale, if we add zoom):
-	float scale = 1.0f;
-	gui::Floats<2> br{ m_workAreaT[0] + m_size[0] / scale, m_workAreaT[1] + m_size[1] / scale };
+	//Work-space coords:
+	gui::Floats<2> tl = m_workAreaT;
+	gui::Floats<2> br = tl + m_size / m_workAreaS;
+	//gui::Floats<2> br{ tl[0] + m_size[0] / m_workAreaS[0], tl[1] + m_size[1] / m_workAreaS[1] };
 	float step = 64.0f;
-	for (float x = fmodf(m_workAreaT[0], step); x < br[0]; x += step)
-		drawer.line({ m_workAreaT[0] + x, m_workAreaT[1] }, { m_workAreaT[0] + x, br[1] }, { 0.3f, 0.3f, 0.3f, 1.0f });
-	for (float y = fmodf(m_workAreaT[1], step); y < br[1]; y += step)
-		drawer.line({ m_workAreaT[0], m_workAreaT[1] + y }, { br[0], m_workAreaT[1] + y }, { 0.3f, 0.3f, 0.3f, 1.0f });
-	drawer.end();
+	for (float x = std::fmodf(tl[0], step); x < br[0]; x += step)
+		drawer.line({ rectTL[0] + x, rectTL[1] }, { rectTL[0] + x, rectBR[1] }, { 0.3f, 0.3f, 0.3f, 1.0f });
+	for (float y = std::fmodf(tl[1], step); y < br[1]; y += step)
+		drawer.line({ rectTL[0], rectTL[1] + y }, { rectBR[0], rectTL[1] + y }, { 0.3f, 0.3f, 0.3f, 1.0f });
+	drawer.end();*/
 
-	ConnectionHandler::frame(fd);
+	Composite::frame(fd);
 }
 
 void node::Editor::setProjectName(const std::string& name)
@@ -135,34 +143,34 @@ void node::Editor::setProjectName(const std::string& name)
 		root->object().name().set(name);
 }
 
-std::unique_ptr<gui::IComponent> node::Editor::createAddMenu(IComponent& parent)
+std::unique_ptr<gui::IComponent> node::Editor::WorkArea::createAddMenu()
 {
 	auto root = std::make_unique<gui::Composite>();
 	auto group = root->newChild<gui::Menu>("Grouping");
-	group->newChild<gui::MenuItem>("Node", std::bind(&Editor::addNode<Node>, this));
+	group->newChild<gui::MenuItem>("Node", std::bind(&Editor::WorkArea::addNode<Node>, this));
 
 	auto part = root->newChild<gui::Menu>("Particles");
-	part->newChild<gui::MenuItem>("Particle system", std::bind(&Editor::addNode<ParticleSystem>, this));
+	part->newChild<gui::MenuItem>("Particle system", std::bind(&Editor::WorkArea::addNode<ParticleSystem>, this));
 	part->newChild<gui::Separator>();
-	part->newChild<gui::MenuItem>("Emitter (box)", std::bind(&Editor::addNode<BoxEmitter>, this));
-	part->newChild<gui::MenuItem>("Emitter (cylinder)", std::bind(&Editor::addNode<CylinderEmitter>, this));
-	part->newChild<gui::MenuItem>("Emitter (sphere)", std::bind(&Editor::addNode<SphereEmitter>, this));
+	part->newChild<gui::MenuItem>("Emitter (box)", std::bind(&Editor::WorkArea::addNode<BoxEmitter>, this));
+	part->newChild<gui::MenuItem>("Emitter (cylinder)", std::bind(&Editor::WorkArea::addNode<CylinderEmitter>, this));
+	part->newChild<gui::MenuItem>("Emitter (sphere)", std::bind(&Editor::WorkArea::addNode<SphereEmitter>, this));
 	part->newChild<gui::Separator>();
-	part->newChild<gui::MenuItem>("Force field (planar)", std::bind(&Editor::addNode<PlanarForceField>, this));
-	part->newChild<gui::MenuItem>("Force field (spherical)", std::bind(&Editor::addNode<SphericalForceField>, this));
+	part->newChild<gui::MenuItem>("Force field (planar)", std::bind(&Editor::WorkArea::addNode<PlanarForceField>, this));
+	part->newChild<gui::MenuItem>("Force field (spherical)", std::bind(&Editor::WorkArea::addNode<SphericalForceField>, this));
 	part->newChild<gui::Separator>();
-	part->newChild<gui::MenuItem>("Colour modifier (simple)", std::bind(&Editor::addNode<SimpleColourModifier>, this));
-	part->newChild<gui::MenuItem>("Rotation modifier", std::bind(&Editor::addNode<RotationModifier>, this));
-	part->newChild<gui::MenuItem>("Scale modifier", std::bind(&Editor::addNode<ScaleModifier>, this));
+	part->newChild<gui::MenuItem>("Colour modifier (simple)", std::bind(&Editor::WorkArea::addNode<SimpleColourModifier>, this));
+	part->newChild<gui::MenuItem>("Rotation modifier", std::bind(&Editor::WorkArea::addNode<RotationModifier>, this));
+	part->newChild<gui::MenuItem>("Scale modifier", std::bind(&Editor::WorkArea::addNode<ScaleModifier>, this));
 
 	auto shad = root->newChild<gui::Menu>("Shaders");
-	shad->newChild<gui::MenuItem>("Effect shader", std::bind(&Editor::addNode<EffectShader>, this));
+	shad->newChild<gui::MenuItem>("Effect shader", std::bind(&Editor::WorkArea::addNode<EffectShader>, this));
 
 	auto extra = root->newChild<gui::Menu>("Extra data");
-	extra->newChild<gui::MenuItem>("String data", std::bind(&Editor::addNode<StringData>, this));
-	extra->newChild<gui::MenuItem>("Weapon type", std::bind(&Editor::addNode<WeaponTypeData>, this));
+	extra->newChild<gui::MenuItem>("String data", std::bind(&Editor::WorkArea::addNode<StringData>, this));
+	extra->newChild<gui::MenuItem>("Weapon type", std::bind(&Editor::WorkArea::addNode<WeaponTypeData>, this));
 
-	return std::move(root);
+	return root;
 }
 
 node::Root* node::Editor::findRootNode() const
@@ -190,4 +198,45 @@ HelpWindow::HelpWindow()
 	}
 	else
 		newChild<gui::Text>(std::string("Failed to load ") + DOC_FILE_NAME);
+}
+
+node::Editor::WorkArea::WorkArea()
+{
+}
+
+void node::Editor::WorkArea::frame(gui::FrameDrawer& fd)
+{
+	//pan
+	if (fd.isMouseDown(gui::MouseButton::MIDDLE))
+		m_translation += fd.getMouseMove();
+
+	//They should set our size, but let's go with this for now
+	assert(getParent());
+	m_size = getParent()->getSize();
+	//Hmm, this means we are using size inconsistently.
+	//Normally components occupy the area from m_translation to m_translation + m_scale * m_size, in parent space
+	// ((0, 0) to m_size in local space).
+	//We occupy the area from (0, 0) to parent_size in parent space.
+	//Again, this setup feels a little stupid.
+
+	gui::Drawer drawer;//rework to use the FrameDrawer instead
+	drawer.setTargetLayer(gui::Layer::BACKGROUND);
+	drawer.begin();
+	//Background always covers (0,0) to size
+	drawer.rectangle(fd.toGlobal({ 0.0f, 0.0f }), fd.toGlobal(m_size), { 0.2f, 0.2f, 0.2f, 1.0f });
+	//But if we add panning, the grid lines might have a different origin (and scale, if we add zoom):
+	float step = 64.0f;
+	float x = std::fmodf(m_translation[0], step);
+	if (x < 0.0f)
+		x += step;
+	for (; x < m_size[0]; x += step)
+		drawer.line(fd.toGlobal({ x, 0.0f }), fd.toGlobal({ x, m_size[1] }), { 0.3f, 0.3f, 0.3f, 1.0f });
+	float y = std::fmodf(m_translation[1], step);
+	if (y < 0.0f)
+		y += step;
+	for (; y < m_size[1]; y += step)
+		drawer.line(fd.toGlobal({ 0.0f, y }), fd.toGlobal({ m_size[0], y }), { 0.3f, 0.3f, 0.3f, 1.0f });
+	drawer.end();
+
+	ConnectionHandler::frame(fd);
 }
