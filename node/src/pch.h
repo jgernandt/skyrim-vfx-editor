@@ -23,4 +23,7 @@
 #include <cassert>
 #include <memory>
 
+#define EIGEN_MPL2_ONLY
+#include "Eigen\Dense"
+
 #endif //PCH_H

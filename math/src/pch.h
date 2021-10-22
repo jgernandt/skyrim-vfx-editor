@@ -22,6 +22,7 @@
 #include <array>
 #include <cmath>
 
+#define EIGEN_MPL2_ONLY
 #include "Eigen\Dense"
 
 #endif //PCH_H

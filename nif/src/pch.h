@@ -24,4 +24,7 @@
 
 #include "nif_backend.h"
 
+#define EIGEN_MPL2_ONLY
+#include "Eigen\Dense"
+
 #endif //PCH_H
