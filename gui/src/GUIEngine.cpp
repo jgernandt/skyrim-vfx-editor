@@ -138,7 +138,7 @@ gui::Floats<2> gui::backend::ImGuiWinD3D10::getMousePosition() const
 bool gui::backend::ImGuiWinD3D10::isWheelCaptured() const
 {
 	ImGuiContext* c = ImGui::GetCurrentContext();
-	return c ? c->ActiveIdUsingMouseWheel : false;
+	return c ? c->ActiveIdUsingMouseWheel || c->HoveredIdUsingMouseWheel : false;
 }
 
 void gui::backend::ImGuiWinD3D10::setCaptureWheel()
