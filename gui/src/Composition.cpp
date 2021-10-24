@@ -27,9 +27,14 @@ gui::Component::~Component()
 
 gui::Floats<2> gui::Component::getGlobalPosition() const
 {
-	Floats<2> p_trans = m_parent ? m_parent->getGlobalPosition() : Floats<2>{ 0.0f, 0.0f };
-	Floats<2> p_scale = m_parent ? m_parent->getScale() : Floats<2>{ 1.0f, 1.0f };
-	return { p_trans[0] + p_scale[0] * m_translation[0], p_trans[1] + p_scale[1] * m_translation[1] };
+	Floats<2> result = m_translation;
+	IComponent* super = m_parent;
+	while (super) {
+		//transform to their parent space
+		result = super->getTranslation() + super->getScale() * result;
+		super = super->getParent();
+	}
+	return result;
 }
 
 void gui::Component::accept(Visitor& v)
