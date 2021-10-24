@@ -44,10 +44,10 @@ namespace node
 
 
 	private:
-		class WorkArea final : public gui::ConnectionHandler
+		class NodeRoot final : public gui::ConnectionHandler
 		{
 		public:
-			WorkArea();
+			NodeRoot();
 			virtual void frame(gui::FrameDrawer& fd) override;
 
 			std::unique_ptr<IComponent> createAddMenu();
@@ -55,10 +55,6 @@ namespace node
 		};
 
 		const nif::File::Version m_niVersion;
-
-		//Transform of the work area, for panning and zooming. Or should it be a child component, between us and the nodes?
-		gui::Floats<2> m_workAreaT{ 0.0f, 0.0f };
-		gui::Floats<2> m_workAreaS{ 1.0f, 1.0f };
 	};
 }
 

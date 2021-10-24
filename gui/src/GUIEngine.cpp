@@ -126,7 +126,29 @@ bool gui::backend::ImGuiWinD3D10::isMouseDown(MouseButton btn) const
 gui::Floats<2> gui::backend::ImGuiWinD3D10::getMouseMove() const
 {
 	Floats<2> mousePos = gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos);
-	return { mousePos[0] - m_lastMousePos[0], mousePos[1] - m_lastMousePos[1] };
+	return toLocal(mousePos - m_lastMousePos);
+	//return { mousePos[0] - m_lastMousePos[0], mousePos[1] - m_lastMousePos[1] };
+}
+
+gui::Floats<2> gui::backend::ImGuiWinD3D10::getMousePosition() const
+{
+	return toLocal(gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos));
+}
+
+bool gui::backend::ImGuiWinD3D10::isWheelCaptured() const
+{
+	ImGuiContext* c = ImGui::GetCurrentContext();
+	return c ? c->ActiveIdUsingMouseWheel : false;
+}
+
+void gui::backend::ImGuiWinD3D10::setCaptureWheel()
+{
+	assert(false);//TODO
+}
+
+float gui::backend::ImGuiWinD3D10::getWheelDelta() const
+{
+	return ImGui::GetIO().MouseWheel;
 }
 
 void gui::backend::ImGuiWinD3D10::initWin32Window(HWND hwnd)
@@ -168,6 +190,23 @@ void gui::backend::ImGuiWinD3D10::beginFrame()
 
 void gui::backend::ImGuiWinD3D10::endFrame()
 {
+#ifdef DEBUG
+	if (m_frameCount++ % 10 == 0) {
+		long long t = m_timer.elapsed();
+		m_frameRate = 10.0f / (static_cast<float>(t - m_lastTime) * 1e-6f);
+		m_lastTime = t;
+	}
+
+	ImGuiContext* c = ImGui::GetCurrentContext();
+	assert(c && !c->Viewports.empty() && c->Viewports[0]);
+	ImGui::SetNextWindowSize({ 150.0f, 0.0f });
+	ImGui::SetNextWindowPos({ c->Viewports[0]->Size[0] - 175.0f, 25.0f });
+	if (ImGui::Begin("Metrics/Debugger##JGDebug")) {
+		ImGui::Text("%.1f FPS", m_frameRate);
+	}
+	ImGui::End();
+#endif
+
 	//This seems like a reliable way to keep the main menu bar on top. Haven't noticed any side effects yet.
 	ImGui::BringWindowToDisplayFront(ImGui::FindWindowByName("##MainMenuBar"));
 

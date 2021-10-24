@@ -49,9 +49,20 @@ namespace gui
 		virtual Floats<2> toGlobal(const Floats<2>&) const = 0;
 		virtual Floats<2> toLocal(const Floats<2>&) const = 0;
 
-		//Ok, this REALLY shouldn't be a part of us. Makes no sense here at all.
+		//Do we really want inputs here? Seems like we're using this class to generally hide imgui's global nature,
+		//which isn't necessarily a good idea.
 		virtual bool isMouseDown(MouseButton) const = 0;
 		virtual Floats<2> getMouseMove() const = 0;
+		virtual Floats<2> getMousePosition() const = 0;
+		virtual bool isWheelCaptured() const = 0;
+		virtual void setCaptureWheel() = 0;
+		virtual float getWheelDelta() const = 0;
+		//More generally, if this is something we want to pursue:
+		//get the component that is currently capturing the button (if any)
+		//virtual IComponent* getCaptured(MouseButton) const = 0;
+		//have a component capture/release the given button
+		//virtual void capture(MouseButton, IComponent&) = 0;
+		//virtual void release(MouseButton, IComponent&) = 0;
 	};
 
 	class IComponent

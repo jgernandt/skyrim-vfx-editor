@@ -17,10 +17,13 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
+#include <array>
 #include <filesystem>
 #include <memory>
 #include <stack>
 #include <windows.h>
+
+#include "Timer.h"
 #include "IComponent.h"
 
 struct ID3D10Device;
@@ -31,7 +34,7 @@ namespace gui
 	{
 		//I'm not sure this is how we want to do it, but lump this up with FrameDrawer for now
 		//(feels like this class is turning into some general abstraction for all of Dear ImGui)
-		class ImGuiWinD3D10 : public FrameDrawer
+		class ImGuiWinD3D10 final : public FrameDrawer
 		{
 		public:
 			ImGuiWinD3D10();
@@ -51,6 +54,10 @@ namespace gui
 
 			virtual bool isMouseDown(MouseButton btn) const override;
 			virtual Floats<2> getMouseMove() const override;
+			virtual Floats<2> getMousePosition() const override;
+			virtual bool isWheelCaptured() const override;
+			virtual void setCaptureWheel() override;
+			virtual float getWheelDelta() const override;
 
 			void initWin32Window(HWND hwnd);
 			void initDX10Window(ID3D10Device* device);
@@ -71,7 +78,11 @@ namespace gui
 			std::stack<Floats<4>> m_clipArea;
 			std::stack<Floats<4>> m_transform;
 			Floats<2> m_lastMousePos{ 0.0f, 0.0f };
-		};
 
+			Timer<long long, std::micro> m_timer;
+			int m_frameCount{ 0 };
+			long long m_lastTime{ 0 };
+			float m_frameRate{ 0.0f };
+		};
 	}
 }

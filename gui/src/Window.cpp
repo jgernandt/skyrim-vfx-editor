@@ -67,9 +67,21 @@ void gui::Window::frame(FrameDrawer& fd)
 		//Floats<2> currentGlobal = gui_type_conversion<Floats<2>>::from(window->Pos);//not accounting for new ancestor transforms
 		//Floats<2> translation_from_dragging = currentGlobal - m_lastGlobalPos;//in global scale
 		m_translation += (gui_type_conversion<Floats<2>>::from(window->Pos) - m_lastGlobalPos) * fd.getCurrentScale();
+
+		if (ImGui::Begin("Metrics/Debugger##JGDebug")) {
+			Floats<2> currentGlobal = gui_type_conversion<Floats<2>>::from(window->Pos);
+			Floats<2> translation_from_dragging = currentGlobal - m_lastGlobalPos;
+			Text("lastG: %.2f, %.2f", m_lastGlobalPos[0], m_lastGlobalPos[1]);
+			Text("currG: %.2f, %.2f", currentGlobal[0], currentGlobal[1]);
+			Text("T_drag: %.2f, %.2f", translation_from_dragging[0], translation_from_dragging[1]);
+			Text("T: %.2f, %.2f", m_translation[0], m_translation[1]);
+		}
+		ImGui::End();
 	}
 
-	SetNextWindowPos(gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation)));
+	Floats<2> pos = fd.toGlobal(m_translation);
+	SetNextWindowPos({ std::floorf(pos[0]), std::floorf(pos[1]) });
+	m_lastGlobalPos = pos;
 
 	PushStyleColor(ImGuiCol_TitleBg, gui_type_conversion<ImVec4>::from(m_colours[COL_TITLE]));
 	PushStyleColor(ImGuiCol_TitleBgActive, gui_type_conversion<ImVec4>::from(m_colours[COL_TITLE_ACTIVE]));
@@ -95,7 +107,7 @@ void gui::Window::frame(FrameDrawer& fd)
 		PushItemWidth(-std::numeric_limits<float>::min());
 		util::CallWrapper popItemWidth(&PopItemWidth);
 
-		m_lastGlobalPos = gui_type_conversion<Floats<2>>::from(GetWindowPos());
+		//m_lastGlobalPos = gui_type_conversion<Floats<2>>::from(GetWindowPos());
 
 		Composite::frame(fd);
 
