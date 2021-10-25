@@ -40,19 +40,28 @@ public:
 	HelpWindow();
 };
 
+//Should this be baseline Component functionality?
+gui::Floats<2> transformToLocal(gui::IComponent& c, const gui::Floats<2>& pos)
+{
+	if (gui::IComponent* p = c.getParent())
+		return (transformToLocal(*p, pos) - c.getTranslation()) / c.getScale();
+	else
+		return (pos - c.getTranslation()) / c.getScale();
+}
+
 template<typename T>
 void node::Editor::NodeRoot::addNode()
 {
 	try {
 		auto node = std::make_unique<T>();
-		//Set position:
-		//We want to set it so that it appears at the cursor, possibly restricted from being too close to the edge of the window.
-		//We can get our global position and size (should have been updated by the time we get here).
-		//For the forseeable future, none of our ancestors will apply any scaling. However, let's assume there may be translation.
-		// 
-		//Or, let's not try to cut corners. We need to find the transform that maps our coordinates to the global space.
-		//The node should be positioned at the cursor, min/maxed to our rectangle. Then we just invert the transform.
-
+		//Position node at the cursor (constrained to our work area)
+		gui::Floats<2> pos = transformToLocal(*this, gui::Mouse::getPosition());
+		assert(getParent());
+		gui::Floats<2> tl = -m_translation / m_scale;
+		gui::Floats<2> br = tl + getParent()->getSize() / m_scale;
+		pos[0] = std::max(std::min(pos[0], br[0]), tl[0]);
+		pos[1] = std::max(std::min(pos[1], br[1]), tl[1]);
+		node->setTranslation(pos);
 		asyncInvoke<gui::AddChild>(std::move(node), this, true);
 	}
 	catch (const std::exception&) {

@@ -32,3 +32,8 @@ int gui::guiToImGuiButton(MouseButton button)
 		return -1;
 	}
 }
+
+gui::Floats<2> gui::Mouse::getPosition()
+{
+	return gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos);
+}
