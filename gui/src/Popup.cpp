@@ -40,7 +40,7 @@ void gui::Popup::frame(FrameDrawer& fd)
 		Floats<2> size = m_size * fd.getCurrentScale();
 		ImGui::SetNextWindowSize({ std::floorf(size[0]), std::floorf(size[1]) });
 
-		if (ImGui::BeginPopup(m_id[0].c_str())) {
+		if (ImGui::BeginPopup(m_id[0].c_str(), ImGuiWindowFlags_NoScrollbar)) {
 			util::CallWrapper end(&ImGui::EndPopup);
 
 			ImGui::PushItemWidth(-std::numeric_limits<float>::min());
