@@ -130,7 +130,7 @@ gui::Floats<2> gui::backend::ImGuiWinD3D10::toLocal(const Floats<2>& global) con
 void gui::backend::ImGuiWinD3D10::loadFontScale(float scale)
 {
 	float fontSize = (FONT_SIZE_BASE * scale);
-	if (fontSize != m_secondFontScale) {
+	if (fontSize != m_secondFontScale && !m_fontBuf.empty()) {
 		m_secondFontScale = fontSize;
 		m_reloadSecond = true;
 	}
@@ -149,7 +149,7 @@ void gui::backend::ImGuiWinD3D10::pushUIScale(float scale)
 #endif
 
 	ImFont* font = nullptr;
-	if (fontSize == FONT_SIZE_BASE) {
+	if (fontSize == FONT_SIZE_BASE || m_fontBuf.empty()) {
 		font = ImGui::GetIO().Fonts->Fonts[0];
 	}
 	else if (ImGui::GetIO().Fonts->Fonts.Size > 1 && fontSize == ImGui::GetIO().Fonts->Fonts[1]->FontSize) {
@@ -227,6 +227,8 @@ void gui::backend::ImGuiWinD3D10::initDX10Window(ID3D10Device* device)
 
 bool gui::backend::ImGuiWinD3D10::setDefaultFont()
 {
+	m_defaultFontPath = std::filesystem::path();
+	m_fontBuf.clear();
 	ImFont* font = ImGui::GetIO().Fonts->AddFontDefault();
 	return font != nullptr;
 }
@@ -252,7 +254,6 @@ bool gui::backend::ImGuiWinD3D10::setDefaultFont(const std::filesystem::path& pa
 		}
 	}
 	return result;
-	//ImFont* font = ImGui::GetIO().Fonts->AddFontFromFileTTF(path.u8string().c_str(), FONT_SIZE_BASE, nullptr, GLYPH_RANGE);
 }
 
 void UpdateFontTexture();
