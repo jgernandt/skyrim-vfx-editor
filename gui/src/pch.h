@@ -22,6 +22,7 @@
 #include <array>
 #include <cassert>
 #include <exception>
+#include <fstream>
 #include <functional>
 #include <map>
 #include <memory>

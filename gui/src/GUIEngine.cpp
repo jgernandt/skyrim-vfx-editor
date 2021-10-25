@@ -140,11 +140,13 @@ void gui::backend::ImGuiWinD3D10::pushUIScale(float scale)
 {
 	float fontSize = (FONT_SIZE_BASE * scale);
 
+#ifdef DEBUG
 	if (ImGui::Begin("Metrics/Debugger##JGDebug")) {
 		ImGui::Text("Scale %.2f", scale);
 		ImGui::Text("Font size %.0f", fontSize);
 	}
 	ImGui::End();
+#endif
 
 	ImFont* font = nullptr;
 	if (fontSize == FONT_SIZE_BASE) {
@@ -231,14 +233,26 @@ bool gui::backend::ImGuiWinD3D10::setDefaultFont()
 
 bool gui::backend::ImGuiWinD3D10::setDefaultFont(const std::filesystem::path& path)
 {
-	ImFont* font = ImGui::GetIO().Fonts->AddFontFromFileTTF(path.u8string().c_str(), FONT_SIZE_BASE, nullptr, GLYPH_RANGE);
+	bool result = false;
+	std::ifstream file(path, std::ifstream::binary);
+	if (file.is_open()) {
+		file.seekg(0, std::ios_base::end);
+		m_fontBuf.resize(static_cast<size_t>(file.tellg()));
+		file.seekg(0);
+		file.read(m_fontBuf.data(), m_fontBuf.size());
+		file.close();
 
-	if (font != nullptr) {
-		m_defaultFontPath = path;
-		return true;
+		ImFontConfig cfg;
+		cfg.FontDataOwnedByAtlas = false;
+		ImFont* font = ImGui::GetIO().Fonts->AddFontFromMemoryTTF(m_fontBuf.data(), m_fontBuf.size(), FONT_SIZE_BASE, &cfg, GLYPH_RANGE);
+
+		if (font != nullptr) {
+			m_defaultFontPath = path;
+			result = true;
+		}
 	}
-	else
-		return false;
+	return result;
+	//ImFont* font = ImGui::GetIO().Fonts->AddFontFromFileTTF(path.u8string().c_str(), FONT_SIZE_BASE, nullptr, GLYPH_RANGE);
 }
 
 void UpdateFontTexture();
@@ -251,8 +265,12 @@ void gui::backend::ImGuiWinD3D10::beginFrame()
 	if (m_reloadSecond) {
 		ImFontAtlas* fonts = ImGui::GetIO().Fonts;
 		fonts->Clear();
-		fonts->AddFontFromFileTTF(m_defaultFontPath.u8string().c_str(), FONT_SIZE_BASE, nullptr, GLYPH_RANGE);
-		fonts->AddFontFromFileTTF(m_defaultFontPath.u8string().c_str(), m_secondFontScale, nullptr, GLYPH_RANGE);
+
+		ImFontConfig cfg;
+		cfg.FontDataOwnedByAtlas = false;
+		fonts->AddFontFromMemoryTTF(m_fontBuf.data(), m_fontBuf.size(), FONT_SIZE_BASE, &cfg, GLYPH_RANGE);
+		fonts->AddFontFromMemoryTTF(m_fontBuf.data(), m_fontBuf.size(), m_secondFontScale, &cfg, GLYPH_RANGE);
+
 		rebuild = true;
 		m_reloadSecond = false;
 	}

@@ -85,6 +85,7 @@ namespace gui
 			std::stack<float> m_uiScale;
 			Floats<2> m_lastMousePos{ 0.0f, 0.0f };
 
+			std::vector<char> m_fontBuf;
 			std::filesystem::path m_defaultFontPath;
 			float m_secondFontScale{ 1.0f };
 			bool m_reloadSecond{ false };
