@@ -49,6 +49,11 @@ namespace gui
 		virtual Floats<2> toGlobal(const Floats<2>&) const = 0;
 		virtual Floats<2> toLocal(const Floats<2>&) const = 0;
 
+		//load font of given scale for next frame
+		virtual void loadFontScale(float) = 0;
+		virtual void pushUIScale(float) = 0;
+		virtual void popUIScale() = 0;
+
 		//Do we really want inputs here? Seems like we're using this class to generally hide imgui's global nature,
 		//which isn't necessarily a good idea.
 		virtual bool isMouseDown(MouseButton) const = 0;

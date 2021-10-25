@@ -32,6 +32,15 @@
 
 #include "imgui_internal.h"
 
+constexpr float FONT_SIZE_BASE = 14.0f;
+
+//Apparently, this needs to persist
+const ImWchar GLYPH_RANGE[] = {
+	0x0020, 0x00FF, // Basic Latin + Latin Supplement
+	0x207B, 0x207B, // superscript minus
+	0,
+};
+
 gui::backend::ImGuiWinD3D10::ImGuiWinD3D10()
 {
 	IMGUI_CHECKVERSION();
@@ -118,6 +127,60 @@ gui::Floats<2> gui::backend::ImGuiWinD3D10::toLocal(const Floats<2>& global) con
 	}
 }
 
+void gui::backend::ImGuiWinD3D10::loadFontScale(float scale)
+{
+	float fontSize = (FONT_SIZE_BASE * scale);
+	if (fontSize != m_secondFontScale) {
+		m_secondFontScale = fontSize;
+		m_reloadSecond = true;
+	}
+}
+
+void gui::backend::ImGuiWinD3D10::pushUIScale(float scale)
+{
+	float fontSize = (FONT_SIZE_BASE * scale);
+
+	if (ImGui::Begin("Metrics/Debugger##JGDebug")) {
+		ImGui::Text("Scale %.2f", scale);
+		ImGui::Text("Font size %.0f", fontSize);
+	}
+	ImGui::End();
+
+	ImFont* font = nullptr;
+	if (fontSize == FONT_SIZE_BASE) {
+		font = ImGui::GetIO().Fonts->Fonts[0];
+	}
+	else if (ImGui::GetIO().Fonts->Fonts.Size > 1 && fontSize == ImGui::GetIO().Fonts->Fonts[1]->FontSize) {
+		font = ImGui::GetIO().Fonts->Fonts[1];
+	}
+	else {
+		//we messed something up!
+	}
+	assert(font);
+
+	ImGui::PushFont(font);
+
+	float relScale = m_uiScale.empty() ? scale : scale / m_uiScale.top();
+	m_uiScale.push(scale);
+
+	//We're leaving out some table and tree vars. And rounding of corners. Fix if we need.
+	ImGuiStyle& style = ImGui::GetStyle();
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { (style.WindowPadding.x * relScale), (style.WindowPadding.y * relScale) });
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, { (style.WindowMinSize.x * relScale), (style.WindowMinSize.y * relScale) });
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { (style.FramePadding.x * relScale), (style.FramePadding.y * relScale) });
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { (style.ItemSpacing.x * relScale), (style.ItemSpacing.y * relScale) });
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, { (style.ItemInnerSpacing.x * relScale), (style.ItemInnerSpacing.y * relScale) });
+	ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, (style.ScrollbarSize * relScale));
+	ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, (style.GrabMinSize * relScale));
+}
+
+void gui::backend::ImGuiWinD3D10::popUIScale()
+{
+	ImGui::PopFont();
+	ImGui::PopStyleVar(7);
+	m_uiScale.pop();
+}
+
 bool gui::backend::ImGuiWinD3D10::isMouseDown(MouseButton btn) const
 {
 	return ImGui::IsMouseDown(guiToImGuiButton(btn));
@@ -127,7 +190,6 @@ gui::Floats<2> gui::backend::ImGuiWinD3D10::getMouseMove() const
 {
 	Floats<2> mousePos = gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos);
 	return toLocal(mousePos - m_lastMousePos);
-	//return { mousePos[0] - m_lastMousePos[0], mousePos[1] - m_lastMousePos[1] };
 }
 
 gui::Floats<2> gui::backend::ImGuiWinD3D10::getMousePosition() const
@@ -161,28 +223,44 @@ void gui::backend::ImGuiWinD3D10::initDX10Window(ID3D10Device* device)
 	ImGui_ImplDX10_Init(device);
 }
 
-bool gui::backend::ImGuiWinD3D10::loadFont()
+bool gui::backend::ImGuiWinD3D10::setDefaultFont()
 {
 	ImFont* font = ImGui::GetIO().Fonts->AddFontDefault();
 	return font != nullptr;
 }
 
-bool gui::backend::ImGuiWinD3D10::loadFont(const std::filesystem::path& path)
+bool gui::backend::ImGuiWinD3D10::setDefaultFont(const std::filesystem::path& path)
 {
-	//Apparently, the range is used later on
-	static const ImWchar range[] = {
-		0x0020, 0x00FF, // Basic Latin + Latin Supplement
-		0x207B, 0x207B, // superscript minus
-		0,
-	};
-	ImFont* font = ImGui::GetIO().Fonts->AddFontFromFileTTF(path.u8string().c_str(), 14.0f, nullptr, range);
+	ImFont* font = ImGui::GetIO().Fonts->AddFontFromFileTTF(path.u8string().c_str(), FONT_SIZE_BASE, nullptr, GLYPH_RANGE);
 
-	return font != nullptr;
+	if (font != nullptr) {
+		m_defaultFontPath = path;
+		return true;
+	}
+	else
+		return false;
 }
+
+void UpdateFontTexture();
 
 void gui::backend::ImGuiWinD3D10::beginFrame()
 {
 	m_lastMousePos = gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos);
+
+	bool rebuild = false;
+	if (m_reloadSecond) {
+		ImFontAtlas* fonts = ImGui::GetIO().Fonts;
+		fonts->Clear();
+		fonts->AddFontFromFileTTF(m_defaultFontPath.u8string().c_str(), FONT_SIZE_BASE, nullptr, GLYPH_RANGE);
+		fonts->AddFontFromFileTTF(m_defaultFontPath.u8string().c_str(), m_secondFontScale, nullptr, GLYPH_RANGE);
+		rebuild = true;
+		m_reloadSecond = false;
+	}
+	if (rebuild) {
+		//ImGui::GetIO().Fonts->Build();//redundant? imgui.h says it's called by GetTexData*
+		UpdateFontTexture();
+	}
+
 	ImGui_ImplDX10_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
@@ -255,3 +333,101 @@ void gui::backend::ImGuiWinD3D10::setStyleColours()
 	style.Colors[ImGuiCol_HeaderActive] = blueActive;
 }
 
+
+//ImGui backend addition
+
+// DirectX data
+struct ImplDX10_Data
+{
+	ID3D10Device* pd3dDevice;
+	IDXGIFactory* pFactory;
+	ID3D10Buffer* pVB;
+	ID3D10Buffer* pIB;
+	ID3D10VertexShader* pVertexShader;
+	ID3D10InputLayout* pInputLayout;
+	ID3D10Buffer* pVertexConstantBuffer;
+	ID3D10PixelShader* pPixelShader;
+	ID3D10SamplerState* pFontSampler;
+	ID3D10ShaderResourceView* pFontTextureView;
+	ID3D10RasterizerState* pRasterizerState;
+	ID3D10BlendState* pBlendState;
+	ID3D10DepthStencilState* pDepthStencilState;
+	int                         VertexBufferSize;
+	int                         IndexBufferSize;
+
+	ImplDX10_Data() = delete;
+};
+
+void UpdateFontTexture()
+{
+	// Build texture atlas
+	ImGuiIO& io = ImGui::GetIO();
+	ImplDX10_Data* bd = ImGui::GetCurrentContext() ? reinterpret_cast<ImplDX10_Data*>(io.BackendRendererUserData) : nullptr;
+	if (!bd)
+		throw std::runtime_error("No context or renderer data");
+
+	if (bd->pFontSampler) {
+		bd->pFontSampler->Release();
+		bd->pFontSampler = nullptr;
+	}
+	if (bd->pFontTextureView) {
+		bd->pFontTextureView->Release(); 
+		bd->pFontTextureView = nullptr; 
+		ImGui::GetIO().Fonts->SetTexID(nullptr);
+	}
+
+	unsigned char* pixels;
+	int width, height;
+	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
+
+	// Upload texture to graphics system
+	{
+		D3D10_TEXTURE2D_DESC desc;
+		ZeroMemory(&desc, sizeof(desc));
+		desc.Width = width;
+		desc.Height = height;
+		desc.MipLevels = 1;
+		desc.ArraySize = 1;
+		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		desc.SampleDesc.Count = 1;
+		desc.Usage = D3D10_USAGE_DEFAULT;
+		desc.BindFlags = D3D10_BIND_SHADER_RESOURCE;
+		desc.CPUAccessFlags = 0;
+
+		ID3D10Texture2D* pTexture = NULL;
+		D3D10_SUBRESOURCE_DATA subResource;
+		subResource.pSysMem = pixels;
+		subResource.SysMemPitch = desc.Width * 4;
+		subResource.SysMemSlicePitch = 0;
+		bd->pd3dDevice->CreateTexture2D(&desc, &subResource, &pTexture);
+		IM_ASSERT(pTexture != NULL);
+
+		// Create texture view
+		D3D10_SHADER_RESOURCE_VIEW_DESC srv_desc;
+		ZeroMemory(&srv_desc, sizeof(srv_desc));
+		srv_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		srv_desc.ViewDimension = D3D10_SRV_DIMENSION_TEXTURE2D;
+		srv_desc.Texture2D.MipLevels = desc.MipLevels;
+		srv_desc.Texture2D.MostDetailedMip = 0;
+		bd->pd3dDevice->CreateShaderResourceView(pTexture, &srv_desc, &bd->pFontTextureView);
+		pTexture->Release();
+	}
+
+	// Store our identifier
+	io.Fonts->SetTexID((ImTextureID)bd->pFontTextureView);
+
+	// Create texture sampler
+	{
+		D3D10_SAMPLER_DESC desc;
+		ZeroMemory(&desc, sizeof(desc));
+		desc.Filter = D3D10_FILTER_MIN_MAG_MIP_LINEAR;
+		desc.AddressU = D3D10_TEXTURE_ADDRESS_WRAP;
+		desc.AddressV = D3D10_TEXTURE_ADDRESS_WRAP;
+		desc.AddressW = D3D10_TEXTURE_ADDRESS_WRAP;
+		desc.MipLODBias = 0.f;
+		desc.ComparisonFunc = D3D10_COMPARISON_ALWAYS;
+		desc.MinLOD = 0.f;
+		desc.MaxLOD = 0.f;
+		bd->pd3dDevice->CreateSamplerState(&desc, &bd->pFontSampler);
+	}
+}

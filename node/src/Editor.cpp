@@ -31,8 +31,8 @@
 constexpr const char* DOC_FILE_NAME = "block types.txt";
 
 constexpr float SCALE_BASE = 1.1f;
-constexpr float SCALE_MIN = 0.1f;
-constexpr float SCALE_MAX = 4.0f;
+constexpr float SCALE_MIN = 0.23939f;
+constexpr float SCALE_MAX = 4.17725f;
 
 class HelpWindow final : public gui::Window
 {
@@ -247,6 +247,12 @@ void node::Editor::NodeRoot::frame(gui::FrameDrawer& fd)
 		drawer.line(fd.toGlobal({ 0.0f, y }), fd.toGlobal({ parentSize[0], y }), { 0.3f, 0.3f, 0.3f, 1.0f });
 	drawer.end();
 
+	float parentGlobalScale = fd.getCurrentScale()[0];//assume isotropic scale
+	util::CallWrapper pop;
+	if (float ourScale = parentGlobalScale * m_scale[0]; ourScale != 1.0f) {
+		fd.pushUIScale(ourScale);
+		pop = util::CallWrapper(std::bind(&gui::FrameDrawer::popUIScale, &fd));
+	}
 	ConnectionHandler::frame(fd);
 
 	//zoom
@@ -259,6 +265,7 @@ void node::Editor::NodeRoot::frame(gui::FrameDrawer& fd)
 			gui::Floats<2> P = fd.getMousePosition();
 			m_translation = P - (P - m_translation) * newScale / m_scale[0];
 			m_scale = { newScale, newScale };
+			fd.loadFontScale(newScale * parentGlobalScale);
 		}
 	}
 }

@@ -152,7 +152,8 @@ void gui::SimpleHandles::frame(FrameDrawer& fd)
 
 	using namespace ImGui;
 
-	float buttonSize = m_size + 10.0f;
+	float size = m_handleSize * fd.getCurrentScale()[0] * m_scale[0];
+	float buttonSize = m_handleSize * s_buttonMult;
 
 	ImVec2 pos = GetCursorPos();//we should probably reset this when we're done
 
@@ -204,8 +205,8 @@ void gui::SimpleHandles::frame(FrameDrawer& fd)
 			ImU32 col = highlight ? ColorConvertFloat4ToU32({ 1.0f, 1.0f, 1.0f, 1.0f }) : ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_Text]);
 
 			GetWindowDrawList()->AddRectFilled(
-				{ p.x - m_size / 2.0f, p.y - m_size / 2.0f },
-				{ p.x + m_size / 2.0f, p.y + m_size / 2.0f },
+				{ p.x - size / 2.0f, p.y - size / 2.0f },
+				{ p.x + size / 2.0f, p.y + size / 2.0f },
 				col);
 		}
 	}

@@ -45,9 +45,9 @@ app::VFXEditor::VFXEditor(HINSTANCE hInstance, int nCmdShow) :
         //However, finding a failsafe method seems unreasonably complicated at this point.
         //Try a couple of fonts and fall back to the built-in if they can't be loaded.
         std::filesystem::path path(wpath, std::filesystem::path::native_format);
-        if (!m_guiEngine.loadFont(path / "calibri.ttf"))
-            if (!m_guiEngine.loadFont(path / "arial.ttf"))
-                if (!m_guiEngine.loadFont())
+        if (!m_guiEngine.setDefaultFont(path / "calibri.ttf"))
+            if (!m_guiEngine.setDefaultFont(path / "arial.ttf"))
+                if (!m_guiEngine.setDefaultFont())
                     throw std::runtime_error("Failed to load any fonts.");
     }
     CoTaskMemFree(wpath);

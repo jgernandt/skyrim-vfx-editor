@@ -28,9 +28,11 @@ void gui::Handle::frame(FrameDrawer& fd)
 	using namespace ImGui;
 
 	ImVec2 start_pos = GetCursorPos();//we should probably reset this when we're done
-	SetCursorPos(gui_type_conversion<ImVec2>::from(m_translation));
 
-	InvisibleButton(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(m_size), ImGuiButtonFlags_MouseButtonLeft);
+	Floats<2> scale = fd.getCurrentScale();
+	SetCursorPos(gui_type_conversion<ImVec2>::from(static_cast<Floats<2>>(m_translation * scale)));
+
+	InvisibleButton(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(static_cast<Floats<2>>(m_size * scale * m_scale)), ImGuiButtonFlags_MouseButtonLeft);
 
 	if (IsItemActivated())
 		onClick(MouseButton::LEFT);
@@ -38,7 +40,7 @@ void gui::Handle::frame(FrameDrawer& fd)
 	if (IsItemActive()) {
 		m_active = true;
 		if (GetIO().MouseDelta.x != 0.0f || GetIO().MouseDelta.y != 0.0f)
-			onMove({ GetIO().MouseDelta.x, GetIO().MouseDelta.y });
+			onMove({ GetIO().MouseDelta.x / scale[0], GetIO().MouseDelta.y / scale[1] });
 	}
 
 	if (IsItemDeactivated()) {

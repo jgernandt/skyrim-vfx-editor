@@ -27,6 +27,7 @@
 #include "IComponent.h"
 
 struct ID3D10Device;
+struct ImFont;
 
 namespace gui
 {
@@ -52,6 +53,10 @@ namespace gui
 			virtual Floats<2> toGlobal(const Floats<2>& local) const override;
 			virtual Floats<2> toLocal(const Floats<2>& global) const override;
 
+			virtual void loadFontScale(float scale) override;
+			virtual void pushUIScale(float scale) override;
+			virtual void popUIScale() override;
+
 			virtual bool isMouseDown(MouseButton btn) const override;
 			virtual Floats<2> getMouseMove() const override;
 			virtual Floats<2> getMousePosition() const override;
@@ -62,8 +67,8 @@ namespace gui
 			void initWin32Window(HWND hwnd);
 			void initDX10Window(ID3D10Device* device);
 
-			bool loadFont();
-			bool loadFont(const std::filesystem::path& path);
+			bool setDefaultFont();
+			bool setDefaultFont(const std::filesystem::path& path);
 
 			void beginFrame();
 			void endFrame();
@@ -77,7 +82,12 @@ namespace gui
 		private:
 			std::stack<Floats<4>> m_clipArea;
 			std::stack<Floats<4>> m_transform;
+			std::stack<float> m_uiScale;
 			Floats<2> m_lastMousePos{ 0.0f, 0.0f };
+
+			std::filesystem::path m_defaultFontPath;
+			float m_secondFontScale{ 1.0f };
+			bool m_reloadSecond{ false };
 
 			Timer<long long, std::micro> m_timer;
 			int m_frameCount{ 0 };

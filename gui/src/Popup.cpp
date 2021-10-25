@@ -37,7 +37,8 @@ void gui::PopupBase::open()
 void gui::Popup::frame(FrameDrawer& fd)
 {
 	if (m_isOpen) {
-		ImGui::SetNextWindowSize({ m_size[0], m_size[1] });
+		Floats<2> size = m_size * fd.getCurrentScale();
+		ImGui::SetNextWindowSize({ std::floorf(size[0]), std::floorf(size[1]) });
 
 		if (ImGui::BeginPopup(m_id[0].c_str())) {
 			util::CallWrapper end(&ImGui::EndPopup);

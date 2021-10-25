@@ -25,7 +25,7 @@
 
 gui::Window::Window(const std::string& title) :
 	m_title(title), 
-	m_style { ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse }
+	m_style { ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar }
 {
 	if (ImGui::GetCurrentContext()) {
 		m_colours[COL_TITLE] = gui_type_conversion<gui::ColRGBA>::from(ImGui::GetStyle().Colors[ImGuiCol_TitleBg]);
@@ -56,7 +56,9 @@ void gui::Window::frame(FrameDrawer& fd)
 
 	using namespace ImGui;
 
-	SetNextWindowSize(gui_type_conversion<ImVec2>::from(m_size));
+	Floats<2> scale = fd.getCurrentScale();
+	Floats<2> size = m_size * scale;
+	SetNextWindowSize({ std::floorf(size[0]), std::floorf(size[1]) });
 
 	//Position
 	//ImGui handles dragging windows during Begin/EndFrame. We need to pull out the current position of 
@@ -66,7 +68,7 @@ void gui::Window::frame(FrameDrawer& fd)
 	if (ImGuiWindow* window = FindWindowByName(m_title[0].c_str())) {
 		//Floats<2> currentGlobal = gui_type_conversion<Floats<2>>::from(window->Pos);//not accounting for new ancestor transforms
 		//Floats<2> translation_from_dragging = currentGlobal - m_lastGlobalPos;//in global scale
-		m_translation += (gui_type_conversion<Floats<2>>::from(window->Pos) - m_lastGlobalPos) / fd.getCurrentScale();
+		m_translation += (gui_type_conversion<Floats<2>>::from(window->Pos) - m_lastGlobalPos) / scale;
 	}
 
 	Floats<2> pos = fd.toGlobal(m_translation);
@@ -95,6 +97,8 @@ void gui::Window::frame(FrameDrawer& fd)
 
 		PushItemWidth(-std::numeric_limits<float>::min());
 		util::CallWrapper popItemWidth(&PopItemWidth);
+
+		//SetWindowFontScale(scale[0]);
 
 		m_lastGlobalPos = gui_type_conversion<Floats<2>>::from(GetWindowPos());
 

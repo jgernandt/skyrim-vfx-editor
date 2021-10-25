@@ -100,6 +100,7 @@ namespace gui
 	private:
 		const PlotArea& m_area;//we need some sensible way to limit test
 
-		float m_size{ 5.0f };
+		float m_handleSize{ 5.0f };
+		constexpr static float s_buttonMult{ 3.0f };//invisible button size = handle size x this
 	};
 }

@@ -25,7 +25,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"//for ImVec operators and GImGui
 
-constexpr float g_connectorWidth = 15.0f;
+constexpr float CONNECTOR_RADIUS = 4.0f;
 
 class HandlerFinder final :
 	public gui::AscendingVisitor
@@ -83,9 +83,13 @@ void gui::Connector::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 
+	Floats<2> scale = fd.getCurrentScale();
+
 	ImVec2 cursorPos = GetCursorPos();
 	float frameH = ImGui::GetFrameHeight();
-	Floats<2> hint = { cursorPos.x, cursorPos.y + 0.5f * frameH };
+	//The imgui cursor position is expressed in global scale
+	Floats<2> hint = { cursorPos.x / scale[0], (cursorPos.y + 0.5f * frameH) / scale[1] };
+	//Floats<2> hint = { cursorPos.x, cursorPos.y + 0.5f * frameH };
 	m_translation = m_ctlr ? m_ctlr->place(hint) : hint;
 	ImVec2 imPos = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation));
 
@@ -97,13 +101,12 @@ void gui::Connector::frame(FrameDrawer& fd)
 	dl->PushClipRect(bb.Min, bb.Max);
 	//dl->AddRectFilled(bb.Min, bb.Max, 0x60ffffff);
 
-	const float radius = 4.0f;
-	dl->AddCircleFilled(imPos, radius, 0xffffffff);
-	dl->AddCircle(imPos, radius, 0xff000000);
+	dl->AddCircleFilled(imPos, CONNECTOR_RADIUS * scale[0], 0xffffffff);
+	dl->AddCircle(imPos, CONNECTOR_RADIUS * scale[0], 0xff000000, 0, scale[0]);
 
 	//highlight (could be a separate decorator)
 	if (ConnectionHandler* handler = getHandler(); handler && handler->query(this))
-		dl->AddCircle(imPos, radius * 1.5f, { 0xff00d7ff }, 0, 2.0f);
+		dl->AddCircle(imPos, CONNECTOR_RADIUS * scale[0] * 1.5f, { 0xff00d7ff }, 0, 2.0f * scale[0]);
 
 	//Get the imgui item id for this connector (using our address as name)
 	ImGuiContext& g = *GImGui;
@@ -197,7 +200,7 @@ void gui::Connector::frame(FrameDrawer& fd)
 
 gui::Floats<2> gui::Connector::getSizeHint() const
 {
-	return { g_connectorWidth, ImGui::GetFrameHeight() };
+	return { ImGui::GetFrameHeight(), ImGui::GetFrameHeight() };
 }
 
 void gui::Connector::onRelease()
