@@ -51,15 +51,15 @@ void node::Constructor::extractNodes(gui::ConnectionHandler& target)
 	for (auto&& item : m_connections) {
 		gui::Connector* c1 = nullptr;
 		if (auto it = m_objectMap.find(item.object1); it != m_objectMap.end()) {
-			if (it->second)
-				if (Field* f = it->second->getField(item.field1))
+			if (it->second >= 0)
+				if (Field* f = m_nodes[it->second]->getField(item.field1))
 					c1 = f->connector;
 		}
 
 		gui::Connector* c2 = nullptr;
 		if (auto it = m_objectMap.find(item.object2); it != m_objectMap.end()) {
-			if (it->second)
-				if (Field* f = it->second->getField(item.field2))
+			if (it->second >= 0)
+				if (Field* f = m_nodes[it->second]->getField(item.field2))
 					c2 = f->connector;
 		}
 
@@ -97,7 +97,7 @@ void node::Constructor::EP_process(nif::native::NiAVObject* obj)
 				node = std::make_unique<DummyAVObject>(std::make_unique<nif::NiAVObject>(obj));
 			}
 
-			m_objectMap.insert({ obj, node.get() });
+			m_objectMap.insert({ obj, m_nodes.size() });
 			m_nodes.push_back(std::move(node));
 
 			for (auto&& data : obj->GetExtraData()) {
@@ -171,7 +171,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 	bool discarded = false;
 
 	if (Niflib::NiPSysData* d = Niflib::DynamicCast<Niflib::NiPSysData>(obj->GetData())) {
-		if (auto result = m_objectMap.insert({ d, nullptr }); !result.second) {
+		if (auto result = m_objectMap.insert({ d, -1 }); !result.second) {
 			//File error: This data is used by multiple objects
 			std::string s = obj->GetName();
 			s.append(" shares its data with another object");
@@ -183,7 +183,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 		incomplete = true;
 
 	if (NiAlphaProperty* a = obj->GetAlphaProperty()) {
-		if (auto result = m_objectMap.insert({ a, nullptr }); !result.second) {
+		if (auto result = m_objectMap.insert({ a, -1 }); !result.second) {
 			//This is not an error, but will be a problem for us since we're not exposing this alpha property. We should clone it.
 			// 
 			//NiAlphaPropertyRef clone = StaticCast<NiAlphaProperty>(a->Clone(s_version, s_userVersion));
@@ -212,7 +212,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 	for (auto&& c : obj->GetControllers()) {
 		if (Niflib::NiPSysUpdateCtlr* u = Niflib::DynamicCast<Niflib::NiPSysUpdateCtlr>(c)) {
 			if (!ctlr) {
-				if (auto result = m_objectMap.insert({ u, nullptr }); !result.second) {
+				if (auto result = m_objectMap.insert({ u, -1 }); !result.second) {
 					//File error: Controller is used by multiple objects
 					std::string s = obj->GetName();
 					s.append(" shares its update controller with another object");
@@ -256,7 +256,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 	for (auto it = mods.begin(); it != mods.end(); ++it) {
 		if (Niflib::NiPSysAgeDeathModifier* derived = Niflib::DynamicCast<Niflib::NiPSysAgeDeathModifier>(*it)) {
 			if (!adm) {
-				if (auto result = m_objectMap.insert({ *it, nullptr }); !result.second) {
+				if (auto result = m_objectMap.insert({ *it, -1 }); !result.second) {
 					//File error: Modifier is used by multiple objects
 					std::string s = obj->GetName() + ":" + (*it)->GetName() + " is used by multiple objects";
 					m_warnings.push_back(std::move(s));
@@ -272,7 +272,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 		}
 		else if (Niflib::NiPSysPositionModifier* derived = Niflib::DynamicCast<Niflib::NiPSysPositionModifier>(*it)) {
 			if (!pm) {
-				if (auto result = m_objectMap.insert({ *it, nullptr }); !result.second) {
+				if (auto result = m_objectMap.insert({ *it, -1 }); !result.second) {
 					//File error: Modifier is used by multiple objects
 					std::string s = obj->GetName() + ":" + (*it)->GetName() + " is used by multiple objects";
 					m_warnings.push_back(std::move(s));
@@ -288,7 +288,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 		}
 		else if (Niflib::NiPSysBoundUpdateModifier* derived = Niflib::DynamicCast<Niflib::NiPSysBoundUpdateModifier>(*it)) {
 			if (!bum) {
-				if (auto result = m_objectMap.insert({ *it, nullptr }); !result.second) {
+				if (auto result = m_objectMap.insert({ *it, -1 }); !result.second) {
 					//File error: Modifier is used by multiple objects
 					std::string s = obj->GetName() + ":" + (*it)->GetName() + " is used by multiple objects";
 					m_warnings.push_back(std::move(s));
@@ -363,7 +363,7 @@ void node::Constructor::EP_process(nif::native::NiExtraData* obj)
 			if (!node)
 				node = std::make_unique<DummyExtraData>(std::make_unique<nif::NiExtraData>(obj));
 
-			m_objectMap.insert({ obj, node.get() });
+			m_objectMap.insert({ obj, m_nodes.size() });
 			m_nodes.push_back(std::move(node));
 		}
 		//else ignore
@@ -416,7 +416,7 @@ void node::Constructor::EP_process(nif::native::NiPSysModifier* obj, const CtlrL
 				}
 			}
 
-			m_objectMap.insert({ obj, node.get() });
+			m_objectMap.insert({ obj, m_nodes.size() });
 			m_nodes.push_back(std::move(node));
 		}
 		else {
@@ -586,7 +586,7 @@ void node::Constructor::EP_process(nif::native::BSEffectShaderProperty* obj)
 		if (auto it = m_objectMap.find(obj); it == m_objectMap.end()) {
 			auto node = std::make_unique<EffectShader>(std::make_unique<nif::BSEffectShaderProperty>(obj));
 
-			m_objectMap.insert({ obj, node.get() });
+			m_objectMap.insert({ obj, m_nodes.size() });
 			m_nodes.push_back(std::move(node));
 		}
 	}
