@@ -142,6 +142,7 @@ void app::Document::setFilePath(const std::filesystem::path& path)
 {
 	m_targetPath = path;
 	if (m_nodeEditor)
+		//Or should we just do this ourselves? What's the point of having the editor do it?
 		m_nodeEditor->setProjectName(path.filename().u8string());
 }
 

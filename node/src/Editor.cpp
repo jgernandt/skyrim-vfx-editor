@@ -108,11 +108,20 @@ node::Editor::Editor(const gui::Floats<2>& size, const nif::File& file) : m_niVe
 			main->addChild(workArea->createAddMenu());
 			addChild(std::move(main));
 
-			//Transform the work area to some nice initial position. We assume there is a Root at (0, 0).
-			workArea->setTranslation({ (m_size[0] - Root::WIDTH) / 8.0f, (m_size[1] - Root::HEIGHT) / 2.0f });
+			for (auto&& child : workArea->getChildren()) {
+				if (Root* root = dynamic_cast<Root*>(child.get()))
+					m_rootNode = root;
+			}
+
+			if (m_rootNode) {
+				//Transform the work area to some nice initial position
+				gui::Floats<2> pos = m_rootNode->getTranslation();
+				workArea->setTranslation({ (m_size[0] - Root::WIDTH) / 8.0f - pos[0], (m_size[1] - Root::HEIGHT) / 2.0f - pos[1] });
+			}
 		}
 		catch (const std::exception& e) {
 			clearChildren();
+			m_rootNode = nullptr;
 			auto workArea = newChild<NodeRoot>();
 			newChild<gui::MessageBox>("Error", e.what());
 
@@ -138,37 +147,13 @@ node::Editor::~Editor()
 
 void node::Editor::frame(gui::FrameDrawer& fd)
 {
-	//pan
-	/*if (fd.isMouseDown(gui::MouseButton::MIDDLE)) {
-		m_workAreaT += fd.getMouseMove();
-	}
-
-	gui::Drawer drawer;//do we just use the FrameDrawer instead?
-	drawer.setTargetLayer(gui::Layer::BACKGROUND);
-	drawer.begin();
-	//Rectangle should always go from (0, 0) to size (actually from fd.toGlobal(m_translation) to fd.toGlobal(m_translation + m_scale * m_size))
-	gui::Floats<2> rectTL = fd.toGlobal(m_translation);
-	gui::Floats<2> rectBR = fd.toGlobal(m_translation + m_scale * m_size);
-	drawer.rectangle(rectTL, rectBR, { 0.2f, 0.2f, 0.2f, 1.0f });
-	//But if we add panning, the grid lines might have a different origin (and scale, if we add zoom):
-	//Work-space coords:
-	gui::Floats<2> tl = m_workAreaT;
-	gui::Floats<2> br = tl + m_size / m_workAreaS;
-	//gui::Floats<2> br{ tl[0] + m_size[0] / m_workAreaS[0], tl[1] + m_size[1] / m_workAreaS[1] };
-	float step = 64.0f;
-	for (float x = std::fmodf(tl[0], step); x < br[0]; x += step)
-		drawer.line({ rectTL[0] + x, rectTL[1] }, { rectTL[0] + x, rectBR[1] }, { 0.3f, 0.3f, 0.3f, 1.0f });
-	for (float y = std::fmodf(tl[1], step); y < br[1]; y += step)
-		drawer.line({ rectTL[0], rectTL[1] + y }, { rectBR[0], rectTL[1] + y }, { 0.3f, 0.3f, 0.3f, 1.0f });
-	drawer.end();*/
-
 	Composite::frame(fd);
 }
 
 void node::Editor::setProjectName(const std::string& name)
 {
-	if (Root* root = findRootNode())
-		root->object().name().set(name);
+	if (m_rootNode)
+		m_rootNode->object().name().set(name);
 }
 
 std::unique_ptr<gui::IComponent> node::Editor::NodeRoot::createAddMenu()
@@ -199,15 +184,6 @@ std::unique_ptr<gui::IComponent> node::Editor::NodeRoot::createAddMenu()
 	extra->newChild<gui::MenuItem>("Weapon type", std::bind(&NodeRoot::addNode<WeaponTypeData>, this));
 
 	return root;
-}
-
-node::Root* node::Editor::findRootNode() const
-{
-	for (auto&& child : getChildren()) {
-		if (Root* root = dynamic_cast<Root*>(child.get()))
-			return root;
-	}
-	return nullptr;
 }
 
 HelpWindow::HelpWindow()

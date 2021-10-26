@@ -39,11 +39,6 @@ namespace node
 		void setProjectName(const std::string& name);
 
 	private:
-		//static std::unique_ptr<IComponent> createAddMenu(IComponent& parent);
-		Root* findRootNode() const;
-
-
-	private:
 		class NodeRoot final : public gui::ConnectionHandler
 		{
 		public:
@@ -55,6 +50,7 @@ namespace node
 		};
 
 		const nif::File::Version m_niVersion;
+		Root* m_rootNode{ nullptr };
 	};
 }
 
