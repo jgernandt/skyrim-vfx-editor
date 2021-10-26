@@ -293,7 +293,7 @@ node::ParticleSystem::ParticleSystem(
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_Geom);
 	setColour(COL_TITLE_ACTIVE, TitleCol_GeomActive);
-	setSize({ 160.0, 0.0f });
+	setSize({ WIDTH, HEIGHT });
 	setTitle("Particle system");
 
 	newField<NameField>(NAME, *this);

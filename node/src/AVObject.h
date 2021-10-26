@@ -110,5 +110,7 @@ namespace node
 	public:
 		DummyAVObject(std::unique_ptr<nif::NiAVObject>&& obj);
 
+		constexpr static float WIDTH = 150.0f;
+		constexpr static float HEIGHT = 105.0f;
 	};
 }

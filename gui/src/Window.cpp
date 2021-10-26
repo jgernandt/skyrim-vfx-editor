@@ -98,14 +98,9 @@ void gui::Window::frame(FrameDrawer& fd)
 		PushItemWidth(-std::numeric_limits<float>::min());
 		util::CallWrapper popItemWidth(&PopItemWidth);
 
-		//SetWindowFontScale(scale[0]);
-
 		m_lastGlobalPos = gui_type_conversion<Floats<2>>::from(GetWindowPos());
 
 		Composite::frame(fd);
-
-		//Doesn't give me the actual size?
-		//m_size = gui_type_conversion<Floats<2>>::from(GetWindowSize());
 	}
 	else {
 		//When do we get here? I thought it was when window is collapsed, but no...

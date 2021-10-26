@@ -33,6 +33,9 @@ namespace node
 		constexpr static const char* ANGLE = "Initial";
 		constexpr static const char* SPEED = "Speed";
 
+		constexpr static float WIDTH = 160.0f;
+		constexpr static float HEIGHT = 160.0f;
+
 	private:
 		class AngleField;
 		class SpeedField;

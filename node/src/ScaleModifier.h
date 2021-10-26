@@ -27,8 +27,11 @@ namespace node
 		ScaleModifier();
 		ScaleModifier(std::unique_ptr<nif::BSPSysScaleModifier>&& obj);
 
-	public:
 		virtual nif::BSPSysScaleModifier& object() override;
+
+	public:
+		constexpr static float WIDTH = 200.0f;
+		constexpr static float HEIGHT = 320.0f;
 
 	private:
 		class ScaleField;

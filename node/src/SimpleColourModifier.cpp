@@ -441,7 +441,7 @@ node::SimpleColourModifier::SimpleColourModifier() :
 node::SimpleColourModifier::SimpleColourModifier(std::unique_ptr<nif::BSPSysSimpleColorModifier>&& obj) :
 	Modifier(std::move(obj))
 {
-	setSize({ 175.0f, 0.0f });
+	setSize({ WIDTH, HEIGHT });
 	setTitle("Colour modifier");
 
 	addTargetField(std::make_shared<ReqDevice<Requirement::COLOUR>>(*this));

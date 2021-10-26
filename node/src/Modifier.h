@@ -190,5 +190,8 @@ namespace node
 	{
 	public:
 		DummyModifier(std::unique_ptr<nif::NiPSysModifier>&& obj);
+
+		constexpr static float WIDTH = 150.0f;
+		constexpr static float HEIGHT = 80.0f;
 	};
 }

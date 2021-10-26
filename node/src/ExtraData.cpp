@@ -38,7 +38,6 @@ node::ExtraData::ExtraData(std::unique_ptr<nif::NiExtraData>&& obj) : NodeBase(s
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_XData);
 	setColour(COL_TITLE_ACTIVE, TitleCol_XDataActive);
-	setSize({ 150.0f, 0.0f });
 
 	newField<TargetField>(TARGET, *this);
 }
@@ -68,6 +67,7 @@ node::StringData::StringData(std::unique_ptr<nif::NiStringExtraData>&& obj) :
 	StringDataShared(std::move(obj))
 {
 	setTitle("String data");
+	setSize({ WIDTH, HEIGHT });
 
 	newField<NameField>(NAME, *this);
 
@@ -88,6 +88,7 @@ node::WeaponTypeData::WeaponTypeData(std::unique_ptr<nif::NiStringExtraData>&& o
 	StringDataShared(std::move(obj))
 {
 	setTitle("Weapon type data");
+	setSize({ WIDTH, HEIGHT });
 
 	object().name().set("Prn");
 
@@ -115,6 +116,7 @@ node::DummyExtraData::DummyExtraData(std::unique_ptr<nif::NiExtraData>&& obj) :
 	ExtraData(std::move(obj))
 {
 	setTitle("Extra data");
+	setSize({ WIDTH, HEIGHT });
 	newChild<gui::Separator>();
 	newChild<gui::FramePadded>(std::make_unique<gui::Text>(object().name().get()));
 }

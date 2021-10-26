@@ -183,7 +183,7 @@ node::EffectShader::EffectShader(std::unique_ptr<nif::BSEffectShaderProperty>&& 
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_Shader);
 	setColour(COL_TITLE_ACTIVE, TitleCol_ShaderActive);
-	setSize({ 170.0f, 0.0f });
+	setSize({ WIDTH, HEIGHT });
 	setTitle("Effect shader");
 
 	newField<GeometryField>(GEOMETRY, *this);

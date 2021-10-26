@@ -254,7 +254,7 @@ node::ScaleModifier::ScaleModifier() :
 node::ScaleModifier::ScaleModifier(std::unique_ptr<nif::BSPSysScaleModifier>&& obj) :
 	Modifier(std::move(obj))
 {
-	setSize({ 200.0f, 0.0f });
+	setSize({ WIDTH, HEIGHT });
 	setTitle("Scale modifier");
 
 	addTargetField(std::make_shared<Device>(*this));

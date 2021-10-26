@@ -42,6 +42,9 @@ namespace node
 		constexpr static const char* PALETTE_TEXTURE = "PaletteTexture";
 		constexpr static const char* SUBTEXTURES = "Subtextures";
 
+		constexpr static float WIDTH = 170.0f;
+		constexpr static float HEIGHT = 250.0f;
+
 	private:
 		class GeometryField;
 		class ShaderFlagsField1;

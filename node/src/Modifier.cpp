@@ -152,6 +152,6 @@ node::DummyModifier::DummyModifier(std::unique_ptr<nif::NiPSysModifier>&& obj) :
 	Modifier(std::move(obj))
 {
 	setTitle("Unknown modifier");
-	setSize({ 150.0f, 0.0f });
+	setSize({ WIDTH, HEIGHT });
 	addTargetField(std::make_shared<Device>(*this));
 }

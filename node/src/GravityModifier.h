@@ -57,6 +57,9 @@ namespace node
 		constexpr static const char* GRAVITY_AXIS = "Direction";
 		constexpr static const char* WORLD_ALIGNED = "World aligned";
 
+		constexpr static float WIDTH = 150.0f;
+		constexpr static float HEIGHT = 280.0f;
+
 	private:
 		class GravityAxisField;
 		//class WorldAlignedField;
@@ -67,6 +70,9 @@ namespace node
 	public:
 		SphericalForceField();
 		SphericalForceField(std::unique_ptr<nif::NiPSysGravityModifier>&& obj);
+
+		constexpr static float WIDTH = 150.0f;
+		constexpr static float HEIGHT = 210.0f;
 
 	};
 }

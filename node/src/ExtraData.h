@@ -75,6 +75,9 @@ namespace node
 	public:
 		StringData();
 		StringData(std::unique_ptr<nif::NiStringExtraData>&& obj);
+
+		constexpr static float WIDTH = 150.0f;
+		constexpr static float HEIGHT = 140.0f;
 	};
 
 	class WeaponTypeData final : public StringDataShared
@@ -85,11 +88,17 @@ namespace node
 
 	public:
 		constexpr static const char* TYPE = "Type";
+
+		constexpr static float WIDTH = 150.0f;
+		constexpr static float HEIGHT = 90.0f;
 	};
 
 	class DummyExtraData final : public ExtraData
 	{
 	public:
 		DummyExtraData(std::unique_ptr<nif::NiExtraData>&& obj);
+
+		constexpr static float WIDTH = 150.0f;
+		constexpr static float HEIGHT = 90.0f;
 	};
 }
