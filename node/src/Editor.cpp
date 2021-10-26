@@ -71,12 +71,15 @@ void node::Editor::NodeRoot::addNode()
 	}
 }
 
-node::Editor::Editor() : m_niVersion{ nif::File::Version::UNKNOWN }
+node::Editor::Editor(const gui::Floats<2>& size) : m_niVersion{ nif::File::Version::UNKNOWN }
 {
+	m_size = size;
 }
 
-node::Editor::Editor(const nif::File& file) : m_niVersion{ file.getVersion() }
+node::Editor::Editor(const gui::Floats<2>& size, const nif::File& file) : m_niVersion{ file.getVersion() }
 {
+	m_size = size;
+
 	std::unique_ptr<Constructor> c;//assign an object of the right version (there is only one so far)
 
 	if (file.getVersion() == nif::File::Version::SKYRIM || file.getVersion() == nif::File::Version::SKYRIM_SE)
@@ -104,6 +107,9 @@ node::Editor::Editor(const nif::File& file) : m_niVersion{ file.getVersion() }
 			auto main = std::make_unique<gui::MainMenu>("Add");
 			main->addChild(workArea->createAddMenu());
 			addChild(std::move(main));
+
+			//Transform the work area to some nice initial position. We assume there is a Root at (0, 0).
+			workArea->setTranslation({ (m_size[0] - Root::WIDTH) / 8.0f, (m_size[1] - Root::HEIGHT) / 2.0f });
 		}
 		catch (const std::exception& e) {
 			clearChildren();

@@ -18,14 +18,14 @@
 
 #include "pch.h"
 #include "VFXEditor.h"
-#include "Document.h"
 #include "GUIEngine.h"
+#undef min
+#undef max
 #include "Timer.h"
 #include "CallWrapper.h"
 #include "version.h"
-
-#undef min
-#undef max
+#include "AboutBox.h"
+#include "Document.h"
 #include "widgets.h"
 
 app::VFXEditor::VFXEditor(HINSTANCE hInstance, int nCmdShow) : 
@@ -145,11 +145,13 @@ void app::VFXEditor::quit()
 
 void app::VFXEditor::newDoc()
 {
-    m_current.reset();
-    m_current = std::make_unique<Document>();
     RECT rect;
-    if (GetClientRect(m_hwnd, &rect))
-        m_current->setSize({ static_cast<float>(rect.right), static_cast<float>(rect.bottom) });
+    gui::Floats<2> size = GetClientRect(m_hwnd, &rect) ? 
+        gui::Floats<2>{ static_cast<float>(rect.right), static_cast<float>(rect.bottom) } : 
+        gui::Floats<2>{ 0.0f, 0.0f };
+
+    m_current.reset();
+    m_current = std::make_unique<Document>(size);
 }
 void app::VFXEditor::open()
 {
@@ -173,11 +175,15 @@ void app::VFXEditor::open()
         PWSTR wpath;
         HRESULT res = item->GetDisplayName(SIGDN_FILESYSPATH, &wpath);
         if (SUCCEEDED(res)) {
-            m_current.reset();
-            m_current = std::make_unique<Document>(std::filesystem::path(wpath, std::filesystem::path::native_format));
+
             RECT rect;
-            if (GetClientRect(m_hwnd, &rect))
-                m_current->setSize({ static_cast<float>(rect.right), static_cast<float>(rect.bottom) });
+            gui::Floats<2> size = GetClientRect(m_hwnd, &rect) ?
+                gui::Floats<2>{ static_cast<float>(rect.right), static_cast<float>(rect.bottom) } :
+                gui::Floats<2>{ 0.0f, 0.0f };
+
+            m_current.reset();
+            m_current = std::make_unique<Document>(size, std::filesystem::path(wpath, std::filesystem::path::native_format));
+
             CoTaskMemFree(wpath);
         }
     }

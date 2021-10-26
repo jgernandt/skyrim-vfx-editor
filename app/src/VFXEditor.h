@@ -23,10 +23,10 @@
 #include "BaseWindow.h"
 #include "GUIEngine.h"
 #include "Menu.h"
-#include "AboutBox.h"
 
 namespace app
 {
+	class AboutBox;
 	class Document;
 
 	class VFXEditor final :

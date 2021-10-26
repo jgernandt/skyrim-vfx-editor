@@ -30,8 +30,8 @@ namespace node
 		public gui::Composite
 	{
 	public:
-		Editor();
-		Editor(const nif::File& file);
+		Editor(const gui::Floats<2>& size);
+		Editor(const gui::Floats<2>& size, const nif::File& file);
 		~Editor();
 
 		virtual void frame(gui::FrameDrawer& fd) override;

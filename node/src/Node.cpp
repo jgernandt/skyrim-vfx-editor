@@ -39,7 +39,6 @@ node::NodeShared::NodeShared(std::unique_ptr<nif::NiNode>&& obj) : AVObject(std:
 {
 	setColour(COL_TITLE, TitleCol_Node);
 	setColour(COL_TITLE_ACTIVE, TitleCol_NodeActive);
-	setSize({ 150.0f, 0.0f });
 }
 
 nif::NiNode& node::NodeShared::object()
@@ -54,6 +53,7 @@ node::Node::Node(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj)
 {
 	setClosable(true);
 	setTitle("Node");
+	setSize({ WIDTH, HEIGHT });
 
 	newField<NameField>(NAME, *this);
 	newField<ExtraDataField>(EXTRA_DATA, *this);
@@ -70,6 +70,7 @@ node::Root::Root() : Root(std::make_unique<nif::BSFadeNode>()) {}
 node::Root::Root(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj))
 {
 	setTitle("Root");
+	setSize({ WIDTH, HEIGHT });
 
 	struct NameField : Field
 	{
