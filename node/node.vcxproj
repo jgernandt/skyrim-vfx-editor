@@ -34,6 +34,7 @@
     <ClInclude Include="src\nodes.h" />
     <ClInclude Include="src\node_concepts.h" />
     <ClInclude Include="src\ParticleSystem.h" />
+    <ClInclude Include="src\Positioner.h" />
     <ClInclude Include="src\RotationModifier.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\node_traits.h" />
@@ -67,6 +68,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\Positioner.cpp" />
     <ClCompile Include="src\RotationModifier.cpp" />
     <ClCompile Include="src\ScaleModifier.cpp" />
     <ClCompile Include="src\Shaders.cpp" />
