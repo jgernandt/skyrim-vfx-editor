@@ -165,7 +165,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\LBFGSpp\include; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -184,7 +184,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\LBFGSpp\include; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -204,7 +204,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\LBFGSpp\include; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -223,7 +223,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\LBFGSpp\include; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>

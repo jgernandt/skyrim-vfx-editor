@@ -30,6 +30,9 @@
     <ClInclude Include="src\Angles.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Optimisation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Rotation.cpp">
@@ -39,6 +42,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Optimisation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

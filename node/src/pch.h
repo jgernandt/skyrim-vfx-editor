@@ -20,8 +20,10 @@
 #define PCH_H
 
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <memory>
+#include <thread>
 
 #define EIGEN_MPL2_ONLY
 #include "Eigen\Dense"

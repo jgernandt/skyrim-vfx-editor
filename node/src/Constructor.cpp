@@ -90,18 +90,21 @@ void node::Constructor::extractNodes(gui::ConnectionHandler& target)
 	m_connections.clear();
 
 	if (m_nodes.size() > 1) {
-		Positioner solver;
-		auto pos = solver.solve(connectivity);
-		if (pos.size() == 2 * m_nodes.size()) {
-			for (int i = 0; i < static_cast<int>(m_nodes.size()); i++)
-				m_nodes[i]->setTranslation({ pos[i], pos[i + m_nodes.size()] });
-		}
+		target.addChild(std::make_unique<Positioner>(std::move(m_nodes), connectivity));
+		//Positioner solver(connectivity);
+		//auto pos = solver.solve(connectivity);
+		//if (pos.size() == 2 * m_nodes.size()) {
+		//	for (int i = 0; i < static_cast<int>(m_nodes.size()); i++)
+		//		m_nodes[i]->setTranslation({ pos[i], pos[i + m_nodes.size()] });
+		//}
 	}
+	else if (m_nodes.size() == 1)
+		target.addChild(std::move(m_nodes.front()));
 
-	for (auto&& node : m_nodes) {
-		target.addChild(std::move(node));
-	}
-	m_nodes.clear();
+	//for (auto&& node : m_nodes) {
+	//	target.addChild(std::move(node));
+	//}
+	//m_nodes.clear();
 
 	for (auto&& pair : couplings) {
 		pair.first->setConnectionState(pair.second, true);

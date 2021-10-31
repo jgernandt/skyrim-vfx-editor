@@ -114,7 +114,7 @@ void gui::Window::frame(FrameDrawer& fd)
 void gui::Window::setTranslation(const Floats<2>& t)
 {
 	m_translation = t;
-	m_lastGlobalPos = getGlobalPosition();
+	//m_lastGlobalPos = getGlobalPosition();//wrong, will undo the translation next frame
 }
 
 void gui::Window::onClose()

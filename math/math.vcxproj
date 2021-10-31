@@ -171,11 +171,13 @@
   <ItemGroup>
     <ClInclude Include="src\Angles.h" />
     <ClInclude Include="src\constants.h" />
+    <ClInclude Include="src\Optimisation.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Rotation.h" />
     <ClInclude Include="src\SplineInterpolant.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Optimisation.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

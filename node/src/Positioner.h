@@ -17,25 +17,41 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
+#include <atomic>
+#include <mutex>
+#include <thread>
 #include "Eigen\Core"
+#include "Composition.h"
 
 namespace node
 {
+	class NodeBase;
+
 	//Responsible for positioning nodes after loading a file
-	class Positioner
+	class Positioner final : public gui::Composite
 	{
 	public:
-		Positioner() = default;
-		~Positioner() = default;
+		Positioner(std::vector<std::unique_ptr<NodeBase>>&& nodes, const Eigen::MatrixXf& connectivity);
+		~Positioner();
 
-		Eigen::VectorXf solve(const Eigen::MatrixXf& connectivity);
+		virtual void frame(gui::FrameDrawer& fd) override;
+		virtual gui::ComponentPtr removeChild(gui::IComponent*) override;
 
 	private:
-		void distance(const Eigen::VectorXf& x, Eigen::ArrayXXf& r_r2, Eigen::ArrayXXf& r_r2inv);
-		float eval(const Eigen::MatrixXf& r2, const Eigen::MatrixXf& r2inv, const Eigen::MatrixXf& C);
-		float feval(const Eigen::VectorXf& x, const Eigen::MatrixXf& C);
-		Eigen::VectorXf gradient(const Eigen::VectorXf& x, const Eigen::ArrayXXf& r2inv, const Eigen::MatrixXf& C);
-		float lineSearch(const Eigen::VectorXf& x, const Eigen::VectorXf& s, const Eigen::MatrixXf& C, float& fval);
+		void solve();
+
+	private:
+		Eigen::MatrixXf m_C;
+		int m_N;
+		std::mutex m_mutex;//protects access to result vector
+		Eigen::VectorXd m_x;
+
+		std::thread m_thread;
+		std::atomic_bool m_cancel{ false };
+		std::atomic_bool m_done{ false };
+
+		std::vector<NodeBase*> m_nodes;
+		std::vector<gui::IComponent*> m_removed;
 
 	};
 }

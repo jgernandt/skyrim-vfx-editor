@@ -19,165 +19,159 @@
 #include "pch.h"
 #include <random>
 #include "Positioner.h"
+#include "NodeBase.h"
+#include "CompositionActions.h"
 
+#include "Optimisation.h"
+
+constexpr float SCALE = 100.0f;
 constexpr float k = 10.0f;
 
-Eigen::VectorXf node::Positioner::solve(const Eigen::MatrixXf& C)
+node::Positioner::Positioner(std::vector<std::unique_ptr<NodeBase>>&& nodes, const Eigen::MatrixXf& connectivity) :
+	m_C{ connectivity }, m_N{ static_cast<int>(nodes.size()) }, m_x{ Eigen::VectorXd::Zero(2 * m_N - 2) }
 {
-	using namespace Eigen;
+	//Add nodes as children
+	m_nodes.reserve(m_N);
+	for (auto&& node : nodes) {
+		m_nodes.push_back(node.get());
+		addChild(std::move(node));
+	}
+	//Start solving in m_thread
+	m_thread = std::thread(&Positioner::solve, this);
+}
 
-	int N = C.rows();
+node::Positioner::~Positioner()
+{
+	//Join thread, if still running
+	if (m_thread.joinable()) {
+		m_cancel.store(true);
+		m_thread.join();
+	}
+}
 
-	VectorXf x(2 * N);
-	std::mt19937 mt;
-	std::uniform_real_distribution<float> D(0.0f, 10.0f);
-	x(0) = 0.0f;
-	x(N) = 0.0f;
- 	for (int i = 1; i < N; i++) {
-		x(i) = D(mt);
-		x(i + N) = D(mt);
+void node::Positioner::frame(gui::FrameDrawer& fd)
+{
+	Composite::frame(fd);
+
+	//Update positions (if our algorithm gives thread-safe access to the current result vector, else move into conditional)
+	assert(m_nodes.size() == m_N);
+	Eigen::VectorXf x(2 * m_N);
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		assert(m_x.size() == 2 * m_N - 2);
+		x << 0.0f, SCALE * m_x.head(m_N - 1).cast<float>(), 0.0f, SCALE * m_x.tail(m_N - 1).cast<float>();
+	}
+	for (int i = 0; i < m_N; i++) {
+		if (std::find(m_removed.begin(), m_removed.end(), m_nodes[i]) == m_removed.end()) {
+			assert(m_nodes[i]);
+			m_nodes[i]->setTranslation({ x(i), x(i + m_N) });
+		}
 	}
 
-	//When solving, we should disregard "variable" 0 and N (leave them at 0.0).
+	if (m_done.load()) {
+		//Join thread
+		m_thread.join();
 
-	//Initial approximation of the Hessian
-	MatrixXf B = MatrixXf::Identity(2 * N - 2, 2 * N - 2);
+		//transfer our children to parent and retire
+		if (IComponent* parent = getParent()) {
+			for (auto&& child : getChildren())
+				asyncInvoke<gui::MoveChild>(child.get(), this, parent, false);
+			asyncInvoke<gui::RemoveChild>(this, parent, false);
+		}
+	}
+}
 
-	ArrayXXf r2(N, N);
-	ArrayXXf rm2(N, N);
-	distance(x, r2, rm2);
+//If the search takes a long time, someone might remove a node before we're done. Track that here.
+gui::ComponentPtr node::Positioner::removeChild(gui::IComponent* c)
+{
+	m_removed.push_back(c);
+	return Composite::removeChild(c);
+}
 
-	VectorXf grad = gradient(x, rm2, C);
+struct OurFunction
+{
+	void eval(const Eigen::VectorXd& x, double& r_f, Eigen::VectorXd& r_grad) 
+	{
+		using namespace Eigen;
 
-	//Function value
-	float f = eval(r2, rm2, C);
+		assert(x.size() % 2 == 0);
+		int N = x.size() / 2 + 1;
+		assert(C.rows() == N && C.cols() == N);
+
+		VectorXd X(2 * N);
+		X << 0.0, x.head(N - 1), 0.0, x.tail(N - 1);
+
+		ArrayXXd r2(N, N);
+		ArrayXXd rm2(N, N);
+
+		//We do double the required work, since this matrix is symmetric. Optimise later.
+		for (int i = 0; i < N; i++) {
+			r2.row(i) = (X(i) - X.head(N).array()).square() + (X(i + N) - X.tail(N).array()).square();
+			rm2.row(i) = 1.0f / r2.row(i);
+		}
+		//This is just destroying terms that should be excluded (but we include anyway for vectorisation purposes)
+		rm2.matrix().diagonal() = ArrayXd::Zero(N);
+
+		double repulsion = 10.0;
+
+		//Function value
+		r_f = 0.0f;
+		for (int i = 0; i < N; i++) {
+			r_f += C(i, seq(i, N - 1)) * r2(seq(i, N - 1), i).matrix() + repulsion * rm2(i, seq(i, N - 1)).sum();
+		}
+
+		//gradient
+		r_grad.resize(2 * N - 2);
+		MatrixXd K = C - repulsion * rm2.square().matrix();
+		for (int i = 1; i < N; i++) {
+			r_grad(i - 1) = 2.0f * (X(i) - X.head(N).array()).matrix().transpose() * K.col(i);
+			r_grad(i + N - 2) = 2.0f * (X(i + N) - X.tail(N).array()).matrix().transpose() * K.col(i);
+		}
+
+	}
+	void fval(const Eigen::VectorXd& x, double& r_f) {}
+	void grad(const Eigen::VectorXd& x, Eigen::VectorXd& r_grad) {}
+
+	Eigen::MatrixXd C;
+};
+
+void node::Positioner::solve()
+{
+	//initial guess
+	{
+		std::mt19937 mt;
+		std::uniform_real_distribution<float> D(0.0f, 10.0f);
+
+		std::lock_guard<std::mutex> lock(m_mutex);
+		m_x.resize(2 * m_N - 2);
+		for (int i = 0; i < m_N - 1; i++) {
+			m_x(i) = D(mt);
+			m_x(i + m_N - 1) = D(mt);
+		}
+	}
+
+	OurFunction fcn;
+	fcn.C = m_C.cast<double>();
+	math::opt::SyncMultiMin minimiser(fcn, m_x, m_mutex);
 
 	int count = 0;
-	while (count < 1000) {
-	//for (int n = 0; n < 10; n++) {
+	math::opt::Status status = math::opt::Status::SUCCESS;
+	do {
+		//iterate
 		count++;
+		status = minimiser.iterate();
 
-		//Optimisations:
-		//*Update the factorisation instead of recalcing
-		//*Faster line search method
-		//*Exploit symmetry of distance matrix
-
-		//Solve for direction
-		VectorXf s = B.llt().solve(-grad);
-
-		//Perform line search
-		VectorXf S(2 * N);
-		S << 0.0f, s.head(N - 1), 0.0f, s.tail(N - 1);
-		float alpha = lineSearch(x, S, C, f);
-		s *= alpha;
-
-		//Update solution
-		x(seq(1, N - 1)) += s.head(N - 1);
-		x(seq(N + 1, 2 * N - 1)) += s.tail(N - 1);
-
-		distance(x, r2, rm2);
-		float nextF = eval(r2, rm2, C);
-		VectorXf nextGrad = gradient(x, rm2, C);
-		VectorXf y = nextGrad - grad;
-
-		float denom = s.transpose() * B * s;
-		if (s.squaredNorm() < f * 1.0e-6f / denom)
-			break;
-		MatrixXf nextB = B + (y * y.transpose()) / (y.transpose() * s) - (B * s * s.transpose() * B) / denom;
-
-		grad = nextGrad;
-		B = nextB;
-	}
-
-	return 100.0f * x;
-}
-
-void node::Positioner::distance(const Eigen::VectorXf& x, Eigen::ArrayXXf& r_r2, Eigen::ArrayXXf& r_r2inv)
-{
-	using namespace Eigen;
-
-	//We do double the required work, since this matrix is symmetric. Optimise later.
-	int N = x.size() / 2;
-	for (int i = 0; i < N; i++) {
-		r_r2.row(i) = (x(i) - x.head(N).array()).square() + (x(i + N) - x.tail(N).array()).square();
-		r_r2inv.row(i) = 1.0f / r_r2.row(i);
-	}
-	//This is just destroying terms that should be excluded (but we include anyway for vectorisation purposes)
-	r_r2inv.matrix().diagonal() = ArrayXf::Zero(N);
-}
-
-float node::Positioner::eval(const Eigen::MatrixXf& r2, const Eigen::MatrixXf& r2inv, const Eigen::MatrixXf& C)
-{
-	using namespace Eigen;
-
-	float result = 0.0f;
-	int N = C.rows();
-	for (int i = 0; i < N; i++)
-		result += C(i, seq(i, N - 1)) * r2(seq(i, N - 1), i).matrix() + k * r2inv(i, seq(i, N - 1)).sum();
-	return result;
-}
-
-float node::Positioner::feval(const Eigen::VectorXf& x, const Eigen::MatrixXf& C)
-{
-	using namespace Eigen;
-
-	int N = C.rows();
-	ArrayXXf r2(N, N);
-	ArrayXXf rm2(N, N);
-	distance(x, r2, rm2);
-	return eval(r2, rm2, C);
-}
-
-Eigen::VectorXf node::Positioner::gradient(const Eigen::VectorXf& x, const Eigen::ArrayXXf& r2inv, const Eigen::MatrixXf& C)
-{
-	using namespace Eigen;
-
-	int N = C.rows();
-	VectorXf grad(2 * N - 2);
-	MatrixXf K = C - k * r2inv.square().matrix();
-	for (int i = 1; i < N; i++) {
-		grad(i - 1) = 2.0f * (x(i) - x.head(N).array()).matrix().transpose() * K.col(i);
-		grad(i + N - 2) = 2.0f * (x(i + N) - x.tail(N).array()).matrix().transpose() * K.col(i);
-	}
-	return grad;
-}
-
-float node::Positioner::lineSearch(const Eigen::VectorXf& x, const Eigen::VectorXf& s, const Eigen::MatrixXf& C, float& fval)
-{
-	float tau = 0.61803399f;
-	float a = 0.0f;
-	float fa = fval;
-	float b = 1.0f;
-	float fb = feval(x + s, C);
-
-	float x1 = a + (1 - tau) * (b - a);
-	float f1 = feval(x + x1 * s, C);
-	float x2 = a + tau * (b - a);
-	float f2 = feval(x + x2 * s, C);
-
-	while ((b - a) > 0.01f) {
-		if (f1 > f2) {
-			a = x1;
-			x1 = x2;
-			f1 = f2;
-			x2 = a + tau * (b - a);
-			f2 = feval(x + x2 * s, C);
+		if (status == math::opt::Status::SUCCESS) {
+			//Suitable test of convergence? This seems completely arbitrary.
+			if (double gnorm2 = minimiser.grad().squaredNorm(); gnorm2 > 1.0e-4)
+				status = math::opt::Status::CONTINUE;
 		}
 		else {
-			b = x2;
-			x2 = x1;
-			f2 = f1;
-			x1 = a + (1 - tau) * (b - a);
-			f1 = feval(x + x1 * s, C);
+			//deal with problem (= ignore it)
 		}
-	}
+	} 
+	while (status == math::opt::Status::CONTINUE && count < 200 && !m_cancel.load());
 
-	if (f1 < f2) {
-		fval = f1;
-		return x1;
-	}
-	else {
-		fval = f2;
-		return x2;
-	}
+	double gnorm = minimiser.grad().norm();
+	m_done.store(true);
 }
