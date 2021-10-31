@@ -76,6 +76,23 @@ node::Editor::Editor(const gui::Floats<2>& size) : m_niVersion{ nif::File::Versi
 	m_size = size;
 }
 
+//temporary fix, we'll find a nicer way later
+class RootFinder final : public gui::DescendingVisitor
+{
+public:
+	virtual void visit(gui::Composite& c) override
+	{
+		if (dynamic_cast<gui::Window*>(&c)) {
+			if (node::Root* r = dynamic_cast<node::Root*>(&c))
+				result = r;
+		}
+		else
+			DescendingVisitor::visit(c);
+	}
+
+	node::Root* result{ nullptr };
+};
+
 node::Editor::Editor(const gui::Floats<2>& size, const nif::File& file) : m_niVersion{ file.getVersion() }
 {
 	m_size = size;
@@ -108,10 +125,13 @@ node::Editor::Editor(const gui::Floats<2>& size, const nif::File& file) : m_niVe
 			main->addChild(workArea->createAddMenu());
 			addChild(std::move(main));
 
-			for (auto&& child : workArea->getChildren()) {
-				if (Root* root = dynamic_cast<Root*>(child.get()))
-					m_rootNode = root;
-			}
+			//for (auto&& child : workArea->getChildren()) {
+			//	if (Root* root = dynamic_cast<Root*>(child.get()))
+			//		m_rootNode = root;
+			//}
+			RootFinder rf;
+			workArea->accept(rf);
+			m_rootNode = rf.result;
 
 			if (m_rootNode) {
 				//Transform the work area to some nice initial position
