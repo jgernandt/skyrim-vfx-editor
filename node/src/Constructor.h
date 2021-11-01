@@ -43,6 +43,7 @@ namespace node
 
 		bool empty() const { return m_nodes.empty(); }
 		size_t size() const { return m_nodes.size(); }
+		const std::vector<std::unique_ptr<NodeBase>>& nodes() const { return m_nodes; }
 
 	protected:
 		//Entry point functions should test for duplication. 

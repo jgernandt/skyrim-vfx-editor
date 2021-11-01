@@ -29,18 +29,18 @@ namespace node
 
 			Assert::IsTrue(c.size() == 4);
 
-			TestRoot nodeRoot;
-			c.extractNodes(nodeRoot);
-
 			//Were the correct nodes created?
-			Root* root_node = findNode<Root>(nodeRoot.getChildren(), root);
-			Node* c1_node = findNode<Node>(nodeRoot.getChildren(), c1);
-			Node* c2_node = findNode<Node>(nodeRoot.getChildren(), c2);
-			Node* c1c1_node = findNode<Node>(nodeRoot.getChildren(), c1c1);
+			Root* root_node = findNode<Root>(c.nodes(), root);
+			Node* c1_node = findNode<Node>(c.nodes(), c1);
+			Node* c2_node = findNode<Node>(c.nodes(), c2);
+			Node* c1c1_node = findNode<Node>(c.nodes(), c1c1);
 			Assert::IsNotNull(root_node);
 			Assert::IsNotNull(c1_node);
 			Assert::IsNotNull(c2_node);
 			Assert::IsNotNull(c1c1_node);
+
+			TestRoot nodeRoot;
+			c.extractNodes(nodeRoot);
 
 			//Were they connected?
 			Assert::IsTrue(areConnected(root_node->getField(Node::CHILDREN)->connector, c1_node->getField(Node::PARENT)->connector));
@@ -95,15 +95,12 @@ namespace node
 
 			Assert::IsTrue(c.size() == 12);
 
-			TestRoot nodeRoot;
-			c.extractNodes(nodeRoot);
-
 			//Were the correct nodes created?
-			Root* root_node = findNode<Root>(nodeRoot.getChildren(), root);
-			Node* n1_node = findNode<Node>(nodeRoot.getChildren(), n1);
-			StringData* s1_node = findNode<StringData>(nodeRoot.getChildren(), s1);
-			StringData* s2_node = findNode<StringData>(nodeRoot.getChildren(), s2);
-			StringData* s3_node = findNode<StringData>(nodeRoot.getChildren(), s3);
+			Root* root_node = findNode<Root>(c.nodes(), root);
+			Node* n1_node = findNode<Node>(c.nodes(), n1);
+			StringData* s1_node = findNode<StringData>(c.nodes(), s1);
+			StringData* s2_node = findNode<StringData>(c.nodes(), s2);
+			StringData* s3_node = findNode<StringData>(c.nodes(), s3);
 			Assert::IsNotNull(root_node);
 			Assert::IsNotNull(n1_node);
 			Assert::IsNotNull(s1_node);
@@ -112,9 +109,12 @@ namespace node
 
 			WeaponTypeData* wtype_nodes[7];
 			for (int i = 0; i < 7; i++) {
-				wtype_nodes[i] = findNode<WeaponTypeData>(nodeRoot.getChildren(), weaponTypes[i]);
+				wtype_nodes[i] = findNode<WeaponTypeData>(c.nodes(), weaponTypes[i]);
 				Assert::IsNotNull(wtype_nodes[i]);
 			}
+
+			TestRoot nodeRoot;
+			c.extractNodes(nodeRoot);
 
 			//Were they connected?
 			Assert::IsTrue(areConnected(root_node->getField(Node::EXTRA_DATA)->connector, s1_node->getField(ExtraData::TARGET)->connector));
@@ -155,14 +155,14 @@ namespace node
 
 			Assert::IsTrue(c.size() == 2);
 
-			TestRoot nodeRoot;
-			c.extractNodes(nodeRoot);
-
 			//Were the correct nodes created?
-			Root* root_node = findNode<Root>(nodeRoot.getChildren(), root);
-			ParticleSystem* psys_node = findNode<ParticleSystem>(nodeRoot.getChildren(), psys);
+			Root* root_node = findNode<Root>(c.nodes(), root);
+			ParticleSystem* psys_node = findNode<ParticleSystem>(c.nodes(), psys);
 			Assert::IsNotNull(root_node);
 			Assert::IsNotNull(psys_node);
+
+			TestRoot nodeRoot;
+			c.extractNodes(nodeRoot);
 
 			//Were they connected?
 			Assert::IsTrue(areConnected(root_node->getField(Node::CHILDREN)->connector, psys_node->getField(ParticleSystem::PARENT)->connector));
@@ -201,14 +201,14 @@ namespace node
 
 			Assert::IsTrue(c.size() == 2);
 
-			TestRoot nodeRoot;
-			c.extractNodes(nodeRoot);
-
 			//Were the correct nodes created?
-			Root* root_node = findNode<Root>(nodeRoot.getChildren(), root);
-			ParticleSystem* psys_node = findNode<ParticleSystem>(nodeRoot.getChildren(), psys);
+			Root* root_node = findNode<Root>(c.nodes(), root);
+			ParticleSystem* psys_node = findNode<ParticleSystem>(c.nodes(), psys);
 			Assert::IsNotNull(root_node);
 			Assert::IsNotNull(psys_node);
+
+			TestRoot nodeRoot;
+			c.extractNodes(nodeRoot);
 
 			//Were they connected?
 			Assert::IsTrue(areConnected(root_node->getField(Node::CHILDREN)->connector, psys_node->getField(ParticleSystem::PARENT)->connector));
@@ -257,14 +257,14 @@ namespace node
 
 			Assert::IsTrue(c.size() == 2);
 
-			TestRoot nodeRoot;
-			c.extractNodes(nodeRoot);
-
 			//Were the correct nodes created?
-			Root* root_node = findNode<Root>(nodeRoot.getChildren(), root);
-			ParticleSystem* psys_node = findNode<ParticleSystem>(nodeRoot.getChildren(), psys);
+			Root* root_node = findNode<Root>(c.nodes(), root);
+			ParticleSystem* psys_node = findNode<ParticleSystem>(c.nodes(), psys);
 			Assert::IsNotNull(root_node);
 			Assert::IsNotNull(psys_node);
+
+			TestRoot nodeRoot;
+			c.extractNodes(nodeRoot);
 
 			//Were they connected?
 			Assert::IsTrue(areConnected(root_node->getField(Node::CHILDREN)->connector, psys_node->getField(ParticleSystem::PARENT)->connector));
@@ -322,20 +322,20 @@ namespace node
 
 			Assert::IsTrue(c.size() == 5);
 
-			TestRoot nodeRoot;
-			c.extractNodes(nodeRoot);
-
 			//Were the correct nodes created?
-			Root* root_node = findNode<Root>(nodeRoot.getChildren(), root);
-			ParticleSystem* psys_node = findNode<ParticleSystem>(nodeRoot.getChildren(), psys);
-			BoxEmitter* mod0_node = findNode<BoxEmitter>(nodeRoot.getChildren(), mod0);
-			CylinderEmitter* mod1_node = findNode<CylinderEmitter>(nodeRoot.getChildren(), mod1);
-			SphereEmitter* mod2_node = findNode<SphereEmitter>(nodeRoot.getChildren(), mod2);
+			Root* root_node = findNode<Root>(c.nodes(), root);
+			ParticleSystem* psys_node = findNode<ParticleSystem>(c.nodes(), psys);
+			BoxEmitter* mod0_node = findNode<BoxEmitter>(c.nodes(), mod0);
+			CylinderEmitter* mod1_node = findNode<CylinderEmitter>(c.nodes(), mod1);
+			SphereEmitter* mod2_node = findNode<SphereEmitter>(c.nodes(), mod2);
 			Assert::IsNotNull(root_node);
 			Assert::IsNotNull(psys_node);
 			Assert::IsNotNull(mod0_node);
 			Assert::IsNotNull(mod1_node);
 			Assert::IsNotNull(mod2_node);
+
+			TestRoot nodeRoot;
+			c.extractNodes(nodeRoot);
 
 			//Were they connected?
 			Assert::IsTrue(areConnected(psys_node->getField(ParticleSystem::MODIFIERS)->connector, mod0_node->getField(Modifier::TARGET)->connector));
@@ -407,17 +407,14 @@ namespace node
 
 			Assert::IsTrue(c.size() == 7);
 
-			TestRoot nodeRoot;
-			c.extractNodes(nodeRoot);
-
 			//Were the correct nodes created?
-			Root* root_node = findNode<Root>(nodeRoot.getChildren(), root);
-			ParticleSystem* psys_node = findNode<ParticleSystem>(nodeRoot.getChildren(), psys);
-			RotationModifier* mod0_node = findNode<RotationModifier>(nodeRoot.getChildren(), mod0);
-			PlanarForceField* mod1_node = findNode<PlanarForceField>(nodeRoot.getChildren(), mod1);
-			SphericalForceField* mod2_node = findNode<SphericalForceField>(nodeRoot.getChildren(), mod2);
-			SimpleColourModifier* mod3_node = findNode<SimpleColourModifier>(nodeRoot.getChildren(), mod3);
-			ScaleModifier* mod4_node = findNode<ScaleModifier>(nodeRoot.getChildren(), mod4);
+			Root* root_node = findNode<Root>(c.nodes(), root);
+			ParticleSystem* psys_node = findNode<ParticleSystem>(c.nodes(), psys);
+			RotationModifier* mod0_node = findNode<RotationModifier>(c.nodes(), mod0);
+			PlanarForceField* mod1_node = findNode<PlanarForceField>(c.nodes(), mod1);
+			SphericalForceField* mod2_node = findNode<SphericalForceField>(c.nodes(), mod2);
+			SimpleColourModifier* mod3_node = findNode<SimpleColourModifier>(c.nodes(), mod3);
+			ScaleModifier* mod4_node = findNode<ScaleModifier>(c.nodes(), mod4);
 			Assert::IsNotNull(root_node);
 			Assert::IsNotNull(psys_node);
 			Assert::IsNotNull(mod0_node);
@@ -425,6 +422,9 @@ namespace node
 			Assert::IsNotNull(mod2_node);
 			Assert::IsNotNull(mod3_node);
 			Assert::IsNotNull(mod4_node);
+
+			TestRoot nodeRoot;
+			c.extractNodes(nodeRoot);
 
 			//Were they connected?
 			Assert::IsTrue(areConnected(psys_node->getField(ParticleSystem::MODIFIERS)->connector, mod0_node->getField(Modifier::TARGET)->connector));
@@ -489,17 +489,14 @@ namespace node
 
 			Assert::IsTrue(c.size() == 6);
 
-			TestRoot nodeRoot;
-			c.extractNodes(nodeRoot);
-
 			//Were the correct nodes created?
-			ParticleSystem* psys0_node = findNode<ParticleSystem>(nodeRoot.getChildren(), psys0);
-			ParticleSystem* psys1_node = findNode<ParticleSystem>(nodeRoot.getChildren(), psys1);
-			ParticleSystem* psys2_node = findNode<ParticleSystem>(nodeRoot.getChildren(), psys2);
-			//ParticleSystem* psys3_node = findNode<ParticleSystem>(nodeRoot.getChildren(), psys3);
-			EffectShader* shader0_node = findNode<EffectShader>(nodeRoot.getChildren(), shader0);
-			EffectShader* shader12_node = findNode<EffectShader>(nodeRoot.getChildren(), shader12);
-			//EffectShader* shader3_node = findNode<EffectShader>(nodeRoot.getChildren(), shader3);
+			ParticleSystem* psys0_node = findNode<ParticleSystem>(c.nodes(), psys0);
+			ParticleSystem* psys1_node = findNode<ParticleSystem>(c.nodes(), psys1);
+			ParticleSystem* psys2_node = findNode<ParticleSystem>(c.nodes(), psys2);
+			//ParticleSystem* psys3_node = findNode<ParticleSystem>(c.nodes(), psys3);
+			EffectShader* shader0_node = findNode<EffectShader>(c.nodes(), shader0);
+			EffectShader* shader12_node = findNode<EffectShader>(c.nodes(), shader12);
+			//EffectShader* shader3_node = findNode<EffectShader>(c.nodes(), shader3);
 			Assert::IsNotNull(psys0_node);
 			Assert::IsNotNull(psys1_node);
 			Assert::IsNotNull(psys2_node);
@@ -507,6 +504,9 @@ namespace node
 			Assert::IsNotNull(shader0_node);
 			Assert::IsNotNull(shader12_node);
 			//Assert::IsNotNull(shader3_node);
+
+			TestRoot nodeRoot;
+			c.extractNodes(nodeRoot);
 
 			//Were they connected?
 			Assert::IsTrue(areConnected(psys0_node->getField(ParticleSystem::SHADER)->connector, shader0_node->getField(EffectShader::GEOMETRY)->connector));
@@ -530,7 +530,7 @@ namespace node
 		}
 
 		template<typename T>
-		T* findNode(const gui::Composite::ChildList& nodes, const nif::NiObject& obj)
+		T* findNode(const std::vector<std::unique_ptr<NodeBase>>& nodes, const nif::NiObject& obj)
 		{
 			for (auto&& node : nodes) {
 				if (T* result = dynamic_cast<T*>(node.get()); result && result->object() == obj)
