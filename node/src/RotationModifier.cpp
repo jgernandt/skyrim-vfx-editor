@@ -21,7 +21,6 @@
 #include "widget_types.h"
 
 constexpr float VAR_FRACTION = -0.5f;
-constexpr float WND_SIZE = 160.0f;
 
 class node::RotationModifier::AngleField final : public node::Field
 {
@@ -73,7 +72,7 @@ node::RotationModifier::RotationModifier() :
 node::RotationModifier::RotationModifier(std::unique_ptr<nif::NiPSysRotationModifier>&& obj) :
 	Modifier(std::move(obj))
 {
-	setSize({ WND_SIZE, 0.0f });
+	setSize({ WIDTH, HEIGHT });
 	setTitle("Rotation modifier");
 
 	addTargetField(std::make_shared<ReqDevice<Requirement::ROTATION>>(*this));
@@ -83,6 +82,10 @@ node::RotationModifier::RotationModifier(std::unique_ptr<nif::NiPSysRotationModi
 	newField<AngleField>(ANGLE, *this);
 	newField<SpeedField>(SPEED, *this);
 	newChild<Checkbox>(object().randomSign(), "Random direction");
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 }
 
 nif::NiPSysRotationModifier& node::RotationModifier::object()

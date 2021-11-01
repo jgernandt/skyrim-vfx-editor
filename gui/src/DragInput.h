@@ -72,12 +72,6 @@ namespace gui
             const char* format,
             int flags);
 
-        //template<typename T>
-        //unsigned int DragInput(const std::string& label, T* value, const gui::DragInputParameters<T>& params) 
-        //{ 
-        //    return DragInputImpl(label, DragInputDataType<T>::id, value, params.speed, &params.min, &params.max, params.format, params.flags);
-        //}
-
         extern const unsigned int DragInput_AlwaysClamp;
         extern const unsigned int DragInput_Logarithmic;
     }
@@ -249,7 +243,7 @@ namespace gui
             DragInputBase<element_type, N>(labels), m_property{ p } {}
         virtual ~DragInput() = default;
 
-        virtual void frame() override
+        virtual void frame(FrameDrawer& fd) override
         {
             //Read from the property, convert if needed
             T data = util::type_conversion<T, ConverterType<T>>::from(util::property_traits<PropertyType>::get(m_property));

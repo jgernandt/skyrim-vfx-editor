@@ -46,7 +46,7 @@ namespace gui
 		virtual ~Connector() {}
 
 		virtual void accept(Visitor& v);
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 		virtual Floats<2> getSizeHint() const override;
 
 		virtual void onClick() = 0;

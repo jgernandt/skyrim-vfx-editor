@@ -20,31 +20,37 @@
 #include "ConnectionHandler.h"
 #include "NiNode.h"
 #include "File.h"
+#include "widgets.h"
 
 namespace node
 {
 	class Root;
 
 	class Editor final :
-		public gui::ConnectionHandler
+		public gui::Composite
 	{
 	public:
-		Editor();
-		Editor(const nif::File& file);
+		Editor(const gui::Floats<2>& size);
+		Editor(const gui::Floats<2>& size, const nif::File& file);
 		~Editor();
 
-		virtual void frame() override;
+		virtual void frame(gui::FrameDrawer& fd) override;
 
 		void setProjectName(const std::string& name);
 
 	private:
-		std::unique_ptr<IComponent> createAddMenu(IComponent& parent);
-		Root* findRootNode() const;
+		class NodeRoot final : public gui::ConnectionHandler
+		{
+		public:
+			NodeRoot();
+			virtual void frame(gui::FrameDrawer& fd) override;
 
-		template<typename T> void addNode();
+			std::unique_ptr<IComponent> createAddMenu();
+			template<typename T> void addNode();
+		};
 
-	private:
 		const nif::File::Version m_niVersion;
+		Root* m_rootNode{ nullptr };
 	};
 }
 

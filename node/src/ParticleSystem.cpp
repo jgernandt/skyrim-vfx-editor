@@ -293,7 +293,7 @@ node::ParticleSystem::ParticleSystem(
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_Geom);
 	setColour(COL_TITLE_ACTIVE, TitleCol_GeomActive);
-	setSize({ 160.0, 0.0f });
+	setSize({ WIDTH, HEIGHT });
 	setTitle("Particle system");
 
 	newField<NameField>(NAME, *this);
@@ -322,6 +322,11 @@ node::ParticleSystem::ParticleSystem(
 	newChild<gui::Separator>();
 
 	newField<ModifiersField>(MODIFIERS, *this);
+
+	//until we have some other way to determine connector position for loading placement
+	getField(PARENT)->connector->setTranslation({ 0.0f, 62.0f });
+	getField(SHADER)->connector->setTranslation({ WIDTH, 114.0f });
+	getField(MODIFIERS)->connector->setTranslation({ WIDTH, 264.0f });
 }
 
 node::ParticleSystem::~ParticleSystem()

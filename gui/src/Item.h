@@ -36,7 +36,7 @@ namespace gui
 	{
 	public:
 		Item(std::unique_ptr<LayoutOperator> layout = std::unique_ptr<LayoutOperator>());
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 		virtual Floats<2> getSizeHint() const override;
 
 	private:

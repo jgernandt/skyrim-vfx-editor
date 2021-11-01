@@ -19,6 +19,7 @@
 #include "pch.h"
 #include "Constructor.h"
 #include "nodes.h"
+#include "Positioner.h"
 
 //We need to know about the nif backend, which is somewhat stupid, but the alternatives seem unreasonably complicated
 #include "nif_backend.h"
@@ -35,6 +36,8 @@ void node::Constructor::makeRoot(const nif::ni_ptr<nif::native::NiObject>& root)
 		throw std::runtime_error("Invalid root");
 	}
 	else {
+		//Leave room for the root node (maybe vanity, but I'd prefer it to be first)
+		m_nodes.resize(1);
 		EP_process(static_cast<Niflib::NiAVObject*>(root.get()));
 		for (auto&& ctlr : static_cast<Niflib::NiObjectNET*>(root.get())->GetControllers()) {
 			if (Niflib::DynamicCast<Niflib::NiControllerManager>(ctlr)) {
@@ -48,29 +51,81 @@ void node::Constructor::makeRoot(const nif::ni_ptr<nif::native::NiObject>& root)
 void node::Constructor::extractNodes(gui::ConnectionHandler& target)
 {
 	std::vector<std::pair<gui::Connector*, gui::Connector*>> couplings;
+	std::vector<Positioner::LinkInfo> linkInfo;
+
 	for (auto&& item : m_connections) {
 		gui::Connector* c1 = nullptr;
+		int i1;
 		if (auto it = m_objectMap.find(item.object1); it != m_objectMap.end()) {
-			if (it->second)
-				if (Field* f = it->second->getField(item.field1))
+			if (it->second >= 0)
+				if (Field* f = m_nodes[it->second]->getField(item.field1)) {
 					c1 = f->connector;
+					i1 = it->second;
+				}
 		}
 
 		gui::Connector* c2 = nullptr;
+		int i2;
 		if (auto it = m_objectMap.find(item.object2); it != m_objectMap.end()) {
-			if (it->second)
-				if (Field* f = it->second->getField(item.field2))
+			if (it->second >= 0)
+				if (Field* f = m_nodes[it->second]->getField(item.field2)) {
 					c2 = f->connector;
+					i2 = it->second;
+				}
 		}
 
-		if (c1 && c2)
+		if (c1 && c2) {
 			couplings.push_back({ c1, c2 });
+			assert(i1 < static_cast<int>(m_nodes.size()) && i2 < static_cast<int>(m_nodes.size()));
+			if (i1 != i2) {
+				if (i1 > i2) {
+					//the positioner benefits from consistency
+					std::swap(i1, i2);
+					std::swap(c1, c2);
+				}
+
+				linkInfo.push_back({});
+				linkInfo.back().node1 = i1;
+				linkInfo.back().node2 = i2;
+
+				//Offset should be (node-space) translation(c1) - translation(c2).
+				//Connectors don't know their position until we start drawing them,
+				//but down the line we want to delegate to some layout manager to place gui components.
+				//This solution would mean that the connectors *do* know their position at this point.
+				//So let's make this work somehow:
+				linkInfo.back().offset = c2->getTranslation() - c1->getTranslation();
+				//(later, we may not be able to assume that the local translation is in node space)
+
+				//The stiffness may have to be determined pairwise. 
+				//It may also have to depend on the number of links to the same connector, or to the same node.
+				//Unless we make the graph data accessible somehow, this will be hard to work with. Something to consider.
+				//Right now I think the only ones we want softer are the upwards references.
+				if (item.field1 == Node::OBJECT || item.field2 == Node::OBJECT)
+					linkInfo.back().stiffness = 0.1f;
+				else
+					linkInfo.back().stiffness = 1.0f;
+			}
+			//if somehow i1 == i2 we ignore it
+		}
 	}
 	m_connections.clear();
 
-	for (auto&& node : m_nodes)
-		target.addChild(std::move(node));
-	m_nodes.clear();
+	if (m_nodes.size() > 1) {
+		target.addChild(std::make_unique<Positioner>(std::move(m_nodes), std::move(linkInfo)));
+		//Positioner solver(connectivity);
+		//auto pos = solver.solve(connectivity);
+		//if (pos.size() == 2 * m_nodes.size()) {
+		//	for (int i = 0; i < static_cast<int>(m_nodes.size()); i++)
+		//		m_nodes[i]->setTranslation({ pos[i], pos[i + m_nodes.size()] });
+		//}
+	}
+	else if (m_nodes.size() == 1)
+		target.addChild(std::move(m_nodes.front()));
+
+	//for (auto&& node : m_nodes) {
+	//	target.addChild(std::move(node));
+	//}
+	//m_nodes.clear();
 
 	for (auto&& pair : couplings) {
 		pair.first->setConnectionState(pair.second, true);
@@ -97,8 +152,14 @@ void node::Constructor::EP_process(nif::native::NiAVObject* obj)
 				node = std::make_unique<DummyAVObject>(std::make_unique<nif::NiAVObject>(obj));
 			}
 
-			m_objectMap.insert({ obj, node.get() });
-			m_nodes.push_back(std::move(node));
+			if (dynamic_cast<Root*>(node.get())) {
+				m_objectMap.insert({ obj, 0 });
+				m_nodes[0] = std::move(node);
+			}
+			else {
+				m_objectMap.insert({ obj, m_nodes.size() });
+				m_nodes.push_back(std::move(node));
+			}
 
 			for (auto&& data : obj->GetExtraData()) {
 				EP_process(data);
@@ -171,7 +232,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 	bool discarded = false;
 
 	if (Niflib::NiPSysData* d = Niflib::DynamicCast<Niflib::NiPSysData>(obj->GetData())) {
-		if (auto result = m_objectMap.insert({ d, nullptr }); !result.second) {
+		if (auto result = m_objectMap.insert({ d, -1 }); !result.second) {
 			//File error: This data is used by multiple objects
 			std::string s = obj->GetName();
 			s.append(" shares its data with another object");
@@ -183,7 +244,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 		incomplete = true;
 
 	if (NiAlphaProperty* a = obj->GetAlphaProperty()) {
-		if (auto result = m_objectMap.insert({ a, nullptr }); !result.second) {
+		if (auto result = m_objectMap.insert({ a, -1 }); !result.second) {
 			//This is not an error, but will be a problem for us since we're not exposing this alpha property. We should clone it.
 			// 
 			//NiAlphaPropertyRef clone = StaticCast<NiAlphaProperty>(a->Clone(s_version, s_userVersion));
@@ -212,7 +273,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 	for (auto&& c : obj->GetControllers()) {
 		if (Niflib::NiPSysUpdateCtlr* u = Niflib::DynamicCast<Niflib::NiPSysUpdateCtlr>(c)) {
 			if (!ctlr) {
-				if (auto result = m_objectMap.insert({ u, nullptr }); !result.second) {
+				if (auto result = m_objectMap.insert({ u, -1 }); !result.second) {
 					//File error: Controller is used by multiple objects
 					std::string s = obj->GetName();
 					s.append(" shares its update controller with another object");
@@ -256,7 +317,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 	for (auto it = mods.begin(); it != mods.end(); ++it) {
 		if (Niflib::NiPSysAgeDeathModifier* derived = Niflib::DynamicCast<Niflib::NiPSysAgeDeathModifier>(*it)) {
 			if (!adm) {
-				if (auto result = m_objectMap.insert({ *it, nullptr }); !result.second) {
+				if (auto result = m_objectMap.insert({ *it, -1 }); !result.second) {
 					//File error: Modifier is used by multiple objects
 					std::string s = obj->GetName() + ":" + (*it)->GetName() + " is used by multiple objects";
 					m_warnings.push_back(std::move(s));
@@ -272,7 +333,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 		}
 		else if (Niflib::NiPSysPositionModifier* derived = Niflib::DynamicCast<Niflib::NiPSysPositionModifier>(*it)) {
 			if (!pm) {
-				if (auto result = m_objectMap.insert({ *it, nullptr }); !result.second) {
+				if (auto result = m_objectMap.insert({ *it, -1 }); !result.second) {
 					//File error: Modifier is used by multiple objects
 					std::string s = obj->GetName() + ":" + (*it)->GetName() + " is used by multiple objects";
 					m_warnings.push_back(std::move(s));
@@ -288,7 +349,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 		}
 		else if (Niflib::NiPSysBoundUpdateModifier* derived = Niflib::DynamicCast<Niflib::NiPSysBoundUpdateModifier>(*it)) {
 			if (!bum) {
-				if (auto result = m_objectMap.insert({ *it, nullptr }); !result.second) {
+				if (auto result = m_objectMap.insert({ *it, -1 }); !result.second) {
 					//File error: Modifier is used by multiple objects
 					std::string s = obj->GetName() + ":" + (*it)->GetName() + " is used by multiple objects";
 					m_warnings.push_back(std::move(s));
@@ -363,7 +424,7 @@ void node::Constructor::EP_process(nif::native::NiExtraData* obj)
 			if (!node)
 				node = std::make_unique<DummyExtraData>(std::make_unique<nif::NiExtraData>(obj));
 
-			m_objectMap.insert({ obj, node.get() });
+			m_objectMap.insert({ obj, m_nodes.size() });
 			m_nodes.push_back(std::move(node));
 		}
 		//else ignore
@@ -416,7 +477,7 @@ void node::Constructor::EP_process(nif::native::NiPSysModifier* obj, const CtlrL
 				}
 			}
 
-			m_objectMap.insert({ obj, node.get() });
+			m_objectMap.insert({ obj, m_nodes.size() });
 			m_nodes.push_back(std::move(node));
 		}
 		else {
@@ -586,7 +647,7 @@ void node::Constructor::EP_process(nif::native::BSEffectShaderProperty* obj)
 		if (auto it = m_objectMap.find(obj); it == m_objectMap.end()) {
 			auto node = std::make_unique<EffectShader>(std::make_unique<nif::BSEffectShaderProperty>(obj));
 
-			m_objectMap.insert({ obj, node.get() });
+			m_objectMap.insert({ obj, m_nodes.size() });
 			m_nodes.push_back(std::move(node));
 		}
 	}

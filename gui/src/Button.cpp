@@ -22,19 +22,30 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"//for ImVec operators
 
-void gui::Button::frame()
+void gui::Button::frame(FrameDrawer& fd)
 {
-	if (ImGui::Button(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(m_size)))
+	if (ImGui::Button(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(static_cast<Floats<2>>(m_size * fd.getCurrentScale() * m_scale))))
 		onActivate();
 }
 
 gui::Floats<2> gui::Button::getSizeHint() const
 {
+	//This should be returned in local scale, but since all other widgets return in global scale (via imgui::FrameHeight multiples, e.g.)
+	//we do the same for now.
+	//At some point we may have to rework widget placement altogether (not relying on imgui's flimsy auto layout).
+
+	Floats<2> scale = m_scale;
+	IComponent* super = getParent();
+	while (super) {
+		scale *= super->getScale();
+		super = super->getParent();
+	}
+
 	if (m_size[0] > 0.0f && m_size[1] > 0.0f)
-		return m_size;
+		return m_size * scale;
 	else {
 		ImVec2 lSize = ImGui::CalcTextSize(m_label[0].c_str(), nullptr, true);
-		return { m_size[0] <= 0.0f ? lSize.x + 2.0f * ImGui::GetStyle().FramePadding.x : m_size[0],
-			m_size[1] <= 0.0f ? lSize.y + 2.0f * ImGui::GetStyle().FramePadding.y : m_size[1] };
+		return { lSize.x + 2.0f * ImGui::GetStyle().FramePadding.x,
+			lSize.y + 2.0f * ImGui::GetStyle().FramePadding.y };
 	}
 }

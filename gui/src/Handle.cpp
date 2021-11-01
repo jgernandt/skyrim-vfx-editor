@@ -20,44 +20,32 @@
 #include "Handle.h"
 #include "Drawer.h"
 
-constexpr gui::MouseButton imguiToGuiButton(int button)
-{
-	switch (button) {
-	case ImGuiButtonFlags_MouseButtonLeft:
-		return gui::MouseButton::LEFT;
-	case ImGuiButtonFlags_MouseButtonMiddle:
-		return gui::MouseButton::MIDDLE;
-	case ImGuiButtonFlags_MouseButtonRight:
-		return gui::MouseButton::RIGHT;
-	default:
-		return gui::MouseButton::NONE;
-	}
-}
-
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
-void gui::Handle::frame()
+void gui::Handle::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 
 	ImVec2 start_pos = GetCursorPos();//we should probably reset this when we're done
-	SetCursorPos(gui_type_conversion<ImVec2>::from(m_position));
 
-	InvisibleButton(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(m_size), ImGuiButtonFlags_MouseButtonLeft);
+	Floats<2> scale = fd.getCurrentScale();
+	SetCursorPos(gui_type_conversion<ImVec2>::from(static_cast<Floats<2>>(m_translation * scale)));
+
+	InvisibleButton(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(static_cast<Floats<2>>(m_size * scale * m_scale)), ImGuiButtonFlags_MouseButtonLeft);
 
 	if (IsItemActivated())
-		onClick(imguiToGuiButton(ImGuiButtonFlags_MouseButtonLeft));
+		onClick(MouseButton::LEFT);
 
 	if (IsItemActive()) {
 		m_active = true;
 		if (GetIO().MouseDelta.x != 0.0f || GetIO().MouseDelta.y != 0.0f)
-			onMove({ GetIO().MouseDelta.x, GetIO().MouseDelta.y });
+			onMove({ GetIO().MouseDelta.x / scale[0], GetIO().MouseDelta.y / scale[1] });
 	}
 
 	if (IsItemDeactivated()) {
 		m_active = false;
-		onRelease(imguiToGuiButton(ImGuiButtonFlags_MouseButtonLeft));
+		onRelease(MouseButton::LEFT);
 	}
 
 	//Might be weird to always register as hovered when active. We'll see.

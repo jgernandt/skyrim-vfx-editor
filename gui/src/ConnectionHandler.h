@@ -31,7 +31,7 @@ namespace gui
 		virtual ~ConnectionHandler();
 
 		virtual void accept(Visitor& v) override;
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 		void startSearch(Connector* c, Connector::StateMap&& s);
 		bool query(Connector* c);

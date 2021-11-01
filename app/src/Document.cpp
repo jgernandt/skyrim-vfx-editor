@@ -70,11 +70,13 @@ void app::Document::Invoker::flush()
 	m_pending.clear();
 }
 
-app::Document::Document()
+app::Document::Document(const gui::Floats<2>& size)
 {
+	m_size = size;
+
 	m_file = nif::File(nif::File::Version::SKYRIM_SE);
 	m_file.addFadeNode();
-	m_nodeEditor = newChild<node::Editor>(m_file);
+	m_nodeEditor = newChild<node::Editor>(m_size, m_file);
 
 	//If, for any reason, we add a message box here and the file is empty, the popups break.
 	//Doing the exact same thing on a doc created later works fine.
@@ -82,8 +84,10 @@ app::Document::Document()
 	//I don't really care anymore. Just make sure this works 100% and forget about it.
 }
 
-app::Document::Document(const std::filesystem::path& path) : m_targetPath{ path }
+app::Document::Document(const gui::Floats<2>& size, const std::filesystem::path& path) : m_targetPath{ path }
 {
+	m_size = size;
+
 	//Load the file (via a backend io object)
 	//Verify version
 	//Verify validity?
@@ -109,23 +113,25 @@ app::Document::Document(const std::filesystem::path& path) : m_targetPath{ path 
 		//(let's leave it at that for now)
 
 		m_file = nif::File(path);//may throw
-		m_nodeEditor = newChild<node::Editor>(m_file);//should catch warnings, may throw serious errors
+		m_nodeEditor = newChild<node::Editor>(m_size, m_file);//should catch warnings, may throw serious errors
 	}
 	catch (const std::exception& e) {
 		m_file = nif::File();
-		m_nodeEditor = newChild<node::Editor>();
+		m_nodeEditor = newChild<node::Editor>(m_size);
 		newChild<gui::MessageBox>("Error", e.what());
 	}
 }
 
-void app::Document::frame()
+void app::Document::frame(gui::FrameDrawer& fd)
 {
-	Composite::frame();
+	Composite::frame(fd);
 	m_invoker.invoke();
 }
 
 void app::Document::setSize(const gui::Floats<2>& size)
 {
+	m_size = size;
+
 	//If we had multiple views, we would keep track of what view would occupy what area.
 	//Fow now, just pass it on.
 	if (m_nodeEditor)
@@ -136,6 +142,7 @@ void app::Document::setFilePath(const std::filesystem::path& path)
 {
 	m_targetPath = path;
 	if (m_nodeEditor)
+		//Or should we just do this ourselves? What's the point of having the editor do it?
 		m_nodeEditor->setProjectName(path.filename().u8string());
 }
 

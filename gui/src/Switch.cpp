@@ -23,11 +23,11 @@ gui::Switch::Switch(const std::function<int()>& cdn) : m_condition{ cdn }
 {
 }
 
-void gui::Switch::frame()
+void gui::Switch::frame(FrameDrawer& fd)
 {
     if (int n = m_condition ? m_condition() : -1; n < static_cast<int>(getChildren().size()) && n >= 0) {
         assert(getChildren()[n]);
-        getChildren()[n]->frame();
+        getChildren()[n]->frame(fd);
     }
 }
 

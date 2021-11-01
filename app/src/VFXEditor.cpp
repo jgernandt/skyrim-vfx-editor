@@ -18,14 +18,14 @@
 
 #include "pch.h"
 #include "VFXEditor.h"
-#include "Document.h"
 #include "GUIEngine.h"
+#undef min
+#undef max
 #include "Timer.h"
 #include "CallWrapper.h"
 #include "version.h"
-
-#undef min
-#undef max
+#include "AboutBox.h"
+#include "Document.h"
 #include "widgets.h"
 
 app::VFXEditor::VFXEditor(HINSTANCE hInstance, int nCmdShow) : 
@@ -45,9 +45,9 @@ app::VFXEditor::VFXEditor(HINSTANCE hInstance, int nCmdShow) :
         //However, finding a failsafe method seems unreasonably complicated at this point.
         //Try a couple of fonts and fall back to the built-in if they can't be loaded.
         std::filesystem::path path(wpath, std::filesystem::path::native_format);
-        if (!m_guiEngine.loadFont(path / "calibri.ttf"))
-            if (!m_guiEngine.loadFont(path / "arial.ttf"))
-                if (!m_guiEngine.loadFont())
+        if (!m_guiEngine.setDefaultFont(path / "calibri.ttf"))
+            if (!m_guiEngine.setDefaultFont(path / "arial.ttf"))
+                if (!m_guiEngine.setDefaultFont())
                     throw std::runtime_error("Failed to load any fonts.");
     }
     CoTaskMemFree(wpath);
@@ -106,14 +106,14 @@ void app::VFXEditor::frame()
     m_guiEngine.beginFrame();//frame N
 
     try {
-        m_fileMenu.frame();
+        m_fileMenu.frame(m_guiEngine);
         if (m_current)
-            m_current->frame();
-        m_helpMenu.frame();
+            m_current->frame(m_guiEngine);
+        m_helpMenu.frame(m_guiEngine);
         if (m_aboutBox) {
             if (!m_aboutBox->isOpen())
                 m_aboutBox->open();
-            m_aboutBox->frame();
+            m_aboutBox->frame(m_guiEngine);
             if (!m_aboutBox->isOpen())
                 m_aboutBox.reset();
         }
@@ -145,11 +145,13 @@ void app::VFXEditor::quit()
 
 void app::VFXEditor::newDoc()
 {
-    m_current.reset();
-    m_current = std::make_unique<Document>();
     RECT rect;
-    if (GetClientRect(m_hwnd, &rect))
-        m_current->setSize({ static_cast<float>(rect.right), static_cast<float>(rect.bottom) });
+    gui::Floats<2> size = GetClientRect(m_hwnd, &rect) ? 
+        gui::Floats<2>{ static_cast<float>(rect.right), static_cast<float>(rect.bottom) } : 
+        gui::Floats<2>{ 0.0f, 0.0f };
+
+    m_current.reset();
+    m_current = std::make_unique<Document>(size);
 }
 void app::VFXEditor::open()
 {
@@ -173,11 +175,15 @@ void app::VFXEditor::open()
         PWSTR wpath;
         HRESULT res = item->GetDisplayName(SIGDN_FILESYSPATH, &wpath);
         if (SUCCEEDED(res)) {
-            m_current.reset();
-            m_current = std::make_unique<Document>(std::filesystem::path(wpath, std::filesystem::path::native_format));
+
             RECT rect;
-            if (GetClientRect(m_hwnd, &rect))
-                m_current->setSize({ static_cast<float>(rect.right), static_cast<float>(rect.bottom) });
+            gui::Floats<2> size = GetClientRect(m_hwnd, &rect) ?
+                gui::Floats<2>{ static_cast<float>(rect.right), static_cast<float>(rect.bottom) } :
+                gui::Floats<2>{ 0.0f, 0.0f };
+
+            m_current.reset();
+            m_current = std::make_unique<Document>(size, std::filesystem::path(wpath, std::filesystem::path::native_format));
+
             CoTaskMemFree(wpath);
         }
     }

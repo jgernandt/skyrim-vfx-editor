@@ -183,7 +183,7 @@ node::EffectShader::EffectShader(std::unique_ptr<nif::BSEffectShaderProperty>&& 
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_Shader);
 	setColour(COL_TITLE_ACTIVE, TitleCol_ShaderActive);
-	setSize({ 170.0f, 0.0f });
+	setSize({ WIDTH, HEIGHT });
 	setTitle("Effect shader");
 
 	newField<GeometryField>(GEOMETRY, *this);
@@ -204,6 +204,9 @@ node::EffectShader::EffectShader(std::unique_ptr<nif::BSEffectShaderProperty>&& 
 	newChild<gui::Separator>();
 
 	newField<PaletteTexField>(PALETTE_TEXTURE, *this);
+
+	//until we have some other way to determine connector position for loading placement
+	getField(GEOMETRY)->connector->setTranslation({ 0.0f, 38.0f });
 }
 
 nif::BSEffectShaderProperty& node::EffectShader::object()

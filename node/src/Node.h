@@ -44,6 +44,8 @@ namespace node
 		Node();
 		Node(std::unique_ptr<nif::NiNode>&& obj);
 
+		constexpr static float WIDTH = 150.0f;
+		constexpr static float HEIGHT = 180.0f;
 	};
 
 	class Root final : public NodeShared
@@ -51,5 +53,8 @@ namespace node
 	public:
 		Root();
 		Root(std::unique_ptr<nif::NiNode>&& obj);
+
+		constexpr static float WIDTH = 150.0f;
+		constexpr static float HEIGHT = 140.0f;
 	};
 }

@@ -167,10 +167,10 @@ void node::NodeBase::removeController(nif::NiTimeController* obj)
 
 gui::Floats<2> node::NodeBase::LeftController::place(const gui::Floats<2>& hint)
 {
-	return { m_window.getPosition()[0], hint[1] };
+	return { 0.0f, hint[1] };
 }
 
 gui::Floats<2> node::NodeBase::RightController::place(const gui::Floats<2>& hint)
 {
-	return { m_window.getPosition()[0] + m_window.getSize()[0], hint[1] };
+	return { m_window.getSize()[0], hint[1] };
 }

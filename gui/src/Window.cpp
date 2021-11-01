@@ -25,7 +25,7 @@
 
 gui::Window::Window(const std::string& title) :
 	m_title(title), 
-	m_style { ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse }
+	m_style { ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar }
 {
 	if (ImGui::GetCurrentContext()) {
 		m_colours[COL_TITLE] = gui_type_conversion<gui::ColRGBA>::from(ImGui::GetStyle().Colors[ImGuiCol_TitleBg]);
@@ -50,12 +50,30 @@ void gui::Window::accept(Visitor& v)
 	v.visit(*this);
 }
 
-void gui::Window::frame()
+#include "imgui_internal.h"
+void gui::Window::frame(FrameDrawer& fd)
 {
 
 	using namespace ImGui;
 
-	SetNextWindowSize(gui_type_conversion<ImVec2>::from(m_size));
+	Floats<2> scale = fd.getCurrentScale();
+	Floats<2> size = m_size * scale;
+	SetNextWindowSize({ std::floorf(size[0]), std::floorf(size[1]) });
+
+	//Position
+	//ImGui handles dragging windows during Begin/EndFrame. We need to pull out the current position of 
+	//our window from imgui now, before we start tampering with it.
+	//But how to distinguish dragging the window with the mouse from transforming an ancestor?
+
+	if (ImGuiWindow* window = FindWindowByName(m_title[0].c_str())) {
+		//Floats<2> currentGlobal = gui_type_conversion<Floats<2>>::from(window->Pos);//not accounting for new ancestor transforms
+		//Floats<2> translation_from_dragging = currentGlobal - m_lastGlobalPos;//in global scale
+		m_translation += (gui_type_conversion<Floats<2>>::from(window->Pos) - m_lastGlobalPos) / scale;
+	}
+
+	Floats<2> pos = fd.toGlobal(m_translation);
+	SetNextWindowPos({ std::floorf(pos[0]), std::floorf(pos[1]) });
+
 	PushStyleColor(ImGuiCol_TitleBg, gui_type_conversion<ImVec4>::from(m_colours[COL_TITLE]));
 	PushStyleColor(ImGuiCol_TitleBgActive, gui_type_conversion<ImVec4>::from(m_colours[COL_TITLE_ACTIVE]));
 	PushStyleColor(ImGuiCol_TitleBgCollapsed, gui_type_conversion<ImVec4>::from(m_colours[COL_TITLE]));
@@ -80,12 +98,9 @@ void gui::Window::frame()
 		PushItemWidth(-std::numeric_limits<float>::min());
 		util::CallWrapper popItemWidth(&PopItemWidth);
 
-		m_position = gui_type_conversion<Floats<2>>::from(GetWindowPos());
+		m_lastGlobalPos = gui_type_conversion<Floats<2>>::from(GetWindowPos());
 
-		Composite::frame();
-
-		//Doesn't give me the actual size?
-		//m_size = gui_type_conversion<Floats<2>>::from(GetWindowSize());
+		Composite::frame(fd);
 	}
 	else {
 		//When do we get here? I thought it was when window is collapsed, but no...
@@ -96,13 +111,13 @@ void gui::Window::frame()
 		onClose();
 }
 
+void gui::Window::setTranslation(const Floats<2>& t)
+{
+	m_translation = t;
+	//m_lastGlobalPos = getGlobalPosition();//wrong, will undo the translation next frame
+}
+
 void gui::Window::onClose()
 {
 	asyncInvoke<RemoveChild>(this, getParent(), false);//default to irreversible deletion. Bad idea?
-}
-
-gui::Floats<2> gui::Window::getGlobalPosition() const
-{
-	//getting window pos from imgui gives screen coords
-	return m_position;
 }

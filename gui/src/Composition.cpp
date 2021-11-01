@@ -27,8 +27,14 @@ gui::Component::~Component()
 
 gui::Floats<2> gui::Component::getGlobalPosition() const
 {
-	Floats<2> p = m_parent ? m_parent->getGlobalPosition() : Floats<2>{ 0.0f, 0.0f };
-	return { p[0] + m_position[0], p[1] + m_position[1] };
+	Floats<2> result = m_translation;
+	IComponent* super = m_parent;
+	while (super) {
+		//transform to their parent space
+		result = super->getTranslation() + super->getScale() * result;
+		super = super->getParent();
+	}
+	return result;
 }
 
 void gui::Component::accept(Visitor& v)
@@ -54,12 +60,14 @@ gui::Composite::~Composite()
 	}
 }
 
-void gui::Composite::frame()
+void gui::Composite::frame(FrameDrawer& fd)
 {
+	fd.pushTransform(m_translation, m_scale);
 	for (auto& c : m_children) {
 		assert(c);
-		c->frame();
+		c->frame(fd);
 	}
+	fd.popTransform();
 }
 
 void gui::Composite::accept(Visitor& v)
@@ -133,22 +141,34 @@ void gui::ComponentDecorator::clearChildren()
 	m_component->clearChildren();
 }
 
-void gui::ComponentDecorator::frame()
+void gui::ComponentDecorator::frame(FrameDrawer& fd)
 {
 	assert(m_component);
-	m_component->frame();
+	m_component->frame(fd);
 }
 
-gui::Floats<2> gui::ComponentDecorator::getPosition() const
+gui::Floats<2> gui::ComponentDecorator::getTranslation() const
 {
 	assert(m_component);
-	return m_component->getPosition();
+	return m_component->getTranslation();
 }
 
-void gui::ComponentDecorator::setPosition(const Floats<2>& pos)
+void gui::ComponentDecorator::setTranslation(const Floats<2>& t)
 {
 	assert(m_component);
-	m_component->setPosition(pos);
+	m_component->setTranslation(t);
+}
+
+gui::Floats<2> gui::ComponentDecorator::getScale() const
+{
+	assert(m_component);
+	return m_component->getScale();
+}
+
+void gui::ComponentDecorator::setScale(const Floats<2>& s)
+{
+	assert(m_component);
+	m_component->setScale(s);
 }
 
 gui::Floats<2> gui::ComponentDecorator::getGlobalPosition() const

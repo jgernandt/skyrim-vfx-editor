@@ -29,7 +29,7 @@ namespace gui
 	{
 	public:
 		virtual ~PlotArea() = default;
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 		void addCurve(std::unique_ptr<Curve>&& curve);
 		void removeCurve(Curve* curve);
@@ -88,7 +88,7 @@ namespace gui
 			m_area{ area }, m_points{ points } {}
 		virtual ~SimpleHandles() = default;
 
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 		virtual void onClick(size_t, MouseButton) = 0;
 		virtual void onMove(size_t, const Floats<2>& pos) = 0;
@@ -100,6 +100,7 @@ namespace gui
 	private:
 		const PlotArea& m_area;//we need some sensible way to limit test
 
-		float m_size{ 5.0f };
+		float m_handleSize{ 5.0f };
+		constexpr static float s_buttonMult{ 3.0f };//invisible button size = handle size x this
 	};
 }

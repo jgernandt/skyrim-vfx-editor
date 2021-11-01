@@ -39,7 +39,6 @@ node::NodeShared::NodeShared(std::unique_ptr<nif::NiNode>&& obj) : AVObject(std:
 {
 	setColour(COL_TITLE, TitleCol_Node);
 	setColour(COL_TITLE_ACTIVE, TitleCol_NodeActive);
-	setSize({ 150.0f, 0.0f });
 }
 
 nif::NiNode& node::NodeShared::object()
@@ -54,6 +53,7 @@ node::Node::Node(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj)
 {
 	setClosable(true);
 	setTitle("Node");
+	setSize({ WIDTH, HEIGHT });
 
 	newField<NameField>(NAME, *this);
 	newField<ExtraDataField>(EXTRA_DATA, *this);
@@ -63,6 +63,11 @@ node::Node::Node(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj)
 	newField<ParentField>(PARENT, *this);
 	newField<TransformField>(TRANSFORM, *this);
 
+	//until we have some other way to determine connector position for loading placement
+	getField(EXTRA_DATA)->connector->setTranslation({ WIDTH, 62.0f });
+	getField(CHILDREN)->connector->setTranslation({ WIDTH, 86.0f });
+	getField(OBJECT)->connector->setTranslation({ WIDTH, 110.0f });
+	getField(PARENT)->connector->setTranslation({ 0.0f, 134.0f });
 }
 
 node::Root::Root() : Root(std::make_unique<nif::BSFadeNode>()) {}
@@ -70,6 +75,7 @@ node::Root::Root() : Root(std::make_unique<nif::BSFadeNode>()) {}
 node::Root::Root(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj))
 {
 	setTitle("Root");
+	setSize({ WIDTH, HEIGHT });
 
 	struct NameField : Field
 	{
@@ -84,4 +90,9 @@ node::Root::Root(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj)
 	newField<ExtraDataField>(EXTRA_DATA, *this);
 	newField<ChildField>(CHILDREN, *this);
 	newField<ObjectField<nif::NiNode>>(OBJECT, *this, object());
+
+	//until we have some other way to determine connector position for loading placement
+	getField(EXTRA_DATA)->connector->setTranslation({ WIDTH, 62.0f });
+	getField(CHILDREN)->connector->setTranslation({ WIDTH, 86.0f });
+	getField(OBJECT)->connector->setTranslation({ WIDTH, 110.0f });
 }

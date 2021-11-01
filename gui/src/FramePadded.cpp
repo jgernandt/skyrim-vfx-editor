@@ -23,13 +23,13 @@
 #include "imgui_internal.h"//for ImVec operators
 
 //This only really works for text
-void gui::FramePadded::frame()
+void gui::FramePadded::frame(FrameDrawer& fd)
 {
 	assert(m_component);
 	//ImGui::SetCursorPos(ImGui::GetCursorPos() + ImGui::GetStyle().FramePadding);
 	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().FramePadding.x);
 	ImGui::AlignTextToFramePadding();
-	m_component->frame();
+	m_component->frame(fd);
 }
 
 gui::Floats<2> gui::FramePadded::getSizeHint() const

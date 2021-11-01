@@ -24,7 +24,7 @@
 
 #include "imgui_internal.h"//for GImGui
 
-void gui::Panel::frame()
+void gui::Panel::frame(FrameDrawer& fd)
 {
 	/*
 	* This works, but not for the purpose I intended it; to catch right clicks on the backgroud.
@@ -68,7 +68,7 @@ void gui::Panel::frame()
 		}
 	}
 
-	Composite::frame();
+	Composite::frame(fd);
 }
 
 /*void gui::Panel::setSizeHint(const Floats<2>& size)

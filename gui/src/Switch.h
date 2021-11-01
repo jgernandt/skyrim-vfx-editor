@@ -27,7 +27,7 @@ namespace gui
     public:
         Switch(const std::function<int()>& cdn);
 
-        virtual void frame() override;
+        virtual void frame(FrameDrawer& fd) override;
         virtual Floats<2> getSizeHint() const override;
 
     private:

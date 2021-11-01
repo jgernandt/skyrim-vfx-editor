@@ -20,7 +20,7 @@
 #include "Text.h"
 #include "CallWrapper.h"
 
-void gui::Text::frame()
+void gui::Text::frame(FrameDrawer& fd)
 {
 	util::CallWrapper pop;
 	if (m_wrap) {

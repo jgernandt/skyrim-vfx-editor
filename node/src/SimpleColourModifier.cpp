@@ -302,23 +302,24 @@ private:
 			m_size = { 10.0f, 10.0f }; 
 		}
 
-		virtual void frame() override
+		virtual void frame(gui::FrameDrawer& fd) override
 		{
-			gui::Floats<2> grad_pos = m_gradient.getPosition();
+			gui::Floats<2> grad_pos = m_gradient.getTranslation();
 			gui::Floats<2> grad_size = m_gradient.getSize();
+			gui::Floats<2> currentSize = m_size * fd.getCurrentScale();
 			//assumes we are a sibling of the gradient
-			setPosition({ grad_pos[0] + m_props[m_index]->get() * grad_size[0] - 0.5f * m_size[0], grad_pos[1] + grad_size[1] });
+			setTranslation({ grad_pos[0] + m_props[m_index]->get() * grad_size[0] - 0.5f * m_size[0], grad_pos[1] + grad_size[1] });
 
-			Handle::frame();
+			Handle::frame(fd);
 
 			//draw
-			auto globalPos = getGlobalPosition();
+			auto globalPos = fd.toGlobal(m_translation);
 			gui::Drawer d;
 			d.setTargetLayer(gui::Layer::WINDOW);
 			d.begin();
-			d.triangle({ globalPos[0] + 0.5f * m_size[0], globalPos[1] },
-				{ globalPos[0] + 0.15f * m_size[0], globalPos[1] + 0.8f * m_size[1] },
-				{ globalPos[0] + 0.85f * m_size[0], globalPos[1] + 0.8f * m_size[1] },
+			d.triangle({ globalPos[0] + 0.5f * currentSize[0], globalPos[1] },
+				{ globalPos[0] + 0.15f * currentSize[0], globalPos[1] + 0.8f * currentSize[1] },
+				{ globalPos[0] + 0.85f * currentSize[0], globalPos[1] + 0.8f * currentSize[1] },
 				isHovered() ? nif::COL_WHITE : nif::COL_BLACK);
 			d.end();
 		}
@@ -359,23 +360,24 @@ private:
 			m_size = { 10.0f, 10.0f };
 		}
 
-		virtual void frame() override
+		virtual void frame(gui::FrameDrawer& fd) override
 		{
-			gui::Floats<2> grad_pos = m_gradient.getPosition();
+			gui::Floats<2> grad_pos = m_gradient.getTranslation();
 			gui::Floats<2> grad_size = m_gradient.getSize();
+			gui::Floats<2> currentSize = m_size * fd.getCurrentScale();
 			//assumes we are a sibling of the gradient
-			setPosition({ grad_pos[0] + m_props[m_index]->get() * grad_size[0] - 0.5f * m_size[0], grad_pos[1] - m_size[1] });
+			setTranslation({ grad_pos[0] + m_props[m_index]->get() * grad_size[0] - 0.5f * m_size[0], grad_pos[1] - m_size[1] });
 
-			Handle::frame();
+			Handle::frame(fd);
 
 			//draw
-			auto globalPos = getGlobalPosition();
+			auto globalPos = fd.toGlobal(m_translation);
 			gui::Drawer d;
 			d.setTargetLayer(gui::Layer::WINDOW);
 			d.begin();
-			d.triangle({ globalPos[0] + 0.5f * m_size[0], globalPos[1] + m_size[1] },
-				{ globalPos[0] + 0.15f * m_size[0], globalPos[1] + 0.2f * m_size[1] },
-				{ globalPos[0] + 0.85f * m_size[0], globalPos[1] + 0.2f * m_size[1] },
+			d.triangle({ globalPos[0] + 0.5f * currentSize[0], globalPos[1] + currentSize[1] },
+				{ globalPos[0] + 0.15f * currentSize[0], globalPos[1] + 0.2f * currentSize[1] },
+				{ globalPos[0] + 0.85f * currentSize[0], globalPos[1] + 0.2f * currentSize[1] },
 				isHovered() ? nif::COL_WHITE : nif::COL_BLACK);
 			d.end();
 		}
@@ -439,13 +441,17 @@ node::SimpleColourModifier::SimpleColourModifier() :
 node::SimpleColourModifier::SimpleColourModifier(std::unique_ptr<nif::BSPSysSimpleColorModifier>&& obj) :
 	Modifier(std::move(obj))
 {
-	setSize({ 175.0f, 0.0f });
+	setSize({ WIDTH, HEIGHT });
 	setTitle("Colour modifier");
 
 	addTargetField(std::make_shared<ReqDevice<Requirement::COLOUR>>(*this));
 	newChild<gui::Separator>();
 	newChild<gui::VerticalSpacing>(2);
 	newField<ColourField>("Colour", *this);
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 }
 
 nif::BSPSysSimpleColorModifier& node::SimpleColourModifier::object()

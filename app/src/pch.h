@@ -30,4 +30,7 @@
 #include <memory>
 #include <queue>
 
+#define EIGEN_MPL2_ONLY
+#include "Eigen\Dense"
+
 #endif

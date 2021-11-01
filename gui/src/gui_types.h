@@ -20,6 +20,7 @@
 #include <string>
 #include "type_conversion.h"
 #include "traits.h"
+#include "Eigen/Core"
 
 struct ImVec2;
 struct ImVec4;
@@ -27,13 +28,13 @@ struct ImVec4;
 namespace gui
 {
 	template<size_t N>
-	using Floats = std::array<float, N>;
+	using Floats = Eigen::Array<float, N, 1>;
 
 	template<size_t N>
-	using Ints = std::array<int, N>;
+	using Ints = Eigen::Array<int, N, 1>;
 
-	using ColRGB = Floats<3>;
-	using ColRGBA = Floats<4>;
+	using ColRGB = std::array<float, 3>;
+	using ColRGBA = std::array<float, 4>;
 
 	template<typename T>
 	struct GuiConverter
@@ -57,109 +58,42 @@ namespace gui
 	};
 
 	template<>
+	struct GuiConverter<Eigen::Array<float, 2, 1>>
+	{
+		static Eigen::Array<float, 2, 1> convert(const ImVec2& f);
+	};
+	template<>
+	struct GuiConverter<Eigen::Array<float, 4, 1>>
+	{
+		static Eigen::Array<float, 4, 1> convert(const ImVec4& f);
+	};
+
+	template<>
+	struct GuiConverter<Eigen::Vector<float, 2>>
+	{
+		static Eigen::Vector<float, 2> convert(const ImVec2& f);
+	};
+	template<>
+	struct GuiConverter<Eigen::Vector<float, 4>>
+	{
+		static Eigen::Vector<float, 4> convert(const ImVec4& f);
+	};
+
+	template<>
 	struct GuiConverter<ImVec2>
 	{
 		static ImVec2 convert(const std::array<float, 2>& f);
+		static ImVec2 convert(const Eigen::Array<float, 2, 1>& f);
+		static ImVec2 convert(const Eigen::Vector<float, 2>& f);
 	};
 	template<>
 	struct GuiConverter<ImVec4>
 	{
 		static ImVec4 convert(const std::array<float, 4>& f);
+		static ImVec4 convert(const Eigen::Array<float, 4, 1>& f);
+		static ImVec4 convert(const Eigen::Vector<float, 4>& f);
 	};
 }
-
-
-//The downside of this design; we need to declare types from dependent or completely unrelated libraries here.
-//We might get away with it so far, unless gui ends up needing to convert to array<float, 3>.
-/*namespace Niflib
-{
-	struct Vector3;
-	struct Matrix33;
-	struct Quaternion;
-}*/
-
-/*template<>
-struct util::convert_to<std::array<float, 2>>
-{
-	using type = std::array<float, 2>;
-
-	constexpr static type& from(type& t) { return t; }
-	constexpr static const type& from(const type& t) { return t; }
-	constexpr static type&& from(type&& t) { return std::move(t); }
-
-	static type from(const ImVec2& f);
-
-	template<typename From>
-	static type from(From f)
-	{
-		if constexpr (std::is_convertible<From, type>::value)
-			return f;
-		else
-			static_assert(false, "type conversion not defined");
-	}
-};
-template<>
-struct util::convert_to<std::array<float, 4>>
-{
-	using type = std::array<float, 4>;
-
-	constexpr static type& from(type& t) { return t; }
-	constexpr static const type& from(const type& t) { return t; }
-	constexpr static type&& from(type&& t) { return std::move(t); }
-
-	static type from(const ImVec4& f);
-
-	template<typename From>
-	static type from(From f)
-	{
-		if constexpr (std::is_convertible<From, type>::value)
-			return f;
-		else
-			static_assert(false, "type conversion not defined");
-	}
-};
-
-template<>
-struct util::convert_to<ImVec2>
-{
-	using type = ImVec2;
-
-	constexpr static type& from(type& t) { return t; }
-	constexpr static const type& from(const type& t) { return t; }
-	constexpr static type&& from(type&& t) { return std::move(t); }
-
-	static type from(const std::array<float, 2>& f);
-
-	template<typename From>
-	static type from(From f)
-	{
-		if constexpr (std::is_convertible<From, type>::value)
-			return f;
-		else
-			static_assert(false, "type conversion not defined");
-	}
-};
-
-template<>
-struct util::convert_to<ImVec4>
-{
-	using type = ImVec4;
-
-	constexpr static type& from(type& t) { return t; }
-	constexpr static const type& from(const type& t) { return t; }
-	constexpr static type&& from(type&& t) { return std::move(t); }
-
-	static type from(const std::array<float, 4>& f);
-
-	template<typename From>
-	static type from(From f)
-	{
-		if constexpr (std::is_convertible<From, type>::value)
-			return f;
-		else
-			static_assert(false, "type conversion not defined");
-	}
-};*/
 
 template<typename T>
 struct util::colour_traits<std::array<T, 3>>

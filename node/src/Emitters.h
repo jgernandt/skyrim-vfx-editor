@@ -160,10 +160,12 @@ namespace node
 			std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr = std::unique_ptr<nif::NiBoolInterpolator>());
 
 	public:
-		constexpr static const char* WIDTH = "Width (X)";
-		constexpr static const char* HEIGHT = "Height (Y)";
-		constexpr static const char* DEPTH = "Depth (Z)";
+		constexpr static const char* BOX_WIDTH = "Width (X)";
+		constexpr static const char* BOX_HEIGHT = "Height (Y)";
+		constexpr static const char* BOX_DEPTH = "Depth (Z)";
 
+		constexpr static float WIDTH = 180.0f;
+		constexpr static float HEIGHT = 385.0f;
 	};
 
 	class CylinderEmitter final : public VolumeEmitter
@@ -179,9 +181,11 @@ namespace node
 		virtual nif::NiPSysCylinderEmitter& object() override;
 
 	public:
-		constexpr static const char* RADIUS = "Radius (XY)";
-		constexpr static const char* HEIGHT = "Length (Z)";
+		constexpr static const char* CYL_RADIUS = "Radius (XY)";
+		constexpr static const char* CYL_LENGTH = "Length (Z)";
 
+		constexpr static float WIDTH = 180.0f;
+		constexpr static float HEIGHT = 365.0f;
 	};
 
 	class SphereEmitter final : public VolumeEmitter
@@ -197,7 +201,9 @@ namespace node
 		virtual nif::NiPSysSphereEmitter& object() override;
 
 	public:
-		constexpr static const char* RADIUS = "Radius";
+		constexpr static const char* SPH_RADIUS = "Radius";
 
+		constexpr static float WIDTH = 180.0f;
+		constexpr static float HEIGHT = 345.0f;
 	};
 }

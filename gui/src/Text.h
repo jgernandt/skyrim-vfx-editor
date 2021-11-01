@@ -33,7 +33,7 @@ namespace gui
 	{
 	public:
 		Text(const std::string& text) : m_text{ text } {}
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 		virtual Floats<2> getSizeHint() const override;
 
 		void setWrap(bool wrap = true) { m_wrap = wrap; }
@@ -59,7 +59,7 @@ namespace gui
 		static_assert(std::is_assignable<std::string&, typename util::property_traits<PropertyType>::get_type>::value,
 			"TextProperty needs a std::string");
 
-		virtual void frame() override
+		virtual void frame(FrameDrawer& fd) override
 		{
 			std::string s = util::property_traits<PropertyType>::get(m_property);
 

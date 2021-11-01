@@ -53,7 +53,7 @@ namespace gui
 	public:
 		ColourInput(PropertyType& p, const std::string& label) : m_property{ p }, m_label(label) {}
 
-		virtual void frame() override
+		virtual void frame(FrameDrawer& fd) override
 		{
 			//Read from the property, convert if needed
 			T col = util::type_conversion<T, ConverterType<T>>::from(util::property_traits<PropertyType>::get(m_property));

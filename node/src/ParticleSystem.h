@@ -54,6 +54,9 @@ namespace node
 		constexpr static const char* SHADER = "Shader";
 		constexpr static const char* MODIFIERS = "Modifiers";
 
+		constexpr static float WIDTH = 160.0f;
+		constexpr static float HEIGHT = 285.0f;
+
 	private:
 		class MaxCountField;
 		class WorldSpaceField;

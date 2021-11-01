@@ -284,7 +284,7 @@ node::DummyAVObject::DummyAVObject(std::unique_ptr<nif::NiAVObject>&& obj) :
 {
 	setColour(COL_TITLE, TitleCol_Geom);
 	setColour(COL_TITLE_ACTIVE, TitleCol_GeomActive);
-	setSize({ 150.0f, 0.0f });
+	setSize({ WIDTH, HEIGHT });
 
 	setClosable(true);
 	setTitle("AVObject");

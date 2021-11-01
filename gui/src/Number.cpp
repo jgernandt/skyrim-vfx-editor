@@ -21,7 +21,7 @@
 
 constexpr size_t buf_size = 32;
 
-void gui::NumberBase::frame()
+void gui::NumberBase::frame(FrameDrawer& fd)
 {
 	char buf[buf_size];
 	print(buf, buf_size);

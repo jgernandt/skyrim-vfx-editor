@@ -20,12 +20,12 @@
 #include "Subwindow.h"
 #include "CallWrapper.h"
 
-void gui::Subwindow::frame()
+void gui::Subwindow::frame(FrameDrawer& fd)
 {
 	util::CallWrapper end;
 	if (ImGui::BeginChild(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(m_size))) {
 		end = util::CallWrapper(ImGui::EndChild);
 
-		Composite::frame();
+		Composite::frame(fd);
 	}
 }

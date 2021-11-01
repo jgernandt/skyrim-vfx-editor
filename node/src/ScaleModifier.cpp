@@ -254,11 +254,15 @@ node::ScaleModifier::ScaleModifier() :
 node::ScaleModifier::ScaleModifier(std::unique_ptr<nif::BSPSysScaleModifier>&& obj) :
 	Modifier(std::move(obj))
 {
-	setSize({ 200.0f, 0.0f });
+	setSize({ WIDTH, HEIGHT });
 	setTitle("Scale modifier");
 
 	addTargetField(std::make_shared<Device>(*this));
 	newField<ScaleField>("Scale", *this);
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 }
 
 nif::BSPSysScaleModifier& node::ScaleModifier::object()

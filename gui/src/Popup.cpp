@@ -34,18 +34,19 @@ void gui::PopupBase::open()
 	ImGui::OpenPopup(m_id[0].c_str(), 0);
 }
 
-void gui::Popup::frame()
+void gui::Popup::frame(FrameDrawer& fd)
 {
 	if (m_isOpen) {
-		ImGui::SetNextWindowSize({ m_size[0], m_size[1] });
+		Floats<2> size = m_size * fd.getCurrentScale();
+		ImGui::SetNextWindowSize({ std::floorf(size[0]), std::floorf(size[1]) });
 
-		if (ImGui::BeginPopup(m_id[0].c_str())) {
+		if (ImGui::BeginPopup(m_id[0].c_str(), ImGuiWindowFlags_NoScrollbar)) {
 			util::CallWrapper end(&ImGui::EndPopup);
 
 			ImGui::PushItemWidth(-std::numeric_limits<float>::min());
 			util::CallWrapper popWidth(&ImGui::PopItemWidth);
 
-			Composite::frame();
+			Composite::frame(fd);
 		}
 
 		//Is this right? Test!
@@ -54,7 +55,7 @@ void gui::Popup::frame()
 	}
 }
 
-void gui::Modal::frame()
+void gui::Modal::frame(FrameDrawer& fd)
 {
 	if (m_isOpen) {
 		ImGui::SetNextWindowSize({ m_size[0], m_size[1] });
@@ -66,7 +67,7 @@ void gui::Modal::frame()
 		ImGui::PushItemWidth(-std::numeric_limits<float>::min());
 		util::CallWrapper popWidth(&ImGui::PopItemWidth);
 
-		Composite::frame();
+		Composite::frame(fd);
 	}
 	else {
 		//So, here's what I've figured out:
@@ -96,9 +97,9 @@ gui::MessageBox::MessageBox(const std::string& title, const std::string& msg) :
 	addChild(std::move(item));
 }
 
-void gui::MessageBox::frame()
+void gui::MessageBox::frame(FrameDrawer& fd)
 {
-	Modal::frame();
+	Modal::frame(fd);
 	//We must not be open on the first frame
 	if (!m_isOpen && !ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId))
 		open();

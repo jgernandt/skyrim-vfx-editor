@@ -25,14 +25,14 @@ namespace gui
 	{
 	public:
 		Separator() = default;
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 	};
 
 	class VerticalSpacing final : public Component
 	{
 	public:
 		VerticalSpacing(int n = 1) : m_N{n} {}
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 	private:
 		const int m_N;

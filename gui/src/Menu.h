@@ -31,7 +31,7 @@ namespace gui
 	public:
 		MenuItem(const std::string& label, const action_type& action = action_type()) :
 			Activatable(action), m_label{ label } {}
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 	private:
 		std::string m_label;
@@ -41,7 +41,7 @@ namespace gui
 	{
 	public:
 		Menu(const std::string& label) : m_label{ label } {}
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 	private:
 		std::string m_label;
@@ -51,7 +51,7 @@ namespace gui
 	{
 	public:
 		MainMenu(const std::string& label) : Menu{ label } {}
-		virtual void frame() override;
+		virtual void frame(FrameDrawer& fd) override;
 
 	};
 }

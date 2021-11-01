@@ -22,8 +22,7 @@
 
 namespace gui
 {
-	class AddChild final :
-		public ICommand
+	class AddChild final : public ICommand
 	{
 	public:
 		AddChild(ComponentPtr&& child, IComponent* parent, bool reversible) :
@@ -49,8 +48,7 @@ namespace gui
 		bool m_reversible;
 	};
 
-	class RemoveChild final :
-		public ICommand
+	class RemoveChild final : public ICommand
 	{
 	public:
 		RemoveChild(IComponent* child, IComponent* parent, bool reversible) :
@@ -71,6 +69,30 @@ namespace gui
 		IComponent* m_parent;
 		IComponent* m_child;
 		ComponentPtr m_stored;//for redoing
+		bool m_reversible;
+	};
+
+	class MoveChild final : public ICommand
+	{
+	public:
+		MoveChild(IComponent* child, IComponent* from, IComponent* to, bool reversible) :
+			m_child{ child }, m_from{ from }, m_to{ to }, m_reversible{ reversible } {}
+		virtual void execute() override
+		{
+			if (m_from && m_to)
+				m_to->addChild(m_from->removeChild(m_child));
+		}
+		virtual void reverse() override
+		{
+			assert(m_reversible);
+			if (m_from && m_to)
+				m_from->addChild(m_to->removeChild(m_child));
+		}
+		virtual bool reversible() const override { return m_reversible; }
+	private:
+		IComponent* m_child;
+		IComponent* m_from;
+		IComponent* m_to;
 		bool m_reversible;
 	};
 }

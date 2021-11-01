@@ -22,7 +22,6 @@
 #include "widget_types.h"
 
 constexpr float VAR_FRACTION = -0.5f;
-constexpr float WND_SIZE = 180.0f;
 
 class node::Emitter::BirthRateField final : public Field
 {
@@ -201,7 +200,6 @@ node::Emitter::Emitter(std::unique_ptr<nif::NiPSysEmitter>&& obj,
 
 	setColour(COL_TITLE, TitleCol_Modifier);
 	setColour(COL_TITLE_ACTIVE, TitleCol_ModifierActive);
-	setSize({ WND_SIZE, 0.0f });
 	setClosable(true);
 
 	addTargetField(std::make_shared<Emitter::Device>(*this));
@@ -395,10 +393,16 @@ node::BoxEmitter::BoxEmitter(std::unique_ptr<nif::NiPSysBoxEmitter>&& obj,
 	VolumeEmitter(std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Box emitter");
+	setSize({ WIDTH, HEIGHT });
 
-	newField<EmitterMetricField>(WIDTH, *this, object().width());
-	newField<EmitterMetricField>(HEIGHT, *this, object().height());
-	newField<EmitterMetricField>(DEPTH, *this, object().depth());
+	newField<EmitterMetricField>(BOX_WIDTH, *this, object().width());
+	newField<EmitterMetricField>(BOX_HEIGHT, *this, object().height());
+	newField<EmitterMetricField>(BOX_DEPTH, *this, object().depth());
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
+	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
 nif::NiPSysBoxEmitter& node::BoxEmitter::object()
@@ -422,9 +426,15 @@ node::CylinderEmitter::CylinderEmitter(std::unique_ptr<nif::NiPSysCylinderEmitte
 	VolumeEmitter(std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Cylinder emitter");
+	setSize({ WIDTH, HEIGHT });
 
-	newField<EmitterMetricField>(RADIUS, *this, object().radius());
-	newField<EmitterMetricField>(HEIGHT, *this, object().height());
+	newField<EmitterMetricField>(CYL_RADIUS, *this, object().radius());
+	newField<EmitterMetricField>(CYL_LENGTH, *this, object().height());
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
+	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
 nif::NiPSysCylinderEmitter& node::CylinderEmitter::object()
@@ -448,8 +458,14 @@ node::SphereEmitter::SphereEmitter(std::unique_ptr<nif::NiPSysSphereEmitter>&& o
 	VolumeEmitter(std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Sphere emitter");
+	setSize({ WIDTH, HEIGHT });
 
-	newField<EmitterMetricField>(RADIUS, *this, object().radius());
+	newField<EmitterMetricField>(SPH_RADIUS, *this, object().radius());
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
+	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
 nif::NiPSysSphereEmitter& node::SphereEmitter::object()

@@ -22,6 +22,7 @@
 #include <array>
 #include <cassert>
 #include <exception>
+#include <fstream>
 #include <functional>
 #include <map>
 #include <memory>
@@ -33,5 +34,8 @@
 
 #include "imgui.h"
 #include "imgui_stdlib.h"
+
+#define EIGEN_MPL2_ONLY
+#include "Eigen\Dense"
 
 #endif //PCH_H

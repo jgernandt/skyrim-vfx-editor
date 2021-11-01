@@ -43,6 +43,7 @@ namespace node
 
 		bool empty() const { return m_nodes.empty(); }
 		size_t size() const { return m_nodes.size(); }
+		const std::vector<std::unique_ptr<NodeBase>>& nodes() const { return m_nodes; }
 
 	protected:
 		//Entry point functions should test for duplication. 
@@ -76,7 +77,7 @@ namespace node
 		};
 
 		std::vector<std::unique_ptr<NodeBase>> m_nodes;
-		std::map<nif::native::NiObject*, NodeBase*> m_objectMap;
+		std::map<nif::native::NiObject*, int> m_objectMap;//maps processed objects to an index in m_nodes (-1 if none)
 		std::vector<std::string> m_warnings;
 		std::list<Connection> m_connections;
 
