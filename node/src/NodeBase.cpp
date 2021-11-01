@@ -92,12 +92,7 @@ node::NodeBase::NodeBase(std::unique_ptr<nif::NiObject>&& obj) :
 
 node::NodeBase::~NodeBase()
 {
-	//Disconnect all our fields
-	for (auto&& field : m_fields) {
-		assert(field.second);
-		if (field.second->connector)
-			field.second->connector->disconnect();
-	}
+	disconnect();
 
 	//The safest approach would be to destroy our children first, since some widgets may be referencing the objects. 
 	//However, they shouldn't be touching anything on destruction.
@@ -162,6 +157,16 @@ void node::NodeBase::removeController(nif::NiTimeController* obj)
 		it != m_controllers.end())
 	{
 		m_controllers.erase(it);
+	}
+}
+
+void node::NodeBase::disconnect()
+{
+	//Disconnect all our fields
+	for (auto&& field : m_fields) {
+		assert(field.second);
+		if (field.second->connector)
+			field.second->connector->disconnect();
 	}
 }
 
