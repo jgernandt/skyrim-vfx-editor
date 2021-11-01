@@ -89,11 +89,16 @@ namespace node
 	};
 
 	template<typename T>//template only to distinguish types
-	struct Controllable
+	class IController
 	{
-		//The interpolator may be a blend, so we cannot use derived types here (even in specialisations).
-		//It will have to be downcast by the implementation.
-		//virtual void setInterpolator(NiInterpolator*) = 0;
+	public:
+		virtual ~IController() = default;
+
+		virtual IProperty<unsigned short>& flags() = 0;
+		virtual IProperty<float>& frequency() = 0;
+		virtual IProperty<float>& phase() = 0;
+		virtual IProperty<float>& startTime() = 0;
+		virtual IProperty<float>& stopTime() = 0;
 	}; 
 
 	template<typename T>
