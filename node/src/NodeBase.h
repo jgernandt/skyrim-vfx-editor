@@ -25,6 +25,10 @@
 
 #include "NiController.h"
 
+//We need to rework the ownership of resources.
+//The current design was intended to make safe destruction simple (and it does),
+//but resource ownership is hard to setup and even harder to overview.
+
 namespace node
 {
 	struct Field
@@ -94,6 +98,10 @@ namespace node
 
 		virtual void addListener(ISetListener<nif::NiTimeController>& l) override { m_obsImpl.addListener(l); }
 		virtual void removeListener(ISetListener<nif::NiTimeController>& l) override { m_obsImpl.removeListener(l); }
+
+	protected:
+		//quick workaround to avoid relying on our destructor for safe disconnection
+		void disconnect();
 
 	private:
 		class LeftController final :
