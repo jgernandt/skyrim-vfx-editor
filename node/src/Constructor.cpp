@@ -51,10 +51,7 @@ void node::Constructor::makeRoot(const nif::ni_ptr<nif::native::NiObject>& root)
 void node::Constructor::extractNodes(gui::ConnectionHandler& target)
 {
 	std::vector<std::pair<gui::Connector*, gui::Connector*>> couplings;
-
-	//symmetric matrix indicating connections between nodes
-	//(this should be some sparse format instead)
-	Eigen::MatrixXf connectivity = Eigen::MatrixXf::Zero(m_nodes.size(), m_nodes.size());
+	std::vector<Positioner::LinkInfo> linkInfo;
 
 	for (auto&& item : m_connections) {
 		gui::Connector* c1 = nullptr;
@@ -81,8 +78,32 @@ void node::Constructor::extractNodes(gui::ConnectionHandler& target)
 			couplings.push_back({ c1, c2 });
 			assert(i1 < static_cast<int>(m_nodes.size()) && i2 < static_cast<int>(m_nodes.size()));
 			if (i1 != i2) {
-				connectivity(i1, i2) = 1.0f;
-				connectivity(i2, i1) = 1.0f;
+				if (i1 > i2) {
+					//the positioner benefits from consistency
+					std::swap(i1, i2);
+					std::swap(c1, c2);
+				}
+
+				linkInfo.push_back({});
+				linkInfo.back().node1 = i1;
+				linkInfo.back().node2 = i2;
+
+				//Offset should be (node-space) translation(c1) - translation(c2).
+				//Connectors don't know their position until we start drawing them,
+				//but down the line we want to delegate to some layout manager to place gui components.
+				//This solution would mean that the connectors *do* know their position at this point.
+				//So let's make this work somehow:
+				linkInfo.back().offset = c2->getTranslation() - c1->getTranslation();
+				//(later, we may not be able to assume that the local translation is in node space)
+
+				//The stiffness may have to be determined pairwise. 
+				//It may also have to depend on the number of links to the same connector, or to the same node.
+				//Unless we make the graph data accessible somehow, this will be hard to work with. Something to consider.
+				//Right now I think the only ones we want softer are the upwards references.
+				if (item.field1 == Node::OBJECT || item.field2 == Node::OBJECT)
+					linkInfo.back().stiffness = 0.1f;
+				else
+					linkInfo.back().stiffness = 1.0f;
 			}
 			//if somehow i1 == i2 we ignore it
 		}
@@ -90,7 +111,7 @@ void node::Constructor::extractNodes(gui::ConnectionHandler& target)
 	m_connections.clear();
 
 	if (m_nodes.size() > 1) {
-		target.addChild(std::make_unique<Positioner>(std::move(m_nodes), connectivity));
+		target.addChild(std::make_unique<Positioner>(std::move(m_nodes), std::move(linkInfo)));
 		//Positioner solver(connectivity);
 		//auto pos = solver.solve(connectivity);
 		//if (pos.size() == 2 * m_nodes.size()) {

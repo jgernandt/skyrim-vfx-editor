@@ -448,6 +448,10 @@ node::SimpleColourModifier::SimpleColourModifier(std::unique_ptr<nif::BSPSysSimp
 	newChild<gui::Separator>();
 	newChild<gui::VerticalSpacing>(2);
 	newField<ColourField>("Colour", *this);
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 }
 
 nif::BSPSysSimpleColorModifier& node::SimpleColourModifier::object()

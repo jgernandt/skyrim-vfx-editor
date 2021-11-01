@@ -63,6 +63,11 @@ node::Node::Node(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj)
 	newField<ParentField>(PARENT, *this);
 	newField<TransformField>(TRANSFORM, *this);
 
+	//until we have some other way to determine connector position for loading placement
+	getField(EXTRA_DATA)->connector->setTranslation({ WIDTH, 62.0f });
+	getField(CHILDREN)->connector->setTranslation({ WIDTH, 86.0f });
+	getField(OBJECT)->connector->setTranslation({ WIDTH, 110.0f });
+	getField(PARENT)->connector->setTranslation({ 0.0f, 134.0f });
 }
 
 node::Root::Root() : Root(std::make_unique<nif::BSFadeNode>()) {}
@@ -85,4 +90,9 @@ node::Root::Root(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj)
 	newField<ExtraDataField>(EXTRA_DATA, *this);
 	newField<ChildField>(CHILDREN, *this);
 	newField<ObjectField<nif::NiNode>>(OBJECT, *this, object());
+
+	//until we have some other way to determine connector position for loading placement
+	getField(EXTRA_DATA)->connector->setTranslation({ WIDTH, 62.0f });
+	getField(CHILDREN)->connector->setTranslation({ WIDTH, 86.0f });
+	getField(OBJECT)->connector->setTranslation({ WIDTH, 110.0f });
 }

@@ -204,6 +204,9 @@ node::EffectShader::EffectShader(std::unique_ptr<nif::BSEffectShaderProperty>&& 
 	newChild<gui::Separator>();
 
 	newField<PaletteTexField>(PALETTE_TEXTURE, *this);
+
+	//until we have some other way to determine connector position for loading placement
+	getField(GEOMETRY)->connector->setTranslation({ 0.0f, 38.0f });
 }
 
 nif::BSEffectShaderProperty& node::EffectShader::object()

@@ -398,6 +398,11 @@ node::BoxEmitter::BoxEmitter(std::unique_ptr<nif::NiPSysBoxEmitter>&& obj,
 	newField<EmitterMetricField>(BOX_WIDTH, *this, object().width());
 	newField<EmitterMetricField>(BOX_HEIGHT, *this, object().height());
 	newField<EmitterMetricField>(BOX_DEPTH, *this, object().depth());
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
+	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
 nif::NiPSysBoxEmitter& node::BoxEmitter::object()
@@ -425,6 +430,11 @@ node::CylinderEmitter::CylinderEmitter(std::unique_ptr<nif::NiPSysCylinderEmitte
 
 	newField<EmitterMetricField>(CYL_RADIUS, *this, object().radius());
 	newField<EmitterMetricField>(CYL_LENGTH, *this, object().height());
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
+	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
 nif::NiPSysCylinderEmitter& node::CylinderEmitter::object()
@@ -451,6 +461,11 @@ node::SphereEmitter::SphereEmitter(std::unique_ptr<nif::NiPSysSphereEmitter>&& o
 	setSize({ WIDTH, HEIGHT });
 
 	newField<EmitterMetricField>(SPH_RADIUS, *this, object().radius());
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
+	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
 nif::NiPSysSphereEmitter& node::SphereEmitter::object()

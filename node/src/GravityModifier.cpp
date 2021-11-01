@@ -152,6 +152,11 @@ node::PlanarForceField::PlanarForceField(std::unique_ptr<nif::NiPSysGravityModif
 
 	newChild<gui::Separator>();
 	newField<GravityAxisField>(GRAVITY_AXIS, *this);
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
+	getField(GRAVITY_OBJECT)->connector->setTranslation({ 0.0f, 90.0f });
 }
 
 node::SphericalForceField::SphericalForceField() :
@@ -167,4 +172,9 @@ node::SphericalForceField::SphericalForceField(std::unique_ptr<nif::NiPSysGravit
 {
 	setTitle("Spherical force field");
 	setSize({ WIDTH, HEIGHT });
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
+	getField(GRAVITY_OBJECT)->connector->setTranslation({ 0.0f, 90.0f });
 }

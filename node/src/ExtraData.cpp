@@ -80,6 +80,9 @@ node::StringData::StringData(std::unique_ptr<nif::NiStringExtraData>&& obj) :
 		}
 	};
 	newField<ValueField>(VALUE, *this);
+
+	//until we have some other way to determine connector position for loading placement
+	getField(TARGET)->connector->setTranslation({ 0.0f, 38.0f });
 }
 
 node::WeaponTypeData::WeaponTypeData() : WeaponTypeData(std::make_unique<nif::NiStringExtraData>()) {}
@@ -110,6 +113,9 @@ node::WeaponTypeData::WeaponTypeData(std::unique_ptr<nif::NiStringExtraData>&& o
 	};
 
 	newField<TypeField>(TYPE, *this);
+
+	//until we have some other way to determine connector position for loading placement
+	getField(TARGET)->connector->setTranslation({ 0.0f, 38.0f });
 }
 
 node::DummyExtraData::DummyExtraData(std::unique_ptr<nif::NiExtraData>&& obj) :
@@ -119,4 +125,7 @@ node::DummyExtraData::DummyExtraData(std::unique_ptr<nif::NiExtraData>&& obj) :
 	setSize({ WIDTH, HEIGHT });
 	newChild<gui::Separator>();
 	newChild<gui::FramePadded>(std::make_unique<gui::Text>(object().name().get()));
+
+	//until we have some other way to determine connector position for loading placement
+	getField(TARGET)->connector->setTranslation({ 0.0f, 38.0f });
 }

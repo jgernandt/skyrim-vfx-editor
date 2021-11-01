@@ -31,7 +31,19 @@ namespace node
 	class Positioner final : public gui::Composite
 	{
 	public:
-		Positioner(std::vector<std::unique_ptr<NodeBase>>&& nodes, const Eigen::MatrixXf& connectivity);
+		struct LinkInfo
+		{
+			//node indices
+			int node1;
+			int node2;
+			//the offset from node1 to node2 that corresponds to 0 energy
+			gui::Floats<2> offset;
+			//the spring constant of the link, scaled by some number
+			float stiffness;
+		};
+
+	public:
+		Positioner(std::vector<std::unique_ptr<NodeBase>>&& nodes, std::vector<LinkInfo>&& links);
 		~Positioner();
 
 		virtual void frame(gui::FrameDrawer& fd) override;
@@ -41,7 +53,7 @@ namespace node
 		void solve();
 
 	private:
-		Eigen::MatrixXf m_C;
+		//Eigen::MatrixXf m_C;
 		int m_N;
 		std::mutex m_mutex;//protects access to result vector
 		Eigen::VectorXd m_x;
@@ -51,6 +63,7 @@ namespace node
 		std::atomic_bool m_done{ false };
 
 		std::vector<NodeBase*> m_nodes;
+		std::vector<LinkInfo> m_links;
 		std::vector<gui::IComponent*> m_removed;
 
 	};

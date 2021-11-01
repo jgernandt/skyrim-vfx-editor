@@ -82,6 +82,10 @@ node::RotationModifier::RotationModifier(std::unique_ptr<nif::NiPSysRotationModi
 	newField<AngleField>(ANGLE, *this);
 	newField<SpeedField>(SPEED, *this);
 	newChild<Checkbox>(object().randomSign(), "Random direction");
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 }
 
 nif::NiPSysRotationModifier& node::RotationModifier::object()
