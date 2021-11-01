@@ -17,7 +17,8 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 
-//This is an adaptation of an algorithm from GSL by Brian Gough
+//This is an adaptation of an algorithm by Brian Gough from the GNU Scientific Library.
+//The original source code is enclosed with SVFX Editor for reference.
 
 #pragma once
 #include <memory>
@@ -68,7 +69,6 @@ namespace math
 
 	namespace opt
 	{
-
 		enum class Status
 		{
 			SUCCESS,
@@ -90,7 +90,7 @@ namespace math
 			void grad(const Eigen::VectorXd& x, Eigen::VectorXd& r_grad) {}
 		};
 
-		//Wraps a mutli-dim function in the interface of a single-dim function
+		//Wraps a multi-dim function in the interface of a single-dim function
 		template<typename MultiDimType>
 		class OneDimWrapper
 		{
@@ -184,19 +184,22 @@ namespace math
 
 				//Bracket minimum
 				int i = 0;
-				double a, b;//interval lims
-				double fa, fb;//fvals
-				double fpa, fpb;//derivs
+				double a = 0.0, b = alpha;//interval lims
+				double fa = f0, fb = 0.0;//fvals
+				double fpa = fp0, fpb = 0.0;//derivs
 				while (i++ < i_max) {
 					//We evaluate the derivative immediately, since our specific function benefits from it.
 					//In general, it could wait until after the first condition has been tested.
 					m_fcn.eval(alpha, falpha, fpalpha);
 
 					if (falpha > f0 + alpha * m_params.rho * fp0 || falpha >= falpha_prev) {
-						a = alpha_prev; fa = falpha_prev; fpa = fpalpha_prev;
-						//I suppose we could use our calced df here?
-						b = alpha; fb = falpha; fpb = std::numeric_limits<double>::quiet_NaN();
-						break;                /* goto sectioning */
+						a = alpha_prev; 
+						fa = falpha_prev; 
+						fpa = fpalpha_prev;
+						b = alpha; 
+						fb = falpha;
+						fpb = std::numeric_limits<double>::quiet_NaN();
+						break;			//goto sectioning
 					}
 
 					if (std::abs(fpalpha) <= -m_params.sigma * fp0) {
@@ -205,9 +208,13 @@ namespace math
 					}
 
 					if (fpalpha >= 0) {
-						a = alpha; fa = falpha; fpa = fpalpha;
-						b = alpha_prev; fb = falpha_prev; fpb = fpalpha_prev;
-						break;                /* goto sectioning */
+						a = alpha; 
+						fa = falpha; 
+						fpa = fpalpha;
+						b = alpha_prev; 
+						fb = falpha_prev; 
+						fpb = fpalpha_prev;
+						break;			//goto sectioning
 					}
 
 					//extend bracket
@@ -308,27 +315,6 @@ namespace math
 		template<typename FcnType>
 		class SyncMultiMin
 		{
-		private:
-			//Mimic GSL for now - I think we can drop some of this
-			struct InternalState
-			{
-				double step{ 0.01 };
-				double g0norm;
-				double pnorm;
-				double delta_f{ 0.0 };
-				double fp0;                   /* f'(0) for f(x-alpha*p) */
-				Eigen::VectorXd x0;
-				Eigen::VectorXd g0;
-				Eigen::VectorXd p;
-				/* work space */
-				Eigen::VectorXd dx0;
-				Eigen::VectorXd dg0;
-				Eigen::VectorXd x_alpha;
-				Eigen::VectorXd g_alpha;
-				/* wrapper function */
-				std::unique_ptr<OneDimWrapper<FcnType>> wrapper;
-			};
-
 		public:
 			SyncMultiMin(FcnType& fcn, Eigen::VectorXd& r_x, std::mutex& mutex) :
 				m_fcn{ fcn }, m_out{ r_x }, m_mutex{ mutex }
@@ -342,41 +328,39 @@ namespace math
 				//evaluate initial point
 				m_fcn.eval(m_x, m_fval, m_grad);
 				assert(m_grad.size() == m_N);
-				m_dx = Eigen::VectorXd::Zero(m_N);
+				m_deltaX = Eigen::VectorXd::Zero(m_N);
 
-				m_state.x0 = m_x;
-				m_state.g0 = m_grad;
-				m_state.g0norm = m_state.g0.norm();
+				m_gradNorm = m_grad.norm();
 
-				//Use negative gradient as initial step dir
-				m_state.p = -1.0 / m_state.g0norm * m_grad;
-				m_state.pnorm = m_state.p.norm();//should be 1
-				m_state.fp0 = -m_state.g0norm;
+				//Use (normalised) negative gradient as initial step dir
+				m_stepDir = -m_grad / m_gradNorm;
+				m_stepNorm = m_stepDir.norm();//should be 1
+				m_Df = -m_gradNorm;
 
-				m_state.wrapper = std::make_unique<OneDimWrapper<FcnType>>(
-					m_fcn, m_state.x0, m_state.g0, m_state.p, m_fval, m_state.fp0, m_state.x_alpha, m_state.g_alpha);
+				m_wrapperFcn = std::make_unique<OneDimWrapper<FcnType>>(
+					m_fcn, m_x, m_grad, m_stepDir, m_fval, m_Df, m_xTest, m_gradTest);
 			}
 
 			Status iterate()
 			{ 
-				if (m_state.pnorm == 0.0 || m_state.g0norm == 0.0 || m_state.fp0 == 0) {
-					m_dx = Eigen::VectorXd::Zero(m_N);
+				if (m_stepNorm == 0.0 || m_gradNorm == 0.0 || m_Df == 0) {
+					m_deltaX = Eigen::VectorXd::Zero(m_N);
 					return Status::NO_PROGRESS;
 				}
 
 				double alpha;
 
-				if (m_state.delta_f < 0) {
-					double del = std::max(-m_state.delta_f, 10 * std::numeric_limits<double>::epsilon() * std::abs(m_fval));
-					alpha = std::min(1.0, 2.0 * del / (-m_state.fp0));
+				if (m_deltaF < 0) {
+					double del = std::max(-m_deltaF, 10.0 * std::numeric_limits<double>::epsilon() * std::abs(m_fval));
+					alpha = std::min(1.0, 2.0 * del / (-m_Df));
 				}
 				else {
-					alpha = std::abs(m_state.step);
+					alpha = std::abs(m_initStep);
 				}
 
 				//Determine step length
-				assert(m_state.wrapper);
-				SingleMin<OneDimWrapper<FcnType>> lineSearcher(*m_state.wrapper);
+				assert(m_wrapperFcn);
+				SingleMin<OneDimWrapper<FcnType>> lineSearcher(*m_wrapperFcn);
 				Status status = lineSearcher.minSearch(alpha);
 
 				if (status != Status::SUCCESS)
@@ -384,73 +368,86 @@ namespace math
 
 				//Update our current position (this is the only time we write to m_x)
 				double temp;//unused
-				m_state.wrapper->eval(alpha, m_fval, temp);//make sure the right point is cached
-				m_x = m_state.x_alpha;//wrapper is updating x_alpha/g_alpha
-				m_grad = m_state.g_alpha;
+				m_wrapperFcn->eval(alpha, m_fval, temp);//make sure the right point is cached
+
+				//wrapper is updating m_xTest and m_gradTest. They now hold our accepted point.
+				m_deltaX = m_xTest - m_x;
+				m_x = m_xTest;
+
+				m_deltaGrad = m_gradTest - m_grad;
+				m_grad = m_gradTest;
+
 				{
 					std::lock_guard<std::mutex> lock(m_mutex);
 					m_out = m_x;
 				}
 
 				//Choose new direction
-				//Note: We do not actually accumulate any information on the Hessian. 
-				//This might be good enough, but might also be worth storing some history.
-
-				m_state.dx0 = m_x - m_state.x0;
-				m_dx = m_state.dx0;//why do we need a copy?
-
-				m_state.dg0 = m_grad - m_state.g0;
-
-				double dxg = m_state.dx0.transpose() * m_grad;
-				double dgg = m_state.dg0.transpose() * m_grad;
-				double dxdg = m_state.dx0.transpose() * m_state.dg0;
+				double dxg = m_deltaX.transpose() * m_grad;
+				double dgg = m_deltaGrad.transpose() * m_grad;
+				double dxdg = m_deltaX.transpose() * m_deltaGrad;
 
 				double A, B;
-				if (dxdg != 0) {
+				if (dxdg != 0.0) {
 					B = dxg / dxdg;
-					A = -(1.0 + m_state.dg0.squaredNorm() / dxdg) * B + dgg / dxdg;
+					A = -(1.0 + m_deltaGrad.squaredNorm() / dxdg) * B + dgg / dxdg;
 				}
 				else {
-					B = 0;
-					A = 0;
+					B = 0.0;
+					A = 0.0;
 				}
 
-				m_state.p = m_grad - A * m_state.dx0 - B * m_state.dg0;
-
+				m_stepDir = m_grad - A * m_deltaX - B * m_deltaGrad;
+				
 				//Prepare for next iteration
-				//(Could this not be done at the start, and it can be local?)
-				m_state.g0 = m_grad;
-				m_state.x0 = m_x;
-				m_state.g0norm = m_state.g0.norm();
-				m_state.pnorm = m_state.p.norm();
+				m_gradNorm = m_grad.norm();
+				m_stepNorm = m_stepDir.norm();
 
-				double pg = m_state.p.transpose() * m_state.g0;
+				double pg = m_stepDir.transpose() * m_grad;
 				double dir = pg > 0.0 ? -1.0 : 1.0;
-				m_state.p *= dir / m_state.pnorm;
-				m_state.pnorm = m_state.p.norm();
-				m_state.fp0 = m_state.p.transpose() * m_state.g0;//I think we can skip this. Leave it to the wrapper.
-				m_state.wrapper->newDirection(m_state.fp0);//maybe just construct a new wrapper every iteration?
+				m_stepDir *= dir / m_stepNorm;
+				m_stepNorm = m_stepDir.norm();
+				m_Df = m_stepDir.transpose() * m_grad;
+				m_wrapperFcn->newDirection(m_Df);
 
 				return Status::SUCCESS;
 			}
 
 			double fval() const { return m_fval; }
 			const Eigen::VectorXd& grad() const { return m_grad; }
-			const Eigen::VectorXd& dx() const { return m_dx; }
+			const Eigen::VectorXd& dx() const { return m_deltaX; }
+
+			void setInitialStepSize(double step) { m_initStep = step; }
 
 		private:
 			FcnType& m_fcn;
 			Eigen::VectorXd& m_out;
 			std::mutex& m_mutex;
 
+			//Number of variables
 			int m_N;
 
-			Eigen::VectorXd m_x;
+			//Current point
 			double m_fval;
 			Eigen::VectorXd m_grad;
-			Eigen::VectorXd m_dx;
+			Eigen::VectorXd m_deltaX;
 
-			InternalState m_state;
+			std::unique_ptr<OneDimWrapper<FcnType>> m_wrapperFcn;
+
+			//workspace vars
+			Eigen::VectorXd m_x;//private copy of out vector
+			Eigen::VectorXd m_stepDir;
+			Eigen::VectorXd m_deltaGrad;
+
+			//Currently tested point (refs/updated by wrapper)
+			Eigen::VectorXd m_xTest;
+			Eigen::VectorXd m_gradTest;
+
+			double m_initStep{ 0.01 };
+			double m_gradNorm;
+			double m_stepNorm;
+			double m_deltaF{ 0.0 };
+			double m_Df;
 		};
 	}
 }

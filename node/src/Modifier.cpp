@@ -154,4 +154,8 @@ node::DummyModifier::DummyModifier(std::unique_ptr<nif::NiPSysModifier>&& obj) :
 	setTitle("Unknown modifier");
 	setSize({ WIDTH, HEIGHT });
 	addTargetField(std::make_shared<Device>(*this));
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 }

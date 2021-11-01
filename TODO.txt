@@ -1,5 +1,0 @@
-Improvements to block placement and work area
-* pan the work area with the middle button
-* zoom the work area with the scroll wheel
-* place new blocks at the cursor
-* nice structure when loading a file

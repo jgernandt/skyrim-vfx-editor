@@ -58,6 +58,23 @@ void node::Positioner::frame(gui::FrameDrawer& fd)
 	//Update positions (if our algorithm gives thread-safe access to the current result vector, else move into conditional)
 	assert(m_nodes.size() == m_N);
 	Eigen::VectorXf x(2 * m_N);
+	/*Solving without fixing the position of the root tends to converge faster, but yields slightly uglier results
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		assert(m_x.size() == 2 * m_N);
+		x = m_x.cast<float>();
+	}
+	double x_root = x(0);
+	double y_root = x(m_N);
+	x.head(m_N) = SCALE * (x.head(m_N).array() - x_root);
+	x.tail(m_N) = SCALE * (x.tail(m_N).array() - y_root);
+	for (int i = 0; i < m_N; i++) {
+		if (std::find(m_removed.begin(), m_removed.end(), m_nodes[i]) == m_removed.end()) {
+			assert(m_nodes[i]);
+			m_nodes[i]->setTranslation({ x(i), x(i + m_N) });
+		}
+	}
+	*/
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		assert(m_x.size() == 2 * m_N - 2);
@@ -69,6 +86,7 @@ void node::Positioner::frame(gui::FrameDrawer& fd)
 			m_nodes[i]->setTranslation({ x(i), x(i + m_N) });
 		}
 	}
+	
 
 	if (m_done.load()) {
 		//Join thread
@@ -92,18 +110,72 @@ gui::ComponentPtr node::Positioner::removeChild(gui::IComponent* c)
 
 struct OurFunction
 {
-	OurFunction(const std::vector<node::Positioner::LinkInfo>& links) : links{ links } {}
+	OurFunction(const std::vector<node::Positioner::LinkInfo>& links) : m_links{ links } {}
 
 	void eval(const Eigen::VectorXd& x, double& r_f, Eigen::VectorXd& r_grad) 
 	{
 		using namespace Eigen;
+		/*
+		assert(x.size() % 2 == 0);
+		int N = x.size() / 2;
+		m_r2.resize(N, N);
+		
+		//Only calc the upper triangle of r2 (ignore main diagonal)
+		//Store 1/r2 in the lower triangle
+		for (int i = 0; i < N - 1; i++) {
+			m_r2(i, seq(i + 1, N - 1)) = (x(i) - x.segment(i + 1, N - i - 1).array()).square() + (x(i + N) - x.tail(N - i - 1).array()).square();
+			m_r2(seq(i + 1, N - 1), i) = 1.0f / m_r2(i, seq(i + 1, N - 1));
+		}
 
+		r_f = 0.0;
+		r_grad = VectorXd::Zero(2 * N);
+
+		//Contribution from links
+		for (auto&& link : m_links) {
+			int i1 = link.node1;
+			int i2 = link.node2;
+			assert(i1 >= 0 && i1 < N&& i2 >= 0 && i2 < N);
+			if (i1 != i2) {
+				double ox = link.offset[0] / SCALE;
+				double oy = link.offset[1] / SCALE;
+
+				//make sure we use upper triangle
+				assert(i1 < i2);//must be guaranteed by the Constructor
+
+				//Modify squared distance to account for offset
+				m_r2(i1, i2) += ox * (ox - 2.0 * (x(i1) - x(i2)));
+				m_r2(i1, i2) += oy * (oy - 2.0 * (x(i1 + N) - x(i2 + N)));
+
+				//Add contribution to gradient
+				double tmp = 2.0 * stiffness * link.stiffness * (x(i1) - x(i2) - ox);
+				r_grad(i1) += tmp;
+				r_grad(i2) -= tmp;
+				tmp = 2.0 * stiffness * link.stiffness * (x(i1 + N) - x(i2 + N) - oy);
+				r_grad(i1 + N) += tmp;
+				r_grad(i2 + N) -= tmp;
+
+				//Add contribution to function value
+				r_f += stiffness * link.stiffness * m_r2(i1, i2);
+			}
+			//else ignore
+		}
+
+		//Contribution from repulsion
+		for (int i = 0; i < N; i++) {
+			r_f += repulsion * (m_r2(seq(i + 1, N - 1), i).sum());
+
+			//store 1/r4 temporarily
+			m_tmp.resize(N);
+			m_tmp << m_r2(i, seq(0, i - 1)).square().transpose(), 0.0, m_r2(seq(i + 1, N - 1), i).square();
+
+			r_grad(i) -= 2.0 * repulsion * m_tmp.transpose() * (x(i) - x.head(N).array()).matrix();
+			r_grad(i + N) -= 2.0 * repulsion * m_tmp.transpose() * (x(i + N) - x.tail(N).array()).matrix();
+		}
+		*/
+		
 		assert(x.size() % 2 == 0);
 		int N = x.size() / 2 + 1;
 		m_r2.resize(N, N);
-
-		double repulsion = 20.0;
-		double baseStiffness = 1.0;
 
 		//Only calc the upper triangle of r2 (ignore main diagonal)
 		//Store 1/r2 in the lower triangle
@@ -117,7 +189,8 @@ struct OurFunction
 		r_f = repulsion * (m_r2(seq(1, N - 1), 0).sum());
 		r_grad = VectorXd::Zero(2 * N - 2);
 
-		for (auto&& link : links) {
+		//Contribution from links
+		for (auto&& link : m_links) {
 			int i1 = link.node1;
 			int i2 = link.node2;
 			assert(i1 >= 0 && i1 < N&& i2 >= 0 && i2 < N);
@@ -135,10 +208,10 @@ struct OurFunction
 					m_r2(i1, i2) += oy * (oy - 2.0 * (x(i1 + N - 2) - x(i2 + N - 2)));
 
 					//Add contribution to gradient
-					double tmp = 2.0 * baseStiffness * link.stiffness * (x(i1 - 1) - x(i2 - 1) - ox);
+					double tmp = 2.0 * stiffness * link.stiffness * (x(i1 - 1) - x(i2 - 1) - ox);
 					r_grad(i1 - 1) += tmp;
 					r_grad(i2 - 1) -= tmp;
-					tmp = 2.0 * baseStiffness * link.stiffness * (x(i1 + N - 2) - x(i2 + N - 2) - oy);
+					tmp = 2.0 * stiffness * link.stiffness * (x(i1 + N - 2) - x(i2 + N - 2) - oy);
 					r_grad(i1 + N - 2) += tmp;
 					r_grad(i2 + N - 2) -= tmp;
 				}
@@ -148,16 +221,17 @@ struct OurFunction
 					m_r2(i1, i2) += oy * (oy + 2.0 * x(i2 + N - 2));
 
 					//Add contribution to gradient
-					r_grad(i2 - 1) += 2.0 * baseStiffness * link.stiffness * (x(i2 - 1) + ox);
-					r_grad(i2 + N - 2) += 2.0 * baseStiffness * link.stiffness * (x(i2 + N - 2) + oy);
+					r_grad(i2 - 1) += 2.0 * stiffness * link.stiffness * (x(i2 - 1) + ox);
+					r_grad(i2 + N - 2) += 2.0 * stiffness * link.stiffness * (x(i2 + N - 2) + oy);
 				}
 
 				//Add contribution to function value
-				r_f += baseStiffness * link.stiffness * m_r2(i1, i2);
+				r_f += stiffness * link.stiffness * m_r2(i1, i2);
 			}
 			//else ignore
 		}
 
+		//Contribution from repulsion
 		for (int i = 1; i < N; i++) {
 			r_f += repulsion * (m_r2(seq(i + 1, N - 1), i).sum());
 
@@ -166,43 +240,60 @@ struct OurFunction
 			m_tmp << m_r2(i, seq(0, i - 1)).square().transpose(), 0.0, m_r2(seq(i + 1, N - 1), i).square();
 
 			r_grad(i - 1) -= 2.0 * repulsion * (m_tmp(0) * x(i - 1) + m_tmp.tail(N - 1).transpose() * (x(i - 1) - x.head(N - 1).array()).matrix());
-			//r_grad(i - 1) += m_tmp.tail(N - 1).transpose() * (x(i - 1) - x.head(N - 1).array()).matrix();
-			//r_grad(i - 1) *= -2.0 * repulsion;
-
 			r_grad(i + N - 2) -= 2.0 * repulsion * (m_tmp(0) * x(i + N - 2) + m_tmp.tail(N - 1).transpose() * (x(i + N - 2) - x.tail(N - 1).array()).matrix());
-			//r_grad(i + N - 2) += m_tmp.tail(N - 1).transpose() * (x(i + N - 2) - x.tail(N - 1).array()).matrix();
-			//r_grad(i + N - 2) *= -2.0 * repulsion;
 		}
+		
 	}
 	void fval(const Eigen::VectorXd& x, double& r_f) {}
 	void grad(const Eigen::VectorXd& x, Eigen::VectorXd& r_grad) {}
 
-	const std::vector<node::Positioner::LinkInfo>& links;
+	double repulsion{ 10.0 };
+	double stiffness{ 1.0 };
 
-	private:
-		Eigen::ArrayXXd m_r2;
-		Eigen::VectorXd m_tmp;
+private:
+	const std::vector<node::Positioner::LinkInfo>& m_links;
+	Eigen::ArrayXXd m_r2;
+	Eigen::VectorXd m_tmp;
 };
 
 void node::Positioner::solve()
 {
 	//This is an entry-point function
 	try {
-		//initial guess
+
 		{
+			/*
+			//Form initial guess (randomly spread out)
+			double size = 50.0;
 			std::mt19937 mt;
-			std::uniform_real_distribution<float> D(0.0f, 10.0f);
+			std::uniform_real_distribution<double> D(0.0, size);
+
+			std::lock_guard<std::mutex> lock(m_mutex);
+			m_x.resize(2 * m_N);
+			m_x(0) = 0.0;
+			m_x(m_N) = 0.0;
+			for (int i = 1; i < m_N; i++) {
+				m_x(i) = D(mt);
+				m_x(i + m_N) = 2.0 * D(mt) - size;
+			}
+			*/
+			
+			double size = 50.0;
+			std::mt19937 mt;
+			std::uniform_real_distribution<double> D(0.0, size);
 
 			std::lock_guard<std::mutex> lock(m_mutex);
 			m_x.resize(2 * m_N - 2);
 			for (int i = 0; i < m_N - 1; i++) {
 				m_x(i) = D(mt);
-				m_x(i + m_N - 1) = D(mt);
+				m_x(i + m_N - 1) = 2.0 * D(mt) - size;
 			}
+			
 		}
 
 		OurFunction fcn(m_links);
 		math::opt::SyncMultiMin minimiser(fcn, m_x, m_mutex);
+		minimiser.setInitialStepSize(0.01);
 
 		int count = 0;
 		math::opt::Status status = math::opt::Status::SUCCESS;
@@ -213,8 +304,9 @@ void node::Positioner::solve()
 
 			if (status == math::opt::Status::SUCCESS) {
 				//Suitable test of convergence? This seems completely arbitrary.
-				if (double gnorm2 = minimiser.grad().squaredNorm(); gnorm2 > 1.0e-6)
-					status = math::opt::Status::CONTINUE;
+				if (minimiser.grad().squaredNorm() > 1.0e-4)
+					if (minimiser.dx().squaredNorm() > 1.0e-4)
+						status = math::opt::Status::CONTINUE;
 			}
 			else {
 				//deal with problem (= ignore it)

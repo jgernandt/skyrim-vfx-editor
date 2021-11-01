@@ -17,7 +17,8 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 
-//This is an adaptation of an algorithm from GSL by Brian Gough
+//This is an adaptation of an algorithm by Brian Gough from the GNU Scientific Library.
+//The original source code is enclosed with SVFX Editor for reference.
 
 #include "pch.h"
 #include "Optimisation.h"
