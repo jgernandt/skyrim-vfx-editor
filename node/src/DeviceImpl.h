@@ -168,23 +168,29 @@ namespace node
 
 		virtual void addReceiver(IReceiver<T>& r) override
 		{
-			//If we have no receiver, this is the next device in our sequence. We save it.
-			//If we have a receiver, this call must be forwarded from further back. We do not save it.
-			if (!m_rcvr)
-				m_rcvr = &r;
+			//We need a self check, since it is possible to form a cycle
+			if (&r != static_cast<IReceiver<T>*>(this)) {
+				//If we have no receiver, this is the next device in our sequence. We save it.
+				//If we have a receiver, this call must be forwarded from further back. We do not save it.
+				if (!m_rcvr)
+					m_rcvr = &r;
 
-			//Either way, we forward the call.
-			if (m_sndr)
-				m_sndr->addReceiver(r);
+				//Either way, we forward the call.
+				if (m_sndr)
+					m_sndr->addReceiver(r);
+			}
 		}
 		virtual void removeReceiver(IReceiver<T>& r) override
 		{
-			if (m_sndr)
-				m_sndr->removeReceiver(r);
+			//We need a self check, since it is possible to form a cycle
+			if (&r != static_cast<IReceiver<T>*>(this)) {
+				if (m_sndr)
+					m_sndr->removeReceiver(r);
 
-			//If this is our receiver, we clear it. If not, this call must be forwarded from further back.
-			if (&r == m_rcvr)
-				m_rcvr = nullptr;
+				//If this is our receiver, we clear it. If not, this call must be forwarded from further back.
+				if (&r == m_rcvr)
+					m_rcvr = nullptr;
+			}
 		}
 
 	private:
