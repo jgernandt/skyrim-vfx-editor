@@ -106,6 +106,8 @@ namespace node
 	{
 	public:
 		LocalProperty(const T& def = T()) : m_val{ def } {}
+		virtual ~LocalProperty() = default;
+
 		virtual T get() const final override { return m_val; }
 		virtual void set(const T& val) final override 
 		{

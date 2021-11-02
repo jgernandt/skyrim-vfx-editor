@@ -21,6 +21,34 @@
 #include "NiController.h"
 #include "node_concepts.h"
 
+//This might be universally useful
+template<typename T, typename FieldType, int Offset, int Width>
+class BitsetProperty final : public IProperty<T>
+{
+	static_assert(std::is_integral<T>::value && std::is_integral<FieldType>::value);
+	static_assert(Offset >= 0 && Width > 0);
+	static_assert(Offset < 8 * sizeof(FieldType) && Width <= 8 * sizeof(FieldType) - Offset);
+public:
+	BitsetProperty(IProperty<FieldType>& bitfield) : m_bitfield{ bitfield } {}
+
+	virtual T get() const override
+	{
+		return static_cast<T>((m_bitfield.get() & MASK) >> Offset);
+	}
+	virtual void set(const T& t) override
+	{
+		m_bitfield.set(((static_cast<FieldType>(t) << Offset) & MASK) | (m_bitfield.get() & ~MASK));
+	}
+	//we don't really want this to be observable directly, do we?
+	virtual void addListener(IPropertyListener<T>&) override { assert(false); }
+	virtual void removeListener(IPropertyListener<T>&) override { assert(false); }
+
+private:
+	constexpr static FieldType MASK = ~(~FieldType(0) << Width) << Offset;
+
+	IProperty<FieldType>& m_bitfield;
+};
+
 namespace node
 {
 	class FloatController final : public NodeBase
@@ -42,10 +70,31 @@ namespace node
 		constexpr static const char* TARGET = "Target";
 
 		constexpr static float WIDTH = 150.0f;
-		constexpr static float HEIGHT = 200.0f;
+		constexpr static float HEIGHT = 160.0f;
 
 	private:
-		LocalProperty<unsigned short> m_flags;
+		//Or should this be baseline nif?
+		class FlagsProperty final : public LocalProperty<unsigned short>
+		{
+		public:
+			FlagsProperty() : 
+				m_animType(*this), m_cycleType(*this), m_active(*this), m_playBackwards(*this) 
+			{}
+
+			IProperty<bool>& animType() { return m_animType; }
+			IProperty<unsigned short>& cycleType() { return m_cycleType; }
+			IProperty<bool>& active() { return m_active; }
+			IProperty<bool>& playBackwards() { return m_playBackwards; }
+
+		private:
+			BitsetProperty<bool, unsigned short, 0, 1> m_animType;
+			BitsetProperty<unsigned short, unsigned short, 1, 2> m_cycleType;
+			BitsetProperty<bool, unsigned short, 3, 1> m_active;
+			BitsetProperty<bool, unsigned short, 4, 1> m_playBackwards;
+			//BitsetProperty<bool, unsigned short, 5, 1> m_managerControlled;
+			//BitsetProperty<bool, unsigned short, 6, 1> m_unknown;
+		};
+		FlagsProperty m_flags;
 		LocalProperty<float> m_frequency;
 		LocalProperty<float> m_phase;
 		LocalProperty<float> m_startTime;

@@ -19,7 +19,16 @@
 #include "pch.h"
 #include "Controllers.h"
 #include "DeviceImpl.h"
-#include "widgets.h"
+#include "widget_types.h"
+
+constexpr gui::ColRGBA TitleCol_Anim = { 0.8f, 0.8f, 0.8f, 1.0f };
+constexpr gui::ColRGBA TitleCol_AnimActive = { 0.8f, 0.8f, 0.8f, 1.0f };
+
+constexpr unsigned short DEFAULT_FLAGS = 72;
+constexpr float DEFAULT_FREQUENCY = 1.0f;
+constexpr float DEFAULT_PHASE = 0.0f;
+constexpr float DEFAULT_STARTTIME = 0.0f;
+constexpr float DEFAULT_STOPTIME = 1.0f;
 
 class node::FloatController::TargetField : public node::Field
 {
@@ -52,7 +61,11 @@ private:
 node::FloatController::FloatController() : 
 	FloatController(std::make_unique<nif::NiFloatInterpolator>(), std::unique_ptr<nif::NiFloatData>())
 {
-	//set defaults
+	flags().set(DEFAULT_FLAGS);
+	frequency().set(DEFAULT_FREQUENCY);
+	phase().set(DEFAULT_PHASE);
+	startTime().set(DEFAULT_STARTTIME);
+	stopTime().set(DEFAULT_STOPTIME);
 }
 
 node::FloatController::FloatController(
@@ -60,15 +73,35 @@ node::FloatController::FloatController(
 	std::unique_ptr<nif::NiFloatData>&& data) :
 	NodeBase(std::move(iplr))
 {
+	//Remember to have Constructor set our properties before connecting us!
+
 	setClosable(true);
 	setTitle("Float controller");
 	setSize({ WIDTH, HEIGHT });
+	setColour(COL_TITLE, TitleCol_Anim);
+	setColour(COL_TITLE_ACTIVE, TitleCol_AnimActive);
 
 	if (!data) {
 		//We don't necessarily need a data block. Should we always have one regardless?
 	}
 
 	newField<TargetField>(TARGET, *this);
+
+	using selector_type = gui::Selector<unsigned short, IProperty<unsigned short>>;
+	newChild<selector_type>(m_flags.cycleType(), std::string(),
+		selector_type::ItemList{ { 0, "Repeat" }, { 1, "Reverse" }, { 2, "Clamp" } });
+
+	auto fr = newChild<DragFloat>(m_frequency, "Frequency");
+	fr->setSensitivity(0.01f);
+	fr->setLowerLimit(0.0f);
+	fr->setAlwaysClamp(true);
+	fr->setNumberFormat("%.2f");
+
+	auto ph = newChild<DragFloat>(m_phase, "Phase");
+	ph->setSensitivity(0.01f);
+	ph->setNumberFormat("%.2f");
+
+	newChild<gui::Button>("Keys");
 }
 
 node::FloatController::~FloatController()
