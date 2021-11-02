@@ -141,6 +141,10 @@ namespace node
 {
 	TEST_CLASS(EmitterTests)
 	{
+		std::mt19937 m_engine;
+
+	public:
+
 		//Test insertion of controller
 		TEST_METHOD(Controller_single)
 		{
@@ -505,6 +509,85 @@ namespace node
 			Assert::IsTrue(target.requirements().count(Modifier::Requirement::MOVEMENT) == 1);
 			if (c1)
 				c1->disconnect();
+		}
+
+		//Birth rate should send IAssignable<NiInterpolator> and receive IController<float> (single)
+		TEST_METHOD(BirthRateControllerTest)
+		{
+			class MockController : public IController<float>
+			{
+			public:
+				virtual LocalProperty<unsigned short>& flags() override { return m_flags; }
+				virtual LocalProperty<float>& frequency() override { return m_frequency; }
+				virtual LocalProperty<float>& phase() override { return m_phase; }
+				virtual LocalProperty<float>& startTime() override { return m_startTime; }
+				virtual LocalProperty<float>& stopTime() override { return m_stopTime; }
+
+			private:
+				LocalProperty<unsigned short> m_flags;
+				LocalProperty<float> m_frequency;
+				LocalProperty<float> m_phase;
+				LocalProperty<float> m_startTime;
+				LocalProperty<float> m_stopTime;
+			};
+
+			std::unique_ptr<Emitter> node = std::make_unique<BoxEmitter>();
+			nif::NiPSysEmitterCtlr* ctlr = &node->controller();
+
+			MockController target0;
+			MockController target;
+			ConnectorTester<Emitter> tester(std::move(node));
+
+			tester.tryConnect<IAssignable<nif::NiInterpolator>, IController<float>>(Emitter::BIRTH_RATE, false, &target0);
+			auto ifc = tester.tryConnect<IAssignable<nif::NiInterpolator>, IController<float>>(Emitter::BIRTH_RATE, false, &target);
+			Assert::IsNotNull(ifc);
+
+			//Setting the properties on target (but not target0) should set the corresponding on ctlr
+			std::uniform_int_distribution<unsigned short> I;
+			std::uniform_real_distribution<float> F;
+
+			target0.flags().set(I(m_engine));
+			target0.frequency().set(F(m_engine));
+			target0.phase().set(F(m_engine));
+			target0.startTime().set(F(m_engine));
+			target0.stopTime().set(F(m_engine));
+			Assert::IsFalse(ctlr->flags().get() == target0.flags().get());
+			Assert::IsFalse(ctlr->frequency().get() == target0.frequency().get());
+			Assert::IsFalse(ctlr->phase().get() == target0.phase().get());
+			Assert::IsFalse(ctlr->startTime().get() == target0.startTime().get());
+			Assert::IsFalse(ctlr->stopTime().get() == target0.stopTime().get());
+
+			target.flags().set(I(m_engine));
+			target.frequency().set(F(m_engine));
+			target.phase().set(F(m_engine));
+			target.startTime().set(F(m_engine));
+			target.stopTime().set(F(m_engine));
+			Assert::IsTrue(ctlr->flags().get() == target.flags().get());
+			Assert::IsTrue(ctlr->frequency().get() == target.frequency().get());
+			Assert::IsTrue(ctlr->phase().get() == target.phase().get());
+			Assert::IsTrue(ctlr->startTime().get() == target.startTime().get());
+			Assert::IsTrue(ctlr->stopTime().get() == target.stopTime().get());
+
+			//Assigning to the interface should assign to node->controller()->interpolator()
+			nif::NiFloatInterpolator iplr;
+			ifc->assign(&iplr);
+			Assert::IsTrue(ctlr->interpolator().isAssigned(&iplr));
+			ifc->assign(nullptr);
+			Assert::IsFalse(ctlr->interpolator().isAssigned(&iplr));
+
+			//Make sure listeners are removed
+			tester.disconnect<IController<float>>(&target);
+
+			target.flags().set(I(m_engine));
+			target.frequency().set(F(m_engine));
+			target.phase().set(F(m_engine));
+			target.startTime().set(F(m_engine));
+			target.stopTime().set(F(m_engine));
+			Assert::IsFalse(ctlr->flags().get() == target.flags().get());
+			Assert::IsFalse(ctlr->frequency().get() == target.frequency().get());
+			Assert::IsFalse(ctlr->phase().get() == target.phase().get());
+			Assert::IsFalse(ctlr->startTime().get() == target.startTime().get());
+			Assert::IsFalse(ctlr->stopTime().get() == target.stopTime().get());
 		}
 	};
 
