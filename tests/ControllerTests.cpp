@@ -121,59 +121,78 @@ namespace node
 			std::uniform_int_distribution<unsigned short> I;
 			std::uniform_real_distribution<float> F;
 
+			//add the listeners
 			ifc->flags().addListener(l1);
-			Assert::IsTrue(l1.isSignalled() && l1.result() == tester.getNode()->flags().get());
-			l1.reset();
-			tester.getNode()->flags().set(I(m_engine));
-			Assert::IsTrue(l1.isSignalled() && l1.result() == tester.getNode()->flags().get());
-			l1.reset();
-
 			ifc->frequency().addListener(l2);
-			Assert::IsTrue(l2.isSignalled() && l2.result() == tester.getNode()->frequency().get());
-			l2.reset();
-			tester.getNode()->frequency().set(F(m_engine));
-			Assert::IsTrue(l2.isSignalled() && l2.result() == tester.getNode()->frequency().get());
-			l2.reset();
-
 			ifc->phase().addListener(l3);
-			Assert::IsTrue(l3.isSignalled() && l3.result() == tester.getNode()->phase().get());
-			l3.reset();
-			tester.getNode()->phase().set(F(m_engine));
-			Assert::IsTrue(l3.isSignalled() && l3.result() == tester.getNode()->phase().get());
-			l3.reset();
-
 			ifc->startTime().addListener(l4);
-			Assert::IsTrue(l4.isSignalled() && l4.result() == tester.getNode()->startTime().get());
-			l4.reset();
-			tester.getNode()->startTime().set(F(m_engine));
-			Assert::IsTrue(l4.isSignalled() && l4.result() == tester.getNode()->startTime().get());
-			l4.reset();
-
 			ifc->stopTime().addListener(l5);
-			Assert::IsTrue(l5.isSignalled() && l5.result() == tester.getNode()->stopTime().get());
-			l5.reset();
-			tester.getNode()->stopTime().set(F(m_engine));
-			Assert::IsTrue(l5.isSignalled() && l5.result() == tester.getNode()->stopTime().get());
-			l5.reset();
 
-			//Make sure everything was disconnected
+			//they should be signalled on addition
+			Assert::IsTrue(l1.isSignalled() && l1.result() == tester.getNode()->flags().get());	l1.reset();
+			Assert::IsTrue(l2.isSignalled() && l2.result() == tester.getNode()->frequency().get());	l2.reset();
+			Assert::IsTrue(l3.isSignalled() && l3.result() == tester.getNode()->phase().get());	l3.reset();
+			Assert::IsTrue(l4.isSignalled() && l4.result() == tester.getNode()->startTime().get()); l4.reset();
+			Assert::IsTrue(l5.isSignalled() && l5.result() == tester.getNode()->stopTime().get()); l5.reset();
+
+			//Set one property at a time. Only the right listener should be signalled.
+			tester.getNode()->flags().set(I(m_engine));
+			Assert::IsTrue(l1.isSignalled() && l1.result() == tester.getNode()->flags().get());	l1.reset();
+			Assert::IsFalse(l2.isSignalled());
+			Assert::IsFalse(l3.isSignalled());
+			Assert::IsFalse(l4.isSignalled());
+			Assert::IsFalse(l5.isSignalled());
+
+			tester.getNode()->frequency().set(F(m_engine));
+			Assert::IsFalse(l1.isSignalled());
+			Assert::IsTrue(l2.isSignalled() && l2.result() == tester.getNode()->frequency().get());	l2.reset();
+			Assert::IsFalse(l3.isSignalled());
+			Assert::IsFalse(l4.isSignalled());
+			Assert::IsFalse(l5.isSignalled());
+
+			tester.getNode()->phase().set(F(m_engine));
+			Assert::IsFalse(l1.isSignalled());
+			Assert::IsFalse(l2.isSignalled());
+			Assert::IsTrue(l3.isSignalled() && l3.result() == tester.getNode()->phase().get());	l3.reset();
+			Assert::IsFalse(l4.isSignalled());
+			Assert::IsFalse(l5.isSignalled());
+
+			tester.getNode()->startTime().set(F(m_engine));
+			Assert::IsFalse(l1.isSignalled());
+			Assert::IsFalse(l2.isSignalled());
+			Assert::IsFalse(l3.isSignalled());
+			Assert::IsTrue(l4.isSignalled() && l4.result() == tester.getNode()->startTime().get());	l4.reset();
+			Assert::IsFalse(l5.isSignalled());
+
+			tester.getNode()->stopTime().set(F(m_engine));
+			Assert::IsFalse(l1.isSignalled());
+			Assert::IsFalse(l2.isSignalled());
+			Assert::IsFalse(l3.isSignalled());
+			Assert::IsFalse(l4.isSignalled());
+			Assert::IsTrue(l5.isSignalled() && l5.result() == tester.getNode()->stopTime().get()); l5.reset();
+
+			//remove and make sure no one is signalled
+			ifc->flags().removeListener(l1);
+			ifc->frequency().removeListener(l2);
+			ifc->phase().removeListener(l3);
+			ifc->startTime().removeListener(l4);
+			ifc->stopTime().removeListener(l5);
+
+			tester.getNode()->flags().set(I(m_engine));
+			tester.getNode()->frequency().set(F(m_engine));
+			tester.getNode()->phase().set(F(m_engine));
+			tester.getNode()->startTime().set(F(m_engine));
+			tester.getNode()->stopTime().set(F(m_engine));
+
+			Assert::IsFalse(l1.isSignalled());
+			Assert::IsFalse(l2.isSignalled());
+			Assert::IsFalse(l3.isSignalled());
+			Assert::IsFalse(l4.isSignalled());
+			Assert::IsFalse(l5.isSignalled());
+
+			//disconnecting should unassign the interpolator
 			tester.disconnect<IAssignable<nif::NiInterpolator>>(&target);
 			Assert::IsFalse(target.isAssigned(obj));
-
-			tester.getNode()->flags().set(I(m_engine));
-			Assert::IsFalse(l1.isSignalled());
-
-			tester.getNode()->frequency().set(F(m_engine));
-			Assert::IsFalse(l2.isSignalled());
-
-			tester.getNode()->phase().set(F(m_engine));
-			Assert::IsFalse(l3.isSignalled());
-
-			tester.getNode()->startTime().set(F(m_engine));
-			Assert::IsFalse(l4.isSignalled());
-
-			tester.getNode()->stopTime().set(F(m_engine));
-			Assert::IsFalse(l5.isSignalled());
 		}
 
 	};
