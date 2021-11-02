@@ -578,16 +578,19 @@ namespace node
 			//Make sure listeners are removed
 			tester.disconnect<IController<float>>(&target);
 
+			//these calls should not reach the node
 			target.flags().set(I(m_engine));
 			target.frequency().set(F(m_engine));
 			target.phase().set(F(m_engine));
 			target.startTime().set(F(m_engine));
 			target.stopTime().set(F(m_engine));
-			Assert::IsFalse(ctlr->flags().get() == target.flags().get());
-			Assert::IsFalse(ctlr->frequency().get() == target.frequency().get());
-			Assert::IsFalse(ctlr->phase().get() == target.phase().get());
-			Assert::IsFalse(ctlr->startTime().get() == target.startTime().get());
-			Assert::IsFalse(ctlr->stopTime().get() == target.stopTime().get());
+			//defaults should have been restored, use a new node to compare with
+			std::unique_ptr<Emitter> newNode = std::make_unique<BoxEmitter>();
+			Assert::IsTrue(ctlr->flags().get() == newNode->controller().flags().get());
+			Assert::IsTrue(ctlr->frequency().get() == newNode->controller().frequency().get());
+			Assert::IsTrue(ctlr->phase().get() == newNode->controller().phase().get());
+			Assert::IsTrue(ctlr->startTime().get() == newNode->controller().startTime().get());
+			Assert::IsTrue(ctlr->stopTime().get() == newNode->controller().stopTime().get());
 		}
 	};
 

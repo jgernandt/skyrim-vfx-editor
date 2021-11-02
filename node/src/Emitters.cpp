@@ -22,6 +22,11 @@
 #include "widget_types.h"
 
 constexpr float VAR_FRACTION = -0.5f;
+constexpr unsigned short DEFAULT_FLAGS = 72;
+constexpr float DEFAULT_FREQUENCY = 1.0f;
+constexpr float DEFAULT_PHASE = 0.0f;
+constexpr float DEFAULT_STARTTIME = 0.0f;
+constexpr float DEFAULT_STOPTIME = 1.0f;
 
 class node::Emitter::BirthRateField final : public Field
 {
@@ -99,6 +104,13 @@ private:
 			ifc.phase().removeListener(m_lPhase);
 			ifc.startTime().removeListener(m_lStartTime);
 			ifc.stopTime().removeListener(m_lStopTime);
+
+			//we need to restore defaults
+			m_lFlags.onSet(DEFAULT_FLAGS);
+			m_lFrequency.onSet(DEFAULT_FREQUENCY);
+			m_lPhase.onSet(DEFAULT_PHASE);
+			m_lStartTime.onSet(DEFAULT_STARTTIME);
+			m_lStopTime.onSet(DEFAULT_STOPTIME);
 		}
 
 	private:
@@ -248,11 +260,11 @@ node::Emitter::Emitter(std::unique_ptr<nif::NiPSysEmitter>&& obj,
 {
 	if (!ctlr) {
 		ctlr = std::make_unique<nif::NiPSysEmitterCtlr>();
-		ctlr->flags().set(72);
-		ctlr->frequency().set(1.0f);
-		ctlr->phase().set(0.0f);
-		ctlr->startTime().set(0.0f);
-		ctlr->stopTime().set(1.0f);
+		ctlr->flags().set(DEFAULT_FLAGS);
+		ctlr->frequency().set(DEFAULT_FREQUENCY);
+		ctlr->phase().set(DEFAULT_PHASE);
+		ctlr->startTime().set(DEFAULT_STARTTIME);
+		ctlr->stopTime().set(DEFAULT_STOPTIME);
 	}
 	m_ctlr = ctlr.get();
 	addController(std::move(ctlr));
