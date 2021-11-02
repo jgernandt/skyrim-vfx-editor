@@ -528,15 +528,5 @@ namespace node
 			Assert::IsTrue(data3.subtexOffsets().get() == offsets3);
 			Assert::IsTrue(shader3_node->subtexCount().get() == nif::SubtextureCount{ 0, 0 });*/
 		}
-
-		template<typename T>
-		T* findNode(const std::vector<std::unique_ptr<NodeBase>>& nodes, const nif::NiObject& obj)
-		{
-			for (auto&& node : nodes) {
-				if (T* result = dynamic_cast<T*>(node.get()); result && result->object() == obj)
-					return result;
-			}
-			return nullptr;
-		}
 	};
 }

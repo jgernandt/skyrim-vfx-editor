@@ -21,7 +21,15 @@ public:
 
 };
 
-//TODO: test observability of property, set and sequence (only assignable done)
+template<typename T>
+T* findNode(const std::vector<std::unique_ptr<node::NodeBase>>& nodes, const nif::NiObject& obj)
+{
+	for (auto&& node : nodes) {
+		if (T* result = dynamic_cast<T*>(node.get()); result && result->object() == obj)
+			return result;
+	}
+	return nullptr;
+}
 
 //Test that an Assignable can in fact be assigned to.
 //If T is not default constructible, indicate a related type that is.
