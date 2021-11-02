@@ -80,6 +80,26 @@ nif::native::NiFloatInterpolator& nif::NiFloatInterpolator::getNative() const
 }
 
 
+nif::NiBlendBoolInterpolator::NiBlendBoolInterpolator() : NiBlendBoolInterpolator(new Niflib::NiBlendBoolInterpolator) {}
+nif::NiBlendBoolInterpolator::NiBlendBoolInterpolator(native::NiBlendBoolInterpolator* obj) : NiInterpolator(obj) {}
+
+nif::native::NiBlendBoolInterpolator& nif::NiBlendBoolInterpolator::getNative() const
+{
+	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiBlendBoolInterpolator::TYPE));
+	return static_cast<native::NiBlendBoolInterpolator&>(*m_ptr);
+}
+
+
+nif::NiBlendFloatInterpolator::NiBlendFloatInterpolator() : NiBlendFloatInterpolator(new Niflib::NiBlendFloatInterpolator) {}
+nif::NiBlendFloatInterpolator::NiBlendFloatInterpolator(native::NiBlendFloatInterpolator* obj) : NiInterpolator(obj) {}
+
+nif::native::NiBlendFloatInterpolator& nif::NiBlendFloatInterpolator::getNative() const
+{
+	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiBlendFloatInterpolator::TYPE));
+	return static_cast<native::NiBlendFloatInterpolator&>(*m_ptr);
+}
+
+
 nif::NiTimeController::NiTimeController(native::NiTimeController* obj) :
 	NiObject(obj),
 	m_flags(&getNative(), &native::NiTimeController::GetFlags, &native::NiTimeController::SetFlags),

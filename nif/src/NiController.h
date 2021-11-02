@@ -110,6 +110,34 @@ namespace nif
 		Assignable<NiFloatData> m_data;
 	};
 
+	class NiBlendBoolInterpolator : public NiInterpolator//skipping NiBlendInterpolator for now
+	{
+	public:
+		NiBlendBoolInterpolator();
+		NiBlendBoolInterpolator(native::NiBlendBoolInterpolator* obj);
+		NiBlendBoolInterpolator(const NiBlendBoolInterpolator&) = delete;
+
+		virtual ~NiBlendBoolInterpolator() = default;
+
+		NiBlendBoolInterpolator& operator=(const NiBlendBoolInterpolator&) = delete;
+
+		native::NiBlendBoolInterpolator& getNative() const;
+	};
+
+	class NiBlendFloatInterpolator : public NiInterpolator//skipping NiBlendInterpolator for now
+	{
+	public:
+		NiBlendFloatInterpolator();
+		NiBlendFloatInterpolator(native::NiBlendFloatInterpolator* obj);
+		NiBlendFloatInterpolator(const NiBlendFloatInterpolator&) = delete;
+
+		virtual ~NiBlendFloatInterpolator() = default;
+
+		NiBlendFloatInterpolator& operator=(const NiBlendFloatInterpolator&) = delete;
+
+		native::NiBlendFloatInterpolator& getNative() const;
+	};
+
 	class NiTimeController : public NiObject
 	{
 	public:

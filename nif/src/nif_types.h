@@ -45,6 +45,8 @@ namespace Niflib
 	class NiBoolData;
 	class NiFloatInterpolator;
 	class NiFloatData;
+	class NiBlendBoolInterpolator;
+	class NiBlendFloatInterpolator;
 
 	class NiNode;
 	class BSFadeNode;
@@ -134,6 +136,8 @@ namespace nif
 		using NiBoolData = Niflib::NiBoolData;
 		using NiFloatInterpolator = Niflib::NiFloatInterpolator;
 		using NiFloatData = Niflib::NiFloatData;
+		using NiBlendBoolInterpolator = Niflib::NiBlendBoolInterpolator;
+		using NiBlendFloatInterpolator = Niflib::NiBlendFloatInterpolator;
 
 		using NiNode = Niflib::NiNode;
 		using BSFadeNode = Niflib::BSFadeNode;

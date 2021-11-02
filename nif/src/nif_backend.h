@@ -29,6 +29,8 @@
 #include "obj/NiBoolData.h"
 #include "obj/NiFloatInterpolator.h"
 #include "obj/NiFloatData.h"
+#include "obj/NiBlendBoolInterpolator.h"
+#include "obj/NiBlendFloatInterpolator.h"
 
 #include "obj/NiParticleSystem.h"
 #include "obj/NiPSysData.h"
