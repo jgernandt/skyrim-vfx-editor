@@ -39,8 +39,8 @@ namespace node
 		//nif::NiBoolInterpolator& visIplr();//our default interpolator
 
 	public:
-		constexpr static const char* BIRTH_RATE = "BirthRate";
-		constexpr static const char* LIFE_SPAN = "LifeSpan";
+		constexpr static const char* BIRTH_RATE = "Birth rate";
+		constexpr static const char* LIFE_SPAN = "Life span";
 		constexpr static const char* SIZE = "Size";
 		constexpr static const char* COLOUR = "Colour";
 		constexpr static const char* SPEED = "Speed";

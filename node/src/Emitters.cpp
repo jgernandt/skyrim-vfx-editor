@@ -27,25 +27,95 @@ class node::Emitter::BirthRateField final : public Field
 {
 public:
 	BirthRateField(const std::string& name, Emitter& node, std::unique_ptr<nif::NiFloatInterpolator>&& iplr) :
-		Field(name), m_ctlr{ node.m_ctlr }, m_iplr{ std::move(iplr) }
+		Field(name), 
+		m_ctlr{ node.controller() }, 
+		m_iplr{ std::move(iplr) }, 
+		m_ifc(node.controller().interpolator()),
+		m_rcvr(node.controller()),
+		m_sndr(m_ifc)
 	{
 		if (!m_iplr) {
 			m_iplr = std::make_unique<nif::NiFloatInterpolator>();
 		}
-		assert(m_ctlr);
-		if (m_ctlr->interpolator().isAssigned(nullptr))
-			m_ctlr->interpolator().assign(m_iplr.get());
+		if (m_ctlr.interpolator().isAssigned(nullptr))
+			m_ctlr.interpolator().assign(m_iplr.get());
 
-		auto br = node.newChild<DragFloat>(m_iplr->value(), u8"Birth rate");
+		connector = node.addConnector(std::string(), ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
+
+		//Switch widget off when connected
+		auto sw = node.newChild<gui::Switch>(std::bind(&gui::Connector::isConnected, connector));
+
+		auto br = sw->newChild<DragFloat>(m_iplr->value(), name);
 		br->setSensitivity(1.0f);
 		br->setLogarithmic();
 		br->setLowerLimit(0.0f);
 		br->setUpperLimit(1000.0f);
-		widget = br;
+
+		sw->newChild<gui::FramePadded>(std::make_unique<gui::Text>(name));
+
+		widget = sw;
 	}
 
-	nif::NiPSysEmitterCtlr* m_ctlr;
+private:
+	//We need to wrap m_ctlr->interpolator(), since we want to override assign(nullptr)
+	class Assignable final : public IAssignable<nif::NiInterpolator>
+	{
+	public:
+		Assignable(IAssignable<nif::NiInterpolator>& ifc) : 
+			m_ifc{ ifc } {}
+
+		virtual void assign(nif::NiInterpolator* iplr) override { m_ifc.assign(iplr ? iplr : m_default); }
+		virtual bool isAssigned(nif::NiInterpolator* iplr) const override { return m_ifc.isAssigned(iplr); }
+		virtual void addListener(IAssignableListener<nif::NiInterpolator>& l) override { m_ifc.addListener(l); }
+		virtual void removeListener(IAssignableListener<nif::NiInterpolator>& l) override { m_ifc.removeListener(l); }
+
+		IAssignable<nif::NiInterpolator>& m_ifc;
+		nif::NiFloatInterpolator* m_default{ nullptr };
+	};
+	//This will be universally useful, so we'll move this definition later
+	class ControllerReceiver final : public Receiver<IController<float>>
+	{
+	public:
+		ControllerReceiver(nif::NiTimeController& ctlr) :
+			m_lFlags(ctlr.flags()),
+			m_lFrequency(ctlr.frequency()),
+			m_lPhase(ctlr.phase()),
+			m_lStartTime(ctlr.startTime()),
+			m_lStopTime(ctlr.stopTime()) 
+		{}
+
+		virtual void onConnect(IController<float>& ifc) override
+		{
+			ifc.flags().addListener(m_lFlags);
+			ifc.frequency().addListener(m_lFrequency);
+			ifc.phase().addListener(m_lPhase);
+			ifc.startTime().addListener(m_lStartTime);
+			ifc.stopTime().addListener(m_lStopTime);
+		}
+		virtual void onDisconnect(IController<float>& ifc) override
+		{
+			ifc.flags().removeListener(m_lFlags);
+			ifc.frequency().removeListener(m_lFrequency);
+			ifc.phase().removeListener(m_lPhase);
+			ifc.startTime().removeListener(m_lStartTime);
+			ifc.stopTime().removeListener(m_lStopTime);
+		}
+
+	private:
+		SetterListener<unsigned short> m_lFlags;
+		SetterListener<float> m_lFrequency;
+		SetterListener<float> m_lPhase;
+		SetterListener<float> m_lStartTime;
+		SetterListener<float> m_lStopTime;
+	};
+
+	nif::NiPSysEmitterCtlr& m_ctlr;
 	std::unique_ptr<nif::NiFloatInterpolator> m_iplr;
+
+	Assignable m_ifc;
+	ControllerReceiver m_rcvr;
+	Sender<IAssignable<nif::NiInterpolator>> m_sndr;
+
 };
 
 class node::Emitter::LifeSpanField final : public Field
