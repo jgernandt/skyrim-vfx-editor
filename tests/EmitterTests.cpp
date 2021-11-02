@@ -4,6 +4,8 @@
 #include "Mocks.h"
 #include "nodes.h"
 
+#include "Constructor.h"
+#include "nif_backend.h"
 
 namespace nif
 {
@@ -512,7 +514,7 @@ namespace node
 		}
 
 		//Birth rate should send IAssignable<NiInterpolator> and receive IController<float> (single)
-		TEST_METHOD(BirthRateControllerTest)
+		TEST_METHOD(BirthRateConnector)
 		{
 			class MockController : public IController<float>
 			{
@@ -591,6 +593,130 @@ namespace node
 			Assert::IsTrue(ctlr->phase().get() == newNode->controller().phase().get());
 			Assert::IsTrue(ctlr->startTime().get() == newNode->controller().startTime().get());
 			Assert::IsTrue(ctlr->stopTime().get() == newNode->controller().stopTime().get());
+		}
+
+		TEST_METHOD(BirthRateControllerLoading)
+		{
+			//We want a separate controller node only if:
+			//A) There is a NiFloatData attached
+			// OR
+			//B) We have a NiBlendFloatInterpolator
+			//
+			//Unless I am mistaken, the other settings don't matter if the value is const (should verify!).
+			// We might want to warn about or repair crazy settings, though (0 freq, non-increasing time interval...).
+			// 
+			//Do we care about the keys in the FloatData? 
+			// We *could* drop it if it's constant, but probably not worth the trouble.
+			//
+			//In case A the node should be a FloatController.
+			//In case B the node should be some "multi-sequence controller" that we don't have yet. 
+
+			nif::BSFadeNode root;
+			nif::NiFloatInterpolator iplrA;
+			nif::NiPSysBoxEmitter emitterA;
+			nif::NiBlendFloatInterpolator iplrB;
+			nif::NiPSysBoxEmitter emitterB;
+			nif::NiFloatInterpolator iplr0;
+			nif::NiPSysBoxEmitter emitter0;
+			
+			{//case A
+				ParticleSystem psys_node;
+				root.children().add(psys_node.object());
+
+				emitterA.name().set("A");
+				psys_node.object().modifiers().insert(0, emitterA);
+				nif::NiPSysEmitterCtlr ctlr;
+				ctlr.modifierName().set("A");
+				psys_node.object().controllers().insert(0, ctlr);
+				ctlr.interpolator().assign(&iplrA);
+
+				nif::NiFloatData data;
+				iplrA.data().assign(&data);
+
+				//change up the controller settings
+				ctlr.flags().set(75);
+				ctlr.frequency().set(1.4f);
+				ctlr.phase().set(0.6f);
+				ctlr.startTime().set(0.1f);
+				ctlr.stopTime().set(2.8f);
+			}
+
+			{//case B (placeholder)
+				ParticleSystem psys_node;
+				root.children().add(psys_node.object());
+
+				emitterB.name().set("B");
+				psys_node.object().modifiers().insert(0, emitterB);
+				nif::NiPSysEmitterCtlr ctlr;
+				ctlr.modifierName().set("B");
+				psys_node.object().controllers().insert(0, ctlr);
+				ctlr.interpolator().assign(&iplrB);
+
+				//ignore controller settings
+			}
+
+			{//case 0 (no controller node)
+				ParticleSystem psys_node;
+				root.children().add(psys_node.object());
+
+				emitter0.name().set("0");
+				psys_node.object().modifiers().insert(0, emitter0);
+				nif::NiPSysEmitterCtlr ctlr;
+				ctlr.modifierName().set("0");
+				psys_node.object().controllers().insert(0, ctlr);
+				ctlr.interpolator().assign(&iplr0);
+
+				//change up the controller settings
+				ctlr.flags().set(77);
+				ctlr.frequency().set(7.4f);
+				ctlr.phase().set(0.2f);
+				ctlr.startTime().set(0.4f);
+				ctlr.stopTime().set(3.6f);
+			}
+
+			Constructor c;
+			c.makeRoot(&root.getNative());
+
+			//Were the correct nodes created?
+			//1 Root, 3 ParticleSystem, 3 BoxEmitter, 1 FloatController
+			Assert::IsTrue(c.size() == 8);
+
+			Root* root_node = findNode<Root>(c.nodes(), root);
+			FloatController* cA_node = findNode<FloatController>(c.nodes(), iplrA);
+			NodeBase* cB_node = findNode<NodeBase>(c.nodes(), iplrB);
+			NodeBase* c0_node = findNode<NodeBase>(c.nodes(), iplr0);
+			Emitter* eA_node = findNode<Emitter>(c.nodes(), emitterA);
+			Emitter* eB_node = findNode<Emitter>(c.nodes(), emitterB);
+			Emitter* e0_node = findNode<Emitter>(c.nodes(), emitter0);
+			Assert::IsNotNull(root_node);
+			Assert::IsNotNull(cA_node);
+			Assert::IsNull(cB_node);
+			Assert::IsNull(c0_node);
+			Assert::IsNotNull(eA_node);
+			Assert::IsNotNull(eB_node);
+			Assert::IsNotNull(e0_node);
+
+			//Test connections
+			TestRoot nodeRoot;
+			c.extractNodes(nodeRoot);
+			Assert::IsTrue(areConnected(cA_node->getField(FloatController::TARGET)->connector, eA_node->getField(Emitter::BIRTH_RATE)->connector));
+			//Assert::IsTrue(areConnected(cB_node->getField(Controller::TARGET)->connector, eB_node->getField(Emitter::BIRTH_RATE)->connector));
+
+			//Did we mess up the backend?
+			Assert::IsTrue(eA_node->controller().getNative().GetInterpolator() == &iplrA.getNative());
+			Assert::IsTrue(eB_node->controller().getNative().GetInterpolator() == &iplrB.getNative());
+			Assert::IsTrue(e0_node->controller().getNative().GetInterpolator() == &iplr0.getNative());
+
+			//controllerA settings should have been transferred to the node
+			Assert::IsTrue(eA_node->controller().flags().get() == cA_node->flags().get());
+			Assert::IsTrue(eA_node->controller().frequency().get() == cA_node->frequency().get());
+			Assert::IsTrue(eA_node->controller().phase().get() == cA_node->phase().get());
+			Assert::IsTrue(eA_node->controller().startTime().get() == cA_node->startTime().get());
+			Assert::IsTrue(eA_node->controller().stopTime().get() == cA_node->stopTime().get());
+
+			//controllerB settings should be ignored (they use the ControllerSequence for that)
+
+			//leave unspecified what should be done with the settings on controller0
 		}
 	};
 
