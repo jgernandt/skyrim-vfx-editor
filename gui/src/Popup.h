@@ -28,7 +28,11 @@ namespace gui
     {
     public:
         PopupBase(const std::string& title) : m_id(title) {}
-        virtual ~PopupBase() {}
+        virtual ~PopupBase() = default;
+        virtual void frame(FrameDrawer& fd) override;
+
+        virtual void onOpen() {}
+        virtual void onClose() {}
 
         void open();
         bool isOpen() const { return m_isOpen; }
@@ -36,6 +40,9 @@ namespace gui
     protected:
         UniqueLabel<1> m_id;
         bool m_isOpen{ false };
+
+    private:
+        bool m_shouldOpen{ false };
     };
 
     class Popup :

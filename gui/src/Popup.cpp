@@ -26,16 +26,32 @@
 #include "CompositionActions.h"
 #include "IInvoker.h"
 
-//We need to rework this open/close mechanism, since imgui requires the open call to be in immediate vicinity of the begin call.
-//Our call to OpenPopup should be moved to frame.
+//imgui requires the open call to be in the immediate vicinity of the begin call (same level of their window stack)
 void gui::PopupBase::open()
 {
-	m_isOpen = true;
-	ImGui::OpenPopup(m_id[0].c_str(), 0);
+	m_shouldOpen = true;
+}
+
+void gui::PopupBase::frame(FrameDrawer& fd)
+{
+	if (m_shouldOpen) {
+		ImGui::OpenPopup(m_id[0].c_str(), 0);
+		m_isOpen = true;
+		m_shouldOpen = false;
+		onOpen();
+	}
+	else if (m_isOpen) {
+		if (!ImGui::IsPopupOpen(m_id[0].c_str())) {
+			m_isOpen = false;
+			onClose();
+		}
+	}
 }
 
 void gui::Popup::frame(FrameDrawer& fd)
 {
+	PopupBase::frame(fd);
+
 	if (m_isOpen) {
 		Floats<2> size = m_size * fd.getCurrentScale();
 		ImGui::SetNextWindowSize({ std::floorf(size[0]), std::floorf(size[1]) });
@@ -48,15 +64,19 @@ void gui::Popup::frame(FrameDrawer& fd)
 
 			Composite::frame(fd);
 		}
-
-		//Is this right? Test!
-		if (!ImGui::IsPopupOpen(m_id[0].c_str()))
-			m_isOpen = false;
+		else {
+			//we messed something up!
+			assert(false);
+		}
 	}
 }
 
+//Modal has yet to be updated to the new open/close mechanism (yes, it's a mess)
+
 void gui::Modal::frame(FrameDrawer& fd)
 {
+	PopupBase::frame(fd);
+
 	if (m_isOpen) {
 		ImGui::SetNextWindowSize({ m_size[0], m_size[1] });
 	}
