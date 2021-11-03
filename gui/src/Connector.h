@@ -82,6 +82,9 @@ namespace gui
 
 	//Should merge source into target, and erase entries that undo one another
 	void merge(Connector::StateMap& target, Connector::StateMap&& source);
+	//Should set each connection state in a safe and consistent way, correctly sequenced
+	void apply(Connector::StateMap& changes);
+	void revert(Connector::StateMap& changes);
 
 	class SingleConnector :	public Connector
 	{

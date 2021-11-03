@@ -34,18 +34,12 @@ namespace gui
 
 		virtual void execute() override 
 		{
-			for (auto& item : m_stateChanges) {
-				assert(item.first.first);
-				item.first.first->setConnectionState(item.first.second, item.second);
-			}
+			apply(m_stateChanges);
 		}
 		virtual void reverse() override 
 		{
 			assert(m_reversible);
-			for (auto& item : m_stateChanges) {
-				assert(item.first.first);
-				item.first.first->setConnectionState(item.first.second, !item.second);
-			}
+			revert(m_stateChanges);
 		}
 		virtual bool reversible() const override { return m_reversible && !m_stateChanges.empty(); }
 
