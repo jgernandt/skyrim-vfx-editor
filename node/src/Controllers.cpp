@@ -36,6 +36,8 @@ public:
 	TargetField(const std::string& name, FloatController& node) :
 		Field(name), m_ifc(node), m_rcvr(node.object()), m_sndr(m_ifc)
 	{
+		//This is technically an upwards connector, but feels somehow better to have it downwards.
+		//Go for consistency or intuitivity?
 		connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
 	}
 private:
@@ -102,6 +104,9 @@ node::FloatController::FloatController(
 	ph->setNumberFormat("%.2f");
 
 	newChild<gui::Button>("Keys");
+
+	//until we have some other way to determine connector position for loading placement
+	getField(TARGET)->connector->setTranslation({ WIDTH, 38.0f });
 }
 
 node::FloatController::~FloatController()

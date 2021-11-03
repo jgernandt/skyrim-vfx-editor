@@ -484,6 +484,7 @@ node::BoxEmitter::BoxEmitter(std::unique_ptr<nif::NiPSysBoxEmitter>&& obj,
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
 	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
+	getField(BIRTH_RATE)->connector->setTranslation({ 0.0f, 90.0f });
 	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
