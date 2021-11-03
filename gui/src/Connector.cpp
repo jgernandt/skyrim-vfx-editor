@@ -50,6 +50,36 @@ void gui::merge(Connector::StateMap& target, Connector::StateMap&& source)
 	}
 }
 
+void gui::apply(Connector::StateMap& changes)
+{
+	for (auto&& change : changes) {
+		assert(change.first.first);
+		//Do all disconnections first
+		if (!change.second)
+			change.first.first->setConnectionState(change.first.second, change.second);
+	}
+	for (auto&& change : changes) {
+		//Then connect
+		if (change.second)
+			change.first.first->setConnectionState(change.first.second, change.second);
+	}
+}
+
+void gui::revert(Connector::StateMap& changes)
+{
+	for (auto&& change : changes) {
+		assert(change.first.first);
+		//Do all disconnections first
+		if (change.second)
+			change.first.first->setConnectionState(change.first.second, !change.second);
+	}
+	for (auto&& change : changes) {
+		//Then connect
+		if (!change.second)
+			change.first.first->setConnectionState(change.first.second, !change.second);
+	}
+}
+
 gui::Connector::Connector(ISender& sender, IReceiver& receiver) :
 	m_sender{ sender }, m_receiver{ receiver }
 {}
