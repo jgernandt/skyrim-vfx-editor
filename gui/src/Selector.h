@@ -44,7 +44,10 @@ namespace gui
 
 	public:
 		Selector(PropertyType& prop, const std::string& label, ItemList&& items) :
-			m_property{ prop }, m_label(label), m_items{ std::move(items) } {}
+			m_property{ prop }, m_label(label), m_items{ std::move(items) } 
+		{
+			setSizeHint({ -1.0f, -1.0f });
+		}
 
 		virtual void frame(FrameDrawer& fd) override
 		{
@@ -59,7 +62,7 @@ namespace gui
 				}
 			}
 		}
-		virtual Floats<2> getSizeHint() const override { return { -1.0f, getDefaultHeight() }; }
+		virtual Floats<2> getSizeHint() const override { return { m_sizeHint[0], getDefaultHeight() }; }
 
 	private:
 		PropertyType& m_property;
@@ -81,7 +84,10 @@ namespace gui
 
 	public:
 		StringSelector(PropertyType& prop, const std::string& label, ItemList&& items) :
-			m_property{ prop }, m_label(label), m_items{ std::move(items) } {}
+			m_property{ prop }, m_label(label), m_items{ std::move(items) }
+		{
+			setSizeHint({ -1.0f, -1.0f });
+		}
 
 		virtual void frame(FrameDrawer& fd) override
 		{
@@ -97,7 +103,7 @@ namespace gui
 				}
 			}
 		}
-		virtual Floats<2> getSizeHint() const override { return { -1.0f, getDefaultHeight() }; }
+		virtual Floats<2> getSizeHint() const override { return { m_sizeHint[0], getDefaultHeight() }; }
 
 	private:
 		PropertyType& m_property;
@@ -120,7 +126,10 @@ namespace gui
 
 	public:
 		FlagSelector(FieldType& prop, const std::string& label, ItemList&& items) :
-			m_property{ prop }, m_label{ "" }, m_preview{ label }, m_items{ std::move(items) } {}
+			m_property{ prop }, m_label{ "" }, m_preview{ label }, m_items{ std::move(items) }
+		{
+			setSizeHint({ -1.0f, -1.0f });
+		}
 
 		virtual void frame(FrameDrawer& fd) override
 		{
@@ -133,7 +142,7 @@ namespace gui
 				}
 			}
 		}
-		virtual Floats<2> getSizeHint() const override { return { -1.0f, getDefaultHeight() }; }
+		virtual Floats<2> getSizeHint() const override { return { m_sizeHint[0], getDefaultHeight() }; }
 
 	private:
 		FieldType& m_property;

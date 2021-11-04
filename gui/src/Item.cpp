@@ -22,7 +22,8 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"//for ImVec operators
 
-//Redo this once we swap to Eigen::Vectors
+//All of this desperately needs updating to handle transforming of components.
+//We're mixing global and local coordinates everywhere...
 
 gui::Item::Item(std::unique_ptr<LayoutOperator> layout) : m_layout{ std::move(layout) }
 {
@@ -37,6 +38,8 @@ void gui::Item::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 
+	Floats<2> scale = fd.getCurrentScale();
+
 	std::vector<ImVec2> sizes(getChildren().size());
 	int i = 0;
 	for (auto&& c : getChildren()) {
@@ -45,9 +48,8 @@ void gui::Item::frame(FrameDrawer& fd)
 	}
 
 	assert(m_layout);
-	std::vector<ImRect> layout = m_layout->layout(
-		sizes, 
-		{ m_size[0] <= 0.0f ? CalcItemWidth() : m_size[0], GetFrameHeight() });
+	ImVec2 area{ m_size[0] <= 0.0f ? CalcItemWidth() : m_size[0] * scale[0], GetFrameHeight() };
+	std::vector<ImRect> layout = m_layout->layout(sizes, area);
 	assert(layout.size() == getChildren().size());
 
 	ImVec2 origin = GetCursorPos();
