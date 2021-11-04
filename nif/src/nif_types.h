@@ -33,6 +33,7 @@ namespace Niflib
 	struct Quaternion;
 	enum BillboardMode;
 	enum ForceType;
+	enum KeyType;
 
 	class NiObject;
 	class NiObjectNET;
@@ -121,6 +122,27 @@ namespace nif
 	constexpr ForceType FORCE_SPHERICAL = 1;
 	constexpr ForceType FORCE_UNKNOWN = 2;
 
+	enum class KeyType : uint_fast32_t
+	{
+		LINEAR			= 1,
+		QUADRATIC		= 2,
+		TBC				= 3,
+		XYZ_ROTATION	= 4,
+		CONSTANT		= 5,
+	};
+
+	template<typename T>
+	struct Key
+	{
+		float time;
+		T value;
+		T forward;
+		T backward;
+		float tension;
+		float bias;
+		float continuity;
+	};
+
 	namespace native
 	{
 		using ColRGBA = Niflib::Color4;
@@ -180,6 +202,8 @@ namespace nif
 		using translation_t = Niflib::Vector3;
 		using rotation_t = Niflib::Matrix33;
 		using scale_t = float;
+
+		using KeyType = Niflib::KeyType;
 
 		template<typename T> void ref(T*) { static_assert(false, "ref must be explicitly specialised"); }
 		template<typename T> void rel(T*) { static_assert(false, "rel must be explicitly specialised"); }
@@ -336,6 +360,18 @@ namespace nif
 	struct NifConverter<Niflib::ForceType>
 	{
 		static Niflib::ForceType convert(ForceType f);
+	};
+
+	template<>
+	struct NifConverter<Niflib::KeyType>
+	{
+		static Niflib::KeyType convert(KeyType f);
+	};
+
+	template<>
+	struct NifConverter<KeyType>
+	{
+		static KeyType convert(Niflib::KeyType f);
 	};
 
 	template<>

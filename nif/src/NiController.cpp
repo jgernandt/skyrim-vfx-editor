@@ -29,12 +29,47 @@ nif::native::NiInterpolator& nif::NiInterpolator::getNative() const
 
 
 nif::NiBoolData::NiBoolData() : NiBoolData(new Niflib::NiBoolData) {}
-nif::NiBoolData::NiBoolData(native::NiBoolData* obj) : NiObject(obj) {}
+nif::NiBoolData::NiBoolData(native::NiBoolData* obj) : 
+	NiObject(obj), 
+	m_keyType(obj, &native::NiBoolData::GetKeyType, &native::NiBoolData::SetKeyType),
+	m_keys(*this)
+{}
 
 nif::native::NiBoolData& nif::NiBoolData::getNative() const
 {
 	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiBoolData::TYPE));
 	return static_cast<native::NiBoolData&>(*m_ptr);
+}
+
+std::vector<nif::Key<bool>> nif::NiBoolData::Keys::get() const
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	std::vector<Key<bool>> result;
+	result.reserve(keys.size());
+	for (auto&& key : keys) {
+		result.push_back(Key<bool>{ 
+			key.time, 
+			static_cast<bool>(key.data), 
+			static_cast<bool>(key.forward_tangent),
+			static_cast<bool>(key.backward_tangent),
+			key.tension, key.bias, key.continuity });
+	}
+	return result;
+}
+
+void nif::NiBoolData::Keys::set(const std::vector<Key<bool>>& keys)
+{
+	auto&& dest = m_super.getNative().GetKeysRef();
+	dest.clear();
+	dest.reserve(keys.size());
+	for (auto&& key : keys) {
+		dest.push_back(Niflib::Key<unsigned char>{
+			key.time,
+			key.value,
+			key.forward,
+			key.backward,
+			key.tension, key.bias, key.continuity });
+	}
 }
 
 
@@ -55,12 +90,47 @@ nif::native::NiBoolInterpolator& nif::NiBoolInterpolator::getNative() const
 
 
 nif::NiFloatData::NiFloatData() : NiFloatData(new Niflib::NiFloatData) {}
-nif::NiFloatData::NiFloatData(native::NiFloatData* obj) : NiObject(obj) {}
+nif::NiFloatData::NiFloatData(native::NiFloatData* obj) : 
+	NiObject(obj),
+	m_keyType(obj, &native::NiFloatData::GetKeyType, &native::NiFloatData::SetKeyType),
+	m_keys(*this)
+{}
 
 nif::native::NiFloatData& nif::NiFloatData::getNative() const
 {
 	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiFloatData::TYPE));
 	return static_cast<native::NiFloatData&>(*m_ptr);
+}
+
+std::vector<nif::Key<float>> nif::NiFloatData::Keys::get() const
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	std::vector<Key<float>> result;
+	result.reserve(keys.size());
+	for (auto&& key : keys) {
+		result.push_back(Key<float>{
+			key.time,
+			key.data,
+			key.forward_tangent,
+			key.backward_tangent,
+			key.tension, key.bias, key.continuity });
+	}
+	return result;
+}
+
+void nif::NiFloatData::Keys::set(const std::vector<Key<float>>& keys)
+{
+	auto&& dest = m_super.getNative().GetKeysRef();
+	dest.clear();
+	dest.reserve(keys.size());
+	for (auto&& key : keys) {
+		dest.push_back(Niflib::Key<float>{
+			key.time,
+			key.value,
+			key.forward,
+			key.backward,
+			key.tension, key.bias, key.continuity });
+	}
 }
 
 

@@ -46,6 +46,22 @@ namespace nif
 		NiBoolData& operator=(const NiBoolData&) = delete;
 
 		native::NiBoolData& getNative() const;
+
+		IProperty<KeyType>& keyType() { return m_keyType; }
+		IProperty<std::vector<Key<bool>>>& keys() { return m_keys; }
+
+	private:
+		struct Keys : PropertyBase<std::vector<Key<bool>>>
+		{
+			Keys(NiBoolData& super) : m_super{ super } {}
+			virtual std::vector<Key<bool>> get() const override;
+			virtual void set(const std::vector<Key<bool>>& keys) override;
+
+			NiBoolData& m_super;
+		};
+
+		Property<KeyType, native::KeyType> m_keyType;
+		Keys m_keys;
 	};
 
 	class NiBoolInterpolator : public NiInterpolator
@@ -84,6 +100,22 @@ namespace nif
 		NiFloatData& operator=(const NiFloatData&) = delete;
 
 		native::NiFloatData& getNative() const;
+
+		IProperty<KeyType>& keyType() { return m_keyType; }
+		IProperty<std::vector<Key<float>>>& keys() { return m_keys; }
+
+	private:
+		struct Keys : PropertyBase<std::vector<Key<float>>>
+		{
+			Keys(NiFloatData& super) : m_super{ super } {}
+			virtual std::vector<Key<float>> get() const override;
+			virtual void set(const std::vector<Key<float>>& keys) override;
+
+			NiFloatData& m_super;
+		};
+
+		Property<KeyType, native::KeyType> m_keyType;
+		Keys m_keys;
 	};
 
 	class NiFloatInterpolator : public NiInterpolator

@@ -117,6 +117,16 @@ Niflib::ForceType nif::NifConverter<Niflib::ForceType>::convert(ForceType f)
 }
 
 
+Niflib::KeyType nif::NifConverter<Niflib::KeyType>::convert(KeyType f)
+{
+	return static_cast<Niflib::KeyType>(f);
+}
+nif::KeyType nif::NifConverter<nif::KeyType>::convert(Niflib::KeyType f)
+{
+	return static_cast<KeyType>(f);
+}
+
+
 std::array<int, 2> nif::NifConverter<std::array<int, 2>>::convert(const std::vector<nif::SubtextureOffset>& offsets)
 {
 	std::array<int, 2> result{ 0, 0 };
