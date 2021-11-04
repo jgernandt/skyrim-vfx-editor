@@ -32,11 +32,15 @@ void gui::PopupBase::open()
 	m_shouldOpen = true;
 }
 
+#include "imgui_internal.h"
 void gui::PopupBase::frame(FrameDrawer& fd)
 {
+	using namespace ImGui;
+
 	if (m_shouldOpen) {
 		ImGui::OpenPopup(m_id[0].c_str(), 0);
 		m_isOpen = true;
+		m_firstFrame = true;
 		m_shouldOpen = false;
 		onOpen();
 	}
@@ -44,6 +48,27 @@ void gui::PopupBase::frame(FrameDrawer& fd)
 		if (!ImGui::IsPopupOpen(m_id[0].c_str())) {
 			m_isOpen = false;
 			onClose();
+		}
+		else {
+			ImGuiContext& g = *GImGui;
+			assert(g.OpenPopupStack[g.BeginPopupStack.Size].PopupId == g.CurrentWindow->GetID(m_id[0].c_str()));
+
+			if (m_firstFrame) {
+				m_translation = -fd.toGlobal({ 0.0f, 0.0f }) / fd.getCurrentScale();
+				m_lastGlobalPos = { 0.0f, 0.0f };
+				m_firstFrame = false;
+			}
+
+			if (ImGuiWindow* window = g.OpenPopupStack[g.BeginPopupStack.Size].Window) {
+				//Floats<2> currentGlobal = gui_type_conversion<Floats<2>>::from(window->Pos);//not accounting for new ancestor transforms
+				//Floats<2> translation_from_dragging = currentGlobal - m_lastGlobalPos;//in global scale
+
+				m_translation += (gui_type_conversion<Floats<2>>::from(window->Pos) - m_lastGlobalPos) / fd.getCurrentScale();
+			}
+
+			Floats<2> pos = fd.toGlobal(m_translation);
+			m_lastGlobalPos = { std::floorf(pos[0]), std::floorf(pos[1]) };
+			SetNextWindowPos(gui_type_conversion<ImVec2>::from(m_lastGlobalPos));
 		}
 	}
 }

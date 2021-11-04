@@ -42,6 +42,8 @@ namespace gui
         bool m_isOpen{ false };
 
     private:
+        Floats<2> m_lastGlobalPos{ 0.0f, 0.0f };
+        bool m_firstFrame{ false };
         bool m_shouldOpen{ false };
     };
 
