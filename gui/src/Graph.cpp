@@ -34,8 +34,12 @@ constexpr size_t PLOT_MIN_SIZE = 3;
 
 void gui::Axes::frame(FrameDrawer& fd)
 {
+	//We might want to do this in global space instead (rounded to nearest pixel),
+	//to improve consistency on scaling
+
 	assert(getParent());
 	Floats<2> parentSize = getParent()->getSize();
+	Floats<2> sizeTol = parentSize * 1.0e-3f;
 
 	Floats<2> majorGrid = m_scale.abs();
 	Floats<2> minorGrid = 0.25f * m_scale.abs();
@@ -45,17 +49,17 @@ void gui::Axes::frame(FrameDrawer& fd)
 
 	//Minor grid
 	float x = std::fmodf(m_translation[0], minorGrid[0]);
-	if (x < 0.0f)//same as if m_translation < 0 ?
+	if (x + sizeTol[0] < 0.0f)
 		x += minorGrid[0];
-	for (; x <= parentSize[0]; x += minorGrid[0])
+	for (; x <= parentSize[0] + sizeTol[0]; x += minorGrid[0])
 		ImGui::GetWindowDrawList()->AddLine(
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, 0.0f })),
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, parentSize[1] })),
 			minorCol);
 	float y = std::fmodf(m_translation[1], minorGrid[1]);
-	if (y < 0.0f)
+	if (y + sizeTol[1] < 0.0f)
 		y += minorGrid[1];
-	for (; y <= parentSize[1]; y += minorGrid[1])
+	for (; y <= parentSize[1] + sizeTol[1]; y += minorGrid[1])
 		ImGui::GetWindowDrawList()->AddLine(
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ 0.0f, y })),
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ parentSize[0], y })),
@@ -63,30 +67,30 @@ void gui::Axes::frame(FrameDrawer& fd)
 
 	//Major grid
 	x = std::fmodf(m_translation[0], majorGrid[0]);
-	if (x < 0.0f)//same as if m_translation < 0 ?
+	if (x + sizeTol[0] < 0.0f)
 		x += majorGrid[0];
-	for (; x <= parentSize[0]; x += majorGrid[0])
+	for (; x <= parentSize[0] + sizeTol[0]; x += majorGrid[0])
 		ImGui::GetWindowDrawList()->AddLine(
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, 0.0f })),
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, parentSize[1] })),
 			majorCol);
 	y = std::fmodf(m_translation[1], majorGrid[1]);
-	if (y < 0.0f)
+	if (y + sizeTol[1] < 0.0f)
 		y += majorGrid[1];
-	for (; y <= parentSize[1]; y += majorGrid[1])
+	for (; y <= parentSize[1] + sizeTol[1]; y += majorGrid[1])
 		ImGui::GetWindowDrawList()->AddLine(
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ 0.0f, y })),
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ parentSize[0], y })),
 			majorCol);
 
 	//Main axes
-	if (m_translation[0] >= 0.0f && m_translation[0] <= parentSize[0]) {
+	if (m_translation[0] >= 0.0f && m_translation[0] <= parentSize[0] + sizeTol[0]) {
 		ImGui::GetWindowDrawList()->AddLine(
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ m_translation[0], 0.0f })),
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ m_translation[0], parentSize[1] })),
 			axisCol);
 	}
-	if (m_translation[1] >= 0.0f && m_translation[1] <= parentSize[1]) {
+	if (m_translation[1] >= 0.0f && m_translation[1] <= parentSize[1] + sizeTol[1]) {
 		ImGui::GetWindowDrawList()->AddLine(
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ 0.0f, m_translation[1] })),
 			gui_type_conversion<ImVec2>::from(fd.toGlobal({ parentSize[0], m_translation[1] })),
@@ -264,21 +268,152 @@ void gui::PlotArea::frame(FrameDrawer& fd)
 	NewLine();
 	*/
 	
+	ImVec2 TLSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation));
+	ImVec2 BRSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation + m_size * m_scale));
+	
 	ImDrawList* drawList = GetWindowDrawList();
-	drawList->AddRectFilled(
-		gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation)), 
-		gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation + m_size * m_scale)), 
-		ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_FrameBg]));
-
-	//Catch user interaction (before or after children?)
+	drawList->AddRectFilled(TLSS, BRSS, ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_FrameBg]));
 
 	Composite::frame(fd);
 
-	Floats<2> origin = getAxes().toGlobalSpace({ 0.0f, 0.0f });
-	Floats<2> upper = getAxes().toGlobalSpace({ 1.0f, 1.0f });
+	//I would much prefer to separate this from the frame event, 
+	//and process each input to completion before considering the next.
+	//Like this it's hard to control and overview who receives what input.
+	if (m_mouseHandler) {
 
-	Floats<2> originL = toGlobalSpace({ 0.0f, m_size[1] * m_scale[1] });
-	Floats<2> upperL = toGlobalSpace({ m_size[0] * m_scale[0], 0.0f });
+		ImGuiContext* g = GetCurrentContext();
+		assert(g);
+
+		enum class Capturing 
+		{
+			NONE,
+			WE,
+			CHILD,
+			OTHER
+		};
+
+		Capturing who;
+		if (Mouse::getCapture() == this)
+			who = Capturing::WE;
+		else if (Mouse::getCapture() == nullptr)
+			//need to account for items that are still using imgui here (not sure if this will be enough)
+			who = g->ActiveId ? Capturing::OTHER : Capturing::NONE;
+		else if (Mouse::getCapture()->hasAncestor(this))
+			who = Capturing::CHILD;
+		else {
+			who = Capturing::OTHER;
+		}
+
+		if (who == Capturing::OTHER) {
+			//We should not recieve inputs, and should lose focus if we had it
+			if (m_mouseFocus) {
+				m_mouseFocus = false;
+				m_mouseHandler->onMouseLeave();
+			}
+		}
+		else if (who == Capturing::CHILD) {
+			//We should not receive input, but should also not lose focus
+		}
+		else {
+			//We should receive inputs
+
+			ImGuiIO& io = GetIO();
+
+			bool capturing = who == Capturing::WE;
+
+			ImGuiWindow* window = g->CurrentWindow;
+			assert(window);
+
+			bool inside = false;
+			if (g->HoveredWindow == window)
+				//TODO: deal with popups
+				inside = io.MousePos.x >= TLSS.x && io.MousePos.x <= BRSS.x && io.MousePos.y >= TLSS.y && io.MousePos.y <= BRSS.y;
+
+			if (capturing || inside)
+			{
+				//Moving
+				if (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f)
+					m_mouseHandler->onMouseMove(gui_type_conversion<Floats<2>>::from(io.MouseDelta));
+
+				//Clicking
+				if (IsMouseClicked(ImGuiMouseButton_Left))
+					m_mouseHandler->onMouseDown(Mouse::Button::LEFT);
+				else if (IsMouseReleased(ImGuiMouseButton_Left))
+					m_mouseHandler->onMouseUp(Mouse::Button::LEFT);
+
+				if (IsMouseClicked(ImGuiMouseButton_Middle))
+					m_mouseHandler->onMouseDown(Mouse::Button::MIDDLE);
+				else if (IsMouseReleased(ImGuiMouseButton_Middle))
+					m_mouseHandler->onMouseUp(Mouse::Button::MIDDLE);
+
+				if (IsMouseClicked(ImGuiMouseButton_Right))
+					m_mouseHandler->onMouseDown(Mouse::Button::RIGHT);
+				else if (IsMouseReleased(ImGuiMouseButton_Right))
+					m_mouseHandler->onMouseUp(Mouse::Button::RIGHT);
+
+				//Scrolling
+				SetItemUsingMouseWheel();//prevents imgui from scrolling the window
+				if (io.MouseWheel != 0.0f && !fd.isWheelHandled()) {
+					m_mouseHandler->onMouseWheel(io.MouseWheel);
+					fd.setWheelHandled();
+				}
+			}
+			if (!capturing) {
+				if (inside) {
+					//Entering
+					if (!m_mouseFocus) {
+						m_mouseFocus = true;
+						m_mouseHandler->onMouseEnter();
+					}
+				}
+				else {
+					//Leaving
+					if (m_mouseFocus) {
+						m_mouseFocus = false;
+						m_mouseHandler->onMouseLeave();
+					}
+				}
+			}
+
+		}
+
+		if (Mouse::getCapture() == this) {
+
+		}
+		else if (Mouse::getCapture() == nullptr) {
+			ImGuiIO& io = GetIO();
+
+			//Handle moves
+			if (io.MousePos.x >= TLSS.x && io.MousePos.x <= BRSS.x &&
+				io.MousePos.y >= TLSS.y && io.MousePos.y <= BRSS.y)
+			{
+				//Cursor inside plot area
+
+				if (!m_mouseFocus) {
+					//Cursor entered
+					m_mouseFocus = true;
+					m_mouseHandler->onMouseEnter();
+				}
+
+				if (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f)
+					m_mouseHandler->onMouseMove(gui_type_conversion<Floats<2>>::from(io.MouseDelta));
+			}
+			else {
+				//Cursor outside plot area
+
+				if (m_mouseFocus) {
+					//Cursor left
+					m_mouseFocus = false;
+					m_mouseHandler->onMouseLeave();
+				}
+			}
+
+			//Handle clicks
+			if (IsMouseClicked(ImGuiMouseButton_Left))
+				m_mouseHandler->onMouseDown(Mouse::Button::LEFT);
+		}
+		//else ignore (someone else is capturing the mouse)
+	}
 }
 
 gui::ComponentPtr gui::PlotArea::removeChild(IComponent* c)
@@ -334,6 +469,37 @@ void gui::PlotArea::addCurve(std::unique_ptr<Curve>&& curve)
 void gui::PlotArea::removeCurve(Curve* curve)
 {
 	getAxes().removeCurve(curve);
+}
+
+//The limit functions assume linear axes for now
+gui::Floats<2> gui::PlotArea::getXLimits() const
+{
+	float xscale = getAxes().getScale()[0];
+	float xlow = -getAxes().getTranslation()[0] * xscale;
+	return { xlow, xlow + m_size[0] * xscale };
+}
+
+void gui::PlotArea::setXLimits(const Floats<2>& lims)
+{
+	float xscale = m_size[0] / (lims[1] - lims[0]);
+	getAxes().setScaleX(xscale);
+	getAxes().setTranslationX(-lims[0] * xscale);
+}
+
+gui::Floats<2> gui::PlotArea::getYLimits() const
+{
+	//account for reversed axis convention
+	float yscale = getAxes().getScale()[1];
+	float yhigh = -getAxes().getTranslation()[1] / yscale;
+	return { yhigh + m_size[1] / yscale, yhigh };
+}
+
+void gui::PlotArea::setYLimits(const Floats<2>& lims)
+{
+	//account for reversed axis convention
+	float yscale = -m_size[1] / (lims[1] - lims[0]);
+	getAxes().setScaleY(yscale);
+	getAxes().setTranslationY(-lims[1] * yscale);
 }
 
 
@@ -432,10 +598,11 @@ void gui::Plot::frame(FrameDrawer& fd)
 	getYLabels().setTranslation({ 0.0f, 0.0f });
 
 	ImGui::Dummy(gui_type_conversion<ImVec2>::from((m_size * scale).eval()));
-	ImVec2 cursorPos2 = GetCursorPos();
+	ImVec2 cursorPosEnd = GetCursorPos();
 
 	Composite::frame(fd);
-	ImVec2 cursorPos3 = GetCursorPos();
+
+	SetCursorPos(cursorPosEnd);//make sure we leave it where it should be
 }
 
 gui::ComponentPtr gui::Plot::removeChild(IComponent* c)
@@ -535,9 +702,6 @@ void gui::SimpleCurve::draw(Drawer& d) const
 
 void gui::SimpleHandles::frame(FrameDrawer& fd)
 {
-	//NOTE: with the FrameDrawer, we no longer need to know about the plot area. 
-	//It can send its transform down to us instead.
-
 	using namespace ImGui;
 
 	float size = m_handleSize * m_scale[0];
@@ -547,6 +711,8 @@ void gui::SimpleHandles::frame(FrameDrawer& fd)
 
 	for (size_t i = 0; i < m_points.size(); i++) {
 		ImVec2 p = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_points[i]));
+		p[0] = std::round(p[0]);
+		p[1] = std::round(p[1]);
 
 		ImVec2 buttonTL = { p.x - buttonSize / 2.0f, p.y - buttonSize / 2.0f };
 		ImVec2 buttonBR = { p.x + buttonSize / 2.0f, p.y + buttonSize / 2.0f };
@@ -555,6 +721,10 @@ void gui::SimpleHandles::frame(FrameDrawer& fd)
 		ImGuiWindow* window = GetCurrentWindow();
 		assert(window);
 		ImVec4 lims = window->ClipRect.ToVec4();
+		lims.x = std::round(lims.x);
+		lims.y = std::round(lims.y);
+		lims.z = std::round(lims.z);
+		lims.w = std::round(lims.w);
 		util::CallWrapper end;
 		if (p[0] >= lims.x && p[0] <= lims.z && p[1] >= lims.y && p[1] <= lims.w) {
 			PushClipRect(buttonTL, buttonBR, false);

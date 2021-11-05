@@ -25,6 +25,11 @@ gui::Component::~Component()
 	assert(!m_parent);
 }
 
+bool gui::Component::hasAncestor(IComponent* c) const
+{
+	return (m_parent && c) ? m_parent == c || m_parent->hasAncestor(c) : false;
+}
+
 gui::Floats<2> gui::Component::getGlobalPosition() const
 {
 	return toGlobalSpace({ 0.0f, 0.0f });
@@ -125,6 +130,11 @@ gui::ComponentDecorator::~ComponentDecorator()
 	m_component->setParent(nullptr);
 }
 
+bool gui::ComponentDecorator::hasAncestor(IComponent* c) const
+{
+	return (m_parent && c) ? m_parent == c || m_parent->hasAncestor(c) : false;
+}
+
 void gui::ComponentDecorator::addChild(ComponentPtr&& c)
 {
 	assert(m_component);
@@ -165,6 +175,18 @@ void gui::ComponentDecorator::setTranslation(const Floats<2>& t)
 	m_component->setTranslation(t);
 }
 
+void gui::ComponentDecorator::setTranslationX(float x)
+{
+	assert(m_component);
+	m_component->setTranslationX(x);
+}
+
+void gui::ComponentDecorator::setTranslationY(float y)
+{
+	assert(m_component);
+	m_component->setTranslationY(y);
+}
+
 gui::Floats<2> gui::ComponentDecorator::getScale() const
 {
 	assert(m_component);
@@ -175,6 +197,18 @@ void gui::ComponentDecorator::setScale(const Floats<2>& s)
 {
 	assert(m_component);
 	m_component->setScale(s);
+}
+
+void gui::ComponentDecorator::setScaleX(float x)
+{
+	assert(m_component);
+	m_component->setScaleX(x);
+}
+
+void gui::ComponentDecorator::setScaleY(float y)
+{
+	assert(m_component);
+	m_component->setScaleY(y);
 }
 
 gui::Floats<2> gui::ComponentDecorator::getGlobalPosition() const

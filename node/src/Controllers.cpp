@@ -20,6 +20,7 @@
 #include "Controllers.h"
 #include "DeviceImpl.h"
 #include "widget_types.h"
+#include "CompositionActions.h"
 
 constexpr gui::ColRGBA TitleCol_Anim = { 0.8f, 0.8f, 0.8f, 1.0f };
 constexpr gui::ColRGBA TitleCol_AnimActive = { 0.8f, 0.8f, 0.8f, 1.0f };
@@ -29,6 +30,54 @@ constexpr float DEFAULT_FREQUENCY = 1.0f;
 constexpr float DEFAULT_PHASE = 0.0f;
 constexpr float DEFAULT_STARTTIME = 0.0f;
 constexpr float DEFAULT_STOPTIME = 1.0f;
+
+class FloatKeyEditor final : public gui::Popup
+{
+public:
+	FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& tStart, IProperty<float>& tStop) : 
+		m_data{ data }, m_tStart{ tStart }, m_tStop{ tStop }
+	{
+		setSize({ 640.0f, 480.0f });
+
+		//We need:
+		//plot area
+		//input handler for plot area (specific mechanic on generic component inserted above plot area?)
+		//handles for each key
+		//a curve that interpolates the data
+		//widget to select interpolation type
+		//controls for start/stop time
+
+		auto item = newChild<gui::Item>();
+		item->setSize({ 200.0f, -1.0f });
+		item->newChild<gui::Text>("Interpolation");
+		using selector_type = gui::Selector<nif::KeyType, IProperty<nif::KeyType>>;
+		auto selector = item->newChild<selector_type>(data.keyType(), std::string(),
+			selector_type::ItemList{ 
+				{ nif::KeyType::CONSTANT, "Constant" }, 
+				{ nif::KeyType::LINEAR, "Linear" }, 
+				{ nif::KeyType::QUADRATIC, "Quadratic" } });
+
+		auto plot = newChild<gui::Plot>();
+		//plot->setSize({ 600.0f, 400.0f });
+		//plot->setXLimits({ m_tStart.get(), m_tStop.get() });
+		//ylim should be based on min/max data
+	}
+
+	virtual void frame(gui::FrameDrawer& fd) override
+	{
+		Popup::frame(fd);
+	}
+
+	virtual void onClose() override
+	{
+		asyncInvoke<gui::RemoveChild>(this, getParent(), false);
+	}
+
+private:
+	nif::NiFloatData& m_data;
+	IProperty<float>& m_tStart;
+	IProperty<float>& m_tStop;
+};
 
 class node::FloatController::TargetField : public node::Field
 {
@@ -73,7 +122,7 @@ node::FloatController::FloatController() :
 node::FloatController::FloatController(
 	std::unique_ptr<nif::NiFloatInterpolator>&& iplr, 
 	std::unique_ptr<nif::NiFloatData>&& data) :
-	NodeBase(std::move(iplr))
+	NodeBase(std::move(iplr)), m_data{ std::move(data) }
 {
 	//Remember to have Constructor set our properties before connecting us!
 
@@ -83,7 +132,7 @@ node::FloatController::FloatController(
 	setColour(COL_TITLE, TitleCol_Anim);
 	setColour(COL_TITLE_ACTIVE, TitleCol_AnimActive);
 
-	if (!data) {
+	if (!m_data) {
 		//We don't necessarily need a data block. Should we always have one regardless?
 	}
 
@@ -103,7 +152,7 @@ node::FloatController::FloatController(
 	ph->setSensitivity(0.01f);
 	ph->setNumberFormat("%.2f");
 
-	newChild<gui::Button>("Keys");
+	newChild<gui::Button>("Keys", std::bind(&FloatController::openKeyEditor, this));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(TARGET)->connector->setTranslation({ WIDTH, 38.0f });
@@ -122,4 +171,15 @@ node::FloatController::~FloatController()
 nif::NiFloatInterpolator& node::FloatController::object()
 {
 	return static_cast<nif::NiFloatInterpolator&>(NodeBase::object());
+}
+
+void node::FloatController::openKeyEditor()
+{
+	if (!m_data) {
+		m_data = std::make_unique<nif::NiFloatData>();
+		//defaults?
+	}
+	auto c = std::make_unique<FloatKeyEditor>(*m_data, startTime(), stopTime());
+	c->open();
+	asyncInvoke<gui::AddChild>(std::move(c), this, false);
 }

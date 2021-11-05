@@ -271,7 +271,7 @@ void node::Editor::NodeRoot::frame(gui::FrameDrawer& fd)
 
 	//zoom
 	//This needs to come after the children, if capturing is to work. However, that means it will lag one frame.
-	if (float d = fd.getWheelDelta(); d != 0.0f && !fd.isWheelCaptured()) {
+	if (float d = fd.getWheelDelta(); d != 0.0f && !fd.isWheelHandled()) {
 		//assume isotropic scale
 		float newScale = std::min(std::max(m_scale[0] * std::powf(SCALE_BASE, d), SCALE_MIN), SCALE_MAX);
 		if (newScale != m_scale[0]) {

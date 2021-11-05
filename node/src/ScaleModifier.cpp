@@ -34,6 +34,7 @@ public:
 		node.newChild<gui::Separator>();
 		node.newChild<gui::Text>("Scale");
 		auto plot = node.newChild<gui::Plot>();
+		plot->getPlotArea().setMouseHandler(std::make_unique<PlotAreaInput>(plot->getPlotArea()));
 		plot->getPlotArea().addCurve(std::make_unique<gui::SimpleCurve>(m_data));
 		plot->getPlotArea().getAxes().addChild(std::make_unique<Controls>(m_data, node.object().scales()));
 		std::vector<gui::CustomXLabels::AxisLabel> labels{ { "Birth", 0.0f, 0.0f }, { "Death", 1.0f, 1.0f } };
@@ -64,6 +65,21 @@ public:
 	}
 
 private:
+	class PlotAreaInput final : public gui::MouseHandler
+	{
+	public:
+		PlotAreaInput(gui::PlotArea& area) : m_area{ area } {}
+
+		virtual void onMouseWheel(float delta) override
+		{
+			gui::Floats<2> ylims = m_area.getYLimits();
+			ylims[1] = std::max(ylims[1] - delta, 1.0f);
+			m_area.setYLimits(ylims);
+		}
+
+	private:
+		gui::PlotArea& m_area;
+	};
 	class EditPoint final : public gui::ICommand
 	{
 	public:

@@ -21,6 +21,8 @@
 
 namespace gui
 {
+	class IComponent;
+
 	enum class MouseButton
 	{
 		NONE,
@@ -53,5 +55,11 @@ namespace gui
 		static Floats<2> getPosition();
 		static void setPosition(const Floats<2>& pos) {}
 		static float getWheelDelta() { return 0.0f; }
+
+		static IComponent* getCapture() { return s_capturing; }
+		static void setCapture(IComponent* c) { s_capturing = c; }
+
+	private:
+		static IComponent* s_capturing;
 	};
 }

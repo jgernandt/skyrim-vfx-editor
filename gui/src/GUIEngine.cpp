@@ -198,15 +198,16 @@ gui::Floats<2> gui::backend::ImGuiWinD3D10::getMousePosition() const
 	return toLocal(gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos));
 }
 
-bool gui::backend::ImGuiWinD3D10::isWheelCaptured() const
+bool gui::backend::ImGuiWinD3D10::isWheelHandled() const
 {
-	ImGuiContext* c = ImGui::GetCurrentContext();
-	return c ? c->ActiveIdUsingMouseWheel || c->HoveredIdUsingMouseWheel : false;
+	return m_wheelHandled;
+	//ImGuiContext* c = ImGui::GetCurrentContext();
+	//return c ? c->ActiveIdUsingMouseWheel || c->HoveredIdUsingMouseWheel : false;
 }
 
-void gui::backend::ImGuiWinD3D10::setCaptureWheel()
+void gui::backend::ImGuiWinD3D10::setWheelHandled()
 {
-	assert(false);//TODO
+	m_wheelHandled = true;
 }
 
 float gui::backend::ImGuiWinD3D10::getWheelDelta() const
@@ -260,6 +261,7 @@ void UpdateFontTexture();
 void gui::backend::ImGuiWinD3D10::beginFrame()
 {
 	m_lastMousePos = gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos);
+	m_wheelHandled = false;
 
 	bool rebuild = false;
 	if (m_reloadSecond) {

@@ -19,6 +19,8 @@
 #include "pch.h"
 #include "input.h"
 
+gui::IComponent* gui::Mouse::s_capturing = nullptr;
+
 int gui::guiToImGuiButton(MouseButton button)
 {
 	switch (button) {

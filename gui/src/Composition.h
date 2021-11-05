@@ -36,13 +36,20 @@ namespace gui
 
 		virtual IComponent* getParent() const override { return m_parent; }
 		virtual void setParent(IComponent* c) override { m_parent = c; }
+		virtual bool hasAncestor(IComponent* c) const override;
 
 		virtual void frame(FrameDrawer&) override {}
 
 		virtual Floats<2> getTranslation() const override { return m_translation; }
 		virtual void setTranslation(const Floats<2>& t) override { m_translation = t; }
+		virtual void setTranslationX(float x) override { m_translation[0] = x; }
+		virtual void setTranslationY(float y) override { m_translation[1] = y; }
+
 		virtual Floats<2> getScale() const override { return m_scale; }
 		virtual void setScale(const Floats<2>& s) override { m_scale = s; }
+		virtual void setScaleX(float x) override { m_scale[0] = x; }
+		virtual void setScaleY(float y) override { m_scale[1] = y; }
+
 		virtual Floats<2> getGlobalPosition() const override;
 		virtual Floats<2> toGlobalSpace(const Floats<2>& p) const override;
 		virtual Floats<2> toParentSpace(const Floats<2>& p) const override;
@@ -125,6 +132,7 @@ namespace gui
 
 		virtual IComponent* getParent() const override { return m_parent; }
 		virtual void setParent(IComponent* c) override { m_parent = c; }
+		virtual bool hasAncestor(IComponent* c) const override;
 
 		virtual void addChild(ComponentPtr&& c) final override;
 		virtual ComponentPtr removeChild(IComponent* c) final override;
@@ -134,8 +142,14 @@ namespace gui
 
 		virtual Floats<2> getTranslation() const override;
 		virtual void setTranslation(const Floats<2>& t) override;
+		virtual void setTranslationX(float x) override;
+		virtual void setTranslationY(float y) override;
+
 		virtual Floats<2> getScale() const override;
 		virtual void setScale(const Floats<2>& s) override;
+		virtual void setScaleX(float x) override;
+		virtual void setScaleY(float y) override;
+
 		virtual Floats<2> getGlobalPosition() const override;
 		virtual Floats<2> toGlobalSpace(const Floats<2>& p) const override;
 		virtual Floats<2> toParentSpace(const Floats<2>& p) const override;

@@ -60,9 +60,10 @@ namespace gui
 			virtual bool isMouseDown(MouseButton btn) const override;
 			virtual Floats<2> getMouseMove() const override;
 			virtual Floats<2> getMousePosition() const override;
-			virtual bool isWheelCaptured() const override;
-			virtual void setCaptureWheel() override;
 			virtual float getWheelDelta() const override;
+
+			virtual bool isWheelHandled() const override;
+			virtual void setWheelHandled() override;
 
 			void initWin32Window(HWND hwnd);
 			void initDX10Window(ID3D10Device* device);
@@ -90,6 +91,9 @@ namespace gui
 			float m_secondFontScale{ 1.0f };
 			bool m_reloadSecond{ false };
 
+			bool m_wheelHandled{ false };
+
+			//Debug
 			Timer<long long, std::micro> m_timer;
 			int m_frameCount{ 0 };
 			long long m_lastTime{ 0 };

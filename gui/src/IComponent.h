@@ -59,9 +59,11 @@ namespace gui
 		virtual bool isMouseDown(MouseButton) const = 0;
 		virtual Floats<2> getMouseMove() const = 0;
 		virtual Floats<2> getMousePosition() const = 0;
-		virtual bool isWheelCaptured() const = 0;
-		virtual void setCaptureWheel() = 0;
 		virtual float getWheelDelta() const = 0;
+
+		//To report that a component has handled input (don't like it!)
+		virtual bool isWheelHandled() const = 0;
+		virtual void setWheelHandled() = 0;
 		//More generally, if this is something we want to pursue:
 		//get the component that is currently capturing the button (if any)
 		//virtual IComponent* getCaptured(MouseButton) const = 0;
@@ -78,6 +80,7 @@ namespace gui
 		virtual IComponent* getParent() const = 0;
 		//Not for public use! Parenting should be done via add/removeChild.
 		virtual void setParent(IComponent*) = 0;
+		virtual bool hasAncestor(IComponent*) const = 0;
 
 		//Pass ownership of a component to us, and add it as a child
 		virtual void addChild(std::unique_ptr<IComponent>&&) = 0;
@@ -92,9 +95,13 @@ namespace gui
 		//Local translation from our parent component
 		virtual Floats<2> getTranslation() const = 0;
 		virtual void setTranslation(const Floats<2>&) = 0;
+		virtual void setTranslationX(float) = 0;
+		virtual void setTranslationY(float) = 0;
 		//Our local scale
 		virtual Floats<2> getScale() const = 0;
 		virtual void setScale(const Floats<2>&) = 0;
+		virtual void setScaleX(float) = 0;
+		virtual void setScaleY(float) = 0;
 		//Our position in the coordinates of the native window (short for toGlobalSpace({0.0f, 0.0f}))
 		virtual Floats<2> getGlobalPosition() const = 0;
 		//Transform a point in our space to the space of the native window

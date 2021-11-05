@@ -66,6 +66,9 @@ namespace node
 		IProperty<float>& startTime() { return m_startTime; }
 		IProperty<float>& stopTime() { return m_stopTime; }
 
+	private:
+		void openKeyEditor();
+
 	public:
 		constexpr static const char* TARGET = "Target";
 
@@ -99,6 +102,12 @@ namespace node
 		LocalProperty<float> m_phase;
 		LocalProperty<float> m_startTime;
 		LocalProperty<float> m_stopTime;
+
+		//We are moving away from the previous design of letting NodeBase own all objects,
+		//which seems to be causing more problems than it solves.
+		//We'll need a major refactor of NodeBase (and all existing nodes) to complete it,
+		//but this is the first step.
+		std::unique_ptr<nif::NiFloatData> m_data;
 
 		class TargetField;
 	};
