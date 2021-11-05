@@ -33,9 +33,12 @@ public:
 	{
 		node.newChild<gui::Separator>();
 		node.newChild<gui::Text>("Scale");
-		auto area = node.newChild<gui::PlotArea>();
-		area->addCurve(std::make_unique<gui::SimpleCurve>(m_data));
-		area->addChild(std::make_unique<Controls>(*area, m_data, node.object().scales()));
+		auto plot = node.newChild<gui::Plot>();
+		plot->getPlotArea().addCurve(std::make_unique<gui::SimpleCurve>(m_data));
+		plot->getPlotArea().getAxes().addChild(std::make_unique<Controls>(m_data, node.object().scales()));
+		std::vector<gui::CustomXLabels::AxisLabel> labels{ { "Birth", 0.0f, 0.0f }, { "Death", 1.0f, 1.0f } };
+		plot->setXLabels(std::make_unique<gui::CustomXLabels>(plot->getPlotArea().getAxes(), std::move(labels)));
+		//plot->setLimits({ 0.0f, 1.0f, 0.0f, 1.0f });
 
 		//segments +-
 		auto item = node.newChild<gui::Item>(std::make_unique<gui::RightAlign>());
@@ -186,8 +189,8 @@ private:
 	class Controls : public gui::SimpleHandles
 	{
 	public:
-		Controls(const gui::PlotArea& area, const std::vector<gui::Floats<2>>& data, IProperty<std::vector<float>>& trgt) :
-			SimpleHandles(area, data), m_trgt{ trgt } {}
+		Controls(const std::vector<gui::Floats<2>>& data, IProperty<std::vector<float>>& trgt) :
+			SimpleHandles(data), m_trgt{ trgt } {}
 
 		virtual void onClick(size_t i, gui::MouseButton button) override
 		{
@@ -198,9 +201,9 @@ private:
 		{
 			assert(i < m_points.size());
 
-			//we don't allow x movement
-			if (pos[1] != m_points[i][1])
-				asyncInvoke<EditPoint>(m_trgt, i, pos[1], pos[1]);
+			//we don't allow x movement, disallow negative y
+			if (float newY = std::max(pos[1], 0.0f); newY != m_points[i][1])
+				asyncInvoke<EditPoint>(m_trgt, i, newY, newY);
 		}
 		virtual void onRelease(size_t i, gui::MouseButton button) override
 		{

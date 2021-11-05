@@ -27,6 +27,11 @@ float gui::getDefaultHeight()
 		return 0.0f;
 }
 
+float gui::getDefaultHeightConst()
+{
+	return 20.0f;
+}
+
 unsigned int gui::backend::ColourInput(const std::string& label, float* arr)
 {
 	unsigned int flags = ImGuiColorEditFlags_NoInputs | //ImGuiColorEditFlags_NoLabel |

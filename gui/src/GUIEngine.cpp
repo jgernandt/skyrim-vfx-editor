@@ -69,7 +69,6 @@ void gui::backend::ImGuiWinD3D10::pushClipArea(const Floats<2>& p1, const Floats
 	Floats<2> min = toGlobal({ std::min(p1[0], p2[0]), std::min(p1[1], p2[1]) });
 	Floats<2> max = toGlobal({ std::max(p1[0], p2[0]), std::max(p1[1], p2[1]) });
 	ImGui::PushClipRect({ min[0], min[1] }, { max[0], max[1] }, intersect);
-	auto vp = ImGui::GetMainViewport();
 }
 
 void gui::backend::ImGuiWinD3D10::popClipArea()
@@ -303,6 +302,8 @@ void gui::backend::ImGuiWinD3D10::endFrame()
 	}
 	ImGui::End();
 #endif
+
+	assert(m_clipArea.empty() && m_transform.empty());//or we forgot to pop it
 
 	//This seems like a reliable way to keep the main menu bar on top. Haven't noticed any side effects yet.
 	ImGui::BringWindowToDisplayFront(ImGui::FindWindowByName("##MainMenuBar"));

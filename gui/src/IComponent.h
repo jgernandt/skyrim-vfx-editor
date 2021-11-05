@@ -95,8 +95,12 @@ namespace gui
 		//Our local scale
 		virtual Floats<2> getScale() const = 0;
 		virtual void setScale(const Floats<2>&) = 0;
-		//Our position in the coordinates of the native window
+		//Our position in the coordinates of the native window (short for toGlobalSpace({0.0f, 0.0f}))
 		virtual Floats<2> getGlobalPosition() const = 0;
+		//Transform a point in our space to the space of the native window
+		virtual Floats<2> toGlobalSpace(const Floats<2>&) const = 0;
+		//Transform a point in our space to the space of our parent
+		virtual Floats<2> toParentSpace(const Floats<2>&) const = 0;
 
 		//Actual size of component. Decided at runtime.
 		virtual Floats<2> getSize() const = 0;

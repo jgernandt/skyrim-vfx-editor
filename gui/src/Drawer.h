@@ -44,8 +44,8 @@ namespace gui
 
 		void setTargetLayer(Layer l) { assert(!m_drawing); m_layer = l; }
 
-		void pushClipArea(float x1, float y1, float x2, float y2);
-		void pushClipArea(const Floats<2>& xlims, const Floats<2>& ylims);
+		//void pushClipArea(float x1, float y1, float x2, float y2);
+		void pushClipArea(const Floats<2>& p1, const Floats<2>& p2);
 		void popClipArea();
 
 		void pushTransform(float tx, float ty, float sx, float sy);

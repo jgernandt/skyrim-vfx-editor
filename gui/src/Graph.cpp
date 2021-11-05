@@ -18,15 +18,147 @@
 
 #include "pch.h"
 #include "Graph.h"
+#include "CallWrapper.h"
 
 //for ImVec operators
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
+constexpr size_t AREA_AXES_INDEX = 0;
+constexpr size_t AREA_MIN_SIZE = 1;
+
+constexpr size_t PLOT_PLOTAREA_INDEX = 0;
+constexpr size_t PLOT_XLABEL_INDEX = 1;
+constexpr size_t PLOT_YLABEL_INDEX = 2;
+constexpr size_t PLOT_MIN_SIZE = 3;
+
+void gui::Axes::frame(FrameDrawer& fd)
+{
+	assert(getParent());
+	Floats<2> parentSize = getParent()->getSize();
+
+	Floats<2> majorGrid = m_scale.abs();
+	Floats<2> minorGrid = 0.25f * m_scale.abs();
+	ImU32 axisCol = 0xff000000;
+	ImU32 majorCol = 0xff7f7f7f;
+	ImU32 minorCol = 0xffbfbfbf;
+
+	//Minor grid
+	float x = std::fmodf(m_translation[0], minorGrid[0]);
+	if (x < 0.0f)//same as if m_translation < 0 ?
+		x += minorGrid[0];
+	for (; x <= parentSize[0]; x += minorGrid[0])
+		ImGui::GetWindowDrawList()->AddLine(
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, 0.0f })),
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, parentSize[1] })),
+			minorCol);
+	float y = std::fmodf(m_translation[1], minorGrid[1]);
+	if (y < 0.0f)
+		y += minorGrid[1];
+	for (; y <= parentSize[1]; y += minorGrid[1])
+		ImGui::GetWindowDrawList()->AddLine(
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ 0.0f, y })),
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ parentSize[0], y })),
+			minorCol);
+
+	//Major grid
+	x = std::fmodf(m_translation[0], majorGrid[0]);
+	if (x < 0.0f)//same as if m_translation < 0 ?
+		x += majorGrid[0];
+	for (; x <= parentSize[0]; x += majorGrid[0])
+		ImGui::GetWindowDrawList()->AddLine(
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, 0.0f })),
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, parentSize[1] })),
+			majorCol);
+	y = std::fmodf(m_translation[1], majorGrid[1]);
+	if (y < 0.0f)
+		y += majorGrid[1];
+	for (; y <= parentSize[1]; y += majorGrid[1])
+		ImGui::GetWindowDrawList()->AddLine(
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ 0.0f, y })),
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ parentSize[0], y })),
+			majorCol);
+
+	//Main axes
+	if (m_translation[0] >= 0.0f && m_translation[0] <= parentSize[0]) {
+		ImGui::GetWindowDrawList()->AddLine(
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ m_translation[0], 0.0f })),
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ m_translation[0], parentSize[1] })),
+			axisCol);
+	}
+	if (m_translation[1] >= 0.0f && m_translation[1] <= parentSize[1]) {
+		ImGui::GetWindowDrawList()->AddLine(
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ 0.0f, m_translation[1] })),
+			gui_type_conversion<ImVec2>::from(fd.toGlobal({ parentSize[0], m_translation[1] })),
+			axisCol);
+	}
+
+	//Curves (I'm not sure we want to keep doing it this way)
+	Drawer d;
+	d.setTargetLayer(Layer::WINDOW);
+	d.pushTransform(fd.getCurrentTranslation(), fd.getCurrentScale());
+	d.pushClipArea({ 0.0f, 0.0f }, parentSize);
+	d.pushTransform(m_translation, m_scale);
+	for (auto&& curve : m_curves) {
+		assert(curve);
+		curve->draw(d);
+	}
+
+	fd.pushClipArea({ 0.0f, 0.0f }, parentSize);
+	util::CallWrapper end(&FrameDrawer::popClipArea, &fd);
+	Composite::frame(fd);
+}
+
+void gui::Axes::addCurve(std::unique_ptr<Curve>&& curve)
+{
+	m_curves.push_back(std::move(curve));
+}
+
+std::unique_ptr<gui::Curve> gui::Axes::removeCurve(Curve* curve)
+{
+	std::unique_ptr<gui::Curve> result;
+	auto up = [curve](const std::unique_ptr<Curve>& p) { return p.get() == curve; };
+	if (auto it = std::find_if(m_curves.begin(), m_curves.end(), up); it != m_curves.end()) {
+		result = std::move(*it);
+		m_curves.erase(it);
+	}
+	return result;
+}
+
+std::unique_ptr<gui::Curve> gui::Axes::removeCurve(int index)
+{
+	std::unique_ptr<gui::Curve> result;
+	if (index >= 0 && static_cast<size_t>(index) < m_curves.size()) {
+		result = std::move(m_curves[index]);
+		m_curves.erase(m_curves.begin() + index);
+	}
+	return result;
+}
+
+
+gui::PlotArea::PlotArea()
+{
+	auto axes = newChild<Axes>();
+
+	//This will define our axis limits
+	m_size = { 1.0f, 1.0f };
+	axes->setTranslation({ 0.0f, 1.0f });
+	axes->setScale({ 1.0f, -1.0f });
+}
+
 //This is made specifically for the scale mod. We'll make it more general as we go.
 void gui::PlotArea::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
+	/*
+	//We rely on the imgui cursor for our position. Would be nicer to have it set by some layout procedure instead.
+	//This assumes we are child of a Window. Or Popup. Crap.
+	// Maybe just require that a translation be set explicitly?
+	//Should be enough to do this only once?
+	Floats<2> scale = fd.getCurrentScale();
+	//m_translation = gui_type_conversion<Floats<2>>::from(GetCursorPos()) / scale;
+
+	//Ok: use our translation to position the plot area. As it should be done.
 
 	//Determine the size of the plot area.
 	//If size is set to auto, make it a square that fits the allowed width (including labels).
@@ -34,16 +166,16 @@ void gui::PlotArea::frame(FrameDrawer& fd)
 	//(Weird things may happen if size is set, but too small to fit the labels. Let's ignore this fact, and it will go away.)
 	float yLabelWidth = CalcTextSize("00").x;
 	float xLabelHeight = GetFontSize();
-	ImVec2 itemSize;
-	ImVec2 plotSize;
-	itemSize[0] = m_size[0] > 0.0f ? m_size[0] : CalcItemWidth();
+	ImVec2 itemSize;//in screen space
+	ImVec2 plotSize;//in screen space
+	itemSize[0] = m_size[0] > 0.0f ? m_size[0] * scale[0] * m_scale[0] : CalcItemWidth();
 	plotSize[0] = std::max(itemSize[0] - yLabelWidth - GetStyle().ItemInnerSpacing.x, 0.0f);
 	if (m_size[1] <= 0.0f) {
 		plotSize[1] = plotSize[0];
 		itemSize[1] = plotSize[1] + xLabelHeight + GetStyle().ItemInnerSpacing.y;
 	}
 	else {
-		itemSize[1] = m_size[1];
+		itemSize[1] = m_size[1] * scale[1] * m_scale[1];
 		plotSize[1] = std::max(itemSize[1] - xLabelHeight - GetStyle().ItemInnerSpacing.y, 0.0f);
 	}
 
@@ -55,27 +187,28 @@ void gui::PlotArea::frame(FrameDrawer& fd)
 	ImVec2 TLWS = GetCursorPos() + ImVec2{ yLabelWidth + GetStyle().ItemInnerSpacing.x, 0.5f * GetFontSize() };
 	ImVec2 BRWS = TLWS + plotSize;
 
-	m_scale = { (BRSS.x - TLSS.x) / (m_xlim[1] - m_xlim[0]),//r - l
-		(TLSS.y - BRSS.y) / (m_ylim[1] - m_ylim[0]) };		//t - b
-	m_translation = { TLSS.x - m_xlim[0] * m_scale[0],		//l
-		BRSS.y - m_ylim[0] * m_scale[1] };					//b
+	//We don't need to recalc!
+	m_CSscale = { (BRSS.x - TLSS.x) / (m_xlim[1] - m_xlim[0]),	//r - l
+		(TLSS.y - BRSS.y) / (m_ylim[1] - m_ylim[0]) };			//t - b
+	m_CStranslation = { TLSS.x - m_xlim[0] * m_CSscale[0],		//l
+		BRSS.y - m_ylim[0] * m_CSscale[1] };					//b
 
 	//Graph area
 	ImDrawList* drawList = GetWindowDrawList();
 	drawList->AddRectFilled(TLSS, BRSS, ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_FrameBg]));
 
 	//Major grid lines
-	for (float f = TLSS.x + m_scale[0] * std::fmod(m_xlim[0], m_majorGrid[0]);
+	for (float f = TLSS.x + m_CSscale[0] * std::fmod(m_xlim[0], m_majorGrid[0]);
 		f <= BRSS.x;
-		f += m_scale[0] * m_majorGrid[0])
+		f += m_CSscale[0] * m_majorGrid[0])
 		drawList->AddLine(
 			ImVec2(f, TLSS.y),
 			ImVec2(f, BRSS.y),
 			ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_Border]),
 			m_majorGridWidth);
-	for (float f = BRSS.y + m_scale[1] * std::fmod(m_ylim[0], m_majorGrid[1]);
+	for (float f = BRSS.y + m_CSscale[1] * std::fmod(m_ylim[0], m_majorGrid[1]);
 		f >= TLSS.y;
-		f += m_scale[1] * m_majorGrid[1])
+		f += m_CSscale[1] * m_majorGrid[1])
 		drawList->AddLine(
 			ImVec2(TLSS.x, f),
 			ImVec2(BRSS.x, f),
@@ -86,7 +219,7 @@ void gui::PlotArea::frame(FrameDrawer& fd)
 	//This might require another order if we want the plot area to capture other mouse input as well.
 	Drawer d;
 	d.setTargetLayer(Layer::WINDOW);
-	d.pushTransform(m_translation, m_scale);
+	d.pushTransform(m_CStranslation, m_CSscale);
 	d.pushClipArea(m_xlim, m_ylim);
 	for (auto&& curve : m_curves) {
 		assert(curve);
@@ -96,6 +229,7 @@ void gui::PlotArea::frame(FrameDrawer& fd)
 	Composite::frame(fd);
 
 	//Scrolling
+	//Use event handler funciton instead
 	SetCursorScreenPos(TLSS);
 	InvisibleButton("graph_area", plotSize, ImGuiButtonFlags_MouseButtonMiddle);
 	SetItemUsingMouseWheel();
@@ -105,35 +239,289 @@ void gui::PlotArea::frame(FrameDrawer& fd)
 	//y labels
 	char buf[8];
 	snprintf(buf, sizeof(buf), "%.0f", m_ylim[1]);
-	SetCursorPos(TLWS - ImVec2{ CalcTextSize(buf).x + GetStyle().ItemInnerSpacing.x, 0.5f * GetFontSize() });
-	Text(buf);
+	drawList->AddText(TLSS - ImVec2{ CalcTextSize(buf).x + GetStyle().ItemInnerSpacing.x, 0.5f * GetFontSize() }, 0xff000000, buf);
 	snprintf(buf, sizeof(buf), "%.0f", m_ylim[0]);
-	SetCursorPos(ImVec2{ TLWS.x - CalcTextSize(buf).x - GetStyle().ItemInnerSpacing.x, BRWS.y - 0.5f * GetFontSize() });
-	Text(buf);
+	drawList->AddText(ImVec2{ TLSS.x - CalcTextSize(buf).x - GetStyle().ItemInnerSpacing.x, BRSS.y - 0.5f * GetFontSize() }, 0xff000000, buf);
 
 	//x labels
-	SetCursorPos(ImVec2{ TLWS.x, BRWS.y + GetStyle().ItemInnerSpacing.y });
-	Text("Birth");
-	SetCursorPos({ BRWS.x - CalcTextSize("Death").x, BRWS.y + GetStyle().ItemSpacing.y });
-	Text("Death");
+	if (m_xLabels.empty()) {
+		//Use axis values
+	}
+	else {
+		//Use custom labels
+		for (auto&& label : m_xLabels) {
+			if (label.pos >= m_xlim[0] && label.pos <= m_xlim[1]) {
+				ImVec2 size = CalcTextSize(label.label.c_str());
+				ImVec2 pos;
+				pos.x = localToScreen({ label.pos, 0.0f })[0] - label.alignment * size.x;
+				pos.y = BRSS.y + GetStyle().ItemInnerSpacing.y;
+				drawList->AddText(pos, 0xff000000, label.label.c_str());
+			}
+		}
+	}
+
+	SetCursorPos({ BRWS.x, BRWS.y + GetStyle().ItemSpacing.y });
+	NewLine();
+	*/
+	
+	ImDrawList* drawList = GetWindowDrawList();
+	drawList->AddRectFilled(
+		gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation)), 
+		gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation + m_size * m_scale)), 
+		ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_FrameBg]));
+
+	//Catch user interaction (before or after children?)
+
+	Composite::frame(fd);
+
+	Floats<2> origin = getAxes().toGlobalSpace({ 0.0f, 0.0f });
+	Floats<2> upper = getAxes().toGlobalSpace({ 1.0f, 1.0f });
+
+	Floats<2> originL = toGlobalSpace({ 0.0f, m_size[1] * m_scale[1] });
+	Floats<2> upperL = toGlobalSpace({ m_size[0] * m_scale[0], 0.0f });
+}
+
+gui::ComponentPtr gui::PlotArea::removeChild(IComponent* c)
+{
+	//Axes must be kept at 0. These are not removable.
+	auto&& children = getChildren();
+	assert(children.size() >= AREA_MIN_SIZE);
+	if (c == children[AREA_AXES_INDEX].get())
+		return ComponentPtr();
+	else
+		return Composite::removeChild(c);
+}
+
+void gui::PlotArea::clearChildren()
+{
+	//Axes must be kept at 0. These are not removable.
+	auto&& children = getChildren();
+	assert(children.size() >= AREA_MIN_SIZE);
+
+	for (size_t i = AREA_MIN_SIZE; i < children.size(); i++) {
+		assert(children[i]);
+		children[i]->setParent(nullptr);
+	}
+	children.resize(AREA_MIN_SIZE);
+}
+
+void gui::PlotArea::setSize(const Floats<2>& size)
+{
+	assert(size[0] > 0.0f && size[1] > 0.0f);//deal with this later
+
+	if (size.matrix() != m_size.matrix()) {
+		//Scale the axis translation and scale proportionately to our size
+		Floats<2> scale = size / m_size;
+		getAxes().setTranslation(getAxes().getTranslation() * scale);
+		getAxes().setScale(getAxes().getScale() * scale);
+
+		m_size = size;
+	}
+}
+
+gui::Axes& gui::PlotArea::getAxes() const
+{
+	auto&& children = getChildren();
+	assert(children.size() >= AREA_MIN_SIZE && children[AREA_AXES_INDEX]);
+	return static_cast<Axes&>(*children[AREA_AXES_INDEX]);
 }
 
 void gui::PlotArea::addCurve(std::unique_ptr<Curve>&& curve)
 {
-	m_curves.push_back(std::move(curve));
+	getAxes().addCurve(std::move(curve));
 }
 
 void gui::PlotArea::removeCurve(Curve* curve)
 {
-	auto up = [curve](const std::unique_ptr<Curve>& p) { return p.get() == curve; };
-	if (auto it = std::find_if(m_curves.begin(), m_curves.end(), up); it != m_curves.end())
-		m_curves.erase(it);
+	getAxes().removeCurve(curve);
 }
 
-gui::Floats<2> gui::PlotArea::localToScreen(const Floats<2>& p) const
+
+class DefaultXLabels final : public gui::Component
 {
-	return { m_translation[0] + m_scale[0] * p[0], m_translation[1] + m_scale[1] * p[1] };
-	//return { (p[0] - m_bl[0]) * m_scaleS2L[0] + m_screenBL[0], (p[1] - m_bl[1]) * m_scaleS2L[1] + m_screenBL[1] };
+public:
+	DefaultXLabels(const gui::Axes& axes) : m_axes{ axes }
+	{
+		m_sizeHint[1] = 20.0f;
+	}
+
+	virtual void frame(gui::FrameDrawer& fd) override
+	{
+	}
+
+private:
+	const gui::Axes& m_axes;
+};
+
+class DefaultYLabels final : public gui::Component
+{
+public:
+	DefaultYLabels(const gui::Axes& axes) : m_axes{ axes }
+	{
+		m_sizeHint[0] = 20.0f;
+	}
+
+private:
+	const gui::Axes& m_axes;
+};
+
+gui::Plot::Plot()
+{
+	//Add plot area and default labels
+	auto area = newChild<PlotArea>();
+	addChild(std::make_unique<DefaultXLabels>(area->getAxes()));
+	addChild(std::make_unique<DefaultYLabels>(area->getAxes()));
+}
+
+void gui::Plot::frame(FrameDrawer& fd)
+{
+	using namespace ImGui;
+	//We do the layout. 
+	//Maybe we could have the components prompt this calculation when they are resized/replaced,
+	//rather than doing it every frame. We could store a "dirty" flag on Component.
+	//This should also be done by a replaceable component, rather than being hardcoded here.
+
+	//Our layout won't make sense without a parent
+	IComponent* parent = getParent();
+	assert(parent);
+
+	//Ideally, our translation should have been set by the layout manager of our parent.
+	//Until we implement that concept, we do this the old-fashioned way:
+	//(this assumes that ours is the only transform between us and our ImGui window)
+	Floats<2> scale = fd.getCurrentScale();
+	ImVec2 cursorPos = GetCursorPos();
+	m_translation = gui_type_conversion<Floats<2>>::from(cursorPos) / scale;
+
+	Floats<2> parentSize = parent->getSize();
+	float xHeight = getXLabels().getSizeHint()[1];
+	float yWidth = getYLabels().getSizeHint()[0];
+
+	assert(scale[0] == scale[1]);//assume isotropic scale
+	//More generally we might not want to add window padding. A solution could be to have a Component that
+	//represents the client area of Window, that all widgets of the window are parented to.
+	//That way, our parent's size already includes padding (if it is indeed a window) and we never have to worry about it.
+	ImVec2 windowPadding = GetStyle().WindowPadding / scale[0];
+	ImVec2 labelPadding = GetStyle().ItemInnerSpacing / scale[0];//space between label widget and plot area
+
+	//If our x-size hint is non-positive (or larger than parent), fit width to parent.
+	float maxWidth = parentSize[0] - m_translation[0] - windowPadding.x;
+	m_size[0] = m_sizeHint[0] > 0.0f ? std::min(m_sizeHint[0], maxWidth) : maxWidth;
+
+	//If our y-size hint is non-positive (or larger than parent), make the plot area a square that fits the width.
+	float maxHeight = parentSize[1] - m_translation[1] - windowPadding.y;
+	float plotAreaX = yWidth + labelPadding.x;
+	float plotAreaW = std::max(m_size[0] - plotAreaX, 0.0f);
+	if (m_sizeHint[1] > 0.0f)
+		m_size[1] = std::min(m_sizeHint[1], maxHeight);
+	else
+		m_size[1] = std::min(plotAreaW + xHeight + labelPadding.y, maxHeight);
+
+	float plotAreaH = std::max(m_size[1] - xHeight - labelPadding.y, 0.0f);
+
+	//deal with these problems later
+	assert(plotAreaW > 0.0f);
+	assert(plotAreaH > 0.0f);
+
+	getPlotArea().setSize({ plotAreaW, plotAreaH });
+	getPlotArea().setTranslation({ plotAreaX, 0.0f });
+
+	getXLabels().setSize({ plotAreaW, xHeight });
+	getXLabels().setTranslation({ plotAreaX, plotAreaH + labelPadding.y });
+
+	getYLabels().setSize({ yWidth, plotAreaH });
+	getYLabels().setTranslation({ 0.0f, 0.0f });
+
+	ImGui::Dummy(gui_type_conversion<ImVec2>::from((m_size * scale).eval()));
+	ImVec2 cursorPos2 = GetCursorPos();
+
+	Composite::frame(fd);
+	ImVec2 cursorPos3 = GetCursorPos();
+}
+
+gui::ComponentPtr gui::Plot::removeChild(IComponent* c)
+{
+	//Plot area and labels must be kept at 0, 1, 2. These are not removable.
+	auto&& children = getChildren();
+	assert(children.size() >= PLOT_MIN_SIZE);
+	if (c == children[PLOT_PLOTAREA_INDEX].get() || c == children[PLOT_XLABEL_INDEX].get() || c == children[PLOT_YLABEL_INDEX].get())
+		return ComponentPtr();
+	else
+		return Composite::removeChild(c);
+}
+
+void gui::Plot::clearChildren()
+{
+	//Plot area and labels must be kept at 0, 1, 2. These are not removable.
+	auto&& children = getChildren();
+	assert(children.size() >= PLOT_MIN_SIZE);
+
+	for (size_t i = PLOT_MIN_SIZE; i < children.size(); i++) {
+		assert(children[i]);
+		children[i]->setParent(nullptr);
+	}
+	children.resize(PLOT_MIN_SIZE);
+}
+
+gui::PlotArea& gui::Plot::getPlotArea() const
+{
+	auto&& children = getChildren();
+	assert(children.size() >= PLOT_MIN_SIZE);
+	return static_cast<PlotArea&>(*children[PLOT_PLOTAREA_INDEX]);
+}
+
+gui::IComponent& gui::Plot::getXLabels() const
+{
+	auto&& children = getChildren();
+	assert(children.size() >= PLOT_MIN_SIZE);
+	return *children[PLOT_XLABEL_INDEX];
+}
+
+void gui::Plot::setXLabels(ComponentPtr&& c)
+{
+	auto&& children = getChildren();
+	assert(children.size() >= PLOT_MIN_SIZE && children[PLOT_XLABEL_INDEX]);
+	children[PLOT_XLABEL_INDEX]->setParent(nullptr);
+	children[PLOT_XLABEL_INDEX] = std::move(c);
+}
+
+gui::IComponent& gui::Plot::getYLabels() const
+{
+	auto&& children = getChildren();
+	assert(children.size() >= PLOT_MIN_SIZE);
+	return *children[PLOT_YLABEL_INDEX];
+}
+
+void gui::Plot::setYLabels(ComponentPtr&& c)
+{
+	auto&& children = getChildren();
+	assert(children.size() >= PLOT_MIN_SIZE && children[PLOT_YLABEL_INDEX]);
+	children[PLOT_YLABEL_INDEX]->setParent(nullptr);
+	children[PLOT_YLABEL_INDEX] = std::move(c);
+}
+
+
+gui::CustomXLabels::CustomXLabels(const Axes& axes, std::vector<AxisLabel>&& labels) : 
+	m_axes{ axes }, m_labels{ labels }
+{
+	m_sizeHint = getDefaultHeightConst();
+}
+
+void gui::CustomXLabels::frame(FrameDrawer& fd)
+{
+	ImDrawList* dl = ImGui::GetWindowDrawList();
+	assert(dl);
+	//Transform our boundaries to global
+	Floats<2> globalPos = fd.toGlobal(m_translation).round();
+	float limR = std::round(fd.toGlobal(m_translation + m_size * m_scale)[0]);
+	for (auto&& label : m_labels) {
+		//Transform label value to global and test if it's within our boundaries
+		float globalVal = std::round(m_axes.toGlobalSpace({ label.value, 0.0f })[0]);
+		if (globalVal >= std::min(globalPos[0], limR) && globalVal <= std::max(globalPos[0], limR)) {
+			ImVec2 size = ImGui::CalcTextSize(label.label.c_str());
+			ImVec2 pos{ globalVal - label.alignment * size.x, globalPos[1] };
+			dl->AddText(pos, 0xff000000, label.label.c_str());
+		}
+	}
 }
 
 
@@ -152,63 +540,69 @@ void gui::SimpleHandles::frame(FrameDrawer& fd)
 
 	using namespace ImGui;
 
-	float size = m_handleSize * fd.getCurrentScale()[0] * m_scale[0];
+	float size = m_handleSize * m_scale[0];
 	float buttonSize = m_handleSize * s_buttonMult;
 
 	ImVec2 pos = GetCursorPos();//we should probably reset this when we're done
 
 	for (size_t i = 0; i < m_points.size(); i++) {
-		//convert to screen space
-		ImVec2 p = gui_type_conversion<ImVec2>::from(m_area.localToScreen(m_points[i]));
+		ImVec2 p = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_points[i]));
 
-		//limit test
-		if (Floats<4> lims = m_area.getLimits();
-			m_points[i][0] >= lims[0] &&
-			m_points[i][0] <= lims[1] &&
-			m_points[i][1] >= lims[2] &&
-			m_points[i][1] <= lims[3])
-		{
-			//Apparently, there are Push/PopID functions to replace this
-			SetCursorScreenPos({ p.x - buttonSize / 2.0f, p.y - buttonSize / 2.0f });
-			char buf[16];
-			snprintf(buf, sizeof(buf), "##point%d", static_cast<int>(i));
-			InvisibleButton(buf, { buttonSize, buttonSize }, ImGuiButtonFlags_MouseButtonLeft);
+		ImVec2 buttonTL = { p.x - buttonSize / 2.0f, p.y - buttonSize / 2.0f };
+		ImVec2 buttonBR = { p.x + buttonSize / 2.0f, p.y + buttonSize / 2.0f };
 
-			bool highlight = false;
-
-			if (IsItemActivated())
-				onClick(i, MouseButton::LEFT);
-
-			if (IsItemActive()) {
-				highlight = true;
-				float x;
-				float y;
-				if (GetIO().MouseDelta.x != 0.0f)
-					x = std::max(std::min(m_points[i][0] + GetIO().MouseDelta.x / m_area.getScale()[0], lims[1]), lims[0]);
-				else
-					x = m_points[i][0];
-				if (GetIO().MouseDelta.y != 0.0f)
-					y = std::max(std::min(m_points[i][1] + GetIO().MouseDelta.y / m_area.getScale()[1], lims[3]), lims[2]);
-				else
-					y = m_points[i][1];
-
-				if (x != m_points[i][0] || y != m_points[i][1])
-					onMove(i, { x, y });
-			}
-
-			if (IsItemDeactivated())
-				onRelease(i, MouseButton::LEFT);
-
-			if (!highlight && IsItemHovered())
-				highlight = true;
-
-			ImU32 col = highlight ? ColorConvertFloat4ToU32({ 1.0f, 1.0f, 1.0f, 1.0f }) : ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_Text]);
-
-			GetWindowDrawList()->AddRectFilled(
-				{ p.x - size / 2.0f, p.y - size / 2.0f },
-				{ p.x + size / 2.0f, p.y + size / 2.0f },
-				col);
+		//Expand the clip region if we are inside the previous one
+		ImGuiWindow* window = GetCurrentWindow();
+		assert(window);
+		ImVec4 lims = window->ClipRect.ToVec4();
+		util::CallWrapper end;
+		if (p[0] >= lims.x && p[0] <= lims.z && p[1] >= lims.y && p[1] <= lims.w) {
+			PushClipRect(buttonTL, buttonBR, false);
+			end = util::CallWrapper(&PopClipRect);
 		}
+
+		//Apparently, there are Push/PopID functions to replace this
+		SetCursorScreenPos(buttonTL);
+		char buf[16];
+		snprintf(buf, sizeof(buf), "##point%d", static_cast<int>(i));
+
+		InvisibleButton(buf, { buttonSize, buttonSize }, ImGuiButtonFlags_MouseButtonLeft);
+
+		bool highlight = false;
+
+		if (IsItemActivated())
+			onClick(i, MouseButton::LEFT);
+
+		if (IsItemActive()) {
+			highlight = true;
+			Floats<2> scale = fd.getCurrentScale();
+			float x;
+			float y;
+			if (GetIO().MouseDelta.x != 0.0f)
+				x = m_points[i][0] + GetIO().MouseDelta.x / scale[0];
+			else
+				x = m_points[i][0];
+			if (GetIO().MouseDelta.y != 0.0f)
+				y = m_points[i][1] + GetIO().MouseDelta.y / scale[1];
+			else
+				y = m_points[i][1];
+
+			if (x != m_points[i][0] || y != m_points[i][1])
+				onMove(i, { x, y });
+		}
+
+		if (IsItemDeactivated())
+			onRelease(i, MouseButton::LEFT);
+
+		if (!highlight && IsItemHovered())
+			highlight = true;
+
+		ImU32 col = highlight ? ColorConvertFloat4ToU32({ 1.0f, 1.0f, 1.0f, 1.0f }) : ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_Text]);
+
+		window->DrawList->AddRectFilled(
+			{ p.x - size / 2.0f, p.y - size / 2.0f },
+			{ p.x + size / 2.0f, p.y + size / 2.0f },
+			col);
 	}
 
 	SetCursorPos(pos);

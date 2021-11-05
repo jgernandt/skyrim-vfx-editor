@@ -27,14 +27,18 @@ gui::Component::~Component()
 
 gui::Floats<2> gui::Component::getGlobalPosition() const
 {
-	Floats<2> result = m_translation;
-	IComponent* super = m_parent;
-	while (super) {
-		//transform to their parent space
-		result = super->getTranslation() + super->getScale() * result;
-		super = super->getParent();
-	}
-	return result;
+	return toGlobalSpace({ 0.0f, 0.0f });
+}
+
+gui::Floats<2> gui::Component::toGlobalSpace(const Floats<2>& p) const
+{
+	Floats<2> pp = toParentSpace(p);
+	return m_parent ? m_parent->toGlobalSpace(pp) : pp;
+}
+
+gui::Floats<2> gui::Component::toParentSpace(const Floats<2>& p) const
+{
+	return m_translation + p * m_scale;
 }
 
 void gui::Component::accept(Visitor& v)
@@ -102,8 +106,10 @@ gui::ComponentPtr gui::Composite::removeChild(IComponent* c)
 
 void gui::Composite::clearChildren()
 {
-	for (auto&& child : m_children)
+	for (auto&& child : m_children) {
+		assert(child);
 		child->setParent(nullptr);
+	}
 	m_children.clear();
 }
 
@@ -175,6 +181,18 @@ gui::Floats<2> gui::ComponentDecorator::getGlobalPosition() const
 {
 	assert(m_component);
 	return m_component->getGlobalPosition();
+}
+
+gui::Floats<2> gui::ComponentDecorator::toGlobalSpace(const Floats<2>& p) const
+{
+	assert(m_component);
+	return m_component->toGlobalSpace(p);
+}
+
+gui::Floats<2> gui::ComponentDecorator::toParentSpace(const Floats<2>& p) const
+{
+	assert(m_component);
+	return m_component->toParentSpace(p);
 }
 
 gui::Floats<2> gui::ComponentDecorator::getSize() const
