@@ -18,8 +18,7 @@
 
 #pragma once
 #include <string>
-#include "Composition.h"
-#include "UniqueLabel.h"
+#include "Window.h"
 
 namespace gui
 {
@@ -27,7 +26,7 @@ namespace gui
         public Composite
     {
     public:
-        PopupBase(const std::string& title) : m_id(title) {}
+        PopupBase(const std::string& title);
         virtual ~PopupBase() = default;
         virtual void frame(FrameDrawer& fd) override;
 
@@ -37,8 +36,11 @@ namespace gui
         void open();
         bool isOpen() const { return m_isOpen; }
 
+        void setStyle(Window::Style style, bool on = true);
+
     protected:
         UniqueLabel<1> m_id;
+        unsigned int m_style{ 0 };
         bool m_isOpen{ false };
 
     private:

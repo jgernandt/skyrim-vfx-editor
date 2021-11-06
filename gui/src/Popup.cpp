@@ -26,13 +26,20 @@
 #include "CompositionActions.h"
 #include "IInvoker.h"
 
+#include "imgui_internal.h"
+
+gui::PopupBase::PopupBase(const std::string& title) : 
+	m_id(title),
+	m_style{ ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse }
+{
+}
+
 //imgui requires the open call to be in the immediate vicinity of the begin call (same level of their window stack)
 void gui::PopupBase::open()
 {
 	m_shouldOpen = true;
 }
 
-#include "imgui_internal.h"
 void gui::PopupBase::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
@@ -73,6 +80,18 @@ void gui::PopupBase::frame(FrameDrawer& fd)
 	}
 }
 
+void gui::PopupBase::setStyle(Window::Style style, bool on)
+{
+	switch (style) {
+	case Window::Style::SCROLLABLE:
+		if (on)
+			m_style &= ~(ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
+		else
+			m_style |= ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar;
+		break;
+	}
+}
+
 void gui::Popup::frame(FrameDrawer& fd)
 {
 	PopupBase::frame(fd);
@@ -81,7 +100,7 @@ void gui::Popup::frame(FrameDrawer& fd)
 		Floats<2> size = m_size * fd.getCurrentScale();
 		ImGui::SetNextWindowSize({ std::floorf(size[0]), std::floorf(size[1]) });
 
-		if (ImGui::BeginPopup(m_id[0].c_str(), ImGuiWindowFlags_NoScrollbar)) {
+		if (ImGui::BeginPopup(m_id[0].c_str(), m_style)) {
 			util::CallWrapper end(&ImGui::EndPopup);
 
 			ImGui::PushItemWidth(-std::numeric_limits<float>::min());

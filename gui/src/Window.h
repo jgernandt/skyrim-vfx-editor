@@ -42,6 +42,10 @@ namespace gui
 			COL_FRAME_ACTIVE,*/
 			COL_SIZE,
 		};
+		enum class Style
+		{
+			SCROLLABLE
+		};
 
 	public:
 		Window(const std::string& title = std::string());
@@ -56,6 +60,7 @@ namespace gui
 		void setClosable(bool set = true) { m_closable = set; }
 		void setTitle(const std::string& s) { m_title.reset(s); }
 		void setColour(Colour i, const ColRGBA& col) { m_colours[i] = col; }
+		void setStyle(Style style, bool on = true);
 
 	private:
 		UniqueLabel<1> m_title;
