@@ -41,11 +41,8 @@ namespace gui
 			ImGuiWinD3D10();
 			~ImGuiWinD3D10();
 
-			virtual void pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) override;
-			virtual void popClipArea() override;
-
-			virtual void pushTransform(const Floats<2>& translation, const Floats<2>& scale) override;
-			virtual void popTransform() override;
+			[[nodiscard]] virtual util::CallWrapper pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) override;
+			[[nodiscard]] virtual util::CallWrapper pushTransform(const Floats<2>& translation, const Floats<2>& scale) override;
 
 			virtual Floats<2> getCurrentTranslation() const override;
 			virtual Floats<2> getCurrentScale() const override;
@@ -79,6 +76,10 @@ namespace gui
 			bool isCapturingKeyboard();
 
 			void setStyleColours();
+
+		private:
+			void popClipArea();
+			void popTransform();
 
 		private:
 			std::stack<Floats<4>> m_clipArea;

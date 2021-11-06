@@ -64,11 +64,13 @@ gui::backend::ImGuiWinD3D10::~ImGuiWinD3D10()
 	ImGui::DestroyContext();
 }
 
-void gui::backend::ImGuiWinD3D10::pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect)
+util::CallWrapper gui::backend::ImGuiWinD3D10::pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect)
 {
 	Floats<2> min = toGlobal({ std::min(p1[0], p2[0]), std::min(p1[1], p2[1]) });
 	Floats<2> max = toGlobal({ std::max(p1[0], p2[0]), std::max(p1[1], p2[1]) });
 	ImGui::PushClipRect({ min[0], min[1] }, { max[0], max[1] }, intersect);
+
+	return util::CallWrapper(&ImGuiWinD3D10::popClipArea, this);
 }
 
 void gui::backend::ImGuiWinD3D10::popClipArea()
@@ -76,7 +78,7 @@ void gui::backend::ImGuiWinD3D10::popClipArea()
 	ImGui::PopClipRect();
 }
 
-void gui::backend::ImGuiWinD3D10::pushTransform(const Floats<2>& translation, const Floats<2>& scale)
+util::CallWrapper gui::backend::ImGuiWinD3D10::pushTransform(const Floats<2>& translation, const Floats<2>& scale)
 {
 	if (m_transform.empty())
 		m_transform.push({ translation[0], translation[1], scale[0], scale[1] });
@@ -88,6 +90,8 @@ void gui::backend::ImGuiWinD3D10::pushTransform(const Floats<2>& translation, co
 			T[2] * scale[0],
 			T[3] * scale[1] });
 	}
+
+	return util::CallWrapper(&ImGuiWinD3D10::popTransform, this);
 }
 
 void gui::backend::ImGuiWinD3D10::popTransform()

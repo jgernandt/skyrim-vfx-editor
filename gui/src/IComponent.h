@@ -22,6 +22,8 @@
 #include "input.h"
 #include "gui_types.h"
 
+#include "CallWrapper.h"
+
 //We should adopt a global strategy for pixel rounding
 constexpr float (*TO_PIXEL)(float) noexcept = &std::floor;
 
@@ -39,11 +41,11 @@ namespace gui
 	public:
 		virtual ~FrameDrawer() = default;
 
-		virtual void pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) = 0;
-		virtual void popClipArea() = 0;
+		//Push a clip region to use for future draw calls. Returns an object that restores the previous region on destruction.
+		[[nodiscard]] virtual util::CallWrapper pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) = 0;
 
-		virtual void pushTransform(const Floats<2>& translation, const Floats<2>& scale) = 0;
-		virtual void popTransform() = 0;
+		//Push a transform to use for future draw/transform calls. Returns an object that restores the previous transform on destruction.
+		[[nodiscard]] virtual util::CallWrapper pushTransform(const Floats<2>& translation, const Floats<2>& scale) = 0;
 
 		virtual Floats<2> getCurrentTranslation() const = 0;
 		virtual Floats<2> getCurrentScale() const = 0;

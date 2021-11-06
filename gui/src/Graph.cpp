@@ -54,9 +54,9 @@ void gui::Axes::frame(FrameDrawer& fd)
 	auto xlims = area->getXLimits();
 	auto ylims = area->getYLimits();
 
-	fd.pushTransform(m_translation, m_scale);
 	{
-		util::CallWrapper pop(&FrameDrawer::popTransform, &fd);
+		auto popper = fd.pushTransform(m_translation, m_scale);
+
 		auto points = getGridPointsMinorX(xlims);
 		for (auto&& p : points) {
 			p = TO_PIXEL(fd.toGlobal({ p, 0.0f })[0]);
@@ -106,8 +106,7 @@ void gui::Axes::frame(FrameDrawer& fd)
 		curve->draw(d);
 	}
 
-	fd.pushClipArea({ 0.0f, 0.0f }, parentSize);
-	util::CallWrapper pop(&FrameDrawer::popClipArea, &fd);
+	auto popper = fd.pushClipArea({ 0.0f, 0.0f }, parentSize);
 	Composite::frame(fd);
 }
 

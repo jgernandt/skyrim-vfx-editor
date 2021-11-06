@@ -19,6 +19,7 @@
 #include "pch.h"
 #include "Composition.h"
 #include "Visitor.h"
+#include "CallWrapper.h"
 
 gui::Component::~Component()
 {
@@ -82,12 +83,11 @@ gui::Composite::~Composite()
 
 void gui::Composite::frame(FrameDrawer& fd)
 {
-	fd.pushTransform(m_translation, m_scale);
+	auto popper = fd.pushTransform(m_translation, m_scale);
 	for (auto& c : m_children) {
 		assert(c);
 		c->frame(fd);
 	}
-	fd.popTransform();
 }
 
 void gui::Composite::accept(Visitor& v)
