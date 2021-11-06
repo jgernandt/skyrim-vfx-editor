@@ -19,7 +19,7 @@
 #include "pch.h"
 #include "Selector.h"
 
-util::CallWrapper<> gui::backend::Selector(const std::string& label, const std::string& preview)
+util::CallWrapper gui::backend::Selector(const std::string& label, const std::string& preview)
 {
 	if (ImGui::BeginCombo(label.c_str(), preview.c_str()))
 		return util::CallWrapper(&ImGui::EndCombo);

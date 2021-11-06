@@ -23,31 +23,30 @@ namespace util
 {
 	//Wrap a future call in an exception-safe manner.
 	//Note: std::bind may itself throw, if a constructor of any of the decayed types throws. But when would that happen?
-	template<typename... Args>
 	class CallWrapper
 	{
 	public:
 		CallWrapper() {}
+
+		template<typename call_type, typename... Args>
+		CallWrapper(call_type call, Args&&... args) : m_call{ std::bind(call, std::forward<Args>(args)...) } {}
+
+		~CallWrapper() { if (m_call) m_call(); }
 
 		//Disallow copying
 		CallWrapper(const CallWrapper&) = delete;
 		CallWrapper& operator=(const CallWrapper&) = delete;
 
 		//Allow moving
-		CallWrapper(CallWrapper&& other)
+		CallWrapper(CallWrapper&& other) noexcept
 		{
 			m_call.swap(other.m_call);
 		}
-		CallWrapper& operator=(CallWrapper&& other)
+		CallWrapper& operator=(CallWrapper&& other) noexcept
 		{
 			m_call = std::move(other.m_call);
 			return *this;
 		}
-
-		template<typename call_type>
-		CallWrapper(call_type call, Args&&... args) : m_call{ std::bind(call, std::forward<Args>(args)...) } {}
-
-		~CallWrapper() { if (m_call) m_call(); }
 
 		explicit operator bool() const { return static_cast<bool>(m_call); }
 

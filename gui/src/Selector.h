@@ -30,7 +30,7 @@ namespace gui
 {
 	namespace backend
 	{
-		util::CallWrapper<> Selector(const std::string& label, const std::string& preview);
+		util::CallWrapper Selector(const std::string& label, const std::string& preview);
 		bool SelectableItem(const std::string& label, bool selected);
 		bool ToggleableItem(const std::string& label, bool toggled);
 	}
