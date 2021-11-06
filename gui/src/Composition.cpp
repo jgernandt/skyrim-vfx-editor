@@ -46,6 +46,17 @@ gui::Floats<2> gui::Component::toParentSpace(const Floats<2>& p) const
 	return m_translation + p * m_scale;
 }
 
+gui::Floats<2> gui::Component::fromGlobalSpace(const Floats<2>& p) const
+{
+	Floats<2> pp = m_parent ? m_parent->fromGlobalSpace(p) : p;
+	return fromParentSpace(pp);
+}
+
+gui::Floats<2> gui::Component::fromParentSpace(const Floats<2>& p) const
+{
+	return (p - m_translation) / m_scale;
+}
+
 void gui::Component::accept(Visitor& v)
 {
 	v.visit(*this);
@@ -213,20 +224,32 @@ void gui::ComponentDecorator::setScaleY(float y)
 
 gui::Floats<2> gui::ComponentDecorator::getGlobalPosition() const
 {
-	assert(m_component);
-	return m_component->getGlobalPosition();
+	assert(false);//TODO
+	return Floats<2>();
 }
 
 gui::Floats<2> gui::ComponentDecorator::toGlobalSpace(const Floats<2>& p) const
 {
-	assert(m_component);
-	return m_component->toGlobalSpace(p);
+	assert(false);//TODO
+	return Floats<2>();
 }
 
 gui::Floats<2> gui::ComponentDecorator::toParentSpace(const Floats<2>& p) const
 {
-	assert(m_component);
-	return m_component->toParentSpace(p);
+	assert(false);//TODO
+	return Floats<2>();
+}
+
+gui::Floats<2> gui::ComponentDecorator::fromGlobalSpace(const Floats<2>& p) const
+{
+	assert(false);//TODO
+	return Floats<2>();
+}
+
+gui::Floats<2> gui::ComponentDecorator::fromParentSpace(const Floats<2>& p) const
+{
+	assert(false);//TODO
+	return Floats<2>();
 }
 
 gui::Floats<2> gui::ComponentDecorator::getSize() const

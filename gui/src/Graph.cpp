@@ -24,6 +24,9 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
+//We should adopt a global strategy for pixel rounding
+constexpr float (*TO_PIXEL)(float) noexcept = &std::floor;
+
 constexpr size_t AREA_AXES_INDEX = 0;
 constexpr size_t AREA_MIN_SIZE = 1;
 
@@ -45,8 +48,8 @@ void gui::Axes::frame(FrameDrawer& fd)
 	Floats<2> globalDisp = m_translation * fd.getCurrentScale() * (1.0f + 10.0f * std::numeric_limits<float>::epsilon());
 
 
-	Floats<2> majorGrid = globalScale;
-	Floats<2> minorGrid = 0.25f * globalScale;
+	Floats<2> majorGrid = m_majorUnit * globalScale;
+	Floats<2> minorGrid = m_minorUnit * globalScale;
 
 	ImU32 axisCol = 0xff000000;
 	ImU32 majorCol = 0xff7f7f7f;
@@ -139,6 +142,51 @@ std::unique_ptr<gui::Curve> gui::Axes::removeCurve(int index)
 	return result;
 }
 
+static std::vector<float> findPointsInInterval(const gui::Floats<2>& lims, float unit) 
+{
+	//This is not a drawing function. We do not care about pixel aliasing.
+	//It's the caller's responsibility to account for that in the limits they pass.
+	assert(unit >= 0.0f);
+
+	std::vector<float> result;
+
+	//If "upper" limit is smaller than "lower" limit, flip the sign of the axis.
+	//This means that the output gridpoint always go in order from lim[0] to lim[1].
+	float step = lims[1] >= lims[0] ? unit : -unit;
+
+	//Index to first gridpoint inside interval and to first gridpoint past the end
+	//gui::Ints<2> indices = (lims / step).ceil().cast<int>();
+	int n = static_cast<int>(std::ceil(lims[0] / step));
+	int nend = static_cast<int>(std::floor(lims[1] / step)) + 1;
+
+	result.reserve(nend - n);
+
+	for (; n < nend; n++)
+		result.push_back(n * step);
+
+	return result;
+}
+
+std::vector<float> gui::Axes::getGridPointsMajorX(const Floats<2>& lims) const
+{
+	return findPointsInInterval(lims, m_majorUnit[0]);
+}
+
+std::vector<float> gui::Axes::getGridPointsMinorX(const Floats<2>& lims) const
+{
+	return findPointsInInterval(lims, m_minorUnit[0]);
+}
+
+std::vector<float> gui::Axes::getGridPointsMajorY(const Floats<2>& lims) const
+{
+	return findPointsInInterval(lims, m_majorUnit[1]);
+}
+
+std::vector<float> gui::Axes::getGridPointsMinorY(const Floats<2>& lims) const
+{
+	return findPointsInInterval(lims, m_minorUnit[1]);
+}
+
 
 gui::PlotArea::PlotArea()
 {
@@ -153,31 +201,6 @@ gui::PlotArea::PlotArea()
 void gui::PlotArea::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
-	/*
-	//y labels
-	char buf[8];
-	snprintf(buf, sizeof(buf), "%.0f", m_ylim[1]);
-	drawList->AddText(TLSS - ImVec2{ CalcTextSize(buf).x + GetStyle().ItemInnerSpacing.x, 0.5f * GetFontSize() }, 0xff000000, buf);
-	snprintf(buf, sizeof(buf), "%.0f", m_ylim[0]);
-	drawList->AddText(ImVec2{ TLSS.x - CalcTextSize(buf).x - GetStyle().ItemInnerSpacing.x, BRSS.y - 0.5f * GetFontSize() }, 0xff000000, buf);
-
-	//x labels
-	if (m_xLabels.empty()) {
-		//Use axis values
-	}
-	else {
-		//Use custom labels
-		for (auto&& label : m_xLabels) {
-			if (label.pos >= m_xlim[0] && label.pos <= m_xlim[1]) {
-				ImVec2 size = CalcTextSize(label.label.c_str());
-				ImVec2 pos;
-				pos.x = localToScreen({ label.pos, 0.0f })[0] - label.alignment * size.x;
-				pos.y = BRSS.y + GetStyle().ItemInnerSpacing.y;
-				drawList->AddText(pos, 0xff000000, label.label.c_str());
-			}
-		}
-	}
-	*/
 	
 	ImVec2 TLSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation).round().eval());
 	ImVec2 BRSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation + m_size * m_scale).round().eval());
@@ -344,16 +367,27 @@ void gui::PlotArea::removeCurve(Curve* curve)
 	getAxes().removeCurve(curve);
 }
 
-//The limit functions assume linear axes for now
+//The axis limits should be insensitive to roundoff and small variations,
+//which will inevitably result from the various transforms and the pixel 
+//aliasing of our size (which we don't actually register yet).
+//We achieve this by rounding the calculated limits to some small fraction
+//of the minor unit.
 gui::Floats<2> gui::PlotArea::getXLimits() const
 {
-	float xscale = getAxes().getScale()[0];
-	float xlow = -getAxes().getTranslation()[0] * xscale;
-	return { xlow, xlow + m_size[0] * xscale };
+	//Works regardless of the nature of the axis transform
+	Floats<2> tl = getAxes().fromParentSpace({ 0.0f, 0.0f });
+	Floats<2> br = getAxes().fromParentSpace(m_size);
+
+	//Round to some fraction of the axis unit
+	float eps = getAxes().getMinorUnitX() * 0.01f;
+	return eps * (Floats<2>{ tl[0], br[0] } / eps).round();
 }
 
 void gui::PlotArea::setXLimits(const Floats<2>& lims)
 {
+	//Works for any axis transform that can be represented by the parameters "scale" and "translation".
+	//For a logarithmic axis those would correspond to the base and the prefactor, respectively.
+	//If we ever want something crazier (very unlikely) we may have to revise this procedure.
 	float xscale = m_size[0] / (lims[1] - lims[0]);
 	getAxes().setScaleX(xscale);
 	getAxes().setTranslationX(-lims[0] * xscale);
@@ -361,10 +395,13 @@ void gui::PlotArea::setXLimits(const Floats<2>& lims)
 
 gui::Floats<2> gui::PlotArea::getYLimits() const
 {
+	Floats<2> tl = getAxes().fromParentSpace({ 0.0f, 0.0f });
+	Floats<2> br = getAxes().fromParentSpace(m_size);
+
+	//Round to some fraction of the axis unit
+	float eps = getAxes().getMinorUnitY() * 0.01f;
 	//account for reversed axis convention
-	float yscale = getAxes().getScale()[1];
-	float yhigh = -getAxes().getTranslation()[1] / yscale;
-	return { yhigh + m_size[1] / yscale, yhigh };
+	return eps * (Floats<2>{ br[1], tl[1] } / eps).round();
 }
 
 void gui::PlotArea::setYLimits(const Floats<2>& lims)
@@ -379,37 +416,67 @@ void gui::PlotArea::setYLimits(const Floats<2>& lims)
 class DefaultXLabels final : public gui::Component
 {
 public:
-	DefaultXLabels(const gui::Axes& axes) : m_axes{ axes }
+	DefaultXLabels(const gui::PlotArea& area) : m_area{ area }
 	{
-		m_sizeHint[1] = 20.0f;
+		m_sizeHint[1] = gui::getDefaultHeightConst();
 	}
 
 	virtual void frame(gui::FrameDrawer& fd) override
 	{
+		ImDrawList* dl = ImGui::GetWindowDrawList();
+		assert(dl);
+
+		auto points = m_area.getAxes().getGridPointsMajorY(m_area.getYLimits());
+		float globalY = std::round(fd.toGlobal(m_translation)[1]);
+
+		char buf[8];
+		for (auto&& p : points) {
+			float globalX = std::round(m_area.getAxes().toGlobalSpace({ p, 0.0f })[0]);
+
+			snprintf(buf, sizeof(buf), "%.1f", p);
+			dl->AddText({ globalX, globalY }, 0xff000000, buf);
+		}
 	}
 
 private:
-	const gui::Axes& m_axes;
+	const gui::PlotArea& m_area;
 };
 
 class DefaultYLabels final : public gui::Component
 {
 public:
-	DefaultYLabels(const gui::Axes& axes) : m_axes{ axes }
+	DefaultYLabels(const gui::PlotArea& area) : m_area{ area }
 	{
-		m_sizeHint[0] = 20.0f;
+		m_sizeHint[0] = gui::getDefaultHeightConst();
+	}
+
+	virtual void frame(gui::FrameDrawer& fd) override
+	{
+		ImDrawList* dl = ImGui::GetWindowDrawList();
+		assert(dl);
+
+		auto points = m_area.getAxes().getGridPointsMajorY(m_area.getYLimits());
+		float globalX = std::round(fd.toGlobal(m_translation)[0]);
+
+		char buf[8];
+		for (auto&& p : points) {
+			float globalY = std::round(m_area.getAxes().toGlobalSpace({ 0.0f, p })[1]);
+
+			snprintf(buf, sizeof(buf), "%.1f", p);
+			dl->AddText({ globalX, globalY }, 0xff000000, buf);
+		}
 	}
 
 private:
-	const gui::Axes& m_axes;
+	const gui::PlotArea& m_area;
 };
 
 gui::Plot::Plot()
 {
 	//Add plot area and default labels
 	auto area = newChild<PlotArea>();
-	addChild(std::make_unique<DefaultXLabels>(area->getAxes()));
-	addChild(std::make_unique<DefaultYLabels>(area->getAxes()));
+	addChild(std::make_unique<DefaultXLabels>(*area));
+	addChild(std::make_unique<DefaultYLabels>(*area));
 }
 
 void gui::Plot::frame(FrameDrawer& fd)

@@ -53,6 +53,8 @@ namespace gui
 		virtual Floats<2> getGlobalPosition() const override;
 		virtual Floats<2> toGlobalSpace(const Floats<2>& p) const override;
 		virtual Floats<2> toParentSpace(const Floats<2>& p) const override;
+		virtual Floats<2> fromGlobalSpace(const Floats<2>& p) const override;
+		virtual Floats<2> fromParentSpace(const Floats<2>& p) const override;
 
 		virtual Floats<2> getSize() const override { return m_size; }
 		virtual void setSize(const Floats<2>& size) override { m_size = size; }
@@ -153,6 +155,8 @@ namespace gui
 		virtual Floats<2> getGlobalPosition() const override;
 		virtual Floats<2> toGlobalSpace(const Floats<2>& p) const override;
 		virtual Floats<2> toParentSpace(const Floats<2>& p) const override;
+		virtual Floats<2> fromGlobalSpace(const Floats<2>& p) const override;
+		virtual Floats<2> fromParentSpace(const Floats<2>& p) const override;
 
 		virtual Floats<2> getSize() const override;
 		virtual void setSize(const Floats<2>& size) override;

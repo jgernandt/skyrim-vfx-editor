@@ -108,6 +108,10 @@ namespace gui
 		virtual Floats<2> toGlobalSpace(const Floats<2>&) const = 0;
 		//Transform a point in our space to the space of our parent
 		virtual Floats<2> toParentSpace(const Floats<2>&) const = 0;
+		//Transform a point in the space of the native window to our space
+		virtual Floats<2> fromGlobalSpace(const Floats<2>&) const = 0;
+		//Transform a point in the space of our parent to our space
+		virtual Floats<2> fromParentSpace(const Floats<2>&) const = 0;
 
 		//Actual size of component. Decided at runtime.
 		virtual Floats<2> getSize() const = 0;

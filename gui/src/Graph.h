@@ -64,8 +64,26 @@ namespace gui
 		std::unique_ptr<Curve> removeCurve(Curve* curve);
 		std::unique_ptr<Curve> removeCurve(int index);
 
+		float getMajorUnitX() const { return m_majorUnit[0]; }
+		void setMajorUnitX(float f) { m_majorUnit[0] = f; }
+		float getMinorUnitX() const { return m_minorUnit[0]; }
+		void setMinorUnitX(float f) { m_minorUnit[0] = f; }
+
+		float getMajorUnitY() const { return m_majorUnit[1]; }
+		void setMajorUnitY(float f) { m_majorUnit[1] = f; }
+		float getMinorUnitY() const { return m_minorUnit[1]; }
+		void setMinorUnitY(float f) { m_minorUnit[1] = f; }
+
+		//Returns the grid points in order from lims[0] to lims[1]
+		std::vector<float> getGridPointsMajorX(const Floats<2>& lims) const;
+		std::vector<float> getGridPointsMajorY(const Floats<2>& lims) const;
+		std::vector<float> getGridPointsMinorX(const Floats<2>& lims) const;
+		std::vector<float> getGridPointsMinorY(const Floats<2>& lims) const;
+
 	private:
 		std::vector<std::unique_ptr<Curve>> m_curves;
+		Floats<2> m_majorUnit{ 1.0f, 1.0f };
+		Floats<2> m_minorUnit{ 0.25f, 0.25f };
 	};
 
 	class PlotArea : public Composite
