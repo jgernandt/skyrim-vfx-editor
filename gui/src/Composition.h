@@ -44,11 +44,13 @@ namespace gui
 		virtual void setTranslation(const Floats<2>& t) override { m_translation = t; }
 		virtual void setTranslationX(float x) override { m_translation[0] = x; }
 		virtual void setTranslationY(float y) override { m_translation[1] = y; }
+		virtual void translate(const Floats<2>& t) override { m_translation += t; }
 
 		virtual Floats<2> getScale() const override { return m_scale; }
 		virtual void setScale(const Floats<2>& s) override { m_scale = s; }
 		virtual void setScaleX(float x) override { m_scale[0] = x; }
 		virtual void setScaleY(float y) override { m_scale[1] = y; }
+		virtual void scale(const Floats<2>& s) override { m_scale *= s; }
 
 		virtual Floats<2> getGlobalPosition() const override;
 		virtual Floats<2> toGlobalSpace(const Floats<2>& p) const override;
@@ -146,11 +148,13 @@ namespace gui
 		virtual void setTranslation(const Floats<2>& t) override;
 		virtual void setTranslationX(float x) override;
 		virtual void setTranslationY(float y) override;
+		virtual void translate(const Floats<2>& t) override;
 
 		virtual Floats<2> getScale() const override;
 		virtual void setScale(const Floats<2>& s) override;
 		virtual void setScaleX(float x) override;
 		virtual void setScaleY(float y) override;
+		virtual void scale(const Floats<2>& s) override;
 
 		virtual Floats<2> getGlobalPosition() const override;
 		virtual Floats<2> toGlobalSpace(const Floats<2>& p) const override;

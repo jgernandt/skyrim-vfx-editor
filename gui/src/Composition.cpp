@@ -198,6 +198,12 @@ void gui::ComponentDecorator::setTranslationY(float y)
 	m_component->setTranslationY(y);
 }
 
+void gui::ComponentDecorator::translate(const Floats<2>& t)
+{
+	assert(m_component);
+	m_component->translate(t);
+}
+
 gui::Floats<2> gui::ComponentDecorator::getScale() const
 {
 	assert(m_component);
@@ -220,6 +226,12 @@ void gui::ComponentDecorator::setScaleY(float y)
 {
 	assert(m_component);
 	m_component->setScaleY(y);
+}
+
+void gui::ComponentDecorator::scale(const Floats<2>& s)
+{
+	assert(m_component);
+	m_component->scale(s);
 }
 
 gui::Floats<2> gui::ComponentDecorator::getGlobalPosition() const
