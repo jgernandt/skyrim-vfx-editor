@@ -34,66 +34,66 @@ constexpr size_t PLOT_MIN_SIZE = 3;
 
 void gui::Axes::frame(FrameDrawer& fd)
 {
-	//We might want to do this in global space instead (rounded to nearest pixel),
-	//to improve consistency on scaling
-
 	assert(getParent());
 	Floats<2> parentSize = getParent()->getSize();
-	Floats<2> sizeTol = parentSize * 1.0e-3f;
+	Floats<2> globalTL = fd.toGlobal({ 0.0f, 0.0f }).round();
+	Floats<2> globalBR = fd.toGlobal(parentSize).round();
 
-	Floats<2> majorGrid = m_scale.abs();
-	Floats<2> minorGrid = 0.25f * m_scale.abs();
+	Floats<2> globalScale = fd.getCurrentScale() * m_scale.abs();
+	Floats<2> globalTrans = fd.toGlobal(m_translation);
+	//Roundoff may put us one gridline short in some cases
+	Floats<2> globalDisp = m_translation * fd.getCurrentScale() * (1.0f + 10.0f * std::numeric_limits<float>::epsilon());
+
+
+	Floats<2> majorGrid = globalScale;
+	Floats<2> minorGrid = 0.25f * globalScale;
+
 	ImU32 axisCol = 0xff000000;
 	ImU32 majorCol = 0xff7f7f7f;
 	ImU32 minorCol = 0xffbfbfbf;
 
+	Floats<2> nSteps = (globalDisp / minorGrid).floor();//number of steps to first visible gridline
+	Floats<2> line = globalTrans - nSteps * minorGrid;//exact global pos of first visible gridline
+
 	//Minor grid
-	float x = std::fmodf(m_translation[0], minorGrid[0]);
-	if (x + sizeTol[0] < 0.0f)
-		x += minorGrid[0];
-	for (; x <= parentSize[0] + sizeTol[0]; x += minorGrid[0])
+	for (; std::round(line[0]) <= globalBR[0]; line[0] += minorGrid[0])
 		ImGui::GetWindowDrawList()->AddLine(
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, 0.0f })),
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, parentSize[1] })),
+			{ std::round(line[0]), globalTL[1] },
+			{ std::round(line[0]), globalBR[1] },
 			minorCol);
-	float y = std::fmodf(m_translation[1], minorGrid[1]);
-	if (y + sizeTol[1] < 0.0f)
-		y += minorGrid[1];
-	for (; y <= parentSize[1] + sizeTol[1]; y += minorGrid[1])
+	for (; std::round(line[1]) <= globalBR[1]; line[1] += minorGrid[1])
 		ImGui::GetWindowDrawList()->AddLine(
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ 0.0f, y })),
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ parentSize[0], y })),
+			{ globalTL[0], std::round(line[1]) },
+			{ globalBR[0], std::round(line[1]) },
 			minorCol);
 
 	//Major grid
-	x = std::fmodf(m_translation[0], majorGrid[0]);
-	if (x + sizeTol[0] < 0.0f)
-		x += majorGrid[0];
-	for (; x <= parentSize[0] + sizeTol[0]; x += majorGrid[0])
+	nSteps = (globalDisp / majorGrid).floor();
+	line = globalTrans - nSteps * majorGrid;
+	for (; std::round(line[0]) <= globalBR[0]; line[0] += majorGrid[0])
 		ImGui::GetWindowDrawList()->AddLine(
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, 0.0f })),
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ x, parentSize[1] })),
+			{ std::round(line[0]), globalTL[1] },
+			{ std::round(line[0]), globalBR[1] },
 			majorCol);
-	y = std::fmodf(m_translation[1], majorGrid[1]);
-	if (y + sizeTol[1] < 0.0f)
-		y += majorGrid[1];
-	for (; y <= parentSize[1] + sizeTol[1]; y += majorGrid[1])
+
+	for (; std::round(line[1]) <= globalBR[1]; line[1] += majorGrid[1])
 		ImGui::GetWindowDrawList()->AddLine(
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ 0.0f, y })),
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ parentSize[0], y })),
+			{ globalTL[0], std::round(line[1]) },
+			{ globalBR[0], std::round(line[1]) },
 			majorCol);
 
 	//Main axes
-	if (m_translation[0] >= 0.0f && m_translation[0] <= parentSize[0] + sizeTol[0]) {
+	Floats<2> globalTransR = globalTrans.round();
+	if (globalTransR[0] >= globalTL[0] && globalTransR[0] <= globalBR[0]) {
 		ImGui::GetWindowDrawList()->AddLine(
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ m_translation[0], 0.0f })),
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ m_translation[0], parentSize[1] })),
+			{ globalTransR[0], globalTL[1] },
+			{ globalTransR[0], globalBR[1] },
 			axisCol);
 	}
-	if (m_translation[1] >= 0.0f && m_translation[1] <= parentSize[1] + sizeTol[1]) {
+	if (globalTransR[1] >= globalTL[1] && globalTransR[1] <= globalBR[1]) {
 		ImGui::GetWindowDrawList()->AddLine(
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ 0.0f, m_translation[1] })),
-			gui_type_conversion<ImVec2>::from(fd.toGlobal({ parentSize[0], m_translation[1] })),
+			{ globalTL[0], globalTransR[1] },
+			{ globalBR[0], globalTransR[1] },
 			axisCol);
 	}
 
@@ -150,96 +150,10 @@ gui::PlotArea::PlotArea()
 	axes->setScale({ 1.0f, -1.0f });
 }
 
-//This is made specifically for the scale mod. We'll make it more general as we go.
 void gui::PlotArea::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 	/*
-	//We rely on the imgui cursor for our position. Would be nicer to have it set by some layout procedure instead.
-	//This assumes we are child of a Window. Or Popup. Crap.
-	// Maybe just require that a translation be set explicitly?
-	//Should be enough to do this only once?
-	Floats<2> scale = fd.getCurrentScale();
-	//m_translation = gui_type_conversion<Floats<2>>::from(GetCursorPos()) / scale;
-
-	//Ok: use our translation to position the plot area. As it should be done.
-
-	//Determine the size of the plot area.
-	//If size is set to auto, make it a square that fits the allowed width (including labels).
-	//If height is set to auto, make it a square given whatever width is set (auto or not).
-	//(Weird things may happen if size is set, but too small to fit the labels. Let's ignore this fact, and it will go away.)
-	float yLabelWidth = CalcTextSize("00").x;
-	float xLabelHeight = GetFontSize();
-	ImVec2 itemSize;//in screen space
-	ImVec2 plotSize;//in screen space
-	itemSize[0] = m_size[0] > 0.0f ? m_size[0] * scale[0] * m_scale[0] : CalcItemWidth();
-	plotSize[0] = std::max(itemSize[0] - yLabelWidth - GetStyle().ItemInnerSpacing.x, 0.0f);
-	if (m_size[1] <= 0.0f) {
-		plotSize[1] = plotSize[0];
-		itemSize[1] = plotSize[1] + xLabelHeight + GetStyle().ItemInnerSpacing.y;
-	}
-	else {
-		itemSize[1] = m_size[1] * scale[1] * m_scale[1];
-		plotSize[1] = std::max(itemSize[1] - xLabelHeight - GetStyle().ItemInnerSpacing.y, 0.0f);
-	}
-
-	//Screen space position
-	ImVec2 TLSS = GetCursorScreenPos() + ImVec2{ yLabelWidth + GetStyle().ItemInnerSpacing.x, 0.5f * GetFontSize() };
-	ImVec2 BRSS = TLSS + plotSize;
-
-	//Window space position
-	ImVec2 TLWS = GetCursorPos() + ImVec2{ yLabelWidth + GetStyle().ItemInnerSpacing.x, 0.5f * GetFontSize() };
-	ImVec2 BRWS = TLWS + plotSize;
-
-	//We don't need to recalc!
-	m_CSscale = { (BRSS.x - TLSS.x) / (m_xlim[1] - m_xlim[0]),	//r - l
-		(TLSS.y - BRSS.y) / (m_ylim[1] - m_ylim[0]) };			//t - b
-	m_CStranslation = { TLSS.x - m_xlim[0] * m_CSscale[0],		//l
-		BRSS.y - m_ylim[0] * m_CSscale[1] };					//b
-
-	//Graph area
-	ImDrawList* drawList = GetWindowDrawList();
-	drawList->AddRectFilled(TLSS, BRSS, ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_FrameBg]));
-
-	//Major grid lines
-	for (float f = TLSS.x + m_CSscale[0] * std::fmod(m_xlim[0], m_majorGrid[0]);
-		f <= BRSS.x;
-		f += m_CSscale[0] * m_majorGrid[0])
-		drawList->AddLine(
-			ImVec2(f, TLSS.y),
-			ImVec2(f, BRSS.y),
-			ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_Border]),
-			m_majorGridWidth);
-	for (float f = BRSS.y + m_CSscale[1] * std::fmod(m_ylim[0], m_majorGrid[1]);
-		f >= TLSS.y;
-		f += m_CSscale[1] * m_majorGrid[1])
-		drawList->AddLine(
-			ImVec2(TLSS.x, f),
-			ImVec2(BRSS.x, f),
-			ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_Border]),
-			m_majorGridWidth);
-
-	//We draw the controls first, or the plot area steals focus (or so it seems).
-	//This might require another order if we want the plot area to capture other mouse input as well.
-	Drawer d;
-	d.setTargetLayer(Layer::WINDOW);
-	d.pushTransform(m_CStranslation, m_CSscale);
-	d.pushClipArea(m_xlim, m_ylim);
-	for (auto&& curve : m_curves) {
-		assert(curve);
-		curve->draw(d);
-	}
-
-	Composite::frame(fd);
-
-	//Scrolling
-	//Use event handler funciton instead
-	SetCursorScreenPos(TLSS);
-	InvisibleButton("graph_area", plotSize, ImGuiButtonFlags_MouseButtonMiddle);
-	SetItemUsingMouseWheel();
-	if (IsItemHovered() && GetIO().MouseWheel != 0.0f)
-		m_ylim[1] = std::max(m_ylim[1] - GetIO().MouseWheel, 1.0f);
-
 	//y labels
 	char buf[8];
 	snprintf(buf, sizeof(buf), "%.0f", m_ylim[1]);
@@ -263,13 +177,10 @@ void gui::PlotArea::frame(FrameDrawer& fd)
 			}
 		}
 	}
-
-	SetCursorPos({ BRWS.x, BRWS.y + GetStyle().ItemSpacing.y });
-	NewLine();
 	*/
 	
-	ImVec2 TLSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation));
-	ImVec2 BRSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation + m_size * m_scale));
+	ImVec2 TLSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation).round().eval());
+	ImVec2 BRSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation + m_size * m_scale).round().eval());
 	
 	ImDrawList* drawList = GetWindowDrawList();
 	drawList->AddRectFilled(TLSS, BRSS, ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_FrameBg]));
@@ -374,45 +285,7 @@ void gui::PlotArea::frame(FrameDrawer& fd)
 					}
 				}
 			}
-
 		}
-
-		if (Mouse::getCapture() == this) {
-
-		}
-		else if (Mouse::getCapture() == nullptr) {
-			ImGuiIO& io = GetIO();
-
-			//Handle moves
-			if (io.MousePos.x >= TLSS.x && io.MousePos.x <= BRSS.x &&
-				io.MousePos.y >= TLSS.y && io.MousePos.y <= BRSS.y)
-			{
-				//Cursor inside plot area
-
-				if (!m_mouseFocus) {
-					//Cursor entered
-					m_mouseFocus = true;
-					m_mouseHandler->onMouseEnter();
-				}
-
-				if (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f)
-					m_mouseHandler->onMouseMove(gui_type_conversion<Floats<2>>::from(io.MouseDelta));
-			}
-			else {
-				//Cursor outside plot area
-
-				if (m_mouseFocus) {
-					//Cursor left
-					m_mouseFocus = false;
-					m_mouseHandler->onMouseLeave();
-				}
-			}
-
-			//Handle clicks
-			if (IsMouseClicked(ImGuiMouseButton_Left))
-				m_mouseHandler->onMouseDown(Mouse::Button::LEFT);
-		}
-		//else ignore (someone else is capturing the mouse)
 	}
 }
 
