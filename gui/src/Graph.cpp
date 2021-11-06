@@ -24,9 +24,6 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
-//We should adopt a global strategy for pixel rounding
-constexpr float (*TO_PIXEL)(float) noexcept = &std::floor;
-
 constexpr size_t AREA_AXES_INDEX = 0;
 constexpr size_t AREA_MIN_SIZE = 1;
 
@@ -35,68 +32,66 @@ constexpr size_t PLOT_XLABEL_INDEX = 1;
 constexpr size_t PLOT_YLABEL_INDEX = 2;
 constexpr size_t PLOT_MIN_SIZE = 3;
 
+//We make use of Eigen::Array methods for rounding
+static_assert(TO_PIXEL == static_cast<decltype(TO_PIXEL)>(&std::floor));
+
 void gui::Axes::frame(FrameDrawer& fd)
 {
-	assert(getParent());
-	Floats<2> parentSize = getParent()->getSize();
-	Floats<2> globalTL = fd.toGlobal({ 0.0f, 0.0f }).round();
-	Floats<2> globalBR = fd.toGlobal(parentSize).round();
+	assert(getParent() && dynamic_cast<PlotArea*>(getParent()));
+	PlotArea* area = static_cast<PlotArea*>(getParent());
 
-	Floats<2> globalScale = fd.getCurrentScale() * m_scale.abs();
-	Floats<2> globalTrans = fd.toGlobal(m_translation);
-	//Roundoff may put us one gridline short in some cases
-	Floats<2> globalDisp = m_translation * fd.getCurrentScale() * (1.0f + 10.0f * std::numeric_limits<float>::epsilon());
-
-
-	Floats<2> majorGrid = m_majorUnit * globalScale;
-	Floats<2> minorGrid = m_minorUnit * globalScale;
+	Floats<2> parentSize = area->getSize();
+	Floats<2> globalTL = fd.toGlobal({ 0.0f, 0.0f }).floor();
+	Floats<2> globalBR = fd.toGlobal(parentSize).floor();
 
 	ImU32 axisCol = 0xff000000;
 	ImU32 majorCol = 0xff7f7f7f;
 	ImU32 minorCol = 0xffbfbfbf;
 
-	Floats<2> nSteps = (globalDisp / minorGrid).floor();//number of steps to first visible gridline
-	Floats<2> line = globalTrans - nSteps * minorGrid;//exact global pos of first visible gridline
+	auto dl = ImGui::GetWindowDrawList();
+	assert(dl);
 
-	//Minor grid
-	for (; std::round(line[0]) <= globalBR[0]; line[0] += minorGrid[0])
-		ImGui::GetWindowDrawList()->AddLine(
-			{ std::round(line[0]), globalTL[1] },
-			{ std::round(line[0]), globalBR[1] },
-			minorCol);
-	for (; std::round(line[1]) <= globalBR[1]; line[1] += minorGrid[1])
-		ImGui::GetWindowDrawList()->AddLine(
-			{ globalTL[0], std::round(line[1]) },
-			{ globalBR[0], std::round(line[1]) },
-			minorCol);
+	auto xlims = area->getXLimits();
+	auto ylims = area->getYLimits();
 
-	//Major grid
-	nSteps = (globalDisp / majorGrid).floor();
-	line = globalTrans - nSteps * majorGrid;
-	for (; std::round(line[0]) <= globalBR[0]; line[0] += majorGrid[0])
-		ImGui::GetWindowDrawList()->AddLine(
-			{ std::round(line[0]), globalTL[1] },
-			{ std::round(line[0]), globalBR[1] },
-			majorCol);
+	fd.pushTransform(m_translation, m_scale);
+	{
+		util::CallWrapper pop(&FrameDrawer::popTransform, &fd);
+		auto points = getGridPointsMinorX(xlims);
+		for (auto&& p : points) {
+			p = TO_PIXEL(fd.toGlobal({ p, 0.0f })[0]);
+			dl->AddLine({ p, globalTL[1] }, { p, globalBR[1] }, minorCol);
+		}
+		points = getGridPointsMinorY(ylims);
+		for (auto&& p : points) {
+			p = TO_PIXEL(fd.toGlobal({ 0.0f, p })[1]);
+			dl->AddLine({ globalTL[0], p }, { globalBR[0], p }, minorCol);
+		}
 
-	for (; std::round(line[1]) <= globalBR[1]; line[1] += majorGrid[1])
-		ImGui::GetWindowDrawList()->AddLine(
-			{ globalTL[0], std::round(line[1]) },
-			{ globalBR[0], std::round(line[1]) },
-			majorCol);
+		points = getGridPointsMajorX(xlims);
+		for (auto&& p : points) {
+			p = TO_PIXEL(fd.toGlobal({ p, 0.0f })[0]);
+			dl->AddLine({ p, globalTL[1] }, { p, globalBR[1] }, majorCol);
+		}
+		points = getGridPointsMajorY(ylims);
+		for (auto&& p : points) {
+			p = TO_PIXEL(fd.toGlobal({ 0.0f, p })[1]);
+			dl->AddLine({ globalTL[0], p }, { globalBR[0], p }, majorCol);
+		}
+	}
 
 	//Main axes
-	Floats<2> globalTransR = globalTrans.round();
-	if (globalTransR[0] >= globalTL[0] && globalTransR[0] <= globalBR[0]) {
+	Floats<2> globalTrans = fd.toGlobal(m_translation).floor();
+	if (globalTrans[0] >= globalTL[0] && globalTrans[0] <= globalBR[0]) {
 		ImGui::GetWindowDrawList()->AddLine(
-			{ globalTransR[0], globalTL[1] },
-			{ globalTransR[0], globalBR[1] },
+			{ globalTrans[0], globalTL[1] },
+			{ globalTrans[0], globalBR[1] },
 			axisCol);
 	}
-	if (globalTransR[1] >= globalTL[1] && globalTransR[1] <= globalBR[1]) {
+	if (globalTrans[1] >= globalTL[1] && globalTrans[1] <= globalBR[1]) {
 		ImGui::GetWindowDrawList()->AddLine(
-			{ globalTL[0], globalTransR[1] },
-			{ globalBR[0], globalTransR[1] },
+			{ globalTL[0], globalTrans[1] },
+			{ globalBR[0], globalTrans[1] },
 			axisCol);
 	}
 
@@ -112,7 +107,7 @@ void gui::Axes::frame(FrameDrawer& fd)
 	}
 
 	fd.pushClipArea({ 0.0f, 0.0f }, parentSize);
-	util::CallWrapper end(&FrameDrawer::popClipArea, &fd);
+	util::CallWrapper pop(&FrameDrawer::popClipArea, &fd);
 	Composite::frame(fd);
 }
 
@@ -202,8 +197,8 @@ void gui::PlotArea::frame(FrameDrawer& fd)
 {
 	using namespace ImGui;
 	
-	ImVec2 TLSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation).round().eval());
-	ImVec2 BRSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation + m_size * m_scale).round().eval());
+	ImVec2 TLSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation).floor().eval());
+	ImVec2 BRSS = gui_type_conversion<ImVec2>::from(fd.toGlobal(m_translation + m_size * m_scale).floor().eval());
 	
 	ImDrawList* drawList = GetWindowDrawList();
 	drawList->AddRectFilled(TLSS, BRSS, ColorConvertFloat4ToU32(GetStyle().Colors[ImGuiCol_FrameBg]));

@@ -22,6 +22,9 @@
 #include "input.h"
 #include "gui_types.h"
 
+//We should adopt a global strategy for pixel rounding
+constexpr float (*TO_PIXEL)(float) noexcept = &std::floor;
+
 namespace gui
 {
 	class Visitor;
