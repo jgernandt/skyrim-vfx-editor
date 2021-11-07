@@ -102,15 +102,33 @@ namespace nif
 		native::NiFloatData& getNative() const;
 
 		IProperty<KeyType>& keyType() { return m_keyType; }
-		IProperty<std::vector<Key<float>>>& keys() { return m_keys; }
+		//IProperty<std::vector<Key<float>>>& keys() { return m_keys; }
+		IListProperty<Key<float>>& keys() { return m_keys; }
 
 	private:
-		struct Keys : PropertyBase<std::vector<Key<float>>>
+		/*struct Keys : PropertyBase<std::vector<Key<float>>>
 		{
 			Keys(NiFloatData& super) : m_super{ super } {}
 			virtual std::vector<Key<float>> get() const override;
 			virtual void set(const std::vector<Key<float>>& keys) override;
 
+			NiFloatData& m_super;
+		};*/
+		class Keys final : public ListPropertyBase<Key<float>>
+		{
+		public:
+			Keys(NiFloatData& super) : m_super{ super } {}
+
+			virtual std::vector<Key<float>> get() const override;
+			virtual void set(const std::vector<Key<float>>& list) override;
+
+			virtual Key<float> get(int i) const override;
+			virtual void set(int i, const Key<float>& key) override;
+
+			virtual int insert(int i, const Key<float>& key) override;
+			virtual int erase(int i) override;
+
+		private:
 			NiFloatData& m_super;
 		};
 

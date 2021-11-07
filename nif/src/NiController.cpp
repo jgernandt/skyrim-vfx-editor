@@ -102,35 +102,84 @@ nif::native::NiFloatData& nif::NiFloatData::getNative() const
 	return static_cast<native::NiFloatData&>(*m_ptr);
 }
 
+static_assert(sizeof(nif::Key<float>) == sizeof(Niflib::Key<float>));
+static_assert(offsetof(nif::Key<float>, time) == offsetof(Niflib::Key<float>, time));
+static_assert(offsetof(nif::Key<float>, value) == offsetof(Niflib::Key<float>, data));
+static_assert(offsetof(nif::Key<float>, forward) == offsetof(Niflib::Key<float>, forward_tangent));
+static_assert(offsetof(nif::Key<float>, backward) == offsetof(Niflib::Key<float>, backward_tangent));
+static_assert(offsetof(nif::Key<float>, tension) == offsetof(Niflib::Key<float>, tension));
+static_assert(offsetof(nif::Key<float>, bias) == offsetof(Niflib::Key<float>, bias));
+static_assert(offsetof(nif::Key<float>, continuity) == offsetof(Niflib::Key<float>, continuity));
+
 std::vector<nif::Key<float>> nif::NiFloatData::Keys::get() const
 {
 	auto&& keys = m_super.getNative().GetKeysRef();
-	std::vector<Key<float>> result;
-	result.reserve(keys.size());
-	for (auto&& key : keys) {
-		result.push_back(Key<float>{
-			key.time,
-			key.data,
-			key.forward_tangent,
-			key.backward_tangent,
-			key.tension, key.bias, key.continuity });
-	}
+	std::vector<Key<float>> result(keys.size());
+	std::memcpy(result.data(), keys.data(), result.size() * sizeof(Key<float>));
 	return result;
 }
 
 void nif::NiFloatData::Keys::set(const std::vector<Key<float>>& keys)
 {
 	auto&& dest = m_super.getNative().GetKeysRef();
-	dest.clear();
-	dest.reserve(keys.size());
-	for (auto&& key : keys) {
-		dest.push_back(Niflib::Key<float>{
-			key.time,
-			key.value,
-			key.forward,
-			key.backward,
-			key.tension, key.bias, key.continuity });
+	dest.resize(keys.size());
+	if (std::memcmp(dest.data(), keys.data(), keys.size() * sizeof(Key<float>)) != 0) {
+		std::memcpy(dest.data(), keys.data(), dest.size() * sizeof(Key<float>));
+		notifySet(keys);
 	}
+}
+
+nif::Key<float> nif::NiFloatData::Keys::get(int i) const
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
+	return Key<float>{
+		keys[i].time,
+		keys[i].data,
+		keys[i].forward_tangent,
+		keys[i].backward_tangent,
+		keys[i].tension, keys[i].bias, keys[i].continuity };
+}
+
+void nif::NiFloatData::Keys::set(int i, const Key<float>& key)
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
+	if (std::memcmp(&key, &keys[i], sizeof(Key<float>)) != 0) {
+		std::memcpy(keys.data() + i, &key, sizeof(Key<float>));
+		notifySet(i, key);
+	}
+}
+
+int nif::NiFloatData::Keys::insert(int i, const Key<float>& key)
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0);
+
+	std::vector<Niflib::Key<float>>::iterator it;
+	if (static_cast<size_t>(i) < keys.size())
+		it = keys.begin() + i;
+	else {
+		it = keys.end();
+		i = keys.size();
+	}
+
+	keys.insert(it, Niflib::Key<float>{key.time, key.value, 
+		key.forward, key.backward, key.tension, key.bias, key.continuity });
+	notifyInsert(i);
+
+	return i;
+}
+
+int nif::NiFloatData::Keys::erase(int i)
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
+
+	keys.erase(keys.begin() + i);
+	notifyErase(i);
+
+	return i;
 }
 
 
