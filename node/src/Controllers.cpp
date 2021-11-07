@@ -58,6 +58,7 @@ public:
 				{ nif::KeyType::QUADRATIC, "Quadratic" } });
 
 		auto plot = newChild<gui::Plot>();
+		plot->getPlotArea().setMouseHandler(std::make_unique<PlotAreaInput>(plot->getPlotArea()));
 		//plot->setSize({ 600.0f, 400.0f });
 		//plot->setXLimits({ m_tStart.get(), m_tStop.get() });
 		//ylim should be based on min/max data
@@ -74,6 +75,72 @@ public:
 	}
 
 private:
+	constexpr static float SCALE_BASE = 1.1f;
+	constexpr static float SCALE_SENSITIVITY = 0.1f;
+
+	class PlotAreaInput final : public gui::MouseHandler
+	{
+	public:
+		PlotAreaInput(gui::PlotArea& area) : m_area{ area } {}
+
+		virtual void onMouseDown(gui::Mouse::Button button) override 
+		{
+			if (button == gui::Mouse::Button::MIDDLE) {
+				assert(gui::Mouse::getCapture() == nullptr);
+				gui::Mouse::setCapture(&m_area);
+				if (gui::Keyboard::isDown(gui::Keyboard::Key::CTRL)) {
+					m_zooming = true;
+					//pivot at cursor at the time of clicking
+					m_zoomPivot = m_area.fromGlobalSpace(gui::Mouse::getPosition());
+				}
+				else
+					m_panning = true;
+			}
+		}
+		virtual void onMouseUp(gui::Mouse::Button button) override 
+		{
+			if (button == gui::Mouse::Button::MIDDLE) {
+				assert(gui::Mouse::getCapture() == &m_area && (m_panning || m_zooming));
+				gui::Mouse::setCapture(nullptr);
+				m_panning = false;
+				m_zooming = false;
+			}
+		}
+		virtual void onMouseMove(const gui::Floats<2>& delta) override 
+		{
+			if (gui::Mouse::getCapture() == &m_area) {
+				if (m_panning) {
+					gui::Floats<2> tmp = m_area.fromGlobalSpace(delta) - m_area.fromGlobalSpace({ 0.0f ,0.0f });
+					m_area.getAxes().translate(tmp);
+				}
+				else if (m_zooming) {
+					gui::Floats<2> scale = m_area.getScale();
+					scale[0] *= std::pow(SCALE_BASE, delta[0] * SCALE_SENSITIVITY);
+					scale[1] *= std::pow(SCALE_BASE, -delta[1] * SCALE_SENSITIVITY);
+					gui::Floats<2> T = m_area.getAxes().getTranslation();
+					m_area.getAxes().setTranslation(m_zoomPivot - (m_zoomPivot - T) * scale);
+					m_area.getAxes().scale(scale);
+				}
+			}
+		}
+		virtual void onMouseWheel(float delta) 
+		{
+			//scale the axes
+			float scaleFactor = std::pow(SCALE_BASE, delta);
+			//pivot at cursor
+			gui::Floats<2> P = m_area.fromGlobalSpace(gui::Mouse::getPosition());
+			gui::Floats<2> T = m_area.getAxes().getTranslation();
+			m_area.getAxes().setTranslation(P - (P - T) * scaleFactor);
+			m_area.getAxes().scale({ scaleFactor, scaleFactor });
+		}
+
+	private:
+		gui::PlotArea& m_area;
+		gui::Floats<2> m_zoomPivot;
+		bool m_panning{ false };
+		bool m_zooming{ false };
+	};
+
 	nif::NiFloatData& m_data;
 	IProperty<float>& m_tStart;
 	IProperty<float>& m_tStop;
