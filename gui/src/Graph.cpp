@@ -420,12 +420,12 @@ public:
 		ImDrawList* dl = ImGui::GetWindowDrawList();
 		assert(dl);
 
-		auto points = m_area.getAxes().getGridPointsMajorY(m_area.getYLimits());
-		float globalY = std::round(fd.toGlobal(m_translation)[1]);
+		auto points = m_area.getAxes().getGridPointsMajorX(m_area.getXLimits());
+		float globalY = TO_PIXEL(fd.toGlobal(m_translation)[1]);
 
 		char buf[8];
 		for (auto&& p : points) {
-			float globalX = std::round(m_area.getAxes().toGlobalSpace({ p, 0.0f })[0]);
+			float globalX = TO_PIXEL(m_area.getAxes().toGlobalSpace({ p, 0.0f })[0]);
 
 			snprintf(buf, sizeof(buf), "%.1f", p);
 			dl->AddText({ globalX, globalY }, 0xff000000, buf);
@@ -450,11 +450,11 @@ public:
 		assert(dl);
 
 		auto points = m_area.getAxes().getGridPointsMajorY(m_area.getYLimits());
-		float globalX = std::round(fd.toGlobal(m_translation)[0]);
+		float globalX = TO_PIXEL(fd.toGlobal(m_translation)[0]);
 
 		char buf[8];
 		for (auto&& p : points) {
-			float globalY = std::round(m_area.getAxes().toGlobalSpace({ 0.0f, p })[1]);
+			float globalY = TO_PIXEL(m_area.getAxes().toGlobalSpace({ 0.0f, p })[1]);
 
 			snprintf(buf, sizeof(buf), "%.1f", p);
 			dl->AddText({ globalX, globalY }, 0xff000000, buf);
