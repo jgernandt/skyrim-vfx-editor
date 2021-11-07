@@ -6,6 +6,30 @@
 
 namespace nif
 {
+	TEST_CLASS(NiFloatDataTests)
+	{
+		nif::NiFloatData obj;
+		std::mt19937 m_engine;
+
+		TEST_METHOD(KeyType)
+		{
+			enumPropertyTest<nif::KeyType>(obj.keyType(), 
+				{ KeyType::LINEAR, KeyType::QUADRATIC, KeyType::TBC, KeyType::XYZ_ROTATION, KeyType::CONSTANT });
+		}
+
+		TEST_METHOD(Keys)
+		{
+			std::uniform_real_distribution<float> D;
+			auto g = [this, &D]()
+			{
+				return Key<float>{ D(m_engine), D(m_engine), D(m_engine), D(m_engine),
+					D(m_engine), D(m_engine), D(m_engine) };
+			};
+			ListPropertyTest(obj.keys(), g);
+		}
+
+	};
+
 	TEST_CLASS(NiBoolInterpolatorTests)
 	{
 		nif::NiBoolInterpolator obj;
