@@ -32,6 +32,10 @@ constexpr size_t PLOT_XLABEL_INDEX = 1;
 constexpr size_t PLOT_YLABEL_INDEX = 2;
 constexpr size_t PLOT_MIN_SIZE = 3;
 
+constexpr ImU32 COL_AXIS = 0xff000000;
+constexpr ImU32 COL_MAJOR = 0xff9f9f9f;
+constexpr ImU32 COL_MINOR = 0xffbfbfbf;
+
 //We make use of Eigen::Array methods for rounding
 static_assert(TO_PIXEL == static_cast<decltype(TO_PIXEL)>(&std::floor));
 
@@ -43,10 +47,6 @@ void gui::Axes::frame(FrameDrawer& fd)
 	Floats<2> parentSize = area->getSize();
 	Floats<2> globalTL = fd.toGlobal({ 0.0f, 0.0f }).floor();
 	Floats<2> globalBR = fd.toGlobal(parentSize).floor();
-
-	ImU32 axisCol = 0xff000000;
-	ImU32 majorCol = 0xff7f7f7f;
-	ImU32 minorCol = 0xffbfbfbf;
 
 	auto dl = ImGui::GetWindowDrawList();
 	assert(dl);
@@ -60,23 +60,23 @@ void gui::Axes::frame(FrameDrawer& fd)
 		auto points = getGridPointsMinorX(xlims);
 		for (auto&& p : points) {
 			p = TO_PIXEL(fd.toGlobal({ p, 0.0f })[0]);
-			dl->AddLine({ p, globalTL[1] }, { p, globalBR[1] }, minorCol);
+			dl->AddLine({ p, globalTL[1] }, { p, globalBR[1] }, COL_MINOR);
 		}
 		points = getGridPointsMinorY(ylims);
 		for (auto&& p : points) {
 			p = TO_PIXEL(fd.toGlobal({ 0.0f, p })[1]);
-			dl->AddLine({ globalTL[0], p }, { globalBR[0], p }, minorCol);
+			dl->AddLine({ globalTL[0], p }, { globalBR[0], p }, COL_MINOR);
 		}
 
 		points = getGridPointsMajorX(xlims);
 		for (auto&& p : points) {
 			p = TO_PIXEL(fd.toGlobal({ p, 0.0f })[0]);
-			dl->AddLine({ p, globalTL[1] }, { p, globalBR[1] }, majorCol);
+			dl->AddLine({ p, globalTL[1] }, { p, globalBR[1] }, COL_MAJOR);
 		}
 		points = getGridPointsMajorY(ylims);
 		for (auto&& p : points) {
 			p = TO_PIXEL(fd.toGlobal({ 0.0f, p })[1]);
-			dl->AddLine({ globalTL[0], p }, { globalBR[0], p }, majorCol);
+			dl->AddLine({ globalTL[0], p }, { globalBR[0], p }, COL_MAJOR);
 		}
 	}
 
@@ -86,13 +86,13 @@ void gui::Axes::frame(FrameDrawer& fd)
 		ImGui::GetWindowDrawList()->AddLine(
 			{ globalTrans[0], globalTL[1] },
 			{ globalTrans[0], globalBR[1] },
-			axisCol);
+			COL_AXIS);
 	}
 	if (globalTrans[1] >= globalTL[1] && globalTrans[1] <= globalBR[1]) {
 		ImGui::GetWindowDrawList()->AddLine(
 			{ globalTL[0], globalTrans[1] },
 			{ globalBR[0], globalTrans[1] },
-			axisCol);
+			COL_AXIS);
 	}
 
 	//Curves (I'm not sure we want to keep doing it this way)

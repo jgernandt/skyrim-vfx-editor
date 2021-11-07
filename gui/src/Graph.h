@@ -64,6 +64,11 @@ namespace gui
 		std::unique_ptr<Curve> removeCurve(Curve* curve);
 		std::unique_ptr<Curve> removeCurve(int index);
 
+		Floats<2> getMajorUnits() const { return m_majorUnit; }
+		void setMajorUnits(const Floats<2>& units) { m_majorUnit = units; }
+		Floats<2> getMinorUnits() const { return m_minorUnit; }
+		void setMinorUnits(const Floats<2>& units) { m_minorUnit = units; }
+
 		float getMajorUnitX() const { return m_majorUnit[0]; }
 		void setMajorUnitX(float f) { m_majorUnit[0] = f; }
 		float getMinorUnitX() const { return m_minorUnit[0]; }
