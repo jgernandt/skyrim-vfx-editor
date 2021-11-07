@@ -143,6 +143,13 @@ namespace nif
 		float continuity;
 	};
 
+	template<typename T> constexpr bool operator==(const Key<T>& lhs, const Key<T>& rhs)
+	{
+		return lhs.time == rhs.time && lhs.value == rhs.value && lhs.forward == rhs.forward && lhs.backward == rhs.backward &&
+			lhs.tension == rhs.tension && lhs.bias == rhs.bias && lhs.continuity == rhs.continuity;
+	}
+	template<typename T> constexpr bool operator!=(const Key<T>& lhs, const Key<T>& rhs) { return !(lhs == rhs); }
+
 	namespace native
 	{
 		using ColRGBA = Niflib::Color4;
