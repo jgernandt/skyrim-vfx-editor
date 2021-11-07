@@ -233,10 +233,6 @@ node::Editor::NodeRoot::NodeRoot()
 
 void node::Editor::NodeRoot::frame(gui::FrameDrawer& fd)
 {
-	//pan
-	if (fd.isMouseDown(gui::MouseButton::MIDDLE))
-		m_translation += fd.getMouseMove();
-
 	assert(getParent());
 	gui::Floats<2> parentSize = getParent()->getSize();
 
@@ -269,8 +265,13 @@ void node::Editor::NodeRoot::frame(gui::FrameDrawer& fd)
 	}
 	ConnectionHandler::frame(fd);
 
-	//zoom
 	//This needs to come after the children, if capturing is to work. However, that means it will lag one frame.
+	
+	//pan
+	if (fd.isMouseDown(gui::MouseButton::MIDDLE) && gui::Mouse::getCapture() == nullptr)
+		m_translation += fd.getMouseMove();
+
+	//zoom
 	if (float d = fd.getWheelDelta(); d != 0.0f && !fd.isWheelHandled()) {
 		//assume isotropic scale
 		float newScale = std::min(std::max(m_scale[0] * std::powf(SCALE_BASE, d), SCALE_MIN), SCALE_MAX);
