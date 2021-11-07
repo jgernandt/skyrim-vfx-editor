@@ -272,6 +272,46 @@ void PropertyTest(
 	prop.removeListener(l);
 }
 
+template<typename T>
+void enumPropertyTest(IProperty<T>& prop, std::vector<T>&& values)
+{
+	static_assert(std::is_enum<T>::value);
+
+	class Listener final : public IPropertyListener<T>
+	{
+	public:
+		Listener(IProperty<T>& prop) : m_prop{ prop } { m_prop.addListener(*this); }
+		~Listener() { m_prop.removeListener(*this); }
+
+		virtual void onSet(const T& t) override
+		{
+			m_signalled = true;
+			m_last = t;
+		}
+
+		bool wasSet(T t)
+		{
+			bool result = m_signalled && m_last == t;
+			m_signalled = false;
+			m_last = T();
+			return result;
+		}
+
+	private:
+		IProperty<T>& m_prop;
+		T m_last{ T() };
+		bool m_signalled{ false };
+	};
+
+	Listener l(prop);
+
+	for (T val : values) {
+		prop.set(val);
+		Assert::IsTrue(prop.get() == val);
+		Assert::IsTrue(l.wasSet(val));
+	}
+}
+
 inline void StringPropertyTest(IProperty<std::string>& p)
 {
 	//Good enough, I guess
