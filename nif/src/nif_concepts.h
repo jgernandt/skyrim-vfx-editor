@@ -91,6 +91,25 @@ public:
 	virtual size_t size() const = 0;
 };
 
+template<typename T, typename ContainerType = std::vector<T>>
+class IListProperty : public IObservable<IListProperty<T>>
+{
+public:
+	virtual ~IListProperty() = default;
+
+	//Regular property functions
+	virtual ContainerType get() const = 0;
+	virtual void set(const ContainerType&) = 0;
+
+	//Allow random access
+	virtual T get(int) const = 0;
+	virtual void set(int, const T&) = 0;
+
+	//Allow insertions/deletions
+	virtual int insert(int, const T&) = 0;
+	virtual int erase(int) = 0;
+};
+
 
 
 template<typename T>
@@ -138,6 +157,21 @@ public:
 };
 template<typename T>
 using ISetListener = IListener<ISet<T>>;
+
+template<typename T, typename ContainerType>
+class IListener<IListProperty<T, ContainerType>>
+{
+public:
+	virtual ~IListener() = default;
+
+	virtual void onSet(const ContainerType&) = 0;
+	virtual void onSet(int, const T&) = 0;
+	virtual void onInsert(int) = 0;
+	virtual void onErase(int) = 0;
+	virtual void onDestroy() = 0;
+};
+template<typename T, typename ContainerType = std::vector<T>>
+using IListPropertyListener = IListener<IListProperty<T, ContainerType>>;
 
 
 
@@ -394,6 +428,142 @@ namespace nif
 
 	private:
 		ObservableImpl<ISet<T>> m_obsImpl;
+	};
+
+
+	template<typename T, typename ContainerType = std::vector<T>>
+	class ListPropertyBase : public IListProperty<T, ContainerType>
+	{
+	public:
+		virtual ~ListPropertyBase()
+		{
+			for (IListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
+				assert(l);
+				l->onDestroy();
+			}
+		}
+
+		virtual void addListener(IListPropertyListener<T, ContainerType>&l) final override 
+		{ m_obsImpl.addListener(l); }
+		virtual void removeListener(IListPropertyListener<T, ContainerType>&l) final override 
+		{ m_obsImpl.removeListener(l); }
+
+	protected:
+		void notifySet(const ContainerType& t) const
+		{
+			for (IListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
+				assert(l);
+				l->onSet(t);
+			}
+		}
+		void notifySet(int i, const T& t) const
+		{
+			for (IListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
+				assert(l);
+				l->onSet(i, t);
+			}
+		}
+		void notifyInsert(int i) const
+		{
+			for (IListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
+				assert(l);
+				l->onInsert(i);
+			}
+		}
+		void notifyErase(int i) const
+		{
+			for (IListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
+				assert(l);
+				l->onErase(i);
+			}
+		}
+
+	private:
+		ObservableImpl<IListProperty<T, ContainerType>> m_obsImpl;
+	};
+
+	//We can wrap an element of an IListProperty inside a regular IProperty.
+	//Such a wrapper needs a ref to the IListProperty and its index number.
+	//It also needs to add a listener to the IListProperty to track changes to its index.
+	template<typename T, typename ContainerType = std::vector<T>>
+	class ListElementProperty final : 
+		public PropertyBase<T>, 
+		public IListPropertyListener<T, ContainerType>
+	{
+	public:
+		ListElementProperty(IListProperty<T, ContainerType>& list, int index) :
+			m_list{ &list }, m_index{ index }
+		{
+			list.addListener(this);
+		}
+		~ListElementProperty()
+		{
+			invalidate();
+		}
+
+		virtual T get() const override 
+		{ 
+			if (valid()) {
+				assert(m_list && m_index < m_list.size());
+				return m_list->get(m_index);
+			}
+			else
+				return T();
+		}
+		virtual void set(const T& t) override 
+		{
+			if (valid()) {
+				assert(m_list && m_index < m_list.size());
+				m_list->set(m_index, t);
+			}
+		}
+
+		virtual void onSet(const ContainerType& list) override 
+		{ 
+			if (valid() && m_index < list.size())
+				this->notify(list[m_index]);//we don't know if our element actually changed
+			else
+				invalidate();
+
+			//Or should this always invalidate us? 
+			//Techically, the whole list has been replaced. Our element no longer exists.
+		}
+		virtual void onSet(int i, const T& t) override 
+		{
+			assert(i >= 0);
+			if (i == m_index)
+				this->notify(t);
+		}
+		virtual void onInsert(int i) override 
+		{
+			assert(i >= 0);
+			if (i <= m_index)
+				m_index++;
+		}
+		virtual void onErase(int i) override 
+		{
+			assert(i >= 0);
+			if (i == m_index)
+				invalidate();
+			else if (i < m_index)
+				m_index--;
+		}
+		virtual void onDestroy() override { m_index = -1; }//we must not remove listener here
+
+	private:
+		void invalidate()
+		{
+			if (valid()) {
+				assert(m_list);
+				m_list->removeListener(this);
+				m_index = -1;
+			}
+		}
+		bool valid() { return m_index >= 0; }
+
+	private:
+		IListProperty<T, ContainerType>* m_list;
+		int m_index;
 	};
 
 	//Really just a Set, but intended for int or enum types
