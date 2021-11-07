@@ -90,7 +90,7 @@ private:
 				gui::Mouse::setCapture(&m_area);
 				if (gui::Keyboard::isDown(gui::Keyboard::Key::CTRL)) {
 					m_zooming = true;
-					//pivot at cursor at the time of clicking
+					//maintain the pivot point
 					m_zoomPivot = m_area.fromGlobalSpace(gui::Mouse::getPosition());
 				}
 				else
@@ -117,21 +117,51 @@ private:
 					gui::Floats<2> scale = m_area.getScale();
 					scale[0] *= std::pow(SCALE_BASE, delta[0] * SCALE_SENSITIVITY);
 					scale[1] *= std::pow(SCALE_BASE, -delta[1] * SCALE_SENSITIVITY);
-					gui::Floats<2> T = m_area.getAxes().getTranslation();
-					m_area.getAxes().setTranslation(m_zoomPivot - (m_zoomPivot - T) * scale);
-					m_area.getAxes().scale(scale);
+					applyScale(scale, m_zoomPivot);
 				}
 			}
 		}
 		virtual void onMouseWheel(float delta) 
 		{
-			//scale the axes
 			float scaleFactor = std::pow(SCALE_BASE, delta);
-			//pivot at cursor
-			gui::Floats<2> P = m_area.fromGlobalSpace(gui::Mouse::getPosition());
+			applyScale({ scaleFactor, scaleFactor }, m_area.fromGlobalSpace(gui::Mouse::getPosition()));
+		}
+
+	private:
+		void applyScale(const gui::Floats<2>& factor, const gui::Floats<2>& pivot)
+		{
 			gui::Floats<2> T = m_area.getAxes().getTranslation();
-			m_area.getAxes().setTranslation(P - (P - T) * scaleFactor);
-			m_area.getAxes().scale({ scaleFactor, scaleFactor });
+			m_area.getAxes().setTranslation(pivot - (pivot - T) * factor);
+			m_area.getAxes().scale(factor);
+
+			updateAxisUnits();
+		}
+		void updateAxisUnits()
+		{
+			//major unit should be 1, 2 or 5 raised to some power of 10
+			gui::Floats<2> major;
+			gui::Floats<2> estimate = 300.0f / m_area.getAxes().getScale().abs();
+			gui::Floats<2> power = estimate.log10().floor();
+			gui::Floats<2> oom = { std::pow(10.0f, power[0]), std::pow(10.0f, power[1]) };
+			if (estimate[0] >= 5.0f * oom[0])
+				major[0] = 5.0f * oom[0];
+			else if (estimate[0] >= 2.0f * oom[0])
+				major[0] = 2.0f * oom[0];
+			else
+				major[0] = oom[0];
+
+			if (estimate[1] >= 5.0f * oom[1])
+				major[1] = 5.0f * oom[1];
+			else if (estimate[1] >= 2.0f * oom[1])
+				major[1] = 2.0f * oom[1];
+			else
+				major[1] = oom[1];
+
+			//minor unit should be major / 4 (2?)
+			gui::Floats<2> minor = major / 4.0f;
+
+			m_area.getAxes().setMajorUnits(major);
+			m_area.getAxes().setMinorUnits(minor);
 		}
 
 	private:
