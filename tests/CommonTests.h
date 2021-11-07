@@ -309,6 +309,10 @@ void enumPropertyTest(IProperty<T>& prop, std::vector<T>&& values)
 		prop.set(val);
 		Assert::IsTrue(prop.get() == val);
 		Assert::IsTrue(l.wasSet(val));
+
+		//Resetting should not call listener
+		prop.set(val);
+		Assert::IsFalse(l.wasSet(val));
 	}
 }
 
@@ -589,6 +593,9 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 	list.set(container);
 	Assert::IsTrue(list.get() == container);
 	Assert::IsTrue(l.wasSet(&container));
+	//resetting should not call listener
+	list.set(container);
+	Assert::IsFalse(l.wasSet(&container));
 
 	//get/set element
 	int i = 0;
@@ -600,6 +607,11 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 		list.set(i, element);
 		Assert::IsTrue(list.get(i) == element);//test both elementwise...
 		Assert::IsTrue(l.wasSet(i, element));
+
+		//resetting should not call listener
+		list.set(i, element);
+		Assert::IsFalse(l.wasSet(i, element));
+
 		i++;
 	}
 	Assert::IsTrue(list.get() == container);//...and as a whole
