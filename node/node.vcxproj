@@ -27,6 +27,7 @@
     <ClInclude Include="src\Emitters.h" />
     <ClInclude Include="src\ExtraData.h" />
     <ClInclude Include="src\GravityModifier.h" />
+    <ClInclude Include="src\KeyEditor.h" />
     <ClInclude Include="src\Modifier.h" />
     <ClInclude Include="src\ModifierRequirements.h" />
     <ClInclude Include="src\Node.h" />
@@ -58,6 +59,7 @@
     <ClCompile Include="src\Emitters.cpp" />
     <ClCompile Include="src\ExtraData.cpp" />
     <ClCompile Include="src\GravityModifier.cpp" />
+    <ClCompile Include="src\KeyEditor.cpp" />
     <ClCompile Include="src\Modifier.cpp" />
     <ClCompile Include="src\ModifierRequirements.cpp" />
     <ClCompile Include="src\Node.cpp" />

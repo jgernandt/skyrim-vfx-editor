@@ -20,6 +20,8 @@
 #include "Controllers.h"
 #include "DeviceImpl.h"
 #include "widget_types.h"
+#include "KeyEditor.h"
+
 #include "CompositionActions.h"
 
 constexpr gui::ColRGBA TitleCol_Anim = { 0.8f, 0.8f, 0.8f, 1.0f };
@@ -31,150 +33,6 @@ constexpr float DEFAULT_PHASE = 0.0f;
 constexpr float DEFAULT_STARTTIME = 0.0f;
 constexpr float DEFAULT_STOPTIME = 1.0f;
 
-class FloatKeyEditor final : public gui::Popup
-{
-public:
-	FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& tStart, IProperty<float>& tStop) : 
-		m_data{ data }, m_tStart{ tStart }, m_tStop{ tStop }
-	{
-		setSize({ 640.0f, 480.0f });
-
-		//We need:
-		//plot area
-		//input handler for plot area (specific mechanic on generic component inserted above plot area?)
-		//handles for each key
-		//a curve that interpolates the data
-		//widget to select interpolation type
-		//controls for start/stop time
-
-		auto item = newChild<gui::Item>();
-		item->setSize({ 200.0f, -1.0f });
-		item->newChild<gui::Text>("Interpolation");
-		using selector_type = gui::Selector<nif::KeyType, IProperty<nif::KeyType>>;
-		auto selector = item->newChild<selector_type>(data.keyType(), std::string(),
-			selector_type::ItemList{ 
-				{ nif::KeyType::CONSTANT, "Constant" }, 
-				{ nif::KeyType::LINEAR, "Linear" }, 
-				{ nif::KeyType::QUADRATIC, "Quadratic" } });
-
-		auto plot = newChild<gui::Plot>();
-		plot->getPlotArea().setMouseHandler(std::make_unique<PlotAreaInput>(plot->getPlotArea()));
-		//plot->setSize({ 600.0f, 400.0f });
-		//plot->setXLimits({ m_tStart.get(), m_tStop.get() });
-		//ylim should be based on min/max data
-	}
-
-	virtual void frame(gui::FrameDrawer& fd) override
-	{
-		Popup::frame(fd);
-	}
-
-	virtual void onClose() override
-	{
-		asyncInvoke<gui::RemoveChild>(this, getParent(), false);
-	}
-
-private:
-	constexpr static float SCALE_BASE = 1.1f;
-	constexpr static float SCALE_SENSITIVITY = 0.1f;
-
-	class PlotAreaInput final : public gui::MouseHandler
-	{
-	public:
-		PlotAreaInput(gui::PlotArea& area) : m_area{ area } {}
-
-		virtual void onMouseDown(gui::Mouse::Button button) override 
-		{
-			if (button == gui::Mouse::Button::MIDDLE) {
-				assert(gui::Mouse::getCapture() == nullptr);
-				gui::Mouse::setCapture(&m_area);
-				if (gui::Keyboard::isDown(gui::Keyboard::Key::CTRL)) {
-					m_zooming = true;
-					//maintain the pivot point
-					m_zoomPivot = m_area.fromGlobalSpace(gui::Mouse::getPosition());
-				}
-				else
-					m_panning = true;
-			}
-		}
-		virtual void onMouseUp(gui::Mouse::Button button) override 
-		{
-			if (button == gui::Mouse::Button::MIDDLE) {
-				assert(gui::Mouse::getCapture() == &m_area && (m_panning || m_zooming));
-				gui::Mouse::setCapture(nullptr);
-				m_panning = false;
-				m_zooming = false;
-			}
-		}
-		virtual void onMouseMove(const gui::Floats<2>& delta) override 
-		{
-			if (gui::Mouse::getCapture() == &m_area) {
-				if (m_panning) {
-					gui::Floats<2> tmp = m_area.fromGlobalSpace(delta) - m_area.fromGlobalSpace({ 0.0f ,0.0f });
-					m_area.getAxes().translate(tmp);
-				}
-				else if (m_zooming) {
-					gui::Floats<2> scale = m_area.getScale();
-					scale[0] *= std::pow(SCALE_BASE, delta[0] * SCALE_SENSITIVITY);
-					scale[1] *= std::pow(SCALE_BASE, -delta[1] * SCALE_SENSITIVITY);
-					applyScale(scale, m_zoomPivot);
-				}
-			}
-		}
-		virtual void onMouseWheel(float delta) 
-		{
-			float scaleFactor = std::pow(SCALE_BASE, delta);
-			applyScale({ scaleFactor, scaleFactor }, m_area.fromGlobalSpace(gui::Mouse::getPosition()));
-		}
-
-	private:
-		void applyScale(const gui::Floats<2>& factor, const gui::Floats<2>& pivot)
-		{
-			gui::Floats<2> T = m_area.getAxes().getTranslation();
-			m_area.getAxes().setTranslation(pivot - (pivot - T) * factor);
-			m_area.getAxes().scale(factor);
-
-			updateAxisUnits();
-		}
-		void updateAxisUnits()
-		{
-			//major unit should be 1, 2 or 5 raised to some power of 10
-			gui::Floats<2> major;
-			gui::Floats<2> estimate = 300.0f / m_area.getAxes().getScale().abs();
-			gui::Floats<2> power = estimate.log10().floor();
-			gui::Floats<2> oom = { std::pow(10.0f, power[0]), std::pow(10.0f, power[1]) };
-			if (estimate[0] >= 5.0f * oom[0])
-				major[0] = 5.0f * oom[0];
-			else if (estimate[0] >= 2.0f * oom[0])
-				major[0] = 2.0f * oom[0];
-			else
-				major[0] = oom[0];
-
-			if (estimate[1] >= 5.0f * oom[1])
-				major[1] = 5.0f * oom[1];
-			else if (estimate[1] >= 2.0f * oom[1])
-				major[1] = 2.0f * oom[1];
-			else
-				major[1] = oom[1];
-
-			//minor unit should be major / 4 (2?)
-			gui::Floats<2> minor = major / 4.0f;
-
-			m_area.getAxes().setMajorUnits(major);
-			m_area.getAxes().setMinorUnits(minor);
-		}
-
-	private:
-		gui::PlotArea& m_area;
-		gui::Floats<2> m_zoomPivot;
-		bool m_panning{ false };
-		bool m_zooming{ false };
-	};
-
-	nif::NiFloatData& m_data;
-	IProperty<float>& m_tStart;
-	IProperty<float>& m_tStop;
-};
 
 class node::FloatController::TargetField : public node::Field
 {
