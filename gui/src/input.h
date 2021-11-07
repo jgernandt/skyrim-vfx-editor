@@ -37,6 +37,19 @@ namespace gui
 
 	//I think this is better (as a general idea) than to go via the FrameDrawer/GUIEngine.
 	//Needs some work, though.
+	class Keyboard
+	{
+	public:
+		enum class Key : int
+		{
+			SHIFT		= 0x10,
+			CTRL		= 0x11,
+			ALT			= 0x12,
+		};
+	public:
+		static bool isDown(Key key);
+	};
+
 	class Mouse
 	{
 	public:
