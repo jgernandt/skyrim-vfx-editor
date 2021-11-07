@@ -483,6 +483,113 @@ void SetTest(ISet<T>& set)
 	set.removeListener(l);
 }
 
+
+//Test a list property. Requires an overload of operator== for type T.
+//Requires a function object that generates T's for testing.
+template<typename T, typename ContainerType, typename GeneratorType>
+void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType generator)
+{
+	class Listener : public IListPropertyListener<T, ContainerType>
+	{
+	public:
+		Listener(IListProperty<T, ContainerType>& list) : m_list{ list } { m_list.addListener(*this); }
+		~Listener() { m_list.removeListener(*this); }
+
+		virtual void onSet(const ContainerType& c) override { m_lastCtnr = &c; }
+		virtual void onSet(int i, const T& t) override { m_lastI = i; m_lastT = t; }
+		virtual void onInsert(int i) override { m_lastInsert = i; }
+		virtual void onErase(int i) override { m_lastErase = i; }
+		virtual void onDestroy() override {}
+
+		bool wasSet(ContainerType* c) 
+		{
+			bool result = c == m_lastCtnr;
+			m_lastCtnr = nullptr;
+			return result;
+		}
+		bool wasSet(int i, const T& t)
+		{
+			bool result = m_lastI == i && m_lastT == t;
+			m_lastT = T();
+			m_lastI = -1;
+			return result;
+		}
+		bool wasInserted(int i)
+		{
+			bool result = i == m_lastInsert;
+			m_lastInsert = -1;
+			return result;
+		}
+		bool wasErased(int i)
+		{
+			bool result = i == m_lastErase;
+			m_lastErase = -1;
+			return result;
+		}
+
+	private:
+		IListProperty<T, ContainerType>& m_list;
+		const ContainerType* m_lastCtnr{ nullptr };
+		T m_lastT{ T() };
+		int m_lastI{ -1 };
+		int m_lastInsert{ -1 };
+		int m_lastErase{ -1 };
+	};
+
+	Listener l(list);
+
+	constexpr int SIZE = 10;
+
+	//Generate a reference container
+	ContainerType container(SIZE);
+	for (T& element : container)
+		element = generator();
+
+	//get/set whole container
+	list.set(container);
+	Assert::IsTrue(list.get() == container);
+	Assert::IsTrue(l.wasSet(&container));
+
+	//get/set element
+	int i = 0;
+	for (T& element : container) {
+		//generate a new element
+		element = generator();
+
+		//and set it
+		list.set(i, element);
+		Assert::IsTrue(list.get(i) == element);//test both elementwise...
+		Assert::IsTrue(l.wasSet(i, element));
+		i++;
+	}
+	Assert::IsTrue(list.get() == container);//...and as a whole
+
+	//insert/erase
+	typename ContainerType::iterator it = container.begin();
+	for (int i = 0; i < SIZE + 1; i++) {
+		//generate a new element
+		T t = generator();
+
+		//insert in list and reference
+		list.insert(i, t);
+		it = container.insert(it, t);
+
+		Assert::IsTrue(list.get() == container);
+		Assert::IsTrue(l.wasInserted(i));
+
+		//and erase
+		list.erase(i);
+		it = container.erase(it);
+
+		Assert::IsTrue(list.get() == container);
+		Assert::IsTrue(l.wasErased(i));
+
+		if (it != container.end())
+			++it;
+	}
+}
+
+
 inline bool areConnected(gui::Connector* c1, gui::Connector* c2)
 {
 	if (!c1 || !c2)
