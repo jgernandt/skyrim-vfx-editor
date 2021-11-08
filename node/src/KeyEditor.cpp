@@ -4,7 +4,7 @@
 #include "widget_types.h"
 
 node::FloatKeyEditor::FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& tStart, IProperty<float>& tStop) :
-	m_data{ data }, m_tStart{ tStart }, m_tStop{ tStop }
+	m_keys{ data.keys() }, m_keyType{ data.keyType() }
 {
 	setSize({ 640.0f, 480.0f });
 
@@ -15,8 +15,6 @@ node::FloatKeyEditor::FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& t
 	//a curve that interpolates the data
 	//widget to select interpolation type
 	//controls for start/stop time
-	//listener for data.keyType() to replace our curve widget
-	//listener for data.keys() to refresh our local data vector
 
 	auto item = newChild<gui::Item>();
 	item->setSize({ 200.0f, -1.0f });
@@ -28,16 +26,55 @@ node::FloatKeyEditor::FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& t
 			{ nif::KeyType::LINEAR, "Linear" },
 			{ nif::KeyType::QUADRATIC, "Quadratic" } });
 
-	auto plot = newChild<gui::Plot>();
-	plot->getPlotArea().setMouseHandler(std::make_unique<PlotAreaInput>(plot->getPlotArea()));
+	m_plot = newChild<gui::Plot>();
+	m_plot->getPlotArea().setMouseHandler(std::make_unique<PlotAreaInput>(m_plot->getPlotArea()));
 	//plot->setSize({ 600.0f, 400.0f });
 	//plot->setXLimits({ m_tStart.get(), m_tStop.get() });
 	//ylim should be based on min/max data
+
+	//The initial curve is created by the callback from keyType.
+	m_keyType.addListener(*this);
+}
+
+node::FloatKeyEditor::~FloatKeyEditor()
+{
+	m_keyType.removeListener(*this);
 }
 
 void node::FloatKeyEditor::onClose()
 {
 	asyncInvoke<gui::RemoveChild>(this, getParent(), false);
+}
+
+void node::FloatKeyEditor::onSet(const nif::KeyType& type)
+{
+	assert(m_plot);
+	//This is where we replace the existing curve widget with a new one.
+	//we need to know where the curve is now and remove it.
+	if (m_curve) {
+		m_plot->getPlotArea().getAxes().removeChild(m_curve);
+		m_curve = nullptr;
+	}
+
+	//Then we need to make a new of the appropriate type and add that one instead.
+	//The new curve will need to know about the keys property.
+	gui::ComponentPtr curve;
+	switch (type) {
+	case nif::KeyType::CONSTANT:
+		curve = std::make_unique<ConstantInterpolation>();
+		break;
+	case nif::KeyType::LINEAR:
+		curve = std::make_unique<LinearInterpolation>(m_keys);
+		break;
+	case nif::KeyType::QUADRATIC:
+		curve = std::make_unique<QuadraticInterpolation>(m_keys);
+		break;
+	}
+	if (curve) {
+		auto tmp = curve.get();//addChild may throw. Don't assign until we know it will survive.
+		m_plot->getPlotArea().getAxes().addChild(std::move(curve));
+		m_curve = tmp;
+	}
 }
 
 void node::FloatKeyEditor::PlotAreaInput::onMouseDown(gui::Mouse::Button button)
@@ -122,4 +159,32 @@ void node::FloatKeyEditor::PlotAreaInput::updateAxisUnits()
 
 	m_area.getAxes().setMajorUnits(major);
 	m_area.getAxes().setMinorUnits(minor);
+}
+
+node::FloatKeyEditor::LinearInterpolation::LinearInterpolation(IListProperty<nif::Key<float>>& keys) :
+	m_keys{ keys }
+{
+	//We need handles to manipulate our keys. Nothing fancy, just something that can be dragged around.
+	//They just need an element property from m_keys.
+	//We kind of need some way to set time limits on them, though. Just give them the adjacent
+	// property and let them keep track of it through a listener?
+	// 
+	//The interpolation might be most convenient to draw ourselves.
+
+	m_keys.addListener(*this);//this doesn't trigger an immediate callback. Inconsistent...
+}
+
+node::FloatKeyEditor::LinearInterpolation::~LinearInterpolation()
+{
+	m_keys.removeListener(*this);
+}
+
+void node::FloatKeyEditor::LinearInterpolation::frame(gui::FrameDrawer& fd)
+{
+	//Iterate through our data (or directly through the property, 
+	// if we add some way to do that - nicer!) and draw a line between each key.
+	//Nothing fancy at all.
+
+	//Let the handles do their thing:
+	Composite::frame(fd);
 }
