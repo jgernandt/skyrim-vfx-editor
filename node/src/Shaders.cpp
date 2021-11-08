@@ -161,8 +161,8 @@ private:
 			m_obj.shaderFlags1().set(nif::ShaderFlag1::PALETTE_COLOUR, val[0]);
 			m_obj.shaderFlags1().set(nif::ShaderFlag1::PALETTE_ALPHA, val[1]);
 		}
-		virtual void addListener(IPropertyListener<std::array<bool, 2>>& l) override {}
-		virtual void removeListener(IPropertyListener<std::array<bool, 2>>& l) override {}
+		virtual void addListener(PropertyListener<std::array<bool, 2>>& l) override {}
+		virtual void removeListener(PropertyListener<std::array<bool, 2>>& l) override {}
 
 		nif::BSEffectShaderProperty& m_obj;
 

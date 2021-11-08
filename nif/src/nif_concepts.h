@@ -122,10 +122,10 @@ class IListener<IAssignable<T>>
 public:
 	virtual ~IListener() = default;
 
-	virtual void onAssign(T*) = 0;
+	virtual void onAssign(T*) {}
 };
 template<typename T>
-using IAssignableListener = IListener<IAssignable<T>>;
+using AssignableListener = IListener<IAssignable<T>>;
 
 template<typename T>
 class IListener<IProperty<T>>
@@ -133,10 +133,10 @@ class IListener<IProperty<T>>
 public:
 	virtual ~IListener() = default;
 
-	virtual void onSet(const T&) = 0;
+	virtual void onSet(const T&) {}
 };
 template<typename T>
-using IPropertyListener = IListener<IProperty<T>>;
+using PropertyListener = IListener<IProperty<T>>;
 
 template<typename T>
 class IListener<ISequence<T>>
@@ -144,11 +144,11 @@ class IListener<ISequence<T>>
 public:
 	virtual ~IListener() = default;
 
-	virtual void onInsert(const ISequence<T>&, size_t) = 0;
-	virtual void onErase(const ISequence<T>&, size_t) = 0;
+	virtual void onInsert(const ISequence<T>&, size_t) {}
+	virtual void onErase(const ISequence<T>&, size_t) {}
 };
 template<typename T>
-using ISequenceListener = IListener<ISequence<T>>;
+using SequenceListener = IListener<ISequence<T>>;
 
 template<typename T>
 class IListener<ISet<T>>
@@ -156,11 +156,11 @@ class IListener<ISet<T>>
 public:
 	virtual ~IListener() = default;
 
-	virtual void onAdd(const T&) = 0;
-	virtual void onRemove(const T&) = 0;
+	virtual void onAdd(const T&) {}
+	virtual void onRemove(const T&) {}
 };
 template<typename T>
-using ISetListener = IListener<ISet<T>>;
+using SetListener = IListener<ISet<T>>;
 
 template<typename T, typename ContainerType>
 class IListener<IListProperty<T, ContainerType>>
@@ -168,14 +168,14 @@ class IListener<IListProperty<T, ContainerType>>
 public:
 	virtual ~IListener() = default;
 
-	virtual void onSet(const ContainerType&) = 0;
-	virtual void onSet(int, const T&) = 0;
-	virtual void onInsert(int) = 0;
-	virtual void onErase(int) = 0;
-	virtual void onDestroy() = 0;
+	virtual void onSet(const ContainerType&) {}
+	virtual void onSet(int, const T&) {}
+	virtual void onInsert(int) {}
+	virtual void onErase(int) {}
+	virtual void onDestroy() {}
 };
 template<typename T, typename ContainerType = std::vector<T>>
-using IListPropertyListener = IListener<IListProperty<T, ContainerType>>;
+using ListPropertyListener = IListener<IListProperty<T, ContainerType>>;
 
 
 template<typename T>
@@ -211,13 +211,13 @@ namespace nif
 	public:
 		virtual ~AssignableBase() = default;
 
-		virtual void addListener(IAssignableListener<T>& l) final override { m_obsImpl.addListener(l); }
-		virtual void removeListener(IAssignableListener<T>& l) final override { m_obsImpl.removeListener(l); }
+		virtual void addListener(AssignableListener<T>& l) final override { m_obsImpl.addListener(l); }
+		virtual void removeListener(AssignableListener<T>& l) final override { m_obsImpl.removeListener(l); }
 
 	protected:
 		void notify(T* t)
 		{
-			for (IAssignableListener<T>* l : m_obsImpl.getListeners()) {
+			for (AssignableListener<T>* l : m_obsImpl.getListeners()) {
 				assert(l);
 				l->onAssign(t);
 			}
@@ -233,17 +233,17 @@ namespace nif
 	public:
 		virtual ~PropertyBase() = default;
 
-		virtual void addListener(IPropertyListener<T>& l) final override
+		virtual void addListener(PropertyListener<T>& l) final override
 		{
 			m_obsImpl.addListener(l);
 			l.onSet(this->get());
 		}
-		virtual void removeListener(IPropertyListener<T>& l) final override { m_obsImpl.removeListener(l); }
+		virtual void removeListener(PropertyListener<T>& l) final override { m_obsImpl.removeListener(l); }
 
 	protected:
 		void notify(const T& t)
 		{
-			for (IPropertyListener<T>* l : m_obsImpl.getListeners()) {
+			for (PropertyListener<T>* l : m_obsImpl.getListeners()) {
 				assert(l);
 				l->onSet(t);
 			}
@@ -352,20 +352,20 @@ namespace nif
 	public:
 		virtual ~SequenceBase() = default;
 
-		virtual void addListener(ISequenceListener<T>& l) final override { m_obsImpl.addListener(l); }
-		virtual void removeListener(ISequenceListener<T>& l) final override { m_obsImpl.removeListener(l); }
+		virtual void addListener(SequenceListener<T>& l) final override { m_obsImpl.addListener(l); }
+		virtual void removeListener(SequenceListener<T>& l) final override { m_obsImpl.removeListener(l); }
 
 	protected:
 		void notifyInsert(size_t pos) const
 		{
-			for (ISequenceListener<T>* l : m_obsImpl.getListeners()) {
+			for (SequenceListener<T>* l : m_obsImpl.getListeners()) {
 				assert(l);
 				l->onInsert(*this, pos);
 			}
 		}
 		void notifyErase(size_t pos) const
 		{
-			for (ISequenceListener<T>* l : m_obsImpl.getListeners()) {
+			for (SequenceListener<T>* l : m_obsImpl.getListeners()) {
 				assert(l);
 				l->onErase(*this, pos);
 			}
@@ -381,20 +381,20 @@ namespace nif
 	public:
 		virtual ~SetBase() = default;
 
-		virtual void addListener(ISetListener<T>& l) final override { m_obsImpl.addListener(l); }
-		virtual void removeListener(ISetListener<T>& l) final override { m_obsImpl.removeListener(l); }
+		virtual void addListener(SetListener<T>& l) final override { m_obsImpl.addListener(l); }
+		virtual void removeListener(SetListener<T>& l) final override { m_obsImpl.removeListener(l); }
 
 	protected:
 		void notifyAdd(const T& t) const
 		{
-			for (ISetListener<T>* l : m_obsImpl.getListeners()) {
+			for (SetListener<T>* l : m_obsImpl.getListeners()) {
 				assert(l);
 				l->onAdd(t);
 			}
 		}
 		void notifyRemove(const T& t) const
 		{
-			for (ISetListener<T>* l : m_obsImpl.getListeners()) {
+			for (SetListener<T>* l : m_obsImpl.getListeners()) {
 				assert(l);
 				l->onRemove(t);
 			}
@@ -411,42 +411,42 @@ namespace nif
 	public:
 		virtual ~ListPropertyBase()
 		{
-			for (IListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
+			for (ListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
 				assert(l);
 				l->onDestroy();
 			}
 		}
 
-		virtual void addListener(IListPropertyListener<T, ContainerType>&l) final override 
+		virtual void addListener(ListPropertyListener<T, ContainerType>&l) final override 
 		{ m_obsImpl.addListener(l); }
-		virtual void removeListener(IListPropertyListener<T, ContainerType>&l) final override 
+		virtual void removeListener(ListPropertyListener<T, ContainerType>&l) final override 
 		{ m_obsImpl.removeListener(l); }
 
 	protected:
 		void notifySet(const ContainerType& t) const
 		{
-			for (IListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
+			for (ListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
 				assert(l);
 				l->onSet(t);
 			}
 		}
 		void notifySet(int i, const T& t) const
 		{
-			for (IListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
+			for (ListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
 				assert(l);
 				l->onSet(i, t);
 			}
 		}
 		void notifyInsert(int i) const
 		{
-			for (IListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
+			for (ListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
 				assert(l);
 				l->onInsert(i);
 			}
 		}
 		void notifyErase(int i) const
 		{
-			for (IListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
+			for (ListPropertyListener<T, ContainerType>* l : m_obsImpl.getListeners()) {
 				assert(l);
 				l->onErase(i);
 			}
@@ -462,7 +462,7 @@ namespace nif
 	template<typename T, typename ContainerType = std::vector<T>>
 	class VectorElementProperty final : 
 		public PropertyBase<T>, 
-		public IListPropertyListener<T, ContainerType>
+		public ListPropertyListener<T, ContainerType>
 	{
 	public:
 		VectorElementProperty(IListProperty<T, ContainerType>& list, int index) :

@@ -119,7 +119,7 @@ public:
 private:
 	//If listening to a source property, sets a target property to the same if Compare(source, target) returns true
 	template<typename Compare>
-	class Limiter final : public IPropertyListener<float>
+	class Limiter final : public PropertyListener<float>
 	{
 	public:
 		Limiter(IProperty<float>& dest) : m_dest{ dest } {}

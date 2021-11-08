@@ -96,8 +96,8 @@ namespace node
 		void removeController(nif::NiTimeController* obj);
 		const std::vector<std::unique_ptr<nif::NiTimeController>>& getControllers() const { return m_controllers; }
 
-		virtual void addListener(ISetListener<nif::NiTimeController>& l) override { m_obsImpl.addListener(l); }
-		virtual void removeListener(ISetListener<nif::NiTimeController>& l) override { m_obsImpl.removeListener(l); }
+		virtual void addListener(SetListener<nif::NiTimeController>& l) override { m_obsImpl.addListener(l); }
+		virtual void removeListener(SetListener<nif::NiTimeController>& l) override { m_obsImpl.removeListener(l); }
 
 	protected:
 		//quick workaround to avoid relying on our destructor for safe disconnection

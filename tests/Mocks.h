@@ -8,15 +8,15 @@ public:
 	virtual void assign(T* t) override 
 	{ 
 		m_assigned = t;
-		for (IAssignableListener<T>* l : m_obsImpl.getListeners()) {
+		for (AssignableListener<T>* l : m_obsImpl.getListeners()) {
 			assert(l);
 			l->onAssign(t);
 		}
 	}
 	virtual bool isAssigned(T* t) const override { return t == m_assigned; }
 
-	virtual void addListener(IAssignableListener<T>& l) final override { m_obsImpl.addListener(l); }
-	virtual void removeListener(IAssignableListener<T>& l) final override { m_obsImpl.removeListener(l); }
+	virtual void addListener(AssignableListener<T>& l) final override { m_obsImpl.addListener(l); }
+	virtual void removeListener(AssignableListener<T>& l) final override { m_obsImpl.removeListener(l); }
 
 	T* assigned() const { return m_assigned; }
 
@@ -33,18 +33,18 @@ public:
 	virtual void set(const T& t) override 
 	{ 
 		m_value = t;
-		for (IPropertyListener<T>* l : m_obsImpl.getListeners()) {
+		for (PropertyListener<T>* l : m_obsImpl.getListeners()) {
 			assert(l);
 			l->onSet(t);
 		}
 	}
 
-	virtual void addListener(IPropertyListener<T>& l) final override
+	virtual void addListener(PropertyListener<T>& l) final override
 	{
 		m_obsImpl.addListener(l);
 		l.onSet(this->get());
 	}
-	virtual void removeListener(IPropertyListener<T>& l) final override { m_obsImpl.removeListener(l); }
+	virtual void removeListener(PropertyListener<T>& l) final override { m_obsImpl.removeListener(l); }
 
 private:
 	T m_value{ T() };
@@ -60,8 +60,8 @@ public:
 	virtual void remove(const T& t) override { m_set.erase(&t); }
 	virtual bool has(const T& t) const override { return m_set.find(&t) != m_set.end(); }
 
-	virtual void addListener(ISetListener<T>& l) final override { m_obsImpl.addListener(l); }
-	virtual void removeListener(ISetListener<T>& l) final override { m_obsImpl.removeListener(l); }
+	virtual void addListener(SetListener<T>& l) final override { m_obsImpl.addListener(l); }
+	virtual void removeListener(SetListener<T>& l) final override { m_obsImpl.removeListener(l); }
 
 	virtual size_t size() const override { return m_set.size(); }
 
@@ -82,7 +82,7 @@ public:
 		else
 			m_seq.push_back(&t);
 
-		for (ISequenceListener<T>* l : m_obsImpl.getListeners()) {
+		for (SequenceListener<T>* l : m_obsImpl.getListeners()) {
 			assert(l);
 			l->onInsert(*this, pos);
 		}
@@ -96,7 +96,7 @@ public:
 		m_seq.erase(m_seq.begin() + pos);
 		size_t result = pos < m_seq.size() ? pos : -1;
 
-		for (ISequenceListener<T>* l : m_obsImpl.getListeners()) {
+		for (SequenceListener<T>* l : m_obsImpl.getListeners()) {
 			assert(l);
 			l->onErase(*this, pos);
 		}
@@ -114,8 +114,8 @@ public:
 		return result;
 	}
 
-	virtual void addListener(ISequenceListener<T>& l) final override { m_obsImpl.addListener(l); }
-	virtual void removeListener(ISequenceListener<T>& l) final override { m_obsImpl.removeListener(l); }
+	virtual void addListener(SequenceListener<T>& l) final override { m_obsImpl.addListener(l); }
+	virtual void removeListener(SequenceListener<T>& l) final override { m_obsImpl.removeListener(l); }
 
 	virtual size_t size() const override { return m_seq.size(); }
 
@@ -144,7 +144,7 @@ private:
 };
 
 template<typename T>
-class MockPropertyListener final : public IPropertyListener<T>
+class MockPropertyListener final : public PropertyListener<T>
 {
 public:
 	virtual void onSet(const T& t) override
@@ -192,8 +192,8 @@ public:
 	virtual void remove(const node::Modifier::Requirement& t) override { m_set.erase(t); }
 	virtual bool has(const node::Modifier::Requirement& t) const override { return m_set.find(t) != m_set.end(); }
 
-	virtual void addListener(ISetListener<node::Modifier::Requirement>& l) final override { m_obsImpl.addListener(l); }
-	virtual void removeListener(ISetListener<node::Modifier::Requirement>& l) final override { m_obsImpl.removeListener(l); }
+	virtual void addListener(SetListener<node::Modifier::Requirement>& l) final override { m_obsImpl.addListener(l); }
+	virtual void removeListener(SetListener<node::Modifier::Requirement>& l) final override { m_obsImpl.removeListener(l); }
 
 	size_t count(node::Modifier::Requirement req) const { return m_set.count(req); }
 	virtual size_t size() const override { return m_set.size(); }

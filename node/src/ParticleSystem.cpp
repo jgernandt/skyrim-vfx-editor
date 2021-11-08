@@ -50,8 +50,8 @@ private:
 		virtual bool has(const Modifier::Requirement&) const override;
 		virtual size_t size() const override { return 0; }//doesn't really make sense on us
 
-		virtual void addListener(ISetListener<Modifier::Requirement>&) override {}
-		virtual void removeListener(ISetListener<Modifier::Requirement>&) override {}
+		virtual void addListener(SetListener<Modifier::Requirement>&) override {}
+		virtual void removeListener(SetListener<Modifier::Requirement>&) override {}
 
 	private:
 		std::map<Modifier::Requirement, std::unique_ptr<ModifierRequirement>> m_mngrs;
@@ -130,8 +130,8 @@ private:
 		virtual void assign(nif::BSEffectShaderProperty* obj) override { m_shader.assign(obj ? obj : &m_default); }
 		virtual bool isAssigned(nif::BSEffectShaderProperty* obj) const override { return m_shader.isAssigned(obj); }
 
-		virtual void addListener(IAssignableListener<nif::BSEffectShaderProperty>&) override {}
-		virtual void removeListener(IAssignableListener<nif::BSEffectShaderProperty>&) override {}
+		virtual void addListener(AssignableListener<nif::BSEffectShaderProperty>&) override {}
+		virtual void removeListener(AssignableListener<nif::BSEffectShaderProperty>&) override {}
 
 		IAssignable<nif::BSEffectShaderProperty>& m_shader;//will survive us
 		nif::BSEffectShaderProperty m_default;
@@ -150,7 +150,7 @@ private:
 			m_target.set(std::vector<nif::SubtextureOffset>());
 		}
 
-		class Listener : public IPropertyListener<nif::SubtextureCount>
+		class Listener : public PropertyListener<nif::SubtextureCount>
 		{
 		public:
 			Listener(IProperty<std::vector<nif::SubtextureOffset>>& prop) : m_ifc{ prop } {}

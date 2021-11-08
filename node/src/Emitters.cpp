@@ -71,8 +71,8 @@ private:
 
 		virtual void assign(nif::NiInterpolator* iplr) override { m_ifc.assign(iplr ? iplr : m_default); }
 		virtual bool isAssigned(nif::NiInterpolator* iplr) const override { return m_ifc.isAssigned(iplr); }
-		virtual void addListener(IAssignableListener<nif::NiInterpolator>& l) override { m_ifc.addListener(l); }
-		virtual void removeListener(IAssignableListener<nif::NiInterpolator>& l) override { m_ifc.removeListener(l); }
+		virtual void addListener(AssignableListener<nif::NiInterpolator>& l) override { m_ifc.addListener(l); }
+		virtual void removeListener(AssignableListener<nif::NiInterpolator>& l) override { m_ifc.removeListener(l); }
 
 		IAssignable<nif::NiInterpolator>& m_ifc;
 		nif::NiFloatInterpolator* m_default{ nullptr };

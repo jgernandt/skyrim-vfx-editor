@@ -61,7 +61,7 @@ namespace node
 			virtual void onDisconnect(IModifiable & ifc) override;
 
 		private:
-			class ColourActivator final : public IPropertyListener<nif::ColRGBA>
+			class ColourActivator final : public PropertyListener<nif::ColRGBA>
 			{
 			public:
 				ColourActivator(IProperty<nif::ColRGBA>& prop) : m_prop{ prop } {}
@@ -77,7 +77,7 @@ namespace node
 				bool m_active{ false };
 			};
 
-			class LifeMoveActivator final : public IPropertyListener<float>
+			class LifeMoveActivator final : public PropertyListener<float>
 			{
 			public:
 				LifeMoveActivator(IProperty<float>& prop, IProperty<float>& var, Requirement req) :

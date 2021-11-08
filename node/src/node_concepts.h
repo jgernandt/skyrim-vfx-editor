@@ -62,8 +62,8 @@ namespace node
 		virtual size_t find(const T& obj) const final override { return m_seq.find(obj); }
 		virtual size_t size() const override { return m_seq.size(); }
 
-		virtual void addListener(ISequenceListener<T>& l) final override { m_seq.addListener(l); }
-		virtual void removeListener(ISequenceListener<T>& l) final override { m_seq.removeListener(l); }
+		virtual void addListener(SequenceListener<T>& l) final override { m_seq.addListener(l); }
+		virtual void removeListener(SequenceListener<T>& l) final override { m_seq.removeListener(l); }
 
 		size_t reserve(size_t pos, const T& obj)
 		{
@@ -123,7 +123,7 @@ namespace node
 
 	//May need a conversion before setting
 	template<typename T, typename TargetType = T, template<typename> typename ConverterType = nif::NifConverter>
-	class SetterListener : public IPropertyListener<T>
+	class SetterListener : public PropertyListener<T>
 	{
 	public:
 		SetterListener(IProperty<TargetType>& prop) : m_ifc{ prop } {}

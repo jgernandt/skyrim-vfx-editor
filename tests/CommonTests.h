@@ -38,7 +38,7 @@ void AssignableTest(IAssignable<T>& ass)
 {
 	static_assert(std::is_default_constructible<ConstructibleType>::value, "object is not default constructible");
 
-	struct Listener : IAssignableListener<T>
+	struct Listener : AssignableListener<T>
 	{
 		virtual void onAssign(T* t) 
 		{
@@ -277,7 +277,7 @@ void enumPropertyTest(IProperty<T>& prop, std::vector<T>&& values)
 {
 	static_assert(std::is_enum<T>::value);
 
-	class Listener final : public IPropertyListener<T>
+	class Listener final : public PropertyListener<T>
 	{
 	public:
 		Listener(IProperty<T>& prop) : m_prop{ prop } { m_prop.addListener(*this); }
@@ -333,7 +333,7 @@ inline void StringPropertyTest(IProperty<std::string>& p)
 template<typename T, typename ConstructibleType = T>
 void SequenceTest(ISequence<T>& seq)
 {
-	struct Listener : ISequenceListener<T>
+	struct Listener : SequenceListener<T>
 	{
 		virtual void onInsert(const ISequence<T>&, size_t pos)
 		{
@@ -440,7 +440,7 @@ void SequenceTest(ISequence<T>& seq)
 template<typename T, typename ConstructibleType = T>
 void SetTest(ISet<T>& set)
 {
-	struct Listener : ISetListener<T>
+	struct Listener : SetListener<T>
 	{
 		virtual void onAdd(const T& t)
 		{
@@ -533,7 +533,7 @@ void SetTest(ISet<T>& set)
 template<typename T, typename ContainerType, typename GeneratorType>
 void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType generator)
 {
-	class Listener : public IListPropertyListener<T, ContainerType>
+	class Listener : public ListPropertyListener<T, ContainerType>
 	{
 	public:
 		Listener(IListProperty<T, ContainerType>& list) : m_list{ list } { m_list.addListener(*this); }
@@ -580,7 +580,7 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 		int m_lastErase{ -1 };
 	};
 
-	class ElementListener final : public IPropertyListener<T>
+	class ElementListener final : public PropertyListener<T>
 	{
 	public:
 		ElementListener() {}

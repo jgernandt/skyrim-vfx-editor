@@ -40,8 +40,8 @@ public:
 		m_bitfield.set(((static_cast<FieldType>(t) << Offset) & MASK) | (m_bitfield.get() & ~MASK));
 	}
 	//we don't really want this to be observable directly, do we?
-	virtual void addListener(IPropertyListener<T>&) override { assert(false); }
-	virtual void removeListener(IPropertyListener<T>&) override { assert(false); }
+	virtual void addListener(PropertyListener<T>&) override { assert(false); }
+	virtual void removeListener(PropertyListener<T>&) override { assert(false); }
 
 private:
 	constexpr static FieldType MASK = ~(~FieldType(0) << Width) << Offset;

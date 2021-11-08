@@ -26,7 +26,7 @@
 //We then add one widget to control the points and one to add/remove points, both of which pass their actions back to us.
 //Not the most efficient design, since we're copying a whole new vector (back and forth) when changing one point.
 //We'd need some sort of iterator or random access property to make it better. No big deal, though.
-class node::ScaleModifier::ScaleField final : public Field, public IPropertyListener<std::vector<float>>
+class node::ScaleModifier::ScaleField final : public Field, public PropertyListener<std::vector<float>>
 {
 public:
 	ScaleField(const std::string& name, ScaleModifier& node) : Field(name), m_prop{ node.object().scales() }

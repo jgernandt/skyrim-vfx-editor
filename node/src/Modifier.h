@@ -60,7 +60,7 @@ namespace node
 		constexpr static const char* NEXT_MODIFIER = "Next modifier";
 
 		//Updates modifier order to match position in the sequence
-		class OrderListener : public ISequenceListener<nif::NiPSysModifier>
+		class OrderListener : public SequenceListener<nif::NiPSysModifier>
 		{
 		public:
 			OrderListener(IProperty<unsigned int>& order) :
@@ -74,7 +74,7 @@ namespace node
 		};
 
 		//Updates modifier name to match its order
-		class NameListener : public IPropertyListener<unsigned int>
+		class NameListener : public PropertyListener<unsigned int>
 		{
 		public:
 			NameListener(IProperty<std::string>& name) :
@@ -87,7 +87,7 @@ namespace node
 		};
 
 		//Updates one string to match another string (useful for the modifier name on a NiPSysModifierCtlr)
-		class ModifierNameListener : public IPropertyListener<std::string>
+		class ModifierNameListener : public PropertyListener<std::string>
 		{
 		public:
 			ModifierNameListener(IProperty<std::string>& name) :
