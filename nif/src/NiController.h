@@ -103,7 +103,7 @@ namespace nif
 
 		IProperty<KeyType>& keyType() { return m_keyType; }
 		//IProperty<std::vector<Key<float>>>& keys() { return m_keys; }
-		IListProperty<Key<float>>& keys() { return m_keys; }
+		IVectorProperty<Key<float>>& keys() { return m_keys; }
 
 	private:
 		/*struct Keys : PropertyBase<std::vector<Key<float>>>
@@ -114,7 +114,7 @@ namespace nif
 
 			NiFloatData& m_super;
 		};*/
-		class Keys final : public ListPropertyBase<Key<float>>
+		class Keys final : public VectorPropertyBase<Key<float>>
 		{
 		public:
 			Keys(NiFloatData& super) : m_super{ super } {}
@@ -128,7 +128,7 @@ namespace nif
 			virtual int insert(int i, const Key<float>& key) override;
 			virtual int erase(int i) override;
 
-			virtual std::unique_ptr<IProperty<Key<float>>> element(int i) override;
+			virtual element at(int i) override;
 
 		private:
 			NiFloatData& m_super;

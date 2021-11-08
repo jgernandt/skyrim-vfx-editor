@@ -42,34 +42,34 @@ public:
 template<typename T>
 using PropertyListener = IListener<IProperty<T>>;
 
+template<typename T>
+class PropertyBase : public IProperty<T>
+{
+public:
+	virtual ~PropertyBase() = default;
+
+	virtual void addListener(PropertyListener<T>& l) final override
+	{
+		m_obs.addListener(l);
+		l.onSet(this->get());
+	}
+	virtual void removeListener(PropertyListener<T>& l) final override { m_obs.removeListener(l); }
+
+protected:
+	void notify(const T& t)
+	{
+		for (PropertyListener<T>* l : m_obs.getListeners()) {
+			assert(l);
+			l->onSet(t);
+		}
+	}
+
+private:
+	ObservableBase<IProperty<T>> m_obs;
+};
+
 namespace nif
 {
-	template<typename T>
-	class PropertyBase : public IProperty<T>
-	{
-	public:
-		virtual ~PropertyBase() = default;
-
-		virtual void addListener(PropertyListener<T>& l) final override
-		{
-			m_obs.addListener(l);
-			l.onSet(this->get());
-		}
-		virtual void removeListener(PropertyListener<T>& l) final override { m_obs.removeListener(l); }
-
-	protected:
-		void notify(const T& t)
-		{
-			for (PropertyListener<T>* l : m_obs.getListeners()) {
-				assert(l);
-				l->onSet(t);
-			}
-		}
-
-	private:
-		ObservableBase<IProperty<T>> m_obs;
-	};
-
 	//Typically, ArgType would be T (e.g. when T=float) or const & to some native type.
 	//The latter typically means that RetType is this native type. It may, occasionally, be lvalue reference to it.
 	template<typename T,

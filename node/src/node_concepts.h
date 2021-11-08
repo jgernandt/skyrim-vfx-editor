@@ -102,7 +102,7 @@ namespace node
 	}; 
 
 	template<typename T>
-	class LocalProperty : public nif::PropertyBase<T>
+	class LocalProperty : public PropertyBase<T>
 	{
 	public:
 		LocalProperty(const T& def = T()) : m_val{ def } {}

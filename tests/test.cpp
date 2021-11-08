@@ -11,7 +11,7 @@ namespace test
 		std::mt19937 m_engine;
 
 		template<size_t N>
-		struct PropertyTester : nif::PropertyBase<std::array<float, N>>
+		struct PropertyTester : PropertyBase<std::array<float, N>>
 		{
 			virtual std::array<float, N> get() const override
 			{

@@ -161,7 +161,7 @@ void node::FloatKeyEditor::PlotAreaInput::updateAxisUnits()
 	m_area.getAxes().setMinorUnits(minor);
 }
 
-node::FloatKeyEditor::LinearInterpolation::LinearInterpolation(IListProperty<nif::Key<float>>& keys) :
+node::FloatKeyEditor::LinearInterpolation::LinearInterpolation(IVectorProperty<nif::Key<float>>& keys) :
 	m_keys{ keys }
 {
 	//We need handles to manipulate our keys. Nothing fancy, just something that can be dragged around.

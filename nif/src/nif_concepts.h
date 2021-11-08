@@ -19,10 +19,10 @@
 #pragma once
 #include "nif_types.h"
 #include "Assignable.h"
-#include "ListProperty.h"
 #include "Property.h"
 #include "Sequence.h"
 #include "Set.h"
+#include "VectorProperty.h"
 
 namespace nif
 {

@@ -528,24 +528,24 @@ void SetTest(ISet<T>& set)
 }
 
 
-//Test a list property. Requires an overload of operator== for type T.
+//Test a vector property. Requires an overload of operator== for type T.
 //Requires a function object that generates T's for testing.
-template<typename T, typename ContainerType, typename GeneratorType>
-void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType generator)
+template<typename T, typename GeneratorType>
+void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 {
-	class Listener : public ListPropertyListener<T, ContainerType>
+	class Listener : public VectorPropertyListener<T>
 	{
 	public:
-		Listener(IListProperty<T, ContainerType>& list) : m_list{ list } { m_list.addListener(*this); }
+		Listener(IVectorProperty<T>& list) : m_list{ list } { m_list.addListener(*this); }
 		~Listener() { m_list.removeListener(*this); }
 
-		virtual void onSet(const ContainerType& c) override { m_lastCtnr = &c; }
+		virtual void onSet(const std::vector<T>& c) override { m_lastCtnr = &c; }
 		virtual void onSet(int i, const T& t) override { m_lastI = i; m_lastT = t; }
 		virtual void onInsert(int i) override { m_lastInsert = i; }
 		virtual void onErase(int i) override { m_lastErase = i; }
 		virtual void onDestroy() override {}
 
-		bool wasSet(ContainerType* c) 
+		bool wasSet(std::vector<T>* c)
 		{
 			bool result = c == m_lastCtnr;
 			m_lastCtnr = nullptr;
@@ -572,8 +572,8 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 		}
 
 	private:
-		IListProperty<T, ContainerType>& m_list;
-		const ContainerType* m_lastCtnr{ nullptr };
+		IVectorProperty<T>& m_list;
+		const std::vector<T>* m_lastCtnr{ nullptr };
 		T m_lastT{ T() };
 		int m_lastI{ -1 };
 		int m_lastInsert{ -1 };
@@ -613,21 +613,23 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 	};
 
 	constexpr int SIZE = 10;
-	list.set(ContainerType(SIZE));
+	list.set(std::vector<T>(SIZE));
 
 	Listener l(list);
 
 	//Generate a reference container
-	ContainerType container(SIZE);
+	std::vector<T> container(SIZE);
 	for (T& element : container)
 		element = generator();
 
 	//create element properties
-	std::array<std::unique_ptr<IProperty<T>>, SIZE> elements;
+	std::vector<IVectorProperty<T>::element> elements;
 	std::array<ElementListener, SIZE> lsnrs;
+
+	elements.reserve(SIZE);
 	for (int i = 0; i < SIZE; i++) {
-		elements[i] = list.element(i);
-		elements[i]->addListener(lsnrs[i]);
+		elements.push_back(list.at(i));
+		elements[i].addListener(lsnrs[i]);
 		Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
 	}
 
@@ -644,7 +646,7 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 	i = 0;
 	for (T& element : container) {
 		Assert::IsTrue(list.get(i) == element);
-		Assert::IsTrue(elements[i]->get() == element);
+		Assert::IsTrue(elements[i].get() == element);
 
 		Assert::IsTrue(lsnrs[i].wasSet(element));
 
@@ -663,7 +665,7 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 	i = 0;
 	for (T& element : container) {
 		element = generator();
-		elements[i]->set(element);
+		elements[i].set(element);
 		Assert::IsTrue(l.wasSet(i, element));
 		i++;
 	}
@@ -672,7 +674,7 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 	i = 0;
 	for (T& element : container) {
 		Assert::IsTrue(list.get(i) == element);
-		Assert::IsTrue(elements[i]->get() == element);
+		Assert::IsTrue(elements[i].get() == element);
 
 		Assert::IsTrue(lsnrs[i].wasSet(element));
 
@@ -681,16 +683,18 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 	//resetting should not call listeners
 	i = 0;
 	for (T& element : container) {
-		elements[i]->set(element);
+		elements[i].set(element);
 		Assert::IsFalse(l.wasSet(i, element));
 		Assert::IsFalse(lsnrs[i].wasSet(element));
 		i++;
 	}
 
 	//insert/erase
-	std::array<std::unique_ptr<IProperty<T>>, SIZE + 1> newElements;
+	std::vector<IVectorProperty<T>::element> newElements;
 	std::array<ElementListener, SIZE + 1> newLsnrs;
-	typename ContainerType::iterator it = container.begin();
+
+	newElements.reserve(SIZE + 1);
+	typename std::vector<T>::iterator it = container.begin();
 	for (int i = 0; i < SIZE + 1; i++) {
 		//generate a new element
 		T t = generator();
@@ -703,9 +707,9 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 		Assert::IsTrue(l.wasInserted(i));
 		Assert::IsTrue(inserted == i);
 
-		newElements[i] = list.element(inserted);
-		newElements[i]->addListener(newLsnrs[i]);
-		Assert::IsTrue(newLsnrs[i].wasSet(newElements[i]->get()));
+		newElements.push_back(list.at(inserted));
+		newElements[i].addListener(newLsnrs[i]);
+		Assert::IsTrue(newLsnrs[i].wasSet(newElements[i].get()));
 
 		//and erase
 		int next = list.erase(inserted);
@@ -742,7 +746,7 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 	//and setting through them should fail silently without calling anyone
 	T t = generator();
 	for (int i = 0; i < SIZE + 1; i++)
-		newElements[i]->set(t);
+		newElements[i].set(t);
 	Assert::IsTrue(list.get() == container);
 	for (int i = 0; i < SIZE; i++)
 		Assert::IsFalse(lsnrs[i].wasSet(list.get(i)));

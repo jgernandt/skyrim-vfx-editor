@@ -78,7 +78,7 @@
     <ClInclude Include="src\Sequence.h">
       <Filter>Header Files\Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="src\ListProperty.h">
+    <ClInclude Include="src\VectorProperty.h">
       <Filter>Header Files\Interfaces</Filter>
     </ClInclude>
   </ItemGroup>

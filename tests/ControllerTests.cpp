@@ -25,7 +25,7 @@ namespace nif
 				return Key<float>{ D(m_engine), D(m_engine), D(m_engine), D(m_engine),
 					D(m_engine), D(m_engine), D(m_engine) };
 			};
-			ListPropertyTest(obj.keys(), g);
+			VectorPropertyTest(obj.keys(), g);
 		}
 
 	};

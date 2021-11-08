@@ -24,10 +24,10 @@ namespace node
 
 		};
 		class LinearInterpolation final : 
-			public gui::Composite, public ListPropertyListener<nif::Key<float>>
+			public gui::Composite, public VectorPropertyListener<nif::Key<float>>
 		{
 		public:
-			LinearInterpolation(IListProperty<nif::Key<float>>& keys);
+			LinearInterpolation(IVectorProperty<nif::Key<float>>& keys);
 			~LinearInterpolation();
 
 			virtual void frame(gui::FrameDrawer& fd) override;
@@ -40,16 +40,16 @@ namespace node
 			virtual void onErase(int i) override {}
 
 		private:
-			IListProperty<nif::Key<float>>& m_keys;
+			IVectorProperty<nif::Key<float>>& m_keys;
 			//unless we add a way to iterate through the property (good idea?), 
 			//we should store a copy:
 			std::vector<nif::Key<float>> m_data;
 		};
 		class QuadraticInterpolation final :
-			public gui::Composite, public ListPropertyListener<nif::Key<float>>
+			public gui::Composite, public VectorPropertyListener<nif::Key<float>>
 		{
 		public:
-			QuadraticInterpolation(IListProperty<nif::Key<float>>& keys) {}
+			QuadraticInterpolation(IVectorProperty<nif::Key<float>>& keys) {}
 
 			//redo everything?
 			virtual void onSet(const std::vector<nif::Key<float>>& keys) override {}
@@ -82,7 +82,7 @@ namespace node
 			bool m_zooming{ false };
 		};
 
-		IListProperty<nif::Key<float>>& m_keys;
+		IVectorProperty<nif::Key<float>>& m_keys;
 		IProperty<nif::KeyType>& m_keyType;
 
 		gui::Plot* m_plot{ nullptr };
