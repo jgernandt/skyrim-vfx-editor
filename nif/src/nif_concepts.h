@@ -108,6 +108,10 @@ public:
 	//Allow insertions/deletions
 	virtual int insert(int, const T&) = 0;
 	virtual int erase(int) = 0;
+
+	//Return a property representing element i (if we have one)
+	//(This signature seems wrong. What's the right way of doing this?)
+	virtual std::unique_ptr<IProperty<T>> element(int i) = 0;
 };
 
 
@@ -173,36 +177,6 @@ public:
 template<typename T, typename ContainerType = std::vector<T>>
 using IListPropertyListener = IListener<IListProperty<T, ContainerType>>;
 
-
-
-
-/*template<typename T>
-class IObservableAssignable : public IAssignable<T>, public IObservable<IAssignable<T>>
-{
-public:
-	virtual ~IObservableAssignable() = default;
-};
-
-template<typename T>
-class IObservableProperty : public IProperty<T>, public IObservable<IProperty<T>>
-{
-public:
-	virtual ~IObservableProperty() = default;
-};
-
-template<typename T>
-class IObservableSequence : public ISequence<T>, public IObservable<ISequence<T>>
-{
-public:
-	virtual ~IObservableSequence() = default;
-};
-
-template<typename T>
-class IObservableSet : public ISet<T>, public IObservable<ISet<T>>
-{
-public:
-	virtual ~IObservableSet() = default;
-};*/
 
 template<typename T>
 class ObservableImpl : public IObservable<T>
@@ -483,20 +457,20 @@ namespace nif
 	};
 
 	//We can wrap an element of an IListProperty inside a regular IProperty.
-	//Such a wrapper needs a ref to the IListProperty and its index number.
-	//It also needs to add a listener to the IListProperty to track changes to its index.
+	//Exactly how to do this depends on the container type. Here's an example
+	//suitable for vectors:
 	template<typename T, typename ContainerType = std::vector<T>>
-	class ListElementProperty final : 
+	class VectorElementProperty final : 
 		public PropertyBase<T>, 
 		public IListPropertyListener<T, ContainerType>
 	{
 	public:
-		ListElementProperty(IListProperty<T, ContainerType>& list, int index) :
+		VectorElementProperty(IListProperty<T, ContainerType>& list, int index) :
 			m_list{ &list }, m_index{ index }
 		{
-			list.addListener(this);
+			list.addListener(*this);
 		}
-		~ListElementProperty()
+		~VectorElementProperty()
 		{
 			invalidate();
 		}
@@ -504,7 +478,7 @@ namespace nif
 		virtual T get() const override 
 		{ 
 			if (valid()) {
-				assert(m_list && m_index < m_list.size());
+				assert(m_list);
 				return m_list->get(m_index);
 			}
 			else
@@ -513,14 +487,14 @@ namespace nif
 		virtual void set(const T& t) override 
 		{
 			if (valid()) {
-				assert(m_list && m_index < m_list.size());
+				assert(m_list);
 				m_list->set(m_index, t);
 			}
 		}
 
 		virtual void onSet(const ContainerType& list) override 
 		{ 
-			if (valid() && m_index < list.size())
+			if (valid() && static_cast<size_t>(m_index) < list.size())
 				this->notify(list[m_index]);//we don't know if our element actually changed
 			else
 				invalidate();
@@ -555,11 +529,11 @@ namespace nif
 		{
 			if (valid()) {
 				assert(m_list);
-				m_list->removeListener(this);
+				m_list->removeListener(*this);
 				m_index = -1;
 			}
 		}
-		bool valid() { return m_index >= 0; }
+		bool valid() const { return m_index >= 0; }
 
 	private:
 		IListProperty<T, ContainerType>* m_list;
