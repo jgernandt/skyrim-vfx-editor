@@ -182,6 +182,12 @@ int nif::NiFloatData::Keys::erase(int i)
 	return i;
 }
 
+std::unique_ptr<IProperty<nif::Key<float>>> nif::NiFloatData::Keys::element(int i)
+{
+	assert(i >= 0 && static_cast<size_t>(i) < m_super.getNative().GetKeysRef().size());
+	return std::make_unique<VectorElementProperty<Key<float>>>(*this, i);
+}
+
 
 nif::NiFloatInterpolator::NiFloatInterpolator() : NiFloatInterpolator(new Niflib::NiFloatInterpolator) {}
 

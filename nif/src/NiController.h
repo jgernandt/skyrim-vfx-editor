@@ -128,6 +128,8 @@ namespace nif
 			virtual int insert(int i, const Key<float>& key) override;
 			virtual int erase(int i) override;
 
+			virtual std::unique_ptr<IProperty<Key<float>>> element(int i) override;
+
 		private:
 			NiFloatData& m_super;
 		};
