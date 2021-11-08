@@ -130,7 +130,7 @@ namespace node
 		RightController m_rightCtlr;
 		std::vector<std::unique_ptr<nif::NiObject>> m_objects;
 		std::vector<std::unique_ptr<nif::NiTimeController>> m_controllers;
-		ObservableImpl<ISet<nif::NiTimeController>> m_obsImpl;
+		ObservableBase<ISet<nif::NiTimeController>> m_obsImpl;
 		std::map<std::string, std::unique_ptr<Field>> m_fields;
 	};
 

@@ -22,7 +22,7 @@ public:
 
 private:
 	T* m_assigned{ nullptr };
-	ObservableImpl<IAssignable<T>> m_obsImpl;
+	ObservableBase<IAssignable<T>> m_obsImpl;
 };
 
 template<typename T>
@@ -48,7 +48,7 @@ public:
 
 private:
 	T m_value{ T() };
-	ObservableImpl<IProperty<T>> m_obsImpl;
+	ObservableBase<IProperty<T>> m_obsImpl;
 };
 
 //This is only meant for class types
@@ -67,7 +67,7 @@ public:
 
 private:
 	std::set<const T*> m_set;
-	ObservableImpl<ISet<T>> m_obsImpl;
+	ObservableBase<ISet<T>> m_obsImpl;
 };
 
 template<typename T>
@@ -121,7 +121,7 @@ public:
 
 private:
 	std::vector<const T*> m_seq;
-	ObservableImpl<ISequence<T>> m_obsImpl;
+	ObservableBase<ISequence<T>> m_obsImpl;
 };
 
 template<typename T>
@@ -200,7 +200,7 @@ public:
 
 private:
 	std::multiset<node::Modifier::Requirement> m_set;
-	ObservableImpl<ISet<node::Modifier::Requirement>> m_obsImpl;
+	ObservableBase<ISet<node::Modifier::Requirement>> m_obsImpl;
 };
 struct MockModifiable : node::IModifiable
 {

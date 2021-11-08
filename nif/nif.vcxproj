@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Assignable.h" />
+    <ClInclude Include="src\ListProperty.h" />
     <ClInclude Include="src\nif_backend.h" />
     <ClInclude Include="src\BSEffectShaderProperty.h" />
     <ClInclude Include="src\NiController.h" />
@@ -33,7 +35,11 @@
     <ClInclude Include="src\NiParticleSystem.h" />
     <ClInclude Include="src\NiPSysEmitter.h" />
     <ClInclude Include="src\NiPSysModifier.h" />
+    <ClInclude Include="src\Observable.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\Property.h" />
+    <ClInclude Include="src\Sequence.h" />
+    <ClInclude Include="src\Set.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\BSEffectShaderProperty.cpp" />
