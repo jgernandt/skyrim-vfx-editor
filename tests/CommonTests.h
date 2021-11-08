@@ -580,16 +580,149 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 		int m_lastErase{ -1 };
 	};
 
-	Listener l(list);
+	class ElementListener final : public IPropertyListener<T>
+	{
+	public:
+		ElementListener() {}
+		~ElementListener() = default;
+		virtual void onSet(const T& t) override
+		{
+			m_signalled = true;
+			m_last = t;
+		}
+
+		//check if any value or a given value was set
+		bool wasSet()
+		{
+			bool result = m_signalled;
+			m_signalled = false;
+			m_last = T();
+			return result;
+		}
+		bool wasSet(T t)
+		{
+			bool result = m_signalled && m_last == t;
+			m_signalled = false;
+			m_last = T();
+			return result;
+		}
+
+	private:
+		T m_last{ T() };
+		bool m_signalled{ false };
+	};
 
 	constexpr int SIZE = 10;
+	list.set(ContainerType(SIZE));
+
+	Listener l(list);
 
 	//Generate a reference container
 	ContainerType container(SIZE);
 	for (T& element : container)
 		element = generator();
 
+	//create element properties
+	std::array<std::unique_ptr<IProperty<T>>, SIZE> elements;
+	std::array<ElementListener, SIZE> lsnrs;
+	for (int i = 0; i < SIZE; i++) {
+		elements[i] = list.element(i);
+		elements[i]->addListener(lsnrs[i]);
+		Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
+	}
+
+	//get/set element
+	int i = 0;
+	for (T& element : container) {
+		list.set(i, element);
+		Assert::IsTrue(l.wasSet(i, element));
+		i++;
+	}
+
+	//Verify after setting every element, in case someone sets multiple
+	Assert::IsTrue(list.get() == container);
+	i = 0;
+	for (T& element : container) {
+		Assert::IsTrue(list.get(i) == element);
+		Assert::IsTrue(elements[i]->get() == element);
+
+		Assert::IsTrue(lsnrs[i].wasSet(element));
+
+		i++;
+	}
+	//resetting should not call listeners
+	i = 0;
+	for (T& element : container) {
+		list.set(i, element);
+		Assert::IsFalse(l.wasSet(i, element));
+		Assert::IsFalse(lsnrs[i].wasSet(element));
+		i++;
+	}
+
+	//set through element property (same procedure)
+	i = 0;
+	for (T& element : container) {
+		element = generator();
+		elements[i]->set(element);
+		Assert::IsTrue(l.wasSet(i, element));
+		i++;
+	}
+
+	Assert::IsTrue(list.get() == container);
+	i = 0;
+	for (T& element : container) {
+		Assert::IsTrue(list.get(i) == element);
+		Assert::IsTrue(elements[i]->get() == element);
+
+		Assert::IsTrue(lsnrs[i].wasSet(element));
+
+		i++;
+	}
+	//resetting should not call listeners
+	i = 0;
+	for (T& element : container) {
+		elements[i]->set(element);
+		Assert::IsFalse(l.wasSet(i, element));
+		Assert::IsFalse(lsnrs[i].wasSet(element));
+		i++;
+	}
+
+	//insert/erase
+	std::array<std::unique_ptr<IProperty<T>>, SIZE + 1> newElements;
+	std::array<ElementListener, SIZE + 1> newLsnrs;
+	typename ContainerType::iterator it = container.begin();
+	for (int i = 0; i < SIZE + 1; i++) {
+		//generate a new element
+		T t = generator();
+
+		//insert in list and reference
+		int inserted = list.insert(i, t);
+		it = container.insert(it, t);
+
+		Assert::IsTrue(list.get() == container);
+		Assert::IsTrue(l.wasInserted(i));
+		Assert::IsTrue(inserted == i);
+
+		newElements[i] = list.element(inserted);
+		newElements[i]->addListener(newLsnrs[i]);
+		Assert::IsTrue(newLsnrs[i].wasSet(newElements[i]->get()));
+
+		//and erase
+		int next = list.erase(inserted);
+		it = container.erase(it);
+
+		Assert::IsTrue(list.get() == container);
+		Assert::IsTrue(l.wasErased(i));
+		Assert::IsTrue(next == i);
+
+		if (it != container.end())
+			++it;
+	}
+
 	//get/set whole container
+	for (T& element : container)
+		element = generator();
+
 	list.set(container);
 	Assert::IsTrue(list.get() == container);
 	Assert::IsTrue(l.wasSet(&container));
@@ -597,48 +730,24 @@ void ListPropertyTest(IListProperty<T, ContainerType>& list, GeneratorType gener
 	list.set(container);
 	Assert::IsFalse(l.wasSet(&container));
 
-	//get/set element
-	int i = 0;
-	for (T& element : container) {
-		//generate a new element
-		element = generator();
+	//element listeners should have been called
+	//(but we leave unspecified whether they were called once or twice)
+	for (int i = 0; i < SIZE; i++)
+		Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
 
-		//and set it
-		list.set(i, element);
-		Assert::IsTrue(list.get(i) == element);//test both elementwise...
-		Assert::IsTrue(l.wasSet(i, element));
+	//new elements should not have been called
+	for (int i = 0; i < SIZE + 1; i++)
+		Assert::IsFalse(newLsnrs[i].wasSet());//test for any value here
 
-		//resetting should not call listener
-		list.set(i, element);
-		Assert::IsFalse(l.wasSet(i, element));
-
-		i++;
-	}
-	Assert::IsTrue(list.get() == container);//...and as a whole
-
-	//insert/erase
-	typename ContainerType::iterator it = container.begin();
-	for (int i = 0; i < SIZE + 1; i++) {
-		//generate a new element
-		T t = generator();
-
-		//insert in list and reference
-		list.insert(i, t);
-		it = container.insert(it, t);
-
-		Assert::IsTrue(list.get() == container);
-		Assert::IsTrue(l.wasInserted(i));
-
-		//and erase
-		list.erase(i);
-		it = container.erase(it);
-
-		Assert::IsTrue(list.get() == container);
-		Assert::IsTrue(l.wasErased(i));
-
-		if (it != container.end())
-			++it;
-	}
+	//and setting through them should fail silently without calling anyone
+	T t = generator();
+	for (int i = 0; i < SIZE + 1; i++)
+		newElements[i]->set(t);
+	Assert::IsTrue(list.get() == container);
+	for (int i = 0; i < SIZE; i++)
+		Assert::IsFalse(lsnrs[i].wasSet(list.get(i)));
+	for (int i = 0; i < SIZE + 1; i++)
+		Assert::IsFalse(newLsnrs[i].wasSet());//test for any value here
 }
 
 
