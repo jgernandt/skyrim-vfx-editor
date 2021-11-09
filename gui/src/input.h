@@ -64,6 +64,22 @@ namespace gui
 		static IComponent* s_capturing;
 	};
 
+	class MouseHandler
+	{
+	public:
+		virtual ~MouseHandler() = default;
+
+		//Let true return indicate that the event was handled
+		virtual bool onMouseDown(Mouse::Button) { return false; }
+		virtual bool onMouseUp(Mouse::Button) { return false; }
+		virtual bool onMouseWheel(float) { return false; }
+
+		virtual void onMouseMove(const Floats<2>& pos) {}
+		virtual void onMouseEnter() {}
+		virtual void onMouseLeave() {}
+
+	};
+
 
 	int guiToImGuiButton(Mouse::Button button);
 }

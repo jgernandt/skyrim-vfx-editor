@@ -33,8 +33,12 @@ public:
 	{
 		node.newChild<gui::Separator>();
 		node.newChild<gui::Text>("Scale");
+
 		auto plot = node.newChild<gui::Plot>();
-		plot->getPlotArea().setMouseHandler(std::make_unique<PlotAreaInput>(plot->getPlotArea()));
+
+		m_inputHandler = std::make_unique<PlotAreaInput>(plot->getPlotArea());
+		plot->getPlotArea().setMouseHandler(m_inputHandler.get());
+
 		plot->getPlotArea().addCurve(std::make_unique<gui::SimpleCurve>(m_data));
 		plot->getPlotArea().getAxes().addChild(std::make_unique<Controls>(m_data, node.object().scales()));
 		std::vector<gui::CustomXLabels::AxisLabel> labels{ { "Birth", 0.0f, 0.0f }, { "Death", 1.0f, 1.0f } };
@@ -70,11 +74,13 @@ private:
 	public:
 		PlotAreaInput(gui::PlotArea& area) : m_area{ area } {}
 
-		virtual void onMouseWheel(float delta) override
+		virtual bool onMouseWheel(float delta) override
 		{
 			gui::Floats<2> ylims = m_area.getYLimits();
 			ylims[1] = std::max(ylims[1] - delta, 1.0f);
 			m_area.setYLimits(ylims);
+
+			return true;
 		}
 
 	private:
@@ -262,6 +268,7 @@ private:
 
 	IProperty<std::vector<float>>& m_prop;
 	std::vector<gui::Floats<2>> m_data;
+	std::unique_ptr<PlotAreaInput> m_inputHandler;
 };
 
 node::ScaleModifier::ScaleModifier() : 

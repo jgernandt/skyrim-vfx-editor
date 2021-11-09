@@ -22,26 +22,6 @@
 
 namespace gui
 {
-	//Generalises to all widgets?
-	class MouseHandler
-	{
-	public:
-		virtual ~MouseHandler() = default;
-
-		virtual void onMouseDown(Mouse::Button) {}
-		virtual void onMouseUp(Mouse::Button) {}
-		virtual void onMouseMove(const Floats<2>&) {}
-
-		virtual void onMouseEnter() {}
-		virtual void onMouseLeave() {}
-
-		virtual void onMouseWheel(float) {}
-
-		//Make a different handler for this?
-		//virtual void onKeyDown(Key) {}
-		//virtual void onKeyUp(Key) {}
-	};
-
 	class Curve
 	{
 	public:
@@ -105,8 +85,6 @@ namespace gui
 
 		virtual void setSize(const Floats<2>& size) override;
 
-		void setMouseHandler(std::unique_ptr<MouseHandler>&& h) { m_mouseHandler = std::move(h); }
-
 		Axes& getAxes() const;
 
 		void addCurve(std::unique_ptr<Curve>&& curve);
@@ -117,10 +95,6 @@ namespace gui
 		//Y limits follow normal plotting conventions (axis goes from bottom to top)
 		Floats<2> getYLimits() const;
 		void setYLimits(const Floats<2>& lims);
-
-	private:
-		std::unique_ptr<MouseHandler> m_mouseHandler;
-		bool m_mouseFocus{ false };
 	};
 
 

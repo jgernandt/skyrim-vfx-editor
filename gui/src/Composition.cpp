@@ -21,6 +21,8 @@
 #include "Visitor.h"
 #include "CallWrapper.h"
 
+#include "imgui_internal.h"
+
 gui::Component::~Component()
 {
 	assert(!m_parent);
@@ -29,6 +31,11 @@ gui::Component::~Component()
 bool gui::Component::hasAncestor(IComponent* c) const
 {
 	return (m_parent && c) ? m_parent == c || m_parent->hasAncestor(c) : false;
+}
+
+void gui::Component::frame(FrameDrawer& fd)
+{
+	handleMouse(fd);
 }
 
 gui::Floats<2> gui::Component::getGlobalPosition() const
@@ -68,6 +75,113 @@ gui::IInvoker* gui::Component::getInvoker()
 	return m_parent ? m_parent->getInvoker() : nullptr;
 }
 
+void gui::Component::handleMouse(FrameDrawer& fd)
+{
+	//I would much prefer to separate this from the frame event, 
+	//and process each input to completion before considering the next.
+	//Like this it's hard to control and overview who receives what input.
+	if (m_mouseHandler) {
+
+		ImGuiContext* g = ImGui::GetCurrentContext();
+		assert(g);
+
+		enum class Capturing
+		{
+			NONE,
+			WE,
+			CHILD,
+			OTHER
+		};
+
+		Capturing who;
+		if (Mouse::getCapture() == this)
+			who = Capturing::WE;
+		else if (Mouse::getCapture() == nullptr)
+			//need to account for items that are still using imgui here (not sure if this will be enough)
+			who = g->ActiveId ? Capturing::OTHER : Capturing::NONE;
+		else if (Mouse::getCapture()->hasAncestor(this))
+			who = Capturing::CHILD;
+		else {
+			who = Capturing::OTHER;
+		}
+
+		if (who == Capturing::OTHER) {
+			//We should not recieve inputs, and should lose focus if we had it
+			if (m_mouseFocus) {
+				m_mouseFocus = false;
+				m_mouseHandler->onMouseLeave();
+			}
+		}
+		else if (who == Capturing::CHILD) {
+			//We should not receive input, but should also not lose focus
+		}
+		else {
+			//We should receive inputs
+
+			ImGuiIO& io = ImGui::GetIO();
+
+			bool capturing = who == Capturing::WE;
+
+			ImGuiWindow* window = g->CurrentWindow;
+			assert(window);
+
+			static_assert(TO_PIXEL == static_cast<decltype(TO_PIXEL)>(&std::floor));
+			gui::Floats<2> tlss = fd.toGlobal(m_translation).floor();
+			gui::Floats<2> brss = fd.toGlobal(m_translation + m_size).floor();
+			bool inside = false;
+			if (g->HoveredWindow == window)
+				//TODO: deal with popups
+				inside = io.MousePos.x >= tlss[0] && io.MousePos.x <= brss[0] && io.MousePos.y >= tlss[1] && io.MousePos.y <= brss[0];
+
+			if (capturing || inside)
+			{
+				//Moving
+				if (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f)
+					m_mouseHandler->onMouseMove(gui_type_conversion<Floats<2>>::from(io.MousePos));
+
+				//Clicking (TODO: report handled events)
+				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+					m_mouseHandler->onMouseDown(Mouse::Button::LEFT);
+				else if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+					m_mouseHandler->onMouseUp(Mouse::Button::LEFT);
+
+				if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle))
+					m_mouseHandler->onMouseDown(Mouse::Button::MIDDLE);
+				else if (ImGui::IsMouseReleased(ImGuiMouseButton_Middle))
+					m_mouseHandler->onMouseUp(Mouse::Button::MIDDLE);
+
+				if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+					m_mouseHandler->onMouseDown(Mouse::Button::RIGHT);
+				else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+					m_mouseHandler->onMouseUp(Mouse::Button::RIGHT);
+
+				//Scrolling
+				//ImGui::SetItemUsingMouseWheel();//prevents imgui from scrolling the window
+				if (io.MouseWheel != 0.0f && !fd.isWheelHandled()) {
+					if (m_mouseHandler->onMouseWheel(io.MouseWheel))
+						fd.setWheelHandled();
+				}
+			}
+			if (!capturing) {
+				if (inside) {
+					//Entering
+					if (!m_mouseFocus) {
+						m_mouseFocus = true;
+						m_mouseHandler->onMouseEnter();
+					}
+				}
+				else {
+					//Leaving
+					if (m_mouseFocus) {
+						m_mouseFocus = false;
+						m_mouseHandler->onMouseLeave();
+					}
+				}
+			}
+		}
+	}
+}
+
 gui::IComponent* gui::Component::getRoot()
 {
 	return m_parent ? m_parent->getRoot() : this;
@@ -88,6 +202,8 @@ void gui::Composite::frame(FrameDrawer& fd)
 		assert(c);
 		c->frame(fd);
 	}
+
+	handleMouse(fd);
 }
 
 void gui::Composite::accept(Visitor& v)
@@ -302,4 +418,10 @@ gui::IInvoker* gui::ComponentDecorator::getInvoker()
 gui::IComponent* gui::ComponentDecorator::getRoot()
 {
 	return m_parent ? m_parent->getRoot() : this;
+}
+
+void gui::ComponentDecorator::setMouseHandler(MouseHandler* h)
+{
+	assert(m_component);
+	m_component->setMouseHandler(h);
 }

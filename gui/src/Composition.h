@@ -38,7 +38,7 @@ namespace gui
 		virtual void setParent(IComponent* c) override { m_parent = c; }
 		virtual bool hasAncestor(IComponent* c) const override;
 
-		virtual void frame(FrameDrawer&) override {}
+		virtual void frame(FrameDrawer& fd) override;
 
 		virtual Floats<2> getTranslation() const override { return m_translation; }
 		virtual void setTranslation(const Floats<2>& t) override { m_translation = t; }
@@ -72,8 +72,12 @@ namespace gui
 
 		virtual IComponent* getRoot() override;
 
+		virtual void setMouseHandler(MouseHandler* h) override { m_mouseHandler = h; }
+
 	protected:
 		virtual IInvoker* getInvoker() override;
+
+		void handleMouse(FrameDrawer& fd);
 
 		//Send the given command to our invoker, if we have one. Else, invoke it ourselves.
 		template<typename CmdType, typename... Params>
@@ -96,6 +100,8 @@ namespace gui
 
 	private:
 		IComponent* m_parent{ nullptr };
+		MouseHandler* m_mouseHandler{ nullptr };
+		bool m_mouseFocus{ false };
 	};
 
 	class Composite : public Component
@@ -172,6 +178,8 @@ namespace gui
 
 		virtual IInvoker* getInvoker() override;
 		virtual IComponent* getRoot() override;
+
+		virtual void setMouseHandler(MouseHandler* h) override;
 
 	protected:
 		ComponentPtr m_component;
