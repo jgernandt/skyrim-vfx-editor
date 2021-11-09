@@ -19,6 +19,14 @@
 #include "pch.h"
 #include "gui_types.h"
 
+unsigned int gui::GuiConverter<unsigned int>::convert(const ColRGBA& col)
+{
+	return IM_COL32(static_cast<unsigned int>(col[0] * 255.0f),
+		static_cast<unsigned int>(col[1] * 255.0f),
+		static_cast<unsigned int>(col[2] * 255.0f),
+		static_cast<unsigned int>(col[3] * 255.0f));
+}
+
 std::array<float, 2> gui::GuiConverter<std::array<float, 2>>::convert(const ImVec2& f)
 {
 	return { f.x, f.y };
@@ -27,6 +35,14 @@ std::array<float, 2> gui::GuiConverter<std::array<float, 2>>::convert(const ImVe
 std::array<float, 4> gui::GuiConverter<std::array<float, 4>>::convert(const ImVec4& f)
 {
 	return { f.x, f.y, f.z, f.w };
+}
+
+std::array<float, 4> gui::GuiConverter<std::array<float, 4>>::convert(unsigned int col)
+{
+	return { (col & 0x000000ff) / 255.0f , 
+		((col & 0x0000ff00) >> 8) / 255.0f, 
+		((col & 0x00ff0000) >> 16) / 255.0f, 
+		((col & 0xff000000) >> 24) / 255.0f };
 }
 
 Eigen::Array<float, 2, 1> gui::GuiConverter<Eigen::Array<float, 2, 1>>::convert(const ImVec2& f)
