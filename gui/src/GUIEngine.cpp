@@ -64,6 +64,51 @@ gui::backend::ImGuiWinD3D10::~ImGuiWinD3D10()
 	ImGui::DestroyContext();
 }
 
+void gui::backend::ImGuiWinD3D10::line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList)
+		drawList->AddLine(
+			gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+			gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
+			gui_type_conversion<ImU32>::from(col),
+			width);
+}
+
+void gui::backend::ImGuiWinD3D10::rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList)
+		drawList->AddRectFilled(
+			gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+			gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
+			gui_type_conversion<ImU32>::from(col));
+}
+
+void gui::backend::ImGuiWinD3D10::rectangleGradient(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList)
+		drawList->AddRectFilledMultiColor(
+			gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+			gui_type_conversion<ImVec2>::from(toGlobal(p2)),
+			gui_type_conversion<ImU32>::from(tl), 
+			gui_type_conversion<ImU32>::from(tr), 
+			gui_type_conversion<ImU32>::from(br), 
+			gui_type_conversion<ImU32>::from(bl));
+}
+
+void gui::backend::ImGuiWinD3D10::triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList)
+		drawList->AddTriangleFilled(
+			gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+			gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
+			gui_type_conversion<ImVec2>::from(toGlobal(p3)), 
+			gui_type_conversion<ImU32>::from(col));
+}
+
 util::CallWrapper gui::backend::ImGuiWinD3D10::pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect)
 {
 	Floats<2> min = toGlobal({ std::min(p1[0], p2[0]), std::min(p1[1], p2[1]) });
@@ -186,7 +231,7 @@ void gui::backend::ImGuiWinD3D10::popUIScale()
 	m_uiScale.pop();
 }
 
-bool gui::backend::ImGuiWinD3D10::isMouseDown(MouseButton btn) const
+bool gui::backend::ImGuiWinD3D10::isMouseDown(Mouse::Button btn) const
 {
 	return ImGui::IsMouseDown(guiToImGuiButton(btn));
 }

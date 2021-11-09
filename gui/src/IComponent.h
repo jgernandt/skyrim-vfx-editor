@@ -21,8 +21,7 @@
 #include "IInvoker.h"
 #include "input.h"
 #include "gui_types.h"
-
-#include "CallWrapper.h"
+#include "Drawer.h"
 
 //We should adopt a global strategy for pixel rounding
 constexpr float (*TO_PIXEL)(float) noexcept = &std::floor;
@@ -30,52 +29,6 @@ constexpr float (*TO_PIXEL)(float) noexcept = &std::floor;
 namespace gui
 {
 	class Visitor;
-
-	//We need some object to track certain state as we traverse the composition. Things like clip regions, current transforms.
-	//Come to think of it, this object might actually be the same thing as what we have so far called a GUIEngine. It's purpose
-	//is to translate our composition into vertex buffers.
-	//There will also be considerable overlap with the Drawer we already have. Should be combinable somehow.
-	//In any case, sending (an interface to) such an object to frame seems like the way to go.
-	class FrameDrawer 
-	{
-	public:
-		virtual ~FrameDrawer() = default;
-
-		//Push a clip region to use for future draw calls. Returns an object that restores the previous region on destruction.
-		[[nodiscard]] virtual util::CallWrapper pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) = 0;
-
-		//Push a transform to use for future draw/transform calls. Returns an object that restores the previous transform on destruction.
-		[[nodiscard]] virtual util::CallWrapper pushTransform(const Floats<2>& translation, const Floats<2>& scale) = 0;
-
-		virtual Floats<2> getCurrentTranslation() const = 0;
-		virtual Floats<2> getCurrentScale() const = 0;
-
-		//Apply our currently pushed transform to a point
-		virtual Floats<2> toGlobal(const Floats<2>&) const = 0;
-		virtual Floats<2> toLocal(const Floats<2>&) const = 0;
-
-		//load font of given scale for next frame
-		virtual void loadFontScale(float) = 0;
-		virtual void pushUIScale(float) = 0;
-		virtual void popUIScale() = 0;
-
-		//Do we really want inputs here? Seems like we're using this class to generally hide imgui's global nature,
-		//which isn't necessarily a good idea.
-		virtual bool isMouseDown(MouseButton) const = 0;
-		virtual Floats<2> getMouseMove() const = 0;
-		virtual Floats<2> getMousePosition() const = 0;
-		virtual float getWheelDelta() const = 0;
-
-		//To report that a component has handled input (don't like it!)
-		virtual bool isWheelHandled() const = 0;
-		virtual void setWheelHandled() = 0;
-		//More generally, if this is something we want to pursue:
-		//get the component that is currently capturing the button (if any)
-		//virtual IComponent* getCaptured(MouseButton) const = 0;
-		//have a component capture/release the given button
-		//virtual void capture(MouseButton, IComponent&) = 0;
-		//virtual void release(MouseButton, IComponent&) = 0;
-	};
 
 	class IComponent
 	{

@@ -19,7 +19,7 @@
 #include "pch.h"
 #include "Drawer.h"
 
-ImDrawList* getDrawList(gui::Layer l)
+ImDrawList* gui::getDrawList(gui::Layer l)
 {
 	switch (l) {
 	case gui::Layer::BACKGROUND:

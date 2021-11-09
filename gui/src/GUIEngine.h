@@ -41,6 +41,13 @@ namespace gui
 			ImGuiWinD3D10();
 			~ImGuiWinD3D10();
 
+			virtual void setTargetLayer(Layer l) override { m_layer = l; }
+			virtual void line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width) override;
+			virtual void rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col) override;
+			virtual void rectangleGradient(const Floats<2>& p1, const Floats<2>& p2,
+				const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br) override;
+			virtual void triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col) override;
+
 			[[nodiscard]] virtual util::CallWrapper pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) override;
 			[[nodiscard]] virtual util::CallWrapper pushTransform(const Floats<2>& translation, const Floats<2>& scale) override;
 
@@ -54,7 +61,7 @@ namespace gui
 			virtual void pushUIScale(float scale) override;
 			virtual void popUIScale() override;
 
-			virtual bool isMouseDown(MouseButton btn) const override;
+			virtual bool isMouseDown(Mouse::Button btn) const override;
 			virtual Floats<2> getMouseMove() const override;
 			virtual Floats<2> getMousePosition() const override;
 			virtual float getWheelDelta() const override;
@@ -85,6 +92,7 @@ namespace gui
 			std::stack<Floats<4>> m_clipArea;
 			std::stack<Floats<4>> m_transform;
 			std::stack<float> m_uiScale;
+			Layer m_layer{ Layer::WINDOW };
 			Floats<2> m_lastMousePos{ 0.0f, 0.0f };
 
 			std::vector<char> m_fontBuf;
