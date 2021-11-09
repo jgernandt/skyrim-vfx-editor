@@ -208,9 +208,9 @@ private:
 		Controls(const std::vector<gui::Floats<2>>& data, IProperty<std::vector<float>>& trgt) :
 			SimpleHandles(data), m_trgt{ trgt } {}
 
-		virtual void onClick(size_t i, gui::MouseButton button) override
+		virtual void onClick(size_t i, gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT)
+			if (button == gui::Mouse::Button::LEFT)
 				m_tmp = m_points[i][1];
 		}
 		virtual void onMove(size_t i, const gui::Floats<2>& pos) override
@@ -221,9 +221,9 @@ private:
 			if (float newY = std::max(pos[1], 0.0f); newY != m_points[i][1])
 				asyncInvoke<EditPoint>(m_trgt, i, newY, newY);
 		}
-		virtual void onRelease(size_t i, gui::MouseButton button) override
+		virtual void onRelease(size_t i, gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT) {
+			if (button == gui::Mouse::Button::LEFT) {
 				asyncInvoke<EditPoint>(m_trgt, i, m_points[i][1], m_tmp);
 				//m_tmp = 0.0f; //doesn't really matter
 			}

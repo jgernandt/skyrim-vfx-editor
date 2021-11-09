@@ -675,7 +675,7 @@ void gui::SimpleHandles::frame(FrameDrawer& fd)
 		bool highlight = false;
 
 		if (IsItemActivated())
-			onClick(i, MouseButton::LEFT);
+			onClick(i, Mouse::Button::LEFT);
 
 		if (IsItemActive()) {
 			highlight = true;
@@ -696,7 +696,7 @@ void gui::SimpleHandles::frame(FrameDrawer& fd)
 		}
 
 		if (IsItemDeactivated())
-			onRelease(i, MouseButton::LEFT);
+			onRelease(i, Mouse::Button::LEFT);
 
 		if (!highlight && IsItemHovered())
 			highlight = true;

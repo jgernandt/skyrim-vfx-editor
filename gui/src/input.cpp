@@ -24,14 +24,14 @@
 
 gui::IComponent* gui::Mouse::s_capturing = nullptr;
 
-int gui::guiToImGuiButton(MouseButton button)
+int gui::guiToImGuiButton(Mouse::Button button)
 {
 	switch (button) {
-	case MouseButton::LEFT:
+	case Mouse::Button::LEFT:
 		return ImGuiMouseButton_Left;
-	case MouseButton::MIDDLE:
+	case Mouse::Button::MIDDLE:
 		return ImGuiMouseButton_Middle;
-	case MouseButton::RIGHT:
+	case Mouse::Button::RIGHT:
 		return ImGuiMouseButton_Right;
 	default:
 		return -1;

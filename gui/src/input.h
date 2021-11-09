@@ -23,18 +23,6 @@ namespace gui
 {
 	class IComponent;
 
-	enum class MouseButton
-	{
-		NONE,
-		LEFT,
-		MIDDLE,
-		RIGHT,
-		EXTRA1,
-		EXTRA2,
-	};
-
-	int guiToImGuiButton(gui::MouseButton button);
-
 	//I think this is better (as a general idea) than to go via the FrameDrawer/GUIEngine.
 	//Needs some work, though.
 	class Keyboard
@@ -75,4 +63,7 @@ namespace gui
 	private:
 		static IComponent* s_capturing;
 	};
+
+
+	int guiToImGuiButton(Mouse::Button button);
 }

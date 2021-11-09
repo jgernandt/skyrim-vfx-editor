@@ -189,9 +189,9 @@ namespace gui
 
 		virtual void frame(FrameDrawer& fd) override;
 
-		virtual void onClick(size_t, MouseButton) = 0;
+		virtual void onClick(size_t, Mouse::Button) = 0;
 		virtual void onMove(size_t, const Floats<2>& pos) = 0;
-		virtual void onRelease(size_t, MouseButton) = 0;
+		virtual void onRelease(size_t, Mouse::Button) = 0;
 
 	protected:
 		const std::vector<Floats<2>>& m_points;

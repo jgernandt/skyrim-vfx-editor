@@ -324,9 +324,9 @@ private:
 			d.end();
 		}
 
-		virtual void onClick(gui::MouseButton button) override
+		virtual void onClick(gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT)
+			if (button == gui::Mouse::Button::LEFT)
 				for (size_t i = 0; i < m_props.size(); i++)
 					m_tmps[i] = m_props[i]->get();
 		}
@@ -337,9 +337,9 @@ private:
 				asyncInvoke<EditStop<4>>(m_props, m_index, newVal, false);
 			}
 		}
-		virtual void onRelease(gui::MouseButton button) override
+		virtual void onRelease(gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT)
+			if (button == gui::Mouse::Button::LEFT)
 				asyncInvoke<EditStop<4>>(m_props, m_index, m_props[m_index]->get(), m_tmps);
 		}
 
@@ -382,9 +382,9 @@ private:
 			d.end();
 		}
 
-		virtual void onClick(gui::MouseButton button) override
+		virtual void onClick(gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT)
+			if (button == gui::Mouse::Button::LEFT)
 				for (size_t i = 0; i < m_props.size(); i++)
 					m_tmps[i] = m_props[i]->get();
 		}
@@ -395,9 +395,9 @@ private:
 				asyncInvoke<EditStop<2>>(m_props, m_index, newVal, false);
 			}
 		}
-		virtual void onRelease(gui::MouseButton button) override
+		virtual void onRelease(gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT)
+			if (button == gui::Mouse::Button::LEFT)
 				asyncInvoke<EditStop<2>>(m_props, m_index, m_props[m_index]->get(), m_tmps);
 		}
 

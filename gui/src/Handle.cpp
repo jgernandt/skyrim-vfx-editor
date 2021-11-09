@@ -35,7 +35,7 @@ void gui::Handle::frame(FrameDrawer& fd)
 	InvisibleButton(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(static_cast<Floats<2>>(m_size * scale * m_scale)), ImGuiButtonFlags_MouseButtonLeft);
 
 	if (IsItemActivated())
-		onClick(MouseButton::LEFT);
+		onClick(Mouse::Button::LEFT);
 
 	if (IsItemActive()) {
 		m_active = true;
@@ -45,7 +45,7 @@ void gui::Handle::frame(FrameDrawer& fd)
 
 	if (IsItemDeactivated()) {
 		m_active = false;
-		onRelease(MouseButton::LEFT);
+		onRelease(Mouse::Button::LEFT);
 	}
 
 	//Might be weird to always register as hovered when active. We'll see.

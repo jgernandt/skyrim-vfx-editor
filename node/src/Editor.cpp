@@ -268,7 +268,7 @@ void node::Editor::NodeRoot::frame(gui::FrameDrawer& fd)
 	//This needs to come after the children, if capturing is to work. However, that means it will lag one frame.
 	
 	//pan
-	if (fd.isMouseDown(gui::MouseButton::MIDDLE) && gui::Mouse::getCapture() == nullptr)
+	if (fd.isMouseDown(gui::Mouse::Button::MIDDLE) && gui::Mouse::getCapture() == nullptr)
 		m_translation += fd.getMouseMove();
 
 	//zoom
