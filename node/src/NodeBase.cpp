@@ -126,14 +126,14 @@ gui::Connector* node::NodeBase::addConnector(const std::string& label, Connector
 			//upwards label to the left
 			result->setController(&m_leftCtlr);
 			if (!label.empty())
-				addChild(std::make_unique<gui::FramePadded>(std::make_unique<gui::Text>(label)));
+				addChild(std::make_unique<gui::Label>(label));
 		}
 		else {
 			//downwards to the right
 			result->setController(&m_rightCtlr);
 			if (!label.empty()) {
 				auto item = std::make_unique<gui::Item>(std::make_unique<gui::RightAlign>());
-				item->newChild<gui::FramePadded>(std::make_unique<gui::Text>(label));
+				item->newChild<gui::Label>(label);
 				addChild(std::move(item));
 			}
 		}

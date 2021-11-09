@@ -108,13 +108,7 @@
     <ClInclude Include="src\Separator.h">
       <Filter>Header Files\Widgets</Filter>
     </ClInclude>
-    <ClInclude Include="src\FramePadded.h">
-      <Filter>Header Files\Modifiers</Filter>
-    </ClInclude>
     <ClInclude Include="src\Switch.h">
-      <Filter>Header Files\Modifiers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Toggled.h">
       <Filter>Header Files\Modifiers</Filter>
     </ClInclude>
     <ClInclude Include="src\Text.h">
@@ -215,9 +209,6 @@
     <ClCompile Include="src\Item.cpp">
       <Filter>Source Files\Modifiers</Filter>
     </ClCompile>
-    <ClCompile Include="src\FramePadded.cpp">
-      <Filter>Source Files\Modifiers</Filter>
-    </ClCompile>
     <ClCompile Include="src\Popup.cpp">
       <Filter>Source Files\Widgets</Filter>
     </ClCompile>
@@ -226,9 +217,6 @@
     </ClCompile>
     <ClCompile Include="src\Text.cpp">
       <Filter>Source Files\Widgets</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Toggled.cpp">
-      <Filter>Source Files\Modifiers</Filter>
     </ClCompile>
     <ClCompile Include="src\Switch.cpp">
       <Filter>Source Files\Modifiers</Filter>

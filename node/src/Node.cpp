@@ -81,18 +81,18 @@ node::Root::Root(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj)
 	{
 		NameField(const std::string& name, Root& node) : Field(name)
 		{
-			widget = node.newChild<gui::FramePadded>(
-				std::make_unique<gui::TextProperty<IProperty<std::string>>>(node.object().name()));
+			//widget = node.newChild<gui::FramePadded>(
+			//	std::make_unique<gui::TextProperty<IProperty<std::string>>>(node.object().name()));
 		}
 	};
 
-	newField<NameField>(NAME, *this);
+	//newField<NameField>(NAME, *this);
 	newField<ExtraDataField>(EXTRA_DATA, *this);
 	newField<ChildField>(CHILDREN, *this);
 	newField<ObjectField<nif::NiNode>>(OBJECT, *this, object());
 
 	//until we have some other way to determine connector position for loading placement
-	getField(EXTRA_DATA)->connector->setTranslation({ WIDTH, 62.0f });
-	getField(CHILDREN)->connector->setTranslation({ WIDTH, 86.0f });
-	getField(OBJECT)->connector->setTranslation({ WIDTH, 110.0f });
+	getField(EXTRA_DATA)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(CHILDREN)->connector->setTranslation({ WIDTH, 62.0f });
+	getField(OBJECT)->connector->setTranslation({ WIDTH, 86.0f });
 }

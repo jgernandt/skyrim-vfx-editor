@@ -39,8 +39,4 @@
 #include "Switch.h"
 #include "Text.h"
 #include "TextInput.h"
-#include "Toggled.h"
 #include "Window.h"
-
-//Decorators
-#include "FramePadded.h"

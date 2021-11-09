@@ -124,7 +124,7 @@ node::DummyExtraData::DummyExtraData(std::unique_ptr<nif::NiExtraData>&& obj) :
 	setTitle("Extra data");
 	setSize({ WIDTH, HEIGHT });
 	newChild<gui::Separator>();
-	newChild<gui::FramePadded>(std::make_unique<gui::Text>(object().name().get()));
+	newChild<gui::Label>(object().name().get());
 
 	//until we have some other way to determine connector position for loading placement
 	getField(TARGET)->connector->setTranslation({ 0.0f, 38.0f });

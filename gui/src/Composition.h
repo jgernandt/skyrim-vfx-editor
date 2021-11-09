@@ -128,6 +128,22 @@ namespace gui
 		ChildList m_children;
 	};
 
+	template<typename T, typename ...Args>
+	inline T* Composite::newChild(Args&& ...args)
+	{
+		T* ret = new T(std::forward<Args>(args) ...);
+
+		//we dont want this to be overridden, as that might invalidate the returned pointer
+		Composite::addChild(std::unique_ptr<IComponent>(ret));
+		//If addChild failed somehow, the returned pointer would be invalid.
+		//How could it fail? It's not null and we don't already own it.
+		//The only way is if the push_back allocation fails, but that will throw.
+		//Should be no risk, then.
+		return ret;
+	}
+
+	/* Discontinue updating this. We were barely using it, and it's extra work until the 
+	* interface has settled in.
 	class ComponentDecorator : public IComponent
 	{
 	public:
@@ -187,18 +203,5 @@ namespace gui
 	private:
 		IComponent* m_parent{ nullptr };
 	};
-
-	template<typename T, typename ...Args>
-	inline T* Composite::newChild(Args&& ...args)
-	{
-		T* ret = new T(std::forward<Args>(args) ...);
-
-		//we dont want this to be overridden, as that might invalidate the returned pointer
-		Composite::addChild(std::unique_ptr<IComponent>(ret));
-		//If addChild failed somehow, the returned pointer would be invalid.
-		//How could it fail? It's not null and we don't already own it.
-		//The only way is if the push_back allocation fails, but that will throw.
-		//Should be no risk, then.
-		return ret;
-	}
+	*/
 }

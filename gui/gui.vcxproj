@@ -45,7 +45,6 @@
     <ClInclude Include="src\Connector.h" />
     <ClInclude Include="src\ConnectorActions.h" />
     <ClInclude Include="src\DragInput.h" />
-    <ClInclude Include="src\FramePadded.h" />
     <ClInclude Include="src\IComponent.h" />
     <ClInclude Include="src\IInvoker.h" />
     <ClInclude Include="src\input.h" />
@@ -62,7 +61,6 @@
     <ClInclude Include="src\Switch.h" />
     <ClInclude Include="src\Text.h" />
     <ClInclude Include="src\TextInput.h" />
-    <ClInclude Include="src\Toggled.h" />
     <ClInclude Include="src\UniqueLabel.h" />
     <ClInclude Include="src\Visitor.h" />
     <ClInclude Include="src\Widget.h" />
@@ -128,7 +126,6 @@
     <ClCompile Include="src\DragInput.cpp" />
     <ClCompile Include="src\DragInputImGui.cpp" />
     <ClCompile Include="src\Drawer.cpp" />
-    <ClCompile Include="src\FramePadded.cpp" />
     <ClCompile Include="src\Graph.cpp" />
     <ClCompile Include="src\GUIEngine.cpp" />
     <ClCompile Include="src\gui_types.cpp" />
@@ -151,7 +148,6 @@
     <ClCompile Include="src\Switch.cpp" />
     <ClCompile Include="src\Text.cpp" />
     <ClCompile Include="src\TextInput.cpp" />
-    <ClCompile Include="src\Toggled.cpp" />
     <ClCompile Include="src\Visitor.cpp" />
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>

@@ -46,7 +46,13 @@ namespace gui
 	//A string literal with frame padding
 	class Label final : public Component
 	{
+	public:
+		Label(const std::string& label) : m_label{ label } {}
+		virtual void frame(FrameDrawer& fd) override;
+		virtual Floats<2> getSizeHint() const override;
 
+	private:
+		std::string m_label;
 	};
 
 	template<typename PropertyType>

@@ -55,6 +55,6 @@ namespace node
 		Root(std::unique_ptr<nif::NiNode>&& obj);
 
 		constexpr static float WIDTH = 150.0f;
-		constexpr static float HEIGHT = 140.0f;
+		constexpr static float HEIGHT = 116.0f;
 	};
 }

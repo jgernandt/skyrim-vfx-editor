@@ -245,6 +245,7 @@ void gui::Composite::clearChildren()
 	m_children.clear();
 }
 
+/*
 gui::ComponentDecorator::ComponentDecorator(ComponentPtr&& c) : m_component{ std::move(c) }
 {
 	assert(m_component && !m_component->getParent());
@@ -425,3 +426,4 @@ void gui::ComponentDecorator::setMouseHandler(MouseHandler* h)
 	assert(m_component);
 	m_component->setMouseHandler(h);
 }
+*/

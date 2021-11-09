@@ -56,7 +56,7 @@ public:
 		br->setLowerLimit(0.0f);
 		br->setUpperLimit(1000.0f);
 
-		sw->newChild<gui::FramePadded>(std::make_unique<gui::Text>(name));
+		sw->newChild<gui::Label>(name);
 
 		widget = sw;
 	}

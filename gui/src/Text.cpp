@@ -48,3 +48,16 @@ gui::Floats<2> gui::backend::textSize(const std::string& str)
 	ImVec2 size = ImGui::CalcTextSize(str.c_str());
 	return gui_type_conversion<Floats<2>>::from(size);
 }
+
+void gui::Label::frame(FrameDrawer& fd)
+{
+	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().FramePadding.x);
+	ImGui::AlignTextToFramePadding();
+	ImGui::Text(m_label.c_str());
+}
+
+gui::Floats<2> gui::Label::getSizeHint() const
+{
+	ImVec2 size = ImGui::CalcTextSize(m_label.c_str());
+	return { size.x + 2.0f * ImGui::GetStyle().FramePadding.x, size.y + 2.0f * ImGui::GetStyle().FramePadding.y };
+}
