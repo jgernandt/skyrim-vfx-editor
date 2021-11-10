@@ -1,4 +1,5 @@
 #pragma once
+#include <set>
 #include "Graph.h"
 #include "Popup.h"
 #include "NiController.h"
@@ -19,21 +20,41 @@ namespace node
 		constexpr static float SCALE_BASE = 1.1f;
 		constexpr static float SCALE_SENSITIVITY = 0.1f;
 
-		class ConstantInterpolation final : public gui::Composite
-		{
-
-		};
-		class LinearInterpolation final : 
-			public gui::Composite, public VectorPropertyListener<nif::Key<float>>
+		class Interpolant : public gui::Composite
 		{
 		public:
-			LinearInterpolation(IVectorProperty<nif::Key<float>>& keys);
-			~LinearInterpolation();
+			virtual ~Interpolant() = default;
+			virtual gui::Floats<2> getBounds() const = 0;
+
+			virtual void insertKey(const gui::Floats<2>& key) {}
+			virtual void setKey(const gui::Floats<2>& key) {}
+		};
+
+		class ConstantInterpolant final : public Interpolant
+		{
+		public:
+			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(); }
+		};
+		class LinearInterpolant final : 
+			public Interpolant, public VectorPropertyListener<nif::Key<float>>
+		{
+		public:
+			struct LinearKey
+			{
+				float time{ 0.0f };
+				float value{ 0.0f };
+			};
+			class LinearHandle;
+		public:
+			LinearInterpolant(IVectorProperty<nif::Key<float>>& keys);
+			~LinearInterpolant();
 
 			virtual void frame(gui::FrameDrawer& fd) override;
 
-			//redo everything?
-			virtual void onSet(const std::vector<nif::Key<float>>& keys) override {}
+			virtual gui::Floats<2> getBounds() const override;
+
+			virtual void onSet(const std::vector<nif::Key<float>>& keys) override;
+			virtual void onSet(int i, const nif::Key<float>& key) override;
 			//add handle
 			virtual void onInsert(int i) override {}
 			//remove handle
@@ -43,13 +64,15 @@ namespace node
 			IVectorProperty<nif::Key<float>>& m_keys;
 			//unless we add a way to iterate through the property (good idea?), 
 			//we should store a copy:
-			std::vector<nif::Key<float>> m_data;
+			std::vector<LinearKey> m_data;
 		};
-		class QuadraticInterpolation final :
-			public gui::Composite, public VectorPropertyListener<nif::Key<float>>
+		class QuadraticInterpolant final :
+			public Interpolant, public VectorPropertyListener<nif::Key<float>>
 		{
 		public:
-			QuadraticInterpolation(IVectorProperty<nif::Key<float>>& keys) {}
+			QuadraticInterpolant(IVectorProperty<nif::Key<float>>& keys) {}
+
+			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(); }
 
 			//redo everything?
 			virtual void onSet(const std::vector<nif::Key<float>>& keys) override {}
@@ -64,28 +87,34 @@ namespace node
 		class PlotAreaInput final : public gui::MouseHandler
 		{
 		public:
-			PlotAreaInput(gui::PlotArea& area) : m_area{ area } {}
+			PlotAreaInput(gui::PlotArea& area);
 
-			virtual void onMouseDown(gui::Mouse::Button button) override;
-			virtual void onMouseUp(gui::Mouse::Button button) override;
-			virtual void onMouseMove(const gui::Floats<2>& delta) override;
-			virtual void onMouseWheel(float delta) override;
+			virtual bool onMouseDown(gui::Mouse::Button button) override;
+			virtual bool onMouseUp(gui::Mouse::Button button) override;
+			virtual bool onMouseWheel(float delta) override;
+
+			virtual void onMouseMove(const gui::Floats<2>& pos) override;
 
 		private:
-			void applyScale(const gui::Floats<2>& factor, const gui::Floats<2>& pivot);
 			void updateAxisUnits();
 
 		private:
 			gui::PlotArea& m_area;
-			gui::Floats<2> m_zoomPivot;
+			gui::Floats<2> m_clickPoint;
+			gui::Floats<2> m_startS;
+			gui::Floats<2> m_startT;
 			bool m_panning{ false };
 			bool m_zooming{ false };
+
+			//temp location
+			std::set<IComponent*> m_selection;
 		};
 
 		IVectorProperty<nif::Key<float>>& m_keys;
 		IProperty<nif::KeyType>& m_keyType;
 
 		gui::Plot* m_plot{ nullptr };
-		gui::IComponent* m_curve{ nullptr };
+		std::unique_ptr<PlotAreaInput> m_inputHandler;
+		Interpolant* m_curve{ nullptr };
 	};
 }
