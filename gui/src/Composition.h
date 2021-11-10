@@ -81,6 +81,8 @@ namespace gui
 		virtual IInvoker* getInvoker() override;
 
 		void handleMouse(FrameDrawer& fd);
+		void receiveMouseInput(FrameDrawer& fd, unsigned int imgui_id);
+		bool isHovered(FrameDrawer& fd);
 
 		//Send the given command to our invoker, if we have one. Else, invoke it ourselves.
 		template<typename CmdType, typename... Params>

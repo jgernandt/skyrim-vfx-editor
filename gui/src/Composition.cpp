@@ -82,8 +82,13 @@ void gui::Component::handleMouse(FrameDrawer& fd)
 	//Like this it's hard to control and overview who receives what input.
 	if (m_mouseHandler) {
 
+		//To stop ImGui from using our input, we give them a fake widget
 		ImGuiContext* g = ImGui::GetCurrentContext();
 		assert(g);
+		ImGuiWindow* window = g->CurrentWindow;
+		assert(window);
+		static_assert(std::is_same<ImGuiID, unsigned int>::value);
+		ImGuiID id = window->GetID("FakeActiveWidget");
 
 		enum class Capturing
 		{
@@ -98,7 +103,7 @@ void gui::Component::handleMouse(FrameDrawer& fd)
 			who = Capturing::WE;
 		else if (Mouse::getCapture() == nullptr)
 			//need to account for items that are still using imgui here (not sure if this will be enough)
-			who = g->ActiveId ? Capturing::OTHER : Capturing::NONE;
+			who = (g->ActiveId && g->ActiveId != id) ? Capturing::OTHER : Capturing::NONE;
 		else if (Mouse::getCapture()->hasAncestor(this))
 			who = Capturing::CHILD;
 		else {
@@ -115,71 +120,114 @@ void gui::Component::handleMouse(FrameDrawer& fd)
 		else if (who == Capturing::CHILD) {
 			//We should not receive input, but should also not lose focus
 		}
-		else {
-			//We should receive inputs
+		else if (who == Capturing::WE) {
+			//We should receive input
+			receiveMouseInput(fd, id);
 
-			ImGuiIO& io = ImGui::GetIO();
-
-			bool capturing = who == Capturing::WE;
-
-			ImGuiWindow* window = g->CurrentWindow;
-			assert(window);
-
-			static_assert(TO_PIXEL == static_cast<decltype(TO_PIXEL)>(&std::floor));
-			gui::Floats<2> tlss = fd.toGlobal(m_translation).floor();
-			gui::Floats<2> brss = fd.toGlobal(m_translation + m_size * m_scale).floor();
-			bool inside = false;
-			if (g->HoveredWindow == window)
-				//TODO: deal with popups
-				inside = io.MousePos.x >= tlss[0] && io.MousePos.x <= brss[0] && io.MousePos.y >= tlss[1] && io.MousePos.y <= brss[1];
-
-			if (capturing || inside)
-			{
-				//Moving
-				if (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f)
-					m_mouseHandler->onMouseMove(gui_type_conversion<Floats<2>>::from(io.MousePos));
-
-				//Clicking (TODO: report handled events)
-				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-					m_mouseHandler->onMouseDown(Mouse::Button::LEFT);
-				else if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-					m_mouseHandler->onMouseUp(Mouse::Button::LEFT);
-
-				if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle))
-					m_mouseHandler->onMouseDown(Mouse::Button::MIDDLE);
-				else if (ImGui::IsMouseReleased(ImGuiMouseButton_Middle))
-					m_mouseHandler->onMouseUp(Mouse::Button::MIDDLE);
-
-				if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
-					m_mouseHandler->onMouseDown(Mouse::Button::RIGHT);
-				else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
-					m_mouseHandler->onMouseUp(Mouse::Button::RIGHT);
-
-				//Scrolling
-				//ImGui::SetItemUsingMouseWheel();//prevents imgui from scrolling the window
-				if (io.MouseWheel != 0.0f && !fd.isWheelHandled()) {
-					if (m_mouseHandler->onMouseWheel(io.MouseWheel))
-						fd.setWheelHandled();
-				}
+			//We may no longer be capturing
+			if (Mouse::getCapture() == this) {
+				//ImGui::KeepAliveID(id);
+				ImGui::SetHoveredID(id);
 			}
-			if (!capturing) {
-				if (inside) {
-					//Entering
-					if (!m_mouseFocus) {
-						m_mouseFocus = true;
-						m_mouseHandler->onMouseEnter();
-					}
+			else {
+				if (isHovered(fd)) {
+					ImGui::SetHoveredID(id);
 				}
 				else {
-					//Leaving
+					//We lost focus
 					if (m_mouseFocus) {
 						m_mouseFocus = false;
 						m_mouseHandler->onMouseLeave();
 					}
 				}
+
+				if (ImGui::GetActiveID() == id)
+					ImGui::ClearActiveID();
+			}
+		}
+		else if (isHovered(fd)) {
+			ImGui::SetHoveredID(id);
+
+			//Entering
+			if (!m_mouseFocus) {
+				m_mouseFocus = true;
+				m_mouseHandler->onMouseEnter();
+			}
+
+			receiveMouseInput(fd, id);
+
+			//We may have started capturing
+			if (Mouse::getCapture() == this) {
+				ImGui::SetActiveID(id, window);
+				ImGui::FocusWindow(window);
 			}
 		}
 	}
+}
+
+void gui::Component::receiveMouseInput(FrameDrawer& fd, unsigned int imgui_id)
+{
+	ImGuiContext* g = ImGui::GetCurrentContext();
+	assert(g);
+	ImGuiWindow* window = g->CurrentWindow;
+	assert(window);
+
+	//Moving
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f)
+		m_mouseHandler->onMouseMove(gui_type_conversion<Floats<2>>::from(io.MousePos));
+
+	//Clicking (TODO: report handled events)
+	if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+		if (m_mouseHandler->onMouseDown(Mouse::Button::LEFT)) {
+
+		}
+	}
+	else if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+		m_mouseHandler->onMouseUp(Mouse::Button::LEFT);
+
+	if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle)) {
+		if (m_mouseHandler->onMouseDown(Mouse::Button::MIDDLE)) {
+
+		}
+	}
+	else if (ImGui::IsMouseReleased(ImGuiMouseButton_Middle))
+		m_mouseHandler->onMouseUp(Mouse::Button::MIDDLE);
+
+	if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+		if (m_mouseHandler->onMouseDown(Mouse::Button::RIGHT)) {
+
+		}
+	}
+	else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+		m_mouseHandler->onMouseUp(Mouse::Button::RIGHT);
+
+	//Scrolling
+	//ImGui::SetItemUsingMouseWheel();//prevents imgui from scrolling the window
+	if (io.MouseWheel != 0.0f && !fd.isWheelHandled()) {
+		if (m_mouseHandler->onMouseWheel(io.MouseWheel))
+			fd.setWheelHandled();
+	}
+}
+
+bool gui::Component::isHovered(FrameDrawer& fd)
+{
+	ImGuiContext* g = ImGui::GetCurrentContext();
+	assert(g);
+	ImGuiWindow* window = g->CurrentWindow;
+	assert(window);
+
+	static_assert(TO_PIXEL == static_cast<decltype(TO_PIXEL)>(&std::floor));
+	gui::Floats<2> tlss = fd.toGlobal(m_translation).floor();
+	gui::Floats<2> brss = fd.toGlobal(m_translation + m_size * m_scale).floor();
+
+	bool result = false;
+	if (g->HoveredWindow == window) {
+		//TODO: deal with popups
+		ImGuiIO& io = ImGui::GetIO();
+		result = io.MousePos.x >= tlss[0] && io.MousePos.x <= brss[0] && io.MousePos.y >= tlss[1] && io.MousePos.y <= brss[1];
+	}
+	return result;
 }
 
 gui::IComponent* gui::Component::getRoot()
