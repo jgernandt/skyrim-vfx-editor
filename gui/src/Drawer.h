@@ -80,11 +80,13 @@ namespace gui
 
 		//Drawing
 		virtual void setTargetLayer(Layer) = 0;
-		virtual void line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width = 1.0f) = 0;
-		virtual void rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col) = 0;
+
+		virtual void circle(const Floats<2>& centre, float radius, const ColRGBA& col, bool global = false) = 0;
+		virtual void line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width = 1.0f, bool global = false) = 0;
+		virtual void rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, bool global = false) = 0;
 		virtual void rectangleGradient(const Floats<2>& p1, const Floats<2>& p2,
-			const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br) = 0;
-		virtual void triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col) = 0;
+			const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br, bool global = false) = 0;
+		virtual void triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col, bool global = false) = 0;
 
 		//Push a clip region to use for future draw calls. Returns an object that restores the previous region on destruction.
 		[[nodiscard]] virtual util::CallWrapper pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) = 0;

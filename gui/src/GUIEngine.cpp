@@ -64,49 +64,95 @@ gui::backend::ImGuiWinD3D10::~ImGuiWinD3D10()
 	ImGui::DestroyContext();
 }
 
-void gui::backend::ImGuiWinD3D10::line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width)
+void gui::backend::ImGuiWinD3D10::circle(const Floats<2>& centre, float radius, const ColRGBA& col, bool global)
 {
 	ImDrawList* drawList = getDrawList(m_layer);
 	if (drawList)
-		drawList->AddLine(
-			gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
-			gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
-			gui_type_conversion<ImU32>::from(col),
-			width);
+		if (global)
+			drawList->AddCircleFilled(
+				gui_type_conversion<ImVec2>::from(centre),
+				radius,
+				gui_type_conversion<ImU32>::from(col));
+		else
+			drawList->AddCircleFilled(
+				gui_type_conversion<ImVec2>::from(toGlobal(centre)),
+				radius * getCurrentScale()[0],			//Only using x scale here (we could do geom average until we have ellipses)
+				gui_type_conversion<ImU32>::from(col));
 }
 
-void gui::backend::ImGuiWinD3D10::rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col)
+void gui::backend::ImGuiWinD3D10::line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width, bool global)
 {
 	ImDrawList* drawList = getDrawList(m_layer);
 	if (drawList)
-		drawList->AddRectFilled(
-			gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
-			gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
-			gui_type_conversion<ImU32>::from(col));
+		if (global)
+			drawList->AddLine(
+				gui_type_conversion<ImVec2>::from(p1),
+				gui_type_conversion<ImVec2>::from(p2),
+				gui_type_conversion<ImU32>::from(col),
+				width);
+		else
+			drawList->AddLine(
+				gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+				gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
+				gui_type_conversion<ImU32>::from(col),
+				width);
 }
 
-void gui::backend::ImGuiWinD3D10::rectangleGradient(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br)
+void gui::backend::ImGuiWinD3D10::rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, bool global)
 {
 	ImDrawList* drawList = getDrawList(m_layer);
 	if (drawList)
-		drawList->AddRectFilledMultiColor(
-			gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
-			gui_type_conversion<ImVec2>::from(toGlobal(p2)),
-			gui_type_conversion<ImU32>::from(tl), 
-			gui_type_conversion<ImU32>::from(tr), 
-			gui_type_conversion<ImU32>::from(br), 
-			gui_type_conversion<ImU32>::from(bl));
+		if (global)
+			drawList->AddRectFilled(
+				gui_type_conversion<ImVec2>::from(p1),
+				gui_type_conversion<ImVec2>::from(p2),
+				gui_type_conversion<ImU32>::from(col));
+		else
+			drawList->AddRectFilled(
+				gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+				gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
+				gui_type_conversion<ImU32>::from(col));
 }
 
-void gui::backend::ImGuiWinD3D10::triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col)
+void gui::backend::ImGuiWinD3D10::rectangleGradient(const Floats<2>& p1, const Floats<2>& p2, 
+	const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br, bool global)
 {
 	ImDrawList* drawList = getDrawList(m_layer);
 	if (drawList)
-		drawList->AddTriangleFilled(
-			gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
-			gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
-			gui_type_conversion<ImVec2>::from(toGlobal(p3)), 
-			gui_type_conversion<ImU32>::from(col));
+		if (global)
+			drawList->AddRectFilledMultiColor(
+				gui_type_conversion<ImVec2>::from(p1),
+				gui_type_conversion<ImVec2>::from(p2),
+				gui_type_conversion<ImU32>::from(tl),
+				gui_type_conversion<ImU32>::from(tr),
+				gui_type_conversion<ImU32>::from(br),
+				gui_type_conversion<ImU32>::from(bl));
+		else
+			drawList->AddRectFilledMultiColor(
+				gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+				gui_type_conversion<ImVec2>::from(toGlobal(p2)),
+				gui_type_conversion<ImU32>::from(tl), 
+				gui_type_conversion<ImU32>::from(tr), 
+				gui_type_conversion<ImU32>::from(br), 
+				gui_type_conversion<ImU32>::from(bl));
+}
+
+void gui::backend::ImGuiWinD3D10::triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList)
+		if (global)
+			drawList->AddTriangleFilled(
+				gui_type_conversion<ImVec2>::from(p1),
+				gui_type_conversion<ImVec2>::from(p2),
+				gui_type_conversion<ImVec2>::from(p3),
+				gui_type_conversion<ImU32>::from(col));
+		else
+			drawList->AddTriangleFilled(
+				gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+				gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
+				gui_type_conversion<ImVec2>::from(toGlobal(p3)), 
+				gui_type_conversion<ImU32>::from(col));
 }
 
 util::CallWrapper gui::backend::ImGuiWinD3D10::pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect)

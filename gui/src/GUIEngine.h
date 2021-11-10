@@ -42,11 +42,13 @@ namespace gui
 			~ImGuiWinD3D10();
 
 			virtual void setTargetLayer(Layer l) override { m_layer = l; }
-			virtual void line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width) override;
-			virtual void rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col) override;
+
+			virtual void circle(const Floats<2>& centre, float radius, const ColRGBA& col, bool global) override;
+			virtual void line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width, bool global) override;
+			virtual void rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, bool global) override;
 			virtual void rectangleGradient(const Floats<2>& p1, const Floats<2>& p2,
-				const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br) override;
-			virtual void triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col) override;
+				const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br, bool global) override;
+			virtual void triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col, bool global) override;
 
 			[[nodiscard]] virtual util::CallWrapper pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) override;
 			[[nodiscard]] virtual util::CallWrapper pushTransform(const Floats<2>& translation, const Floats<2>& scale) override;
