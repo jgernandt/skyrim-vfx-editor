@@ -127,11 +127,11 @@ void gui::Component::handleMouse(FrameDrawer& fd)
 
 			static_assert(TO_PIXEL == static_cast<decltype(TO_PIXEL)>(&std::floor));
 			gui::Floats<2> tlss = fd.toGlobal(m_translation).floor();
-			gui::Floats<2> brss = fd.toGlobal(m_translation + m_size).floor();
+			gui::Floats<2> brss = fd.toGlobal(m_translation + m_size * m_scale).floor();
 			bool inside = false;
 			if (g->HoveredWindow == window)
 				//TODO: deal with popups
-				inside = io.MousePos.x >= tlss[0] && io.MousePos.x <= brss[0] && io.MousePos.y >= tlss[1] && io.MousePos.y <= brss[0];
+				inside = io.MousePos.x >= tlss[0] && io.MousePos.x <= brss[0] && io.MousePos.y >= tlss[1] && io.MousePos.y <= brss[1];
 
 			if (capturing || inside)
 			{
@@ -197,12 +197,13 @@ gui::Composite::~Composite()
 
 void gui::Composite::frame(FrameDrawer& fd)
 {
-	auto popper = fd.pushTransform(m_translation, m_scale);
-	for (auto& c : m_children) {
-		assert(c);
-		c->frame(fd);
+	{
+		auto popper = fd.pushTransform(m_translation, m_scale);
+		for (auto& c : m_children) {
+			assert(c);
+			c->frame(fd);
+		}
 	}
-
 	handleMouse(fd);
 }
 
