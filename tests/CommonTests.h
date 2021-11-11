@@ -539,18 +539,11 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 		Listener(IVectorProperty<T>& list) : m_list{ list } { m_list.addListener(*this); }
 		~Listener() { m_list.removeListener(*this); }
 
-		virtual void onSet(const std::vector<T>& c) override { m_lastCtnr = &c; }
 		virtual void onSet(int i, const T& t) override { m_lastI = i; m_lastT = t; }
 		virtual void onInsert(int i) override { m_lastInsert = i; }
 		virtual void onErase(int i) override { m_lastErase = i; }
 		virtual void onDestroy() override {}
 
-		bool wasSet(std::vector<T>* c)
-		{
-			bool result = c == m_lastCtnr;
-			m_lastCtnr = nullptr;
-			return result;
-		}
 		bool wasSet(int i, const T& t)
 		{
 			bool result = m_lastI == i && m_lastT == t;
@@ -613,6 +606,8 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 	};
 
 	constexpr int SIZE = 10;
+	constexpr int SIZE_LARGE = 13;
+	constexpr int SIZE_SMALL = 7;
 	list.set(std::vector<T>(SIZE));
 
 	Listener l(list);
@@ -623,7 +618,7 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 		element = generator();
 
 	//create element properties
-	std::vector<IVectorProperty<T>::element> elements;
+	std::vector<typename IVectorProperty<T>::element> elements;
 	std::array<ElementListener, SIZE> lsnrs;
 
 	elements.reserve(SIZE);
@@ -723,32 +718,49 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 			++it;
 	}
 
-	//get/set whole container
+	//get/set larger container
+	container.resize(SIZE_LARGE);
 	for (T& element : container)
 		element = generator();
 
 	list.set(container);
 	Assert::IsTrue(list.get() == container);
-	Assert::IsTrue(l.wasSet(&container));
-	//resetting should not call listener
-	list.set(container);
-	Assert::IsFalse(l.wasSet(&container));
+	Assert::IsTrue(l.wasInserted(SIZE_LARGE - 1));
 
 	//element listeners should have been called
-	//(but we leave unspecified whether they were called once or twice)
 	for (int i = 0; i < SIZE; i++)
 		Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
 
-	//new elements should not have been called
+	//resetting should not call listeners
+	list.set(container);
+	for (int i = 0; i < SIZE; i++)
+		Assert::IsFalse(lsnrs[i].wasSet(list.get(i)));
+
+	//get/set smaller container
+	container.resize(SIZE_SMALL);
+	for (T& element : container)
+		element = generator();
+
+	list.set(container);
+	Assert::IsTrue(list.get() == container);
+	Assert::IsTrue(l.wasErased(SIZE_SMALL));
+
+	//element listeners that were not erased should have been called
+	for (int i = 0; i < SIZE_SMALL; i++)
+		Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
+
+	//erased elements should not have been called (test for any value here)
+	for (int i = SIZE_SMALL; i < SIZE; i++)
+		Assert::IsFalse(lsnrs[i].wasSet());
 	for (int i = 0; i < SIZE + 1; i++)
-		Assert::IsFalse(newLsnrs[i].wasSet());//test for any value here
+		Assert::IsFalse(newLsnrs[i].wasSet());
 
 	//and setting through them should fail silently without calling anyone
 	T t = generator();
 	for (int i = 0; i < SIZE + 1; i++)
 		newElements[i].set(t);
 	Assert::IsTrue(list.get() == container);
-	for (int i = 0; i < SIZE; i++)
+	for (int i = 0; i < SIZE_SMALL; i++)
 		Assert::IsFalse(lsnrs[i].wasSet(list.get(i)));
 	for (int i = 0; i < SIZE + 1; i++)
 		Assert::IsFalse(newLsnrs[i].wasSet());//test for any value here

@@ -55,7 +55,8 @@ class IListener<IVectorProperty<T>>
 public:
 	virtual ~IListener() = default;
 
-	virtual void onSet(const typename IVectorProperty<T>::container&) {}
+	//Should send insert/erase instead, will be more predictable
+	//virtual void onSet(const typename IVectorProperty<T>::container&) {}
 	virtual void onSet(int, const T&) {}
 	virtual void onInsert(int) {}
 	virtual void onErase(int) {}
@@ -100,6 +101,7 @@ public:
 		}
 	}
 
+	/*Should send insert/erase instead, will be more predictable
 	virtual void onSet(const std::vector<T>& list) override
 	{
 		if (valid() && static_cast<size_t>(m_index) < list.size())
@@ -109,7 +111,7 @@ public:
 
 		//Or should this always invalidate us? 
 		//Techically, the whole list has been replaced. Our element no longer exists.
-	}
+	}*/
 	virtual void onSet(int i, const T & t) override
 	{
 		assert(i >= 0);
@@ -172,13 +174,14 @@ namespace nif
 		}
 
 	protected:
+		/*Should send insert/erase instead, will be more predictable
 		void notifySet(const typename IVectorProperty<T>::container& t) const
 		{
 			for (VectorPropertyListener<T>* l : m_obs.getListeners()) {
 				assert(l);
 				l->onSet(t);
 			}
-		}
+		}*/
 		void notifySet(int i, const T& t) const
 		{
 			for (VectorPropertyListener<T>* l : m_obs.getListeners()) {
