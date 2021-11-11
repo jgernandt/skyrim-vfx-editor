@@ -3,8 +3,13 @@
 #include "CompositionActions.h"
 #include "widget_types.h"
 
+constexpr float DRAG_THRESHOLD = 5.0f;
+
+constexpr float SCALE_BASE = 1.1f;
+constexpr float SCALE_SENSITIVITY = 0.1f;
+
 node::FloatKeyEditor::FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& tStart, IProperty<float>& tStop) :
-	m_keys{ data.keys() }, m_keyType{ data.keyType() }
+	m_keys{ data.iplnData() }, m_keyType{ data.keyType() }
 {
 	setSize({ 640.0f, 480.0f });
 
@@ -87,9 +92,12 @@ void node::FloatKeyEditor::onClose()
 void node::FloatKeyEditor::onSet(const nif::KeyType& type)
 {
 	assert(m_plot);
-	//This is where we replace the existing curve widget with a new one.
-	//we need to know where the curve is now and remove it.
+	//Remove existing curve, clear selection
 	if (m_curve) {
+		//Any reason to unselect first?
+		assert(m_inputHandler);
+		m_inputHandler->m_selection.clear();
+
 		m_plot->getPlotArea().getAxes().removeChild(m_curve);
 		m_curve = nullptr;
 	}
@@ -102,10 +110,10 @@ void node::FloatKeyEditor::onSet(const nif::KeyType& type)
 		curve = std::make_unique<ConstantInterpolant>();
 		break;
 	case nif::KeyType::LINEAR:
-		curve = std::make_unique<LinearInterpolant>(m_keys);
+		curve = std::make_unique<LinearInterpolant>(m_keys.keys());
 		break;
 	case nif::KeyType::QUADRATIC:
-		curve = std::make_unique<QuadraticInterpolant>(m_keys);
+		curve = std::make_unique<QuadraticInterpolant>(m_keys.keys(), m_keys.tangents());
 		break;
 	}
 	if (curve) {
@@ -120,11 +128,11 @@ node::FloatKeyEditor::PlotAreaInput::PlotAreaInput(gui::PlotArea& area) : m_area
 }
 
 //Locate a component whose center is in the vicinity of the cursor
-class ClickSelectionVisitor final : public gui::DescendingVisitor
+class ClickSelector final : public gui::DescendingVisitor
 {
 public:
 	//expects a point in global space
-	ClickSelectionVisitor(const gui::Floats<2>& globalPoint)
+	ClickSelector(const gui::Floats<2>& globalPoint)
 	{
 		m_rect << globalPoint - 5.0f, globalPoint + 5.0f;
 		m_rect = m_rect.floor();
@@ -192,10 +200,10 @@ private:
 };
 
 //Locate all the components whose centres are inside the rectangle
-class RectangleSelectionVisitor final : public gui::DescendingVisitor
+class BoxSelector final : public gui::DescendingVisitor
 {
 public:
-	RectangleSelectionVisitor(const gui::Floats<4>& rect) {}
+	BoxSelector(const gui::Floats<4>& rect) {}
 
 	virtual void visit(gui::Composite& c) override {}
 	virtual void visit(gui::Component& c) override {}
@@ -205,34 +213,36 @@ public:
 
 bool node::FloatKeyEditor::PlotAreaInput::onMouseDown(gui::Mouse::Button button)
 {
-	if (button == gui::Mouse::Button::LEFT) {
-		//locate the clicked object.
-		ClickSelectionVisitor v(gui::Mouse::getPosition());
+	if (m_currentOp != Op::NONE)
+		return true;
+	else if (button == gui::Mouse::Button::LEFT) {
+		//locate the clicked object
+		ClickSelector v(gui::Mouse::getPosition());
 		m_area.accept(v);
 		gui::IComponent* object = v.result;
 
 		if (object) {
 			if (gui::Keyboard::isDown(gui::Keyboard::Key::SHIFT)) {
-				if (m_selection.find(object) != m_selection.end()) {
+				if (auto res = m_selection.insert(object); !res.second) {
 					//shift+clicked selected object
 					//remove from selection
-					m_selection.erase(object);
+					m_selection.erase(res.first);
 					object->setSelected(false);
 				}
 				else {
 					//shift+clicked non-selected object
 					//add to selection
-					m_selection.insert(object);
 					object->setSelected(true);
 				}
 			}
 			else {
-				if (m_selection.find(object) != m_selection.end()) {
+				if (auto it = m_selection.find(object); it != m_selection.end()) {
 					//clicked selected object
 					//start dragging selection (if threshold is passed)
 
-					//if we release before reaching the drag threashold, should clear
+					//if we release before reaching the drag threshold, should clear
 					//other selected objects
+					m_clickedComp = it;
 				}
 				else {
 					//clicked non-selected object
@@ -243,6 +253,11 @@ bool node::FloatKeyEditor::PlotAreaInput::onMouseDown(gui::Mouse::Button button)
 					m_selection.insert(object);
 					object->setSelected(true);
 				}
+				//start dragging
+				gui::Mouse::setCapture(&m_area);
+				m_clickPoint = gui::Mouse::getPosition();
+				m_dragThresholdPassed = false;
+				m_currentOp = Op::DRAG;
 			}
 		}
 		//else clear selection? Or not?
@@ -253,12 +268,12 @@ bool node::FloatKeyEditor::PlotAreaInput::onMouseDown(gui::Mouse::Button button)
 		m_clickPoint = m_area.fromGlobalSpace(gui::Mouse::getPosition());
 		gui::Mouse::setCapture(&m_area);
 		if (gui::Keyboard::isDown(gui::Keyboard::Key::CTRL)) {
-			m_zooming = true;
+			m_currentOp = Op::ZOOM;
 			m_startS = m_area.getAxes().getScale();
 			m_startT = m_area.getAxes().getTranslation();
 		}
 		else {
-			m_panning = true;
+			m_currentOp = Op::PAN;
 			m_startT = m_area.getAxes().getTranslation();
 		}
 
@@ -270,16 +285,24 @@ bool node::FloatKeyEditor::PlotAreaInput::onMouseDown(gui::Mouse::Button button)
 
 bool node::FloatKeyEditor::PlotAreaInput::onMouseUp(gui::Mouse::Button button)
 {
-	if (button == gui::Mouse::Button::MIDDLE) {
-		assert(gui::Mouse::getCapture() == &m_area && (m_panning || m_zooming));
-		gui::Mouse::setCapture(nullptr);
-		m_panning = false;
-		m_zooming = false;
+	bool result = false;
 
-		return true;
+	if (button == gui::Mouse::Button::LEFT) {
+		if (result = m_currentOp == Op::DRAG) {
+			m_currentOp = Op::NONE;
+			assert(gui::Mouse::getCapture() == &m_area);
+			gui::Mouse::setCapture(nullptr);
+		}
 	}
-	else
-		return false;
+	else if (button == gui::Mouse::Button::MIDDLE) {
+		if (result = (m_currentOp == Op::PAN || m_currentOp == Op::ZOOM)) {
+			assert(gui::Mouse::getCapture() == &m_area);
+			gui::Mouse::setCapture(nullptr);
+			m_currentOp = Op::NONE;
+		}
+	}
+	
+	return result;
 }
 
 bool node::FloatKeyEditor::PlotAreaInput::onMouseWheel(float delta)
@@ -298,23 +321,48 @@ bool node::FloatKeyEditor::PlotAreaInput::onMouseWheel(float delta)
 
 void node::FloatKeyEditor::PlotAreaInput::onMouseMove(const gui::Floats<2>& pos)
 {
-	if (gui::Mouse::getCapture() == &m_area) {
-		gui::Floats<2> delta = m_area.fromGlobalSpace(pos) - m_clickPoint;
-		if (m_panning) {
-			//gui::Floats<2> tmp = m_area.fromGlobalSpace(delta) - m_area.fromGlobalSpace({ 0.0f ,0.0f });
-			m_area.getAxes().setTranslation(m_startT + delta);
-		}
-		else if (m_zooming) {
-			gui::Floats<2> factor;
-			factor[0] = std::pow(SCALE_BASE, delta[0] * SCALE_SENSITIVITY);
-			factor[1] = std::pow(SCALE_BASE, -delta[1] * SCALE_SENSITIVITY);
-
-			m_area.getAxes().setTranslation(m_clickPoint - (m_clickPoint - m_startT) * factor);
-			m_area.getAxes().setScale(m_startS * factor);
-
-			updateAxisUnits();
-		}
+	switch (m_currentOp) {
+	case Op::DRAG:
+		drag(pos);
+		break;
+	case Op::PAN:
+		pan(pos);
+		break;
+	case Op::ZOOM:
+		zoom(pos);
+		break;
 	}
+}
+
+void node::FloatKeyEditor::PlotAreaInput::drag(const gui::Floats<2>& pos)
+{
+	if (!m_dragThresholdPassed)
+		m_dragThresholdPassed = std::abs(pos[0] - m_clickPoint[0]) >= DRAG_THRESHOLD || 
+		std::abs(pos[1] - m_clickPoint[1]) >= DRAG_THRESHOLD;
+
+	if (m_dragThresholdPassed) {
+		gui::Floats<2> delta = pos - m_clickPoint;
+
+	}
+}
+
+void node::FloatKeyEditor::PlotAreaInput::pan(const gui::Floats<2>& pos)
+{
+	gui::Floats<2> delta = m_area.fromGlobalSpace(pos) - m_clickPoint;
+	m_area.getAxes().setTranslation(m_startT + delta);
+}
+
+void node::FloatKeyEditor::PlotAreaInput::zoom(const gui::Floats<2>& pos)
+{
+	gui::Floats<2> delta = m_area.fromGlobalSpace(pos) - m_clickPoint;
+	gui::Floats<2> factor;
+	factor[0] = std::pow(SCALE_BASE, delta[0] * SCALE_SENSITIVITY);
+	factor[1] = std::pow(SCALE_BASE, -delta[1] * SCALE_SENSITIVITY);
+
+	m_area.getAxes().setTranslation(m_clickPoint - (m_clickPoint - m_startT) * factor);
+	m_area.getAxes().setScale(m_startS * factor);
+
+	updateAxisUnits();
 }
 
 void node::FloatKeyEditor::PlotAreaInput::updateAxisUnits()
@@ -348,10 +396,15 @@ void node::FloatKeyEditor::PlotAreaInput::updateAxisUnits()
 	m_area.getAxes().setMinorUnits(minor);
 }
 
-class node::FloatKeyEditor::LinearInterpolant::LinearHandle final : public gui::Component
+class node::FloatKeyEditor::LinearInterpolant::LinearHandle final : 
+	public gui::Component, public PropertyListener<nif::Key<float>>
 {
 public:
-	LinearHandle(LinearKey key) { m_translation = { key.time, key.value }; }
+	LinearHandle(IVectorProperty<nif::Key<float>>::element p) : m_property{ p }
+	{ 
+		m_property.addListener(*this);
+	}
+	~LinearHandle() { m_property.removeListener(*this); }
 
 	virtual void frame(gui::FrameDrawer& fd) override 
 	{
@@ -360,14 +413,30 @@ public:
 		fd.circle(fd.toGlobal(m_translation), 3.0f, m_selected ? nif::COL_WHITE : nif::COL_BLACK, true);
 	}
 
+	virtual void setTranslation(const gui::Floats<2>& t) override
+	{
+		//Weird that we are expected to know not to invoke this asynced.
+		//Better to have the Command that moves a selection call the properties directly.
+		//But how would it know about them?
+		m_property.set({t[0], t[1]});
+	}
+
 	virtual void setFocussed(bool on) override {}
 	virtual void setSelected(bool on) override { m_selected = on; }
 
+	virtual void onSet(const nif::Key<float>& key) override
+	{
+		m_translation = { key.key, key.value };
+	}
+
 private:
+	IVectorProperty<nif::Key<float>>::element m_property;
+
+	//Could be a dummy handle if we are an endpoint
+	LinearHandle* m_prev{ nullptr };
+	LinearHandle* m_next{ nullptr };
+
 	bool m_selected{ false };
-	//We need somthing to get/set our key. Could be a IProperty, but doesn't really need to.
-	//We also want (but don't absolutely need) something to limit our x position. This may
-	//be either a key or a start/stop time, so it needs to be abstract.
 };
 
 node::FloatKeyEditor::LinearInterpolant::LinearInterpolant(IVectorProperty<nif::Key<float>>& keys) :
@@ -380,8 +449,11 @@ node::FloatKeyEditor::LinearInterpolant::LinearInterpolant(IVectorProperty<nif::
 	// 
 	//The interpolation might be most convenient to draw ourselves.
 
-	m_keys.addListener(*this);//this doesn't trigger an immediate callback. Inconsistent...
-	onSet(m_keys.get());
+	m_keys.addListener(*this);
+
+	m_data = m_keys.get();
+	for (size_t i = 0; i < m_data.size(); i++)
+		newChild<LinearHandle>(m_keys.at(i));
 }
 
 node::FloatKeyEditor::LinearInterpolant::~LinearInterpolant()
@@ -393,10 +465,16 @@ void node::FloatKeyEditor::LinearInterpolant::frame(gui::FrameDrawer& fd)
 {
 	//Draw line
 	for (size_t i = 0; i < m_data.size() - 1; i++)
-		fd.line({ m_data[i].time, m_data[i].value }, 
-			{ m_data[i + 1].time, m_data[i + 1].value }, 
+		fd.line({ m_data[i].key, m_data[i].value }, 
+			{ m_data[i + 1].key, m_data[i + 1].value }, 
 			{ 1.0f, 0.0f, 0.0f, 1.0f },
 			3.0f);
+
+	//Or
+	//for (auto&& c : getChildren()) {
+	//	auto key = static_cast<LinearHandle*>(c.get());
+		//etc
+	//}
 
 	//We may also want to draw the line outside the start-stop time,
 	//according to the current cycle rule.
@@ -417,23 +495,9 @@ gui::Floats<2> node::FloatKeyEditor::LinearInterpolant::getBounds() const
 	return result;
 }
 
-void node::FloatKeyEditor::LinearInterpolant::onSet(const std::vector<nif::Key<float>>& keys)
-{
-	//recreate our handles?
-	clearChildren();
-
-	m_data.resize(keys.size());
-	for (size_t i = 0; i < m_data.size(); i++) {
-		m_data[i].time = keys[i].time;
-		m_data[i].value = keys[i].value;
-
-		newChild<LinearHandle>(m_data[i]);
-	}
-}
-
 void node::FloatKeyEditor::LinearInterpolant::onSet(int i, const nif::Key<float>& key)
 {
 	assert(i >= 0 && static_cast<size_t>(i) < m_data.size());
-	m_data[i].time = key.time;
+	m_data[i].key = key.key;
 	m_data[i].value = key.value;
 }

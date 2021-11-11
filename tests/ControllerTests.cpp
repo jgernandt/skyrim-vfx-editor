@@ -20,12 +20,21 @@ namespace nif
 		TEST_METHOD(Keys)
 		{
 			std::uniform_real_distribution<float> D;
-			auto g = [this, &D]()
+			auto key = [this, &D]()
 			{
-				return Key<float>{ D(m_engine), D(m_engine), D(m_engine), D(m_engine),
-					D(m_engine), D(m_engine), D(m_engine) };
+				return Key<float>{ D(m_engine), D(m_engine) };
 			};
-			VectorPropertyTest(obj.keys(), g);
+			auto tan = [this, &D]()
+			{
+				return Tangent<float>{ D(m_engine), D(m_engine) };
+			};
+			auto tbc = [this, &D]()
+			{
+				return TBC{ D(m_engine), D(m_engine), D(m_engine) };
+			};
+			VectorPropertyTest(obj.iplnData().keys(), key);
+			VectorPropertyTest(obj.iplnData().tangents(), tan);
+			VectorPropertyTest(obj.iplnData().tbc(), tbc);
 		}
 
 	};

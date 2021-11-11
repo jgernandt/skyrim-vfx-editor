@@ -17,9 +17,6 @@ namespace node
 		virtual void onSet(const nif::KeyType& type) override;
 
 	private:
-		constexpr static float SCALE_BASE = 1.1f;
-		constexpr static float SCALE_SENSITIVITY = 0.1f;
-
 		class Interpolant : public gui::Composite
 		{
 		public:
@@ -39,11 +36,6 @@ namespace node
 			public Interpolant, public VectorPropertyListener<nif::Key<float>>
 		{
 		public:
-			struct LinearKey
-			{
-				float time{ 0.0f };
-				float value{ 0.0f };
-			};
 			class LinearHandle;
 		public:
 			LinearInterpolant(IVectorProperty<nif::Key<float>>& keys);
@@ -53,7 +45,6 @@ namespace node
 
 			virtual gui::Floats<2> getBounds() const override;
 
-			virtual void onSet(const std::vector<nif::Key<float>>& keys) override;
 			virtual void onSet(int i, const nif::Key<float>& key) override;
 			//add handle
 			virtual void onInsert(int i) override {}
@@ -64,18 +55,16 @@ namespace node
 			IVectorProperty<nif::Key<float>>& m_keys;
 			//unless we add a way to iterate through the property (good idea?), 
 			//we should store a copy:
-			std::vector<LinearKey> m_data;
+			std::vector<nif::Key<float>> m_data;
 		};
 		class QuadraticInterpolant final :
 			public Interpolant, public VectorPropertyListener<nif::Key<float>>
 		{
 		public:
-			QuadraticInterpolant(IVectorProperty<nif::Key<float>>& keys) {}
+			QuadraticInterpolant(IVectorProperty<nif::Key<float>>& keys, IVectorProperty<nif::Tangent<float>>& tans) {}
 
 			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(); }
 
-			//redo everything?
-			virtual void onSet(const std::vector<nif::Key<float>>& keys) override {}
 			//update our interpolation of [i-1, i] and [i, i+1]
 			virtual void onSet(int i, const nif::Key<float>& key) override {}
 			//add handle
@@ -95,22 +84,35 @@ namespace node
 
 			virtual void onMouseMove(const gui::Floats<2>& pos) override;
 
+			//temp location (?)
+			std::set<IComponent*> m_selection;
+
 		private:
+			void drag(const gui::Floats<2>& pos);
+			void pan(const gui::Floats<2>& pos);
+			void zoom(const gui::Floats<2>& pos);
+
 			void updateAxisUnits();
 
 		private:
+			enum class Op
+			{
+				NONE,
+				DRAG,
+				PAN,
+				ZOOM,
+			};
 			gui::PlotArea& m_area;
 			gui::Floats<2> m_clickPoint;
 			gui::Floats<2> m_startS;
 			gui::Floats<2> m_startT;
-			bool m_panning{ false };
-			bool m_zooming{ false };
+			std::set<IComponent*>::iterator m_clickedComp;
+			Op m_currentOp{ Op::NONE };
+			bool m_dragThresholdPassed{ false };
 
-			//temp location
-			std::set<IComponent*> m_selection;
 		};
 
-		IVectorProperty<nif::Key<float>>& m_keys;
+		nif::InterpolationData<float>& m_keys;
 		IProperty<nif::KeyType>& m_keyType;
 
 		gui::Plot* m_plot{ nullptr };

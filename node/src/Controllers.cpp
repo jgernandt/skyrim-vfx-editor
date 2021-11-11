@@ -133,7 +133,7 @@ void node::FloatController::openKeyEditor()
 	if (!m_data) {
 		m_data = std::make_unique<nif::NiFloatData>();
 		m_data->keyType().set(nif::KeyType::LINEAR);
-		m_data->keys().set({ { startTime().get(), 0.0f }, { stopTime().get(), 0.0f } });
+		m_data->iplnData().keys().set({ { startTime().get(), 0.0f }, { stopTime().get(), 0.0f } });
 	}
 	auto c = std::make_unique<FloatKeyEditor>(*m_data, startTime(), stopTime());
 	c->open();

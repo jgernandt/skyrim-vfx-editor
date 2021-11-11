@@ -31,45 +31,13 @@ nif::native::NiInterpolator& nif::NiInterpolator::getNative() const
 nif::NiBoolData::NiBoolData() : NiBoolData(new Niflib::NiBoolData) {}
 nif::NiBoolData::NiBoolData(native::NiBoolData* obj) : 
 	NiObject(obj), 
-	m_keyType(obj, &native::NiBoolData::GetKeyType, &native::NiBoolData::SetKeyType),
-	m_keys(*this)
+	m_keyType(obj, &native::NiBoolData::GetKeyType, &native::NiBoolData::SetKeyType)
 {}
 
 nif::native::NiBoolData& nif::NiBoolData::getNative() const
 {
 	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiBoolData::TYPE));
 	return static_cast<native::NiBoolData&>(*m_ptr);
-}
-
-std::vector<nif::Key<bool>> nif::NiBoolData::Keys::get() const
-{
-	auto&& keys = m_super.getNative().GetKeysRef();
-	std::vector<Key<bool>> result;
-	result.reserve(keys.size());
-	for (auto&& key : keys) {
-		result.push_back(Key<bool>{ 
-			key.time, 
-			static_cast<bool>(key.data), 
-			static_cast<bool>(key.forward_tangent),
-			static_cast<bool>(key.backward_tangent),
-			key.tension, key.bias, key.continuity });
-	}
-	return result;
-}
-
-void nif::NiBoolData::Keys::set(const std::vector<Key<bool>>& keys)
-{
-	auto&& dest = m_super.getNative().GetKeysRef();
-	dest.clear();
-	dest.reserve(keys.size());
-	for (auto&& key : keys) {
-		dest.push_back(Niflib::Key<unsigned char>{
-			key.time,
-			key.value,
-			key.forward,
-			key.backward,
-			key.tension, key.bias, key.continuity });
-	}
 }
 
 
@@ -102,56 +70,64 @@ nif::native::NiFloatData& nif::NiFloatData::getNative() const
 	return static_cast<native::NiFloatData&>(*m_ptr);
 }
 
-static_assert(sizeof(nif::Key<float>) == sizeof(Niflib::Key<float>));
-static_assert(offsetof(nif::Key<float>, time) == offsetof(Niflib::Key<float>, time));
-static_assert(offsetof(nif::Key<float>, value) == offsetof(Niflib::Key<float>, data));
-static_assert(offsetof(nif::Key<float>, forward) == offsetof(Niflib::Key<float>, forward_tangent));
-static_assert(offsetof(nif::Key<float>, backward) == offsetof(Niflib::Key<float>, backward_tangent));
-static_assert(offsetof(nif::Key<float>, tension) == offsetof(Niflib::Key<float>, tension));
-static_assert(offsetof(nif::Key<float>, bias) == offsetof(Niflib::Key<float>, bias));
-static_assert(offsetof(nif::Key<float>, continuity) == offsetof(Niflib::Key<float>, continuity));
-
-std::vector<nif::Key<float>> nif::NiFloatData::Keys::get() const
+std::vector<nif::Key<float>> nif::NiFloatData::IplnData::Keys::get() const
 {
 	auto&& keys = m_super.getNative().GetKeysRef();
-	std::vector<Key<float>> result(keys.size());
-	std::memcpy(result.data(), keys.data(), result.size() * sizeof(Key<float>));
+	std::vector<Key<float>> result;
+	result.reserve(keys.size());
+	for (auto&& key : keys)
+		result.push_back({ key.time, key.data });
+
 	return result;
 }
 
-void nif::NiFloatData::Keys::set(const std::vector<Key<float>>& keys)
+void nif::NiFloatData::IplnData::Keys::set(const std::vector<Key<float>>& keys)
 {
 	auto&& dest = m_super.getNative().GetKeysRef();
-	dest.resize(keys.size());
-	if (std::memcmp(dest.data(), keys.data(), keys.size() * sizeof(Key<float>)) != 0) {
-		std::memcpy(dest.data(), keys.data(), dest.size() * sizeof(Key<float>));
-		notifySet(keys);
+
+	//first erase excess
+	for (size_t i = dest.size(); i > keys.size(); i--)
+		erase(i - 1);
+
+	assert(dest.size() <= keys.size());//sanity check
+
+	//then set existing
+	size_t i = 0;
+	for (; i < dest.size(); i++) {
+		if (keys[i].key != dest[i].time || keys[i].value != dest[i].data) {
+			dest[i].time = keys[i].key;
+			dest[i].data = keys[i].value;
+			notifySet(i, keys[i]);
+		}
 	}
+
+	//then insert extra
+	dest.reserve(keys.size());
+	for (; i < keys.size(); i++)
+		insert(i, keys[i]);
 }
 
-nif::Key<float> nif::NiFloatData::Keys::get(int i) const
+nif::Key<float> nif::NiFloatData::IplnData::Keys::get(int i) const
 {
 	auto&& keys = m_super.getNative().GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
-	return Key<float>{
-		keys[i].time,
-		keys[i].data,
-		keys[i].forward_tangent,
-		keys[i].backward_tangent,
-		keys[i].tension, keys[i].bias, keys[i].continuity };
+
+	return { keys[i].time, keys[i].data };
 }
 
-void nif::NiFloatData::Keys::set(int i, const Key<float>& key)
+void nif::NiFloatData::IplnData::Keys::set(int i, const Key<float>& key)
 {
 	auto&& keys = m_super.getNative().GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
-	if (std::memcmp(&key, &keys[i], sizeof(Key<float>)) != 0) {
-		std::memcpy(keys.data() + i, &key, sizeof(Key<float>));
+
+	if (key.key != keys[i].time || key.value != keys[i].data) {
+		keys[i].time = key.key;
+		keys[i].data = key.value;
 		notifySet(i, key);
 	}
 }
 
-int nif::NiFloatData::Keys::insert(int i, const Key<float>& key)
+int nif::NiFloatData::IplnData::Keys::insert(int i, const Key<float>& key)
 {
 	auto&& keys = m_super.getNative().GetKeysRef();
 	assert(i >= 0);
@@ -164,25 +140,227 @@ int nif::NiFloatData::Keys::insert(int i, const Key<float>& key)
 		i = keys.size();
 	}
 
-	keys.insert(it, Niflib::Key<float>{key.time, key.value, 
-		key.forward, key.backward, key.tension, key.bias, key.continuity });
+	keys.insert(it, Niflib::Key<float>{key.key, key.value, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
 	notifyInsert(i);
+	m_super.m_keys.m_tans.notifyInsert(i);
+	m_super.m_keys.m_tbcs.notifyInsert(i);
 
 	return i;
 }
 
-int nif::NiFloatData::Keys::erase(int i)
+int nif::NiFloatData::IplnData::Keys::erase(int i)
 {
 	auto&& keys = m_super.getNative().GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
 
 	keys.erase(keys.begin() + i);
 	notifyErase(i);
+	m_super.m_keys.m_tans.notifyErase(i);
+	m_super.m_keys.m_tbcs.notifyErase(i);
 
 	return i;
 }
 
-IVectorProperty<nif::Key<float>>::element nif::NiFloatData::Keys::at(int i)
+IVectorProperty<nif::Key<float>>::element nif::NiFloatData::IplnData::Keys::at(int i)
+{
+	assert(i >= 0 && static_cast<size_t>(i) < m_super.getNative().GetKeysRef().size());
+	return element(*this, i);
+}
+
+std::vector<nif::Tangent<float>> nif::NiFloatData::IplnData::Tangents::get() const
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	std::vector<Tangent<float>> result;
+	result.reserve(keys.size());
+	for (auto&& key : keys)
+		result.push_back({ key.forward_tangent, key.backward_tangent });
+
+	return result;
+}
+
+void nif::NiFloatData::IplnData::Tangents::set(const std::vector<Tangent<float>>& keys)
+{
+	auto&& dest = m_super.getNative().GetKeysRef();
+
+	//first erase excess
+	for (size_t i = dest.size(); i > keys.size(); i--)
+		erase(i - 1);
+
+	assert(dest.size() <= keys.size());//sanity check
+
+	//then set existing
+	size_t i = 0;
+	for (; i < dest.size(); i++) {
+		if (keys[i].forward != dest[i].forward_tangent || keys[i].backward != dest[i].backward_tangent) {
+			dest[i].forward_tangent = keys[i].forward;
+			dest[i].backward_tangent = keys[i].backward;
+			notifySet(i, keys[i]);
+		}
+	}
+
+	//then insert extra
+	dest.reserve(keys.size());
+	for (; i < keys.size(); i++)
+		insert(i, keys[i]);
+}
+
+nif::Tangent<float> nif::NiFloatData::IplnData::Tangents::get(int i) const
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
+
+	return { keys[i].forward_tangent, keys[i].backward_tangent };
+}
+
+void nif::NiFloatData::IplnData::Tangents::set(int i, const Tangent<float>& tan)
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
+
+	if (tan.forward != keys[i].forward_tangent || tan.backward != keys[i].backward_tangent) {
+		keys[i].forward_tangent = tan.forward;
+		keys[i].backward_tangent = tan.backward;
+		notifySet(i, tan);
+	}
+}
+
+int nif::NiFloatData::IplnData::Tangents::insert(int i, const Tangent<float>& tan)
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0);
+
+	std::vector<Niflib::Key<float>>::iterator it;
+	if (static_cast<size_t>(i) < keys.size())
+		it = keys.begin() + i;
+	else {
+		it = keys.end();
+		i = keys.size();
+	}
+
+	keys.insert(it, Niflib::Key<float>{0.0f, 0.0f, tan.forward, tan.backward, 0.0f, 0.0f, 0.0f });
+	notifyInsert(i);
+	m_super.m_keys.m_keys.notifyInsert(i);
+	m_super.m_keys.m_tbcs.notifyInsert(i);
+
+	return i;
+}
+
+int nif::NiFloatData::IplnData::Tangents::erase(int i)
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
+
+	keys.erase(keys.begin() + i);
+	notifyErase(i);
+	m_super.m_keys.m_keys.notifyErase(i);
+	m_super.m_keys.m_tbcs.notifyErase(i);
+
+	return i;
+}
+
+IVectorProperty<nif::Tangent<float>>::element nif::NiFloatData::IplnData::Tangents::at(int i)
+{
+	assert(i >= 0 && static_cast<size_t>(i) < m_super.getNative().GetKeysRef().size());
+	return element(*this, i);
+}
+
+std::vector<nif::TBC> nif::NiFloatData::IplnData::TBCs::get() const
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	std::vector<TBC> result;
+	result.reserve(keys.size());
+	for (auto&& key : keys)
+		result.push_back({ key.tension, key.bias, key.continuity });
+
+	return result;
+}
+
+void nif::NiFloatData::IplnData::TBCs::set(const std::vector<TBC>& keys)
+{
+	auto&& dest = m_super.getNative().GetKeysRef();
+
+	//first erase excess
+	for (size_t i = dest.size(); i > keys.size(); i--)
+		erase(i - 1);
+
+	assert(dest.size() <= keys.size());//sanity check
+
+	//then set existing
+	size_t i = 0;
+	for (; i < dest.size(); i++) {
+		if (keys[i].tension != dest[i].tension || 
+			keys[i].bias != dest[i].bias || 
+			keys[i].continuity != dest[i].continuity) 
+		{
+			dest[i].tension = keys[i].tension;
+			dest[i].bias = keys[i].bias;
+			dest[i].continuity = keys[i].continuity;
+			notifySet(i, keys[i]);
+		}
+	}
+
+	//then insert extra
+	dest.reserve(keys.size());
+	for (; i < keys.size(); i++)
+		insert(i, keys[i]);
+}
+
+nif::TBC nif::NiFloatData::IplnData::TBCs::get(int i) const
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
+
+	return { keys[i].tension, keys[i].bias, keys[i].continuity };
+}
+
+void nif::NiFloatData::IplnData::TBCs::set(int i, const TBC& tbc)
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
+
+	if (tbc.tension != keys[i].tension || tbc.bias != keys[i].bias || tbc.continuity != keys[i].continuity) {
+		keys[i].tension = tbc.tension;
+		keys[i].bias = tbc.bias;
+		keys[i].continuity = tbc.continuity;
+		notifySet(i, tbc);
+	}
+}
+
+int nif::NiFloatData::IplnData::TBCs::insert(int i, const TBC& tbc)
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0);
+
+	std::vector<Niflib::Key<float>>::iterator it;
+	if (static_cast<size_t>(i) < keys.size())
+		it = keys.begin() + i;
+	else {
+		it = keys.end();
+		i = keys.size();
+	}
+
+	keys.insert(it, Niflib::Key<float>{0.0f, 0.0f, 0.0f, 0.0f, tbc.tension, tbc.bias, tbc.continuity });
+	notifyInsert(i);
+	m_super.m_keys.m_keys.notifyInsert(i);
+	m_super.m_keys.m_tans.notifyInsert(i);
+
+	return i;
+}
+
+int nif::NiFloatData::IplnData::TBCs::erase(int i)
+{
+	auto&& keys = m_super.getNative().GetKeysRef();
+	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
+
+	keys.erase(keys.begin() + i);
+	notifyErase(i);
+	m_super.m_keys.m_keys.notifyErase(i);
+	m_super.m_keys.m_tans.notifyErase(i);
+
+	return i;
+}
+
+IVectorProperty<nif::TBC>::element nif::NiFloatData::IplnData::TBCs::at(int i)
 {
 	assert(i >= 0 && static_cast<size_t>(i) < m_super.getNative().GetKeysRef().size());
 	return element(*this, i);

@@ -46,6 +46,17 @@ namespace nif
 		virtual IProperty<rotation_t>& rotation() = 0;
 		virtual IProperty<scale_t>& scale() = 0;
 	};
+
+	template<typename T>
+	class InterpolationData
+	{
+	public:
+		virtual ~InterpolationData() = default;
+
+		virtual IVectorProperty<Key<T>>& keys() = 0;
+		virtual IVectorProperty<Tangent<T>>& tangents() = 0;
+		virtual IVectorProperty<TBC>& tbc() = 0;
+	};
 }
 
 template<typename T>
