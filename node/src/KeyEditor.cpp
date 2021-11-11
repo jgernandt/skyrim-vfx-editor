@@ -8,6 +8,104 @@ constexpr float DRAG_THRESHOLD = 5.0f;
 constexpr float SCALE_BASE = 1.1f;
 constexpr float SCALE_SENSITIVITY = 0.1f;
 
+//The command needs to work on persistent interfaces, it cannot just move the components.
+//What to do...
+class MoveOp final : public gui::ICommand
+{
+public:
+	virtual void execute() override 
+	{
+	}
+	virtual void reverse() override 
+	{
+	}
+	virtual bool reversible() const override { return false; }
+};
+
+//Locate a component whose center is in the vicinity of the cursor
+class ClickSelector final : public gui::DescendingVisitor
+{
+public:
+	//expects a point in global space
+	ClickSelector(const gui::Floats<2>& globalPoint)
+	{
+		m_rect << globalPoint - 5.0f, globalPoint + 5.0f;
+		m_rect = m_rect.floor();
+	}
+
+	static_assert(TO_PIXEL == static_cast<decltype(TO_PIXEL)>(&std::floor));
+
+	virtual void visit(gui::Composite& c) override
+	{
+		if (m_current.empty()) {
+			m_current.push({});
+			m_current.top() << c.fromGlobalSpace(m_rect.head(2)), c.fromGlobalSpace(m_rect.tail(2));
+		}
+		else {
+			const gui::Floats<4>& prev = m_current.top();
+			m_current.push({});
+			m_current.top() << c.fromParentSpace(prev.head(2)), c.fromParentSpace(prev.tail(2));
+		}
+
+		gui::Floats<2> size = c.getSize();
+		gui::Floats<2> pos = 0.5f * gui::Floats<2>(m_current.top()[2] + m_current.top()[0], m_current.top()[3] + m_current.top()[1]).abs();
+		if ((size[0] == 0.0f || size[1] == 0.0f) || //Treat 0 size as infinite. Makes sense?
+			(pos[0] >= 0.0f && pos[0] <= size[0] && pos[1] >= 0.0f && pos[1] <= size[1])) {
+			for (auto&& child : c.getChildren()) {
+				child->accept(*this);
+				if (result != nullptr)
+					break;
+			}
+		}
+		m_current.pop();
+	}
+	virtual void visit(gui::Component& c) override
+	{
+		gui::Floats<2> pos = c.getTranslation();
+		const gui::Floats<4>& rect = m_current.empty() ? m_rect : m_current.top();
+
+		float minx;
+		float maxx;
+		if (rect[0] < rect[2]) {
+			minx = rect[0];
+			maxx = rect[2];
+		}
+		else {
+			minx = rect[2];
+			maxx = rect[0];
+		}
+		float miny;
+		float maxy;
+		if (rect[1] < rect[3]) {
+			miny = rect[1];
+			maxy = rect[3];
+		}
+		else {
+			miny = rect[3];
+			maxy = rect[1];
+		}
+		if (maxx >= pos[0] && minx <= pos[0] && maxy >= pos[1] && miny <= pos[1])
+			result = &c;
+	}
+
+	gui::IComponent* result{ nullptr };
+private:
+	std::stack<gui::Floats<4>> m_current;
+	gui::Floats<4> m_rect;
+};
+
+//Locate all the components whose centres are inside the rectangle
+class BoxSelector final : public gui::DescendingVisitor
+{
+public:
+	BoxSelector(const gui::Floats<4>& rect) {}
+
+	virtual void visit(gui::Composite& c) override {}
+	virtual void visit(gui::Component& c) override {}
+
+	std::vector<gui::IComponent*> found;
+};
+
 node::FloatKeyEditor::FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& tStart, IProperty<float>& tStop) :
 	m_keys{ data.iplnData() }, m_keyType{ data.keyType() }
 {
@@ -71,9 +169,8 @@ node::FloatKeyEditor::FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& t
 		m_plot->getPlotArea().setYLimits(ylims);
 	}
 
-	//Will set the axis units
-	m_inputHandler = std::make_unique<PlotAreaInput>(m_plot->getPlotArea());
-	m_plot->getPlotArea().setMouseHandler(m_inputHandler.get());
+	updateAxisUnits();
+	m_plot->getPlotArea().setMouseHandler(this);
 }
 
 node::FloatKeyEditor::~FloatKeyEditor()
@@ -95,8 +192,7 @@ void node::FloatKeyEditor::onSet(const nif::KeyType& type)
 	//Remove existing curve, clear selection
 	if (m_curve) {
 		//Any reason to unselect first?
-		assert(m_inputHandler);
-		m_inputHandler->m_selection.clear();
+		m_selection.clear();
 
 		m_plot->getPlotArea().getAxes().removeChild(m_curve);
 		m_curve = nullptr;
@@ -122,103 +218,17 @@ void node::FloatKeyEditor::onSet(const nif::KeyType& type)
 		m_curve = tmp;
 	}
 }
-node::FloatKeyEditor::PlotAreaInput::PlotAreaInput(gui::PlotArea& area) : m_area{ area }
+
+bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 {
-	updateAxisUnits();
-}
+	assert(m_plot);
 
-//Locate a component whose center is in the vicinity of the cursor
-class ClickSelector final : public gui::DescendingVisitor
-{
-public:
-	//expects a point in global space
-	ClickSelector(const gui::Floats<2>& globalPoint)
-	{
-		m_rect << globalPoint - 5.0f, globalPoint + 5.0f;
-		m_rect = m_rect.floor();
-	}
-
-	static_assert(TO_PIXEL == static_cast<decltype(TO_PIXEL)>(&std::floor));
-
-	virtual void visit(gui::Composite& c) override
-	{
-		if (m_current.empty()) {
-			m_current.push({});
-			m_current.top() << c.fromGlobalSpace(m_rect.head(2)), c.fromGlobalSpace(m_rect.tail(2));
-		}
-		else {
-			const gui::Floats<4>& prev = m_current.top();
-			m_current.push({});
-			m_current.top() << c.fromParentSpace(prev.head(2)), c.fromParentSpace(prev.tail(2));
-		}
-
-		gui::Floats<2> size = c.getSize();
-		gui::Floats<2> pos = 0.5f * gui::Floats<2>(m_current.top()[2] + m_current.top()[0], m_current.top()[3] + m_current.top()[1]).abs();
-		if ((size[0] == 0.0f || size[1] == 0.0f) || //Treat 0 size as infinite. Makes sense?
-			(pos[0] >= 0.0f && pos[0] <= size[0] &&	pos[1] >= 0.0f && pos[1] <= size[1])) {
-			for (auto&& child : c.getChildren()) {
-				child->accept(*this);
-				if (result != nullptr)
-					break;
-			}
-		}
-		m_current.pop();
-	}
-	virtual void visit(gui::Component& c) override
-	{
-		gui::Floats<2> pos = c.getTranslation();
-		const gui::Floats<4>& rect = m_current.empty() ? m_rect : m_current.top();
-
-		float minx;
-		float maxx;
-		if (rect[0] < rect[2]) {
-			minx = rect[0];
-			maxx = rect[2];
-		}
-		else {
-			minx = rect[2];
-			maxx = rect[0];
-		}
-		float miny;
-		float maxy;
-		if (rect[1] < rect[3]) {
-			miny = rect[1];
-			maxy = rect[3];
-		}
-		else {
-			miny = rect[3];
-			maxy = rect[1];
-		}
-		if (maxx >= pos[0] && minx <= pos[0] && maxy >= pos[1] && miny <= pos[1])
-			result = &c;
-	}
-
-	gui::IComponent* result{ nullptr };
-private:
-	std::stack<gui::Floats<4>> m_current;
-	gui::Floats<4> m_rect;
-};
-
-//Locate all the components whose centres are inside the rectangle
-class BoxSelector final : public gui::DescendingVisitor
-{
-public:
-	BoxSelector(const gui::Floats<4>& rect) {}
-
-	virtual void visit(gui::Composite& c) override {}
-	virtual void visit(gui::Component& c) override {}
-
-	std::vector<gui::IComponent*> found;
-};
-
-bool node::FloatKeyEditor::PlotAreaInput::onMouseDown(gui::Mouse::Button button)
-{
 	if (m_currentOp != Op::NONE)
 		return true;
 	else if (button == gui::Mouse::Button::LEFT) {
 		//locate the clicked object
 		ClickSelector v(gui::Mouse::getPosition());
-		m_area.accept(v);
+		m_plot->getPlotArea().accept(v);
 		gui::IComponent* object = v.result;
 
 		if (object) {
@@ -254,7 +264,7 @@ bool node::FloatKeyEditor::PlotAreaInput::onMouseDown(gui::Mouse::Button button)
 					object->setSelected(true);
 				}
 				//start dragging
-				gui::Mouse::setCapture(&m_area);
+				gui::Mouse::setCapture(&m_plot->getPlotArea());
 				m_clickPoint = gui::Mouse::getPosition();
 				m_dragThresholdPassed = false;
 				m_currentOp = Op::DRAG;
@@ -265,16 +275,16 @@ bool node::FloatKeyEditor::PlotAreaInput::onMouseDown(gui::Mouse::Button button)
 	}
 	else if (button == gui::Mouse::Button::MIDDLE) {
 		assert(gui::Mouse::getCapture() == nullptr);
-		m_clickPoint = m_area.fromGlobalSpace(gui::Mouse::getPosition());
-		gui::Mouse::setCapture(&m_area);
+		m_clickPoint = m_plot->getPlotArea().fromGlobalSpace(gui::Mouse::getPosition());
+		gui::Mouse::setCapture(&m_plot->getPlotArea());
 		if (gui::Keyboard::isDown(gui::Keyboard::Key::CTRL)) {
 			m_currentOp = Op::ZOOM;
-			m_startS = m_area.getAxes().getScale();
-			m_startT = m_area.getAxes().getTranslation();
+			m_startS = m_plot->getPlotArea().getAxes().getScale();
+			m_startT = m_plot->getPlotArea().getAxes().getTranslation();
 		}
 		else {
 			m_currentOp = Op::PAN;
-			m_startT = m_area.getAxes().getTranslation();
+			m_startT = m_plot->getPlotArea().getAxes().getTranslation();
 		}
 
 		return true;
@@ -283,20 +293,34 @@ bool node::FloatKeyEditor::PlotAreaInput::onMouseDown(gui::Mouse::Button button)
 		return false;
 }
 
-bool node::FloatKeyEditor::PlotAreaInput::onMouseUp(gui::Mouse::Button button)
+bool node::FloatKeyEditor::onMouseUp(gui::Mouse::Button button)
 {
 	bool result = false;
 
 	if (button == gui::Mouse::Button::LEFT) {
 		if (result = m_currentOp == Op::DRAG) {
+			if (m_clickedComp != m_selection.end()) {
+				//they released before reaching the drag threshold, should clear
+				//other selected objects
+				decltype(m_selection) newSelection;
+				newSelection.insert(m_selection.extract(m_clickedComp));
+				for (auto&& obj : m_selection) {
+					assert(obj);
+					obj->setSelected(false);
+				}
+				m_selection = std::move(newSelection);
+				m_clickedComp = m_selection.end();
+			}
+
 			m_currentOp = Op::NONE;
-			assert(gui::Mouse::getCapture() == &m_area);
+			assert(m_plot && gui::Mouse::getCapture() == &m_plot->getPlotArea());
 			gui::Mouse::setCapture(nullptr);
+			m_initialState.clear();
 		}
 	}
 	else if (button == gui::Mouse::Button::MIDDLE) {
 		if (result = (m_currentOp == Op::PAN || m_currentOp == Op::ZOOM)) {
-			assert(gui::Mouse::getCapture() == &m_area);
+			assert(m_plot && gui::Mouse::getCapture() == &m_plot->getPlotArea());
 			gui::Mouse::setCapture(nullptr);
 			m_currentOp = Op::NONE;
 		}
@@ -305,21 +329,23 @@ bool node::FloatKeyEditor::PlotAreaInput::onMouseUp(gui::Mouse::Button button)
 	return result;
 }
 
-bool node::FloatKeyEditor::PlotAreaInput::onMouseWheel(float delta)
+bool node::FloatKeyEditor::onMouseWheel(float delta)
 {
+	assert(m_plot);
+
 	float scaleFactor = std::pow(SCALE_BASE, delta);
 
-	gui::Floats<2> pivot = m_area.fromGlobalSpace(gui::Mouse::getPosition());
-	gui::Floats<2> T = m_area.getAxes().getTranslation();
-	m_area.getAxes().setTranslation(pivot - (pivot - T) * scaleFactor);
-	m_area.getAxes().scale({ scaleFactor, scaleFactor });
+	gui::Floats<2> pivot = m_plot->getPlotArea().fromGlobalSpace(gui::Mouse::getPosition());
+	gui::Floats<2> T = m_plot->getPlotArea().getAxes().getTranslation();
+	m_plot->getPlotArea().getAxes().setTranslation(pivot - (pivot - T) * scaleFactor);
+	m_plot->getPlotArea().getAxes().scale({ scaleFactor, scaleFactor });
 
 	updateAxisUnits();
 
 	return true;
 }
 
-void node::FloatKeyEditor::PlotAreaInput::onMouseMove(const gui::Floats<2>& pos)
+void node::FloatKeyEditor::onMouseMove(const gui::Floats<2>& pos)
 {
 	switch (m_currentOp) {
 	case Op::DRAG:
@@ -334,43 +360,66 @@ void node::FloatKeyEditor::PlotAreaInput::onMouseMove(const gui::Floats<2>& pos)
 	}
 }
 
-void node::FloatKeyEditor::PlotAreaInput::drag(const gui::Floats<2>& pos)
+void node::FloatKeyEditor::drag(const gui::Floats<2>& pos)
 {
-	if (!m_dragThresholdPassed)
-		m_dragThresholdPassed = std::abs(pos[0] - m_clickPoint[0]) >= DRAG_THRESHOLD || 
-		std::abs(pos[1] - m_clickPoint[1]) >= DRAG_THRESHOLD;
+	if (!m_dragThresholdPassed &&
+		(std::abs(pos[0] - m_clickPoint[0]) >= DRAG_THRESHOLD ||
+		std::abs(pos[1] - m_clickPoint[1]) >= DRAG_THRESHOLD))
+	{
+		m_dragThresholdPassed = true;
+		//discard the clicked component
+		m_clickedComp = m_selection.end();
+
+		//save initial state
+		assert(m_initialState.empty());
+		m_initialState.reserve(m_selection.size());
+		for (IComponent* obj : m_selection) {
+			assert(obj);
+			m_initialState.push_back({ obj, obj->getTranslation() });
+		}
+	}
 
 	if (m_dragThresholdPassed) {
 		gui::Floats<2> delta = pos - m_clickPoint;
 
+		for (auto&& item : m_initialState) {
+			if (IComponent* parent = item.first->getParent()) {
+				gui::Floats<2> global = parent->toGlobalSpace(item.second);
+				item.first->setTranslation(parent->fromGlobalSpace(global + delta));
+			}
+		}
 	}
 }
 
-void node::FloatKeyEditor::PlotAreaInput::pan(const gui::Floats<2>& pos)
+void node::FloatKeyEditor::pan(const gui::Floats<2>& pos)
 {
-	gui::Floats<2> delta = m_area.fromGlobalSpace(pos) - m_clickPoint;
-	m_area.getAxes().setTranslation(m_startT + delta);
+	assert(m_plot);
+	gui::Floats<2> delta = m_plot->getPlotArea().fromGlobalSpace(pos) - m_clickPoint;
+	m_plot->getPlotArea().getAxes().setTranslation(m_startT + delta);
 }
 
-void node::FloatKeyEditor::PlotAreaInput::zoom(const gui::Floats<2>& pos)
+void node::FloatKeyEditor::zoom(const gui::Floats<2>& pos)
 {
-	gui::Floats<2> delta = m_area.fromGlobalSpace(pos) - m_clickPoint;
+	assert(m_plot);
+	gui::Floats<2> delta = m_plot->getPlotArea().fromGlobalSpace(pos) - m_clickPoint;
 	gui::Floats<2> factor;
 	factor[0] = std::pow(SCALE_BASE, delta[0] * SCALE_SENSITIVITY);
 	factor[1] = std::pow(SCALE_BASE, -delta[1] * SCALE_SENSITIVITY);
 
-	m_area.getAxes().setTranslation(m_clickPoint - (m_clickPoint - m_startT) * factor);
-	m_area.getAxes().setScale(m_startS * factor);
+	m_plot->getPlotArea().getAxes().setTranslation(m_clickPoint - (m_clickPoint - m_startT) * factor);
+	m_plot->getPlotArea().getAxes().setScale(m_startS * factor);
 
 	updateAxisUnits();
 }
 
-void node::FloatKeyEditor::PlotAreaInput::updateAxisUnits()
+void node::FloatKeyEditor::updateAxisUnits()
 {
+	assert(m_plot);
+
 	//major unit should be 1, 2 or 5 to some power of 10
 	gui::Floats<2> major;
-	gui::Floats<2> xlims = m_area.getXLimits();
-	gui::Floats<2> ylims = m_area.getYLimits();
+	gui::Floats<2> xlims = m_plot->getPlotArea().getXLimits();
+	gui::Floats<2> ylims = m_plot->getPlotArea().getYLimits();
 	gui::Floats<2> estimate{ 0.5f * std::abs(xlims[1] - xlims[0]), 0.5f * std::abs(ylims[1] - ylims[0]) };
 	//gui::Floats<2> estimate = 300.0f / m_area.getAxes().getScale().abs();//problematic before the first frame
 	gui::Floats<2> power = estimate.log10().floor();
@@ -392,8 +441,8 @@ void node::FloatKeyEditor::PlotAreaInput::updateAxisUnits()
 	//minor unit should be major / 4 (2?)
 	gui::Floats<2> minor = major / 4.0f;
 
-	m_area.getAxes().setMajorUnits(major);
-	m_area.getAxes().setMinorUnits(minor);
+	m_plot->getPlotArea().getAxes().setMajorUnits(major);
+	m_plot->getPlotArea().getAxes().setMinorUnits(minor);
 }
 
 class node::FloatKeyEditor::LinearInterpolant::LinearHandle final : 
@@ -415,9 +464,9 @@ public:
 
 	virtual void setTranslation(const gui::Floats<2>& t) override
 	{
-		//Weird that we are expected to know not to invoke this asynced.
-		//Better to have the Command that moves a selection call the properties directly.
-		//But how would it know about them?
+		//The command cannot rely on calling this function, since we will
+		//not survive. It needs our interface to the data model. But our
+		//element interface is also temporary. This won't work!
 		m_property.set({t[0], t[1]});
 	}
 

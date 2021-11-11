@@ -6,7 +6,8 @@
 
 namespace node
 {
-	class FloatKeyEditor final : public gui::Popup, public PropertyListener<nif::KeyType>
+	class FloatKeyEditor final : 
+		public gui::Popup, public PropertyListener<nif::KeyType>, public gui::MouseHandler
 	{
 	public:
 		FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& tStart, IProperty<float>& tStop);
@@ -15,6 +16,19 @@ namespace node
 		virtual void onClose() override;
 
 		virtual void onSet(const nif::KeyType& type) override;
+
+		virtual bool onMouseDown(gui::Mouse::Button button) override;
+		virtual bool onMouseUp(gui::Mouse::Button button) override;
+		virtual bool onMouseWheel(float delta) override;
+
+		virtual void onMouseMove(const gui::Floats<2>& pos) override;
+
+	private:
+		void drag(const gui::Floats<2>& pos);
+		void pan(const gui::Floats<2>& pos);
+		void zoom(const gui::Floats<2>& pos);
+
+		void updateAxisUnits();
 
 	private:
 		class Interpolant : public gui::Composite
@@ -73,50 +87,27 @@ namespace node
 			virtual void onErase(int i) override {}
 		};
 
-		class PlotAreaInput final : public gui::MouseHandler
-		{
-		public:
-			PlotAreaInput(gui::PlotArea& area);
-
-			virtual bool onMouseDown(gui::Mouse::Button button) override;
-			virtual bool onMouseUp(gui::Mouse::Button button) override;
-			virtual bool onMouseWheel(float delta) override;
-
-			virtual void onMouseMove(const gui::Floats<2>& pos) override;
-
-			//temp location (?)
-			std::set<IComponent*> m_selection;
-
-		private:
-			void drag(const gui::Floats<2>& pos);
-			void pan(const gui::Floats<2>& pos);
-			void zoom(const gui::Floats<2>& pos);
-
-			void updateAxisUnits();
-
-		private:
-			enum class Op
-			{
-				NONE,
-				DRAG,
-				PAN,
-				ZOOM,
-			};
-			gui::PlotArea& m_area;
-			gui::Floats<2> m_clickPoint;
-			gui::Floats<2> m_startS;
-			gui::Floats<2> m_startT;
-			std::set<IComponent*>::iterator m_clickedComp;
-			Op m_currentOp{ Op::NONE };
-			bool m_dragThresholdPassed{ false };
-
-		};
-
 		nif::InterpolationData<float>& m_keys;
 		IProperty<nif::KeyType>& m_keyType;
 
 		gui::Plot* m_plot{ nullptr };
-		std::unique_ptr<PlotAreaInput> m_inputHandler;
 		Interpolant* m_curve{ nullptr };
+
+		enum class Op
+		{
+			NONE,
+			DRAG,
+			PAN,
+			ZOOM,
+		};
+		std::set<IComponent*> m_selection;
+		gui::Floats<2> m_clickPoint;
+		gui::Floats<2> m_startS;
+		gui::Floats<2> m_startT;
+		std::set<IComponent*>::iterator m_clickedComp;
+		Op m_currentOp{ Op::NONE };
+
+		std::vector<std::pair<IComponent*, gui::Floats<2>>> m_initialState;
+		bool m_dragThresholdPassed{ false };
 	};
 }
