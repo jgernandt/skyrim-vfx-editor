@@ -19,13 +19,23 @@
 #include "pch.h"
 #include "File.h"
 
+namespace Niflib
+{
+	NiObjectRef FindRoot(std::vector<NiObjectRef> const& objects);
+}
+
 nif::File::File(const std::filesystem::path& path)
 {
 	if (!path.empty()) {
 		std::ifstream in(path, std::ifstream::binary);
 		Niflib::NifInfo fileInfo;
-		Niflib::NiObjectRef root = Niflib::ReadNifTree(in, &fileInfo);
+		auto objects = Niflib::ReadNifList(in, &fileInfo);
 		in.close();
+
+		Niflib::NiObjectRef root = Niflib::FindRoot(objects);
+
+		for (auto&& obj : objects)
+			addToIndex(obj, {});
 
 		if (fileInfo.version == 0x14020007 && fileInfo.userVersion == 12) {
 			if (fileInfo.userVersion2 == 83)
@@ -38,9 +48,22 @@ nif::File::File(const std::filesystem::path& path)
 	}
 }
 
+void nif::File::addToIndex(native::NiObject* obj, const std::shared_ptr<NiObject>& ptr)
+{
+	if (obj) {
+		if (auto result = m_index.insert({ obj, ptr }); result.second) {
+			obj->AddRef();
+		}
+		//else ignore? fail? this is an error!
+		else
+			assert(false);
+	}
+}
+
 void nif::File::addFadeNode(native::NiNode* parent)
 {
 	auto ptr = new Niflib::BSFadeNode;
+	addToIndex(ptr, {});
 	ptr->SetName("NewFile.nif");
 	m_root.reset(ptr);
 }

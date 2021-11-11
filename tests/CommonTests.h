@@ -32,12 +32,10 @@ T* findNode(const std::vector<std::unique_ptr<node::NodeBase>>& nodes, const nif
 }
 
 //Test that an Assignable can in fact be assigned to.
-//If T is not default constructible, indicate a related type that is.
-template<typename T, typename ConstructibleType = T>
-void AssignableTest(IAssignable<T>& ass)
+//Requires a function object that produces objects of type T.
+template<typename T, typename FactoryType>
+void AssignableTest(IAssignable<T>& ass, FactoryType& factory)
 {
-	static_assert(std::is_default_constructible<ConstructibleType>::value, "object is not default constructible");
-
 	struct Listener : AssignableListener<T>
 	{
 		virtual void onAssign(T* t) 
@@ -62,30 +60,32 @@ void AssignableTest(IAssignable<T>& ass)
 	Listener l;
 	ass.addListener(l);
 
-	ConstructibleType o1;
-	Assert::IsFalse(ass.isAssigned(&o1));
+	std::shared_ptr<T> o1 = factory();
+	Assert::IsNotNull(o1.get());
+	Assert::IsFalse(ass.isAssigned(o1.get()));
 
-	ass.assign(&o1);
-	Assert::IsTrue(ass.isAssigned(&o1));
-	Assert::IsTrue(l.wasAssigned(&o1));
+	ass.assign(o1.get());
+	Assert::IsTrue(ass.isAssigned(o1.get()));
+	Assert::IsTrue(l.wasAssigned(o1.get()));
 
 	//Should we require that reassigning the same object does not call the listener?
 
-	ConstructibleType o2;
-	Assert::IsFalse(ass.isAssigned(&o2));
+	std::shared_ptr<T> o2 = factory();
+	Assert::IsNotNull(o2.get());
+	Assert::IsFalse(ass.isAssigned(o2.get()));
 
-	ass.assign(&o2);
-	Assert::IsFalse(ass.isAssigned(&o1));
-	Assert::IsTrue(ass.isAssigned(&o2));
-	Assert::IsTrue(l.wasAssigned(&o2));
+	ass.assign(o2.get());
+	Assert::IsFalse(ass.isAssigned(o1.get()));
+	Assert::IsTrue(ass.isAssigned(o2.get()));
+	Assert::IsTrue(l.wasAssigned(o2.get()));
 
 	ass.assign(nullptr);
-	Assert::IsFalse(ass.isAssigned(&o2));
+	Assert::IsFalse(ass.isAssigned(o2.get()));
 	Assert::IsTrue(l.wasAssigned(nullptr));
 
 	ass.removeListener(l);
-	ass.assign(&o2);
-	Assert::IsFalse(l.wasAssigned(&o2));
+	ass.assign(o2.get());
+	Assert::IsFalse(l.wasAssigned(o2.get()));
 	ass.assign(nullptr);
 
 }
@@ -329,9 +329,9 @@ inline void StringPropertyTest(IProperty<std::string>& p)
 }
 
 //Test that a Sequence does in fact insert and erase elements in the proper order.
-//If T is not default constructible, indicate a related type that is.
-template<typename T, typename ConstructibleType = T>
-void SequenceTest(ISequence<T>& seq)
+//Requires a function object that produces shared_ptr to objects of type T.
+template<typename T, typename FactoryType>
+void SequenceTest(ISequence<T>& seq, const FactoryType& factory)
 {
 	struct Listener : SequenceListener<T>
 	{
@@ -370,57 +370,60 @@ void SequenceTest(ISequence<T>& seq)
 	//Our indices below assumes this. We could make it work in general, if we need to.
 	Assert::IsTrue(seq.size() == 0);
 
-	ConstructibleType o1;
-	Assert::IsTrue(seq.find(o1) == -1);
+	std::shared_ptr<T> o1 = factory();
+	Assert::IsNotNull(o1.get());
+	Assert::IsTrue(seq.find(*o1) == -1);
 
-	Assert::IsTrue(seq.insert(-1, o1) == 0);
-	Assert::IsTrue(seq.find(o1) == 0);
+	Assert::IsTrue(seq.insert(-1, *o1) == 0);
+	Assert::IsTrue(seq.find(*o1) == 0);
 	Assert::IsTrue(seq.size() == 1);
 	Assert::IsTrue(l.wasInserted() == 0);
 	Assert::IsTrue(l.wasErased() == -1);
 
-	ConstructibleType o2;
-	Assert::IsTrue(seq.find(o2) == -1);
+	std::shared_ptr<T> o2 = factory();
+	Assert::IsNotNull(o2.get());
+	Assert::IsTrue(seq.find(*o2) == -1);
 
-	Assert::IsTrue(seq.insert(-1, o2) == 1);
-	Assert::IsTrue(seq.find(o1) == 0);
-	Assert::IsTrue(seq.find(o2) == 1);
+	Assert::IsTrue(seq.insert(-1, *o2) == 1);
+	Assert::IsTrue(seq.find(*o1) == 0);
+	Assert::IsTrue(seq.find(*o2) == 1);
 	Assert::IsTrue(seq.size() == 2);
 	Assert::IsTrue(l.wasInserted() == 1);
 	Assert::IsTrue(l.wasErased() == -1);
 
-	ConstructibleType o3;
-	Assert::IsTrue(seq.find(o3) == -1);
+	std::shared_ptr<T> o3 = factory();
+	Assert::IsNotNull(o3.get());
+	Assert::IsTrue(seq.find(*o3) == -1);
 
-	Assert::IsTrue(seq.insert(1, o3) == 1);
-	Assert::IsTrue(seq.find(o1) == 0);
-	Assert::IsTrue(seq.find(o2) == 2);
-	Assert::IsTrue(seq.find(o3) == 1);
+	Assert::IsTrue(seq.insert(1, *o3) == 1);
+	Assert::IsTrue(seq.find(*o1) == 0);
+	Assert::IsTrue(seq.find(*o2) == 2);
+	Assert::IsTrue(seq.find(*o3) == 1);
 	Assert::IsTrue(seq.size() == 3);
 	Assert::IsTrue(l.wasInserted() == 1);
 	Assert::IsTrue(l.wasErased() == -1);
 
 	Assert::IsTrue(seq.erase(0) == 0);
-	Assert::IsTrue(seq.find(o1) == -1);
-	Assert::IsTrue(seq.find(o2) == 1);
-	Assert::IsTrue(seq.find(o3) == 0);
+	Assert::IsTrue(seq.find(*o1) == -1);
+	Assert::IsTrue(seq.find(*o2) == 1);
+	Assert::IsTrue(seq.find(*o3) == 0);
 	Assert::IsTrue(seq.size() == 2);
 	Assert::IsTrue(l.wasInserted() == -1);
 	Assert::IsTrue(l.wasErased() == 0);
 
-	Assert::IsTrue(seq.insert(10, o1) == 2);
-	Assert::IsTrue(seq.find(o1) == 2);
-	Assert::IsTrue(seq.find(o2) == 1);
-	Assert::IsTrue(seq.find(o3) == 0);
+	Assert::IsTrue(seq.insert(10, *o1) == 2);
+	Assert::IsTrue(seq.find(*o1) == 2);
+	Assert::IsTrue(seq.find(*o2) == 1);
+	Assert::IsTrue(seq.find(*o3) == 0);
 	Assert::IsTrue(seq.size() == 3);
 	Assert::IsTrue(l.wasInserted() == 2);
 	Assert::IsTrue(l.wasErased() == -1);
 
 	//Reinserting is a no-op, even if the position is different from the current.
-	Assert::IsTrue(seq.insert(0, o2) == 1);
-	Assert::IsTrue(seq.find(o1) == 2);
-	Assert::IsTrue(seq.find(o2) == 1);
-	Assert::IsTrue(seq.find(o3) == 0);
+	Assert::IsTrue(seq.insert(0, *o2) == 1);
+	Assert::IsTrue(seq.find(*o1) == 2);
+	Assert::IsTrue(seq.find(*o2) == 1);
+	Assert::IsTrue(seq.find(*o3) == 0);
 	Assert::IsTrue(seq.size() == 3);
 	Assert::IsTrue(l.wasInserted() == -1);
 	Assert::IsTrue(l.wasErased() == -1);
@@ -436,9 +439,9 @@ void SequenceTest(ISequence<T>& seq)
 }
 
 //Test that a Set does in fact add and remove objects passed to it.
-//If T is not default constructible, indicate a related type that is.
-template<typename T, typename ConstructibleType = T>
-void SetTest(ISet<T>& set)
+//Requires a function object that produces shared_ptr to objects of type T.
+template<typename T, typename FactoryType>
+void SetTest(ISet<T>& set, const FactoryType& factory)
 {
 	struct Listener : SetListener<T>
 	{
@@ -476,53 +479,54 @@ void SetTest(ISet<T>& set)
 
 	size_t initialSize = set.size();
 
-	ConstructibleType o1;
-	Assert::IsFalse(set.has(o1));
+	std::shared_ptr<T> o1 = factory();
+	Assert::IsNotNull(o1.get());
+	Assert::IsFalse(set.has(*o1));
 
-	set.add(o1);
-	Assert::IsTrue(set.has(o1));
+	set.add(*o1);
+	Assert::IsTrue(set.has(*o1));
 	Assert::IsTrue(set.size() == initialSize + 1);
-	Assert::IsTrue(l.wasAdded() == &o1);
+	Assert::IsTrue(l.wasAdded() == o1.get());
 	Assert::IsTrue(l.wasRemoved() == nullptr);
 
-	ConstructibleType o2;
-	Assert::IsFalse(set.has(o2));
+	std::shared_ptr<T> o2 = factory();
+	Assert::IsFalse(set.has(*o2));
 
-	set.add(o2);
-	Assert::IsTrue(set.has(o1));
-	Assert::IsTrue(set.has(o2));
+	set.add(*o2);
+	Assert::IsTrue(set.has(*o1));
+	Assert::IsTrue(set.has(*o2));
 	Assert::IsTrue(set.size() == initialSize + 2);
-	Assert::IsTrue(l.wasAdded() == &o2);
+	Assert::IsTrue(l.wasAdded() == o2.get());
 	Assert::IsTrue(l.wasRemoved() == nullptr);
 
 	//Re-adding should do nothing
-	set.add(o2);
-	Assert::IsTrue(set.has(o1));
-	Assert::IsTrue(set.has(o2));
+	set.add(*o2);
+	Assert::IsTrue(set.has(*o1));
+	Assert::IsTrue(set.has(*o2));
 	Assert::IsTrue(set.size() == initialSize + 2);
 	Assert::IsTrue(l.wasAdded() == nullptr);
 	Assert::IsTrue(l.wasRemoved() == nullptr);
 
-	set.remove(o1);
-	Assert::IsFalse(set.has(o1));
-	Assert::IsTrue(set.has(o2));
+	set.remove(*o1);
+	Assert::IsFalse(set.has(*o1));
+	Assert::IsTrue(set.has(*o2));
 	Assert::IsTrue(set.size() == initialSize + 1);
 	Assert::IsTrue(l.wasAdded() == nullptr);
-	Assert::IsTrue(l.wasRemoved() == &o1);
+	Assert::IsTrue(l.wasRemoved() == o1.get());
 
 	//Re-removing should do nothing
-	set.remove(o1);
-	Assert::IsFalse(set.has(o1));
-	Assert::IsTrue(set.has(o2));
+	set.remove(*o1);
+	Assert::IsFalse(set.has(*o1));
+	Assert::IsTrue(set.has(*o2));
 	Assert::IsTrue(set.size() == initialSize + 1);
 	Assert::IsTrue(l.wasAdded() == nullptr);
 	Assert::IsTrue(l.wasRemoved() == nullptr);
 
-	set.remove(o2);
-	Assert::IsFalse(set.has(o2));
+	set.remove(*o2);
+	Assert::IsFalse(set.has(*o2));
 	Assert::IsTrue(set.size() == initialSize);
 	Assert::IsTrue(l.wasAdded() == nullptr);
-	Assert::IsTrue(l.wasRemoved() == &o2);
+	Assert::IsTrue(l.wasRemoved() == o2.get());
 
 	set.removeListener(l);
 }
@@ -936,25 +940,25 @@ void AssignableReceiverTest(const std::string& field, bool multi, std::unique_pt
 	Assert::IsFalse(target2.isAssigned(exp));
 }
 
-template<typename NodeType, typename AssType, typename ConstructibleType = AssType>
-void AssignableSenderTest(const std::string& field, bool multi, std::unique_ptr<NodeType>&& node, IAssignable<AssType>& target)
+template<typename NodeType, typename AssType, typename FactoryType>
+void AssignableSenderTest(const std::string& field, bool multi, std::unique_ptr<NodeType>&& node, IAssignable<AssType>& target, const FactoryType& factory)
 {
 	ConnectorTester<NodeType> tester(std::move(node));
 	tester.tryConnect<IAssignable<AssType>, void>(field, multi, nullptr);
 	auto ifc = tester.tryConnect<IAssignable<AssType>, void>(field, multi, nullptr);
 	Assert::IsNotNull(ifc);
 
-	ConstructibleType obj1;
-	ifc->assign(&obj1);
-	Assert::IsTrue(target.isAssigned(&obj1));
+	std::shared_ptr<AssType> obj1 = factory();
+	ifc->assign(obj1.get());
+	Assert::IsTrue(target.isAssigned(obj1.get()));
 
-	ConstructibleType obj2;
-	ifc->assign(&obj2);
-	Assert::IsFalse(target.isAssigned(&obj1));
-	Assert::IsTrue(target.isAssigned(&obj2));
+	std::shared_ptr<AssType> obj2 = factory();
+	ifc->assign(obj2.get());
+	Assert::IsFalse(target.isAssigned(obj1.get()));
+	Assert::IsTrue(target.isAssigned(obj2.get()));
 
 	ifc->assign(nullptr);
-	Assert::IsFalse(target.isAssigned(&obj2));
+	Assert::IsFalse(target.isAssigned(obj2.get()));
 }
 
 template<typename NodeType, typename SetType>
@@ -979,27 +983,34 @@ void SetReceiverTest(const std::string& field, bool multi, std::unique_ptr<NodeT
 	Assert::IsFalse(target2.has(exp));
 }
 
-template<typename NodeType, typename SetType, typename ConstructibleType = SetType>
-void SetSenderTest(const std::string& field, bool multi, std::unique_ptr<NodeType>&& node, ISet<SetType>& target)
+template<typename NodeType, typename SetType, typename FactoryType>
+void SetSenderTest(
+	const std::string& field, 
+	bool multi, 
+	std::unique_ptr<NodeType>&& node, 
+	ISet<SetType>& target, 
+	const FactoryType& factory)
 {
 	ConnectorTester<NodeType> tester(std::move(node));
 	tester.tryConnect<ISet<SetType>, void>(field, multi, nullptr);
 	auto ifc = tester.tryConnect<ISet<SetType>, void>(field, multi, nullptr);
 	Assert::IsNotNull(ifc);
 
-	ConstructibleType obj1;
-	ifc->add(obj1);
-	Assert::IsTrue(target.has(obj1));
+	std::shared_ptr<SetType> obj1 = factory();
+	Assert::IsNotNull(obj1.get());
+	ifc->add(*obj1);
+	Assert::IsTrue(target.has(*obj1));
 
-	ConstructibleType obj2;
-	ifc->add(obj2);
-	Assert::IsTrue(target.has(obj1));
-	Assert::IsTrue(target.has(obj2));
+	std::shared_ptr<SetType> obj2 = factory();
+	Assert::IsNotNull(obj2.get());
+	ifc->add(*obj2);
+	Assert::IsTrue(target.has(*obj1));
+	Assert::IsTrue(target.has(*obj2));
 
-	ifc->remove(obj1);
-	Assert::IsFalse(target.has(obj1));
-	Assert::IsTrue(target.has(obj2));
+	ifc->remove(*obj1);
+	Assert::IsFalse(target.has(*obj1));
+	Assert::IsTrue(target.has(*obj2));
 
-	ifc->remove(obj2);
-	Assert::IsFalse(target.has(obj2));
+	ifc->remove(*obj2);
+	Assert::IsFalse(target.has(*obj2));
 }

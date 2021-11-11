@@ -200,36 +200,36 @@ private:
 	Sender<IModifiable> m_sndr;
 };
 
-node::ParticleSystem::ParticleSystem() : 
-	ParticleSystem(
-		std::make_unique<nif::NiParticleSystem>(), 
-		std::unique_ptr<nif::NiPSysData>(),
-		std::unique_ptr<nif::NiAlphaProperty>(),
-		std::unique_ptr<nif::NiPSysUpdateCtlr>(),
-		std::unique_ptr<nif::NiPSysAgeDeathModifier>(),
-		std::unique_ptr<nif::NiPSysPositionModifier>(),
-		std::unique_ptr<nif::NiPSysBoundUpdateModifier>())
+node::ParticleSystem::ParticleSystem(nif::File& file) :
+	ParticleSystem(file,
+		file.create<nif::NiParticleSystem>(), 
+		std::shared_ptr<nif::NiPSysData>(),
+		std::shared_ptr<nif::NiAlphaProperty>(),
+		std::shared_ptr<nif::NiPSysUpdateCtlr>(),
+		std::shared_ptr<nif::NiPSysAgeDeathModifier>(),
+		std::shared_ptr<nif::NiPSysPositionModifier>(),
+		std::shared_ptr<nif::NiPSysBoundUpdateModifier>())
 {
 }
 
-node::ParticleSystem::ParticleSystem(
-	std::unique_ptr<nif::NiParticleSystem>&& obj,
-	std::unique_ptr<nif::NiPSysData>&& dat,
-	std::unique_ptr<nif::NiAlphaProperty>&& alpha,
-	std::unique_ptr<nif::NiPSysUpdateCtlr>&& ctlr,
-	std::unique_ptr<nif::NiPSysAgeDeathModifier>&& adm,
-	std::unique_ptr<nif::NiPSysPositionModifier>&& pm,
-	std::unique_ptr<nif::NiPSysBoundUpdateModifier>&& bum) :
+node::ParticleSystem::ParticleSystem(nif::File& file,
+	std::shared_ptr<nif::NiParticleSystem>&& obj,
+	std::shared_ptr<nif::NiPSysData>&& dat,
+	std::shared_ptr<nif::NiAlphaProperty>&& alpha,
+	std::shared_ptr<nif::NiPSysUpdateCtlr>&& ctlr,
+	std::shared_ptr<nif::NiPSysAgeDeathModifier>&& adm,
+	std::shared_ptr<nif::NiPSysPositionModifier>&& pm,
+	std::shared_ptr<nif::NiPSysBoundUpdateModifier>&& bum) :
 	AVObject(std::move(obj))
 {
 	if (!dat) {
-		dat = std::make_unique<nif::NiPSysData>();
+		dat = file.create<nif::NiPSysData>();
 		object().data().assign(dat.get());
 		dat->maxCount().set(100);
 	}
 	addObject(std::move(dat));
 	if (!alpha) {
-		alpha = std::make_unique<nif::NiAlphaProperty>();
+		alpha = file.create<nif::NiAlphaProperty>();
 		alpha->flags().set(13);
 		object().alphaProperty().assign(alpha.get());
 	}
@@ -244,7 +244,7 @@ node::ParticleSystem::ParticleSystem(
 		object().controllers().insert(-1, *ctlr);
 	}
 	else {
-		ctlr = std::make_unique<nif::NiPSysUpdateCtlr>();
+		ctlr = file.create<nif::NiPSysUpdateCtlr>();
 		ctlr->flags().set(72);
 		ctlr->frequency().set(1.0f);
 		ctlr->phase().set(0.0f);
@@ -260,7 +260,7 @@ node::ParticleSystem::ParticleSystem(
 		object().modifiers().insert(0, *adm);
 	}
 	else {
-		adm = std::make_unique<nif::NiPSysAgeDeathModifier>();
+		adm = file.create<nif::NiPSysAgeDeathModifier>();
 	}
 	addObject(std::move(adm));
 
@@ -271,7 +271,7 @@ node::ParticleSystem::ParticleSystem(
 		object().modifiers().insert(-1, *pm);
 	}
 	else {
-		pm = std::make_unique<nif::NiPSysPositionModifier>();
+		pm = file.create<nif::NiPSysPositionModifier>();
 	}
 	addObject(std::move(pm));
 
@@ -282,7 +282,7 @@ node::ParticleSystem::ParticleSystem(
 		object().modifiers().insert(-1, *bum);
 	}
 	else {
-		bum = std::make_unique<nif::NiPSysBoundUpdateModifier>();
+		bum = file.create<nif::NiPSysBoundUpdateModifier>();
 	}
 	addObject(std::move(bum));
 

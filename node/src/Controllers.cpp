@@ -64,8 +64,8 @@ private:
 	Sender<IController<float>> m_sndr;
 };
 
-node::FloatController::FloatController() : 
-	FloatController(std::make_unique<nif::NiFloatInterpolator>(), std::unique_ptr<nif::NiFloatData>())
+node::FloatController::FloatController(nif::File& file) : 
+	FloatController(file, file.create<nif::NiFloatInterpolator>(), std::shared_ptr<nif::NiFloatData>())
 {
 	flags().set(DEFAULT_FLAGS);
 	frequency().set(DEFAULT_FREQUENCY);
@@ -74,9 +74,9 @@ node::FloatController::FloatController() :
 	stopTime().set(DEFAULT_STOPTIME);
 }
 
-node::FloatController::FloatController(
-	std::unique_ptr<nif::NiFloatInterpolator>&& iplr, 
-	std::unique_ptr<nif::NiFloatData>&& data) :
+node::FloatController::FloatController(nif::File& file,
+	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
+	std::shared_ptr<nif::NiFloatData>&& data) :
 	NodeBase(std::move(iplr)), m_data{ std::move(data) }
 {
 	//Remember to have Constructor set our properties before connecting us!
@@ -89,6 +89,9 @@ node::FloatController::FloatController(
 
 	if (!m_data) {
 		//We don't necessarily need a data block. Should we always have one regardless?
+		m_data = file.create<nif::NiFloatData>();
+		m_data->keyType().set(nif::KeyType::LINEAR);
+		m_data->iplnData().keys().set({ { startTime().get(), 0.0f }, { stopTime().get(), 0.0f } });
 	}
 
 	newField<TargetField>(TARGET, *this);
@@ -130,11 +133,6 @@ nif::NiFloatInterpolator& node::FloatController::object()
 
 void node::FloatController::openKeyEditor()
 {
-	if (!m_data) {
-		m_data = std::make_unique<nif::NiFloatData>();
-		m_data->keyType().set(nif::KeyType::LINEAR);
-		m_data->iplnData().keys().set({ { startTime().get(), 0.0f }, { stopTime().get(), 0.0f } });
-	}
 	auto c = std::make_unique<FloatKeyEditor>(*m_data, startTime(), stopTime());
 	c->open();
 	asyncInvoke<gui::AddChild>(std::move(c), this, false);

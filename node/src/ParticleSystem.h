@@ -26,15 +26,15 @@ namespace node
 	class ParticleSystem final : public AVObject
 	{
 	public:
-		ParticleSystem();
-		ParticleSystem(
-			std::unique_ptr<nif::NiParticleSystem>&& obj,
-			std::unique_ptr<nif::NiPSysData>&& data,
-			std::unique_ptr<nif::NiAlphaProperty>&& alpha,
-			std::unique_ptr<nif::NiPSysUpdateCtlr>&& ctlr,
-			std::unique_ptr<nif::NiPSysAgeDeathModifier>&& adm,
-			std::unique_ptr<nif::NiPSysPositionModifier>&& pm,
-			std::unique_ptr<nif::NiPSysBoundUpdateModifier>&& bum);
+		ParticleSystem(nif::File& file);
+		ParticleSystem(nif::File& file,
+			std::shared_ptr<nif::NiParticleSystem>&& obj,
+			std::shared_ptr<nif::NiPSysData>&& data,
+			std::shared_ptr<nif::NiAlphaProperty>&& alpha,
+			std::shared_ptr<nif::NiPSysUpdateCtlr>&& ctlr,
+			std::shared_ptr<nif::NiPSysAgeDeathModifier>&& adm,
+			std::shared_ptr<nif::NiPSysPositionModifier>&& pm,
+			std::shared_ptr<nif::NiPSysBoundUpdateModifier>&& bum);
 
 		~ParticleSystem();
 

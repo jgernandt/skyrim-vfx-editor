@@ -25,10 +25,11 @@ namespace node
 	class Emitter : public Modifier
 	{
 	protected:
-		Emitter(std::unique_ptr<nif::NiPSysEmitter>&& obj,
-			std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-			std::unique_ptr<nif::NiFloatInterpolator>&& iplr,
-			std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr);
+		Emitter(nif::File& file, 
+			std::shared_ptr<nif::NiPSysEmitter>&& obj,
+			std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+			std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
+			std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr);
 
 	public:
 		virtual ~Emitter();
@@ -113,16 +114,17 @@ namespace node
 		std::unique_ptr<ModifierNameListener> m_modNameLsnr;
 
 		//until we have a field to manage this:
-		std::unique_ptr<nif::NiBoolInterpolator> m_visIplr;
+		std::shared_ptr<nif::NiBoolInterpolator> m_visIplr;
 	};
 
 	class VolumeEmitter : public Emitter
 	{
 	protected:
-		VolumeEmitter(std::unique_ptr<nif::NiPSysVolumeEmitter>&& obj,
-			std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-			std::unique_ptr<nif::NiFloatInterpolator>&& iplr,
-			std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr);
+		VolumeEmitter(nif::File& file, 
+			std::shared_ptr<nif::NiPSysVolumeEmitter>&& obj,
+			std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+			std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
+			std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr);
 
 	public:
 		virtual ~VolumeEmitter() = default;
@@ -151,13 +153,15 @@ namespace node
 	class BoxEmitter final : public VolumeEmitter
 	{
 	public:
-		BoxEmitter();
+		BoxEmitter(nif::File& file);
+
+		BoxEmitter(nif::File& file,
+			std::shared_ptr<nif::NiPSysBoxEmitter>&& obj,
+			std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr = std::shared_ptr<nif::NiPSysEmitterCtlr>(),
+			std::shared_ptr<nif::NiFloatInterpolator>&& iplr = std::shared_ptr<nif::NiFloatInterpolator>(),
+			std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr = std::shared_ptr<nif::NiBoolInterpolator>());
 
 		virtual nif::NiPSysBoxEmitter& object() override;
-		BoxEmitter(std::unique_ptr<nif::NiPSysBoxEmitter>&& obj,
-			std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr = std::unique_ptr<nif::NiPSysEmitterCtlr>(),
-			std::unique_ptr<nif::NiFloatInterpolator>&& iplr = std::unique_ptr<nif::NiFloatInterpolator>(),
-			std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr = std::unique_ptr<nif::NiBoolInterpolator>());
 
 	public:
 		constexpr static const char* BOX_WIDTH = "Width (X)";
@@ -171,11 +175,12 @@ namespace node
 	class CylinderEmitter final : public VolumeEmitter
 	{
 	public:
-		CylinderEmitter();
-		CylinderEmitter(std::unique_ptr<nif::NiPSysCylinderEmitter>&& obj,
-			std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr = std::unique_ptr<nif::NiPSysEmitterCtlr>(),
-			std::unique_ptr<nif::NiFloatInterpolator>&& iplr = std::unique_ptr<nif::NiFloatInterpolator>(),
-			std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr = std::unique_ptr<nif::NiBoolInterpolator>());
+		CylinderEmitter(nif::File& file);
+		CylinderEmitter(nif::File& file, 
+			std::shared_ptr<nif::NiPSysCylinderEmitter>&& obj,
+			std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr = std::shared_ptr<nif::NiPSysEmitterCtlr>(),
+			std::shared_ptr<nif::NiFloatInterpolator>&& iplr = std::shared_ptr<nif::NiFloatInterpolator>(),
+			std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr = std::shared_ptr<nif::NiBoolInterpolator>());
 
 	public:
 		virtual nif::NiPSysCylinderEmitter& object() override;
@@ -191,11 +196,12 @@ namespace node
 	class SphereEmitter final : public VolumeEmitter
 	{
 	public:
-		SphereEmitter();
-		SphereEmitter(std::unique_ptr<nif::NiPSysSphereEmitter>&& obj,
-			std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr = std::unique_ptr<nif::NiPSysEmitterCtlr>(),
-			std::unique_ptr<nif::NiFloatInterpolator>&& iplr = std::unique_ptr<nif::NiFloatInterpolator>(),
-			std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr = std::unique_ptr<nif::NiBoolInterpolator>());
+		SphereEmitter(nif::File& file);
+		SphereEmitter(nif::File& file,
+			std::shared_ptr<nif::NiPSysSphereEmitter>&& obj,
+			std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr = std::shared_ptr<nif::NiPSysEmitterCtlr>(),
+			std::shared_ptr<nif::NiFloatInterpolator>&& iplr = std::shared_ptr<nif::NiFloatInterpolator>(),
+			std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr = std::shared_ptr<nif::NiBoolInterpolator>());
 
 	public:
 		virtual nif::NiPSysSphereEmitter& object() override;

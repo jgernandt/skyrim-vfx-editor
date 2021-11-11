@@ -21,7 +21,7 @@
 #include "style.h"
 #include "widget_types.h"
 
-node::Modifier::Modifier(std::unique_ptr<nif::NiPSysModifier>&& obj) :
+node::Modifier::Modifier(std::shared_ptr<nif::NiPSysModifier>&& obj) :
 	NodeBase(std::move(obj))
 {
 	setClosable(true);
@@ -43,7 +43,7 @@ nif::NiPSysModifier& node::Modifier::object()
 	return *static_cast<nif::NiPSysModifier*>(getObjects()[0].get());
 }
 
-void node::Modifier::addUnknownController(std::unique_ptr<nif::NiPSysModifierCtlr>&& ctlr)
+void node::Modifier::addUnknownController(std::shared_ptr<nif::NiPSysModifierCtlr>&& ctlr)
 {
 	if (ctlr) {
 		m_lsnrs.push_back(std::make_unique<ModifierNameListener>(ctlr->modifierName()));
@@ -148,7 +148,7 @@ node::Modifier::NextModField::NextModField(const std::string& name, Modifier& no
 }
 
 
-node::DummyModifier::DummyModifier(std::unique_ptr<nif::NiPSysModifier>&& obj) :
+node::DummyModifier::DummyModifier(std::shared_ptr<nif::NiPSysModifier>&& obj) :
 	Modifier(std::move(obj))
 {
 	setTitle("Unknown modifier");

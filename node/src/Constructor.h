@@ -30,7 +30,7 @@ namespace node
 	class Constructor
 	{
 	public:
-		Constructor() {}
+		Constructor(nif::File& file) : m_file{ file } {}
 		~Constructor() {}
 
 		void makeRoot(const nif::ni_ptr<nif::native::NiObject>& root);
@@ -75,7 +75,7 @@ namespace node
 			std::string field1;
 			std::string field2;
 		};
-
+		nif::File& m_file;
 		std::vector<std::unique_ptr<NodeBase>> m_nodes;
 		std::map<nif::native::NiObject*, int> m_objectMap;//maps processed objects to an index in m_nodes (-1 if none)
 		std::vector<std::string> m_warnings;

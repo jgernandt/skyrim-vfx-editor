@@ -102,7 +102,7 @@ public:
 	}
 };
 
-node::GravityModifier::GravityModifier(std::unique_ptr<nif::NiPSysGravityModifier>&& obj) :
+node::GravityModifier::GravityModifier(std::shared_ptr<nif::NiPSysGravityModifier>&& obj) :
 	Modifier(std::move(obj))
 {
 	addTargetField(std::make_shared<ReqDevice<Requirement::MOVEMENT>>(*this));
@@ -136,15 +136,15 @@ public:
 	}
 };
 
-node::PlanarForceField::PlanarForceField() :
-	PlanarForceField(std::make_unique<nif::NiPSysGravityModifier>())
+node::PlanarForceField::PlanarForceField(nif::File& file) :
+	PlanarForceField(file.create<nif::NiPSysGravityModifier>())
 {
 	object().active().set(true);
 	object().forceType().set(nif::FORCE_PLANAR);
 	object().gravityAxis().set({ 0.0f, 0.0f, 1.0f });
 }
 
-node::PlanarForceField::PlanarForceField(std::unique_ptr<nif::NiPSysGravityModifier>&& obj) :
+node::PlanarForceField::PlanarForceField(std::shared_ptr<nif::NiPSysGravityModifier>&& obj) :
 	GravityModifier(std::move(obj))
 {
 	setTitle("Planar force field");
@@ -159,15 +159,15 @@ node::PlanarForceField::PlanarForceField(std::unique_ptr<nif::NiPSysGravityModif
 	getField(GRAVITY_OBJECT)->connector->setTranslation({ 0.0f, 90.0f });
 }
 
-node::SphericalForceField::SphericalForceField() :
-	SphericalForceField(std::make_unique<nif::NiPSysGravityModifier>())
+node::SphericalForceField::SphericalForceField(nif::File& file) :
+	SphericalForceField(file.create<nif::NiPSysGravityModifier>())
 {
 	object().active().set(true);
 	object().forceType().set(nif::FORCE_SPHERICAL);
 	object().gravityAxis().set({ 0.0f, 0.0f, 1.0f });
 }
 
-node::SphericalForceField::SphericalForceField(std::unique_ptr<nif::NiPSysGravityModifier>&& obj) :
+node::SphericalForceField::SphericalForceField(std::shared_ptr<nif::NiPSysGravityModifier>&& obj) :
 	GravityModifier(std::move(obj))
 {
 	setTitle("Spherical force field");

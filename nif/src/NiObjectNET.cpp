@@ -20,7 +20,7 @@
 #include "NiObjectNET.h"
 #include "NiController.h"
 
-nif::NiObjectNET::NiObjectNET(native::NiObjectNET* obj) :
+nif::NiObjectNET::NiObjectNET(native_type* obj) :
 	NiObject(obj), 
 	m_name(&getNative(), &native::NiObjectNET::GetName, &native::NiObjectNET::SetName),
 	m_extraData(*this), m_controllers(*this)

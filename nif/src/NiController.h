@@ -24,28 +24,32 @@ namespace nif
 	class NiInterpolator : public NiObject
 	{
 	public:
-		NiInterpolator(native::NiInterpolator* obj);
-		NiInterpolator(const NiInterpolator&) = delete;
+		using native_type = native::NiInterpolator;
 
+	protected:
+		friend class File;
+		NiInterpolator(native_type* obj);
+
+	public:
 		virtual ~NiInterpolator() = default;
 
-		NiInterpolator& operator=(const NiInterpolator&) = delete;
-
-		native::NiInterpolator& getNative() const;
+		native_type& getNative() const;
 	};
 
 	class NiBoolData : public NiObject
 	{
 	public:
-		NiBoolData();
-		NiBoolData(native::NiBoolData* obj);
-		NiBoolData(const NiBoolData&) = delete;
+		using native_type = native::NiBoolData;
 
+	protected:
+		friend class File;
+		NiBoolData();
+		NiBoolData(native_type* obj);
+
+	public:
 		virtual ~NiBoolData() = default;
 
-		NiBoolData& operator=(const NiBoolData&) = delete;
-
-		native::NiBoolData& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<KeyType>& keyType() { return m_keyType; }
 
@@ -56,15 +60,17 @@ namespace nif
 	class NiBoolInterpolator : public NiInterpolator
 	{
 	public:
-		NiBoolInterpolator();
-		NiBoolInterpolator(native::NiBoolInterpolator* obj);
-		NiBoolInterpolator(const NiBoolInterpolator&) = delete;
+		using native_type = native::NiBoolInterpolator;
 
+	protected:
+		friend class File;
+		NiBoolInterpolator();
+		NiBoolInterpolator(native_type* obj);
+
+	public:
 		virtual ~NiBoolInterpolator() = default;
 
-		NiBoolInterpolator& operator=(const NiBoolInterpolator&) = delete;
-
-		native::NiBoolInterpolator& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<bool>& value() { return m_value; }
 		const IProperty<bool>& value() const { return m_value; }
@@ -80,13 +86,15 @@ namespace nif
 	class NiFloatData : public NiObject
 	{
 	public:
+		using native_type = native::NiFloatData;
+
+	protected:
+		friend class File;
 		NiFloatData();
-		NiFloatData(native::NiFloatData* obj);
-		NiFloatData(const NiFloatData&) = delete;
+		NiFloatData(native_type* obj);
 
+	public:
 		virtual ~NiFloatData() = default;
-
-		NiFloatData& operator=(const NiFloatData&) = delete;
 
 		native::NiFloatData& getNative() const;
 
@@ -182,15 +190,17 @@ namespace nif
 	class NiFloatInterpolator : public NiInterpolator
 	{
 	public:
-		NiFloatInterpolator();
-		NiFloatInterpolator(native::NiFloatInterpolator* obj);
-		NiFloatInterpolator(const NiFloatInterpolator&) = delete;
+		using native_type = native::NiFloatInterpolator;
 
+	protected:
+		friend class File;
+		NiFloatInterpolator();
+		NiFloatInterpolator(native_type* obj);
+
+	public:
 		virtual ~NiFloatInterpolator() = default;
 
-		NiFloatInterpolator& operator=(const NiFloatInterpolator&) = delete;
-
-		native::NiFloatInterpolator& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<float>& value() { return m_value; }
 		const IProperty<float>& value() const { return m_value; }
@@ -206,42 +216,48 @@ namespace nif
 	class NiBlendBoolInterpolator : public NiInterpolator//skipping NiBlendInterpolator for now
 	{
 	public:
-		NiBlendBoolInterpolator();
-		NiBlendBoolInterpolator(native::NiBlendBoolInterpolator* obj);
-		NiBlendBoolInterpolator(const NiBlendBoolInterpolator&) = delete;
+		using native_type = native::NiBlendBoolInterpolator;
 
+	protected:
+		friend class File;
+		NiBlendBoolInterpolator();
+		NiBlendBoolInterpolator(native_type* obj);
+
+	public:
 		virtual ~NiBlendBoolInterpolator() = default;
 
-		NiBlendBoolInterpolator& operator=(const NiBlendBoolInterpolator&) = delete;
-
-		native::NiBlendBoolInterpolator& getNative() const;
+		native_type& getNative() const;
 	};
 
 	class NiBlendFloatInterpolator : public NiInterpolator//skipping NiBlendInterpolator for now
 	{
 	public:
-		NiBlendFloatInterpolator();
-		NiBlendFloatInterpolator(native::NiBlendFloatInterpolator* obj);
-		NiBlendFloatInterpolator(const NiBlendFloatInterpolator&) = delete;
+		using native_type = native::NiBlendFloatInterpolator;
 
+	protected:
+		friend class File;
+		NiBlendFloatInterpolator();
+		NiBlendFloatInterpolator(native_type* obj);
+
+	public:
 		virtual ~NiBlendFloatInterpolator() = default;
 
-		NiBlendFloatInterpolator& operator=(const NiBlendFloatInterpolator&) = delete;
-
-		native::NiBlendFloatInterpolator& getNative() const;
+		native_type& getNative() const;
 	};
 
 	class NiTimeController : public NiObject
 	{
 	public:
-		NiTimeController(native::NiTimeController* obj);
-		NiTimeController(const NiTimeController&) = delete;
+		using native_type = native::NiTimeController;
 
+	protected:
+		friend class File;
+		NiTimeController(native_type* obj);
+
+	public:
 		virtual ~NiTimeController() = default;
 
-		NiTimeController& operator=(const NiTimeController&) = delete;
-
-		native::NiTimeController& getNative() const;
+		native_type& getNative() const;
 
 		//NiTimeController
 		//disallow assigning to these?
@@ -264,16 +280,17 @@ namespace nif
 	class NiSingleInterpController : public NiTimeController
 	{
 	public:
-		NiSingleInterpController(native::NiSingleInterpController* obj);
-		NiSingleInterpController(const NiSingleInterpController&) = delete;
+		using native_type = native::NiSingleInterpController;
 
+	protected:
+		friend class File;
+		NiSingleInterpController(native_type* obj);
+
+	public:
 		virtual ~NiSingleInterpController() = default;
 
-		NiSingleInterpController& operator=(const NiSingleInterpController&) = delete;
+		native_type& getNative() const;
 
-		native::NiSingleInterpController& getNative() const;
-
-		//NiSingleInterpController
 		IAssignable<NiInterpolator>& interpolator() { return m_iplr; }
 
 	private:

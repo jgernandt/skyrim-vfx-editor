@@ -12,129 +12,186 @@ namespace nif
 	TEST_CLASS(NiPSysEmitterTests)
 	{
 	public:
-		nif::NiPSysBoxEmitter concrete_obj;
-		nif::NiPSysEmitter& obj = concrete_obj;
+		nif::File file{ nif::File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(Colour)
 		{
-			PropertyTest<nif::ColRGBA>(obj.colour(), m_engine);
+			std::shared_ptr<NiPSysEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<nif::ColRGBA>(obj->colour(), m_engine);
 		}
 
 		TEST_METHOD(LifeSpan)
 		{
-			PropertyTest<float>(obj.lifeSpan(), m_engine);
+			std::shared_ptr<NiPSysEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->lifeSpan(), m_engine);
 		}
 
 		TEST_METHOD(LifeSpanVar)
 		{
-			PropertyTest<float>(obj.lifeSpanVar(), m_engine);
+			std::shared_ptr<NiPSysEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->lifeSpanVar(), m_engine);
 		}
 
 		TEST_METHOD(Size)
 		{
-			PropertyTest<float>(obj.size(), m_engine);
+			std::shared_ptr<NiPSysEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->size(), m_engine);
 		}
 
 		TEST_METHOD(SizeVar)
 		{
-			PropertyTest<float>(obj.sizeVar(), m_engine);
+			std::shared_ptr<NiPSysEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->sizeVar(), m_engine);
 		}
 
 		TEST_METHOD(Speed)
 		{
-			PropertyTest<float>(obj.speed(), m_engine);
+			std::shared_ptr<NiPSysEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->speed(), m_engine);
 		}
 
 		TEST_METHOD(SpeedVar)
 		{
-			PropertyTest<float>(obj.speedVar(), m_engine);
+			std::shared_ptr<NiPSysEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->speedVar(), m_engine);
 		}
 
 		TEST_METHOD(Azimuth)
 		{
-			PropertyTest<float>(obj.azimuth(), m_engine, 1.0e-4f);
+			std::shared_ptr<NiPSysEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->azimuth(), m_engine, 1.0e-4f);
 		}
 
 		TEST_METHOD(AzimuthVar)
 		{
-			PropertyTest<float>(obj.azimuthVar(), m_engine, 1.0e-4f);
+			std::shared_ptr<NiPSysEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->azimuthVar(), m_engine, 1.0e-4f);
 		}
 
 		TEST_METHOD(Elevation)
 		{
-			PropertyTest<float>(obj.elevation(), m_engine, 1.0e-4f);
+			std::shared_ptr<NiPSysEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->elevation(), m_engine, 1.0e-4f);
 		}
 
 		TEST_METHOD(ElevationVar)
 		{
-			PropertyTest<float>(obj.elevationVar(), m_engine, 1.0e-4f);
+			std::shared_ptr<NiPSysEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->elevationVar(), m_engine, 1.0e-4f);
 		}
 	};
 
 	TEST_CLASS(NiPSysVolumeEmitterTests)
 	{
-		nif::NiPSysBoxEmitter concrete_obj;
-		nif::NiPSysVolumeEmitter& obj = concrete_obj; 
+		nif::File file{ nif::File::Version::SKYRIM_SE };
 
 		TEST_METHOD(EmitterObject)
 		{
-			AssignableTest<nif::NiNode>(obj.emitterObject());
+			std::shared_ptr<NiPSysVolumeEmitter> obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			auto factory = [this]() { return file.create<NiNode>(); };
+			AssignableTest<nif::NiNode>(obj->emitterObject(), factory);
 		}
 	};
 
 	TEST_CLASS(NiPSysBoxEmitterTests)
 	{
-		nif::NiPSysBoxEmitter obj;
+		nif::File file{ nif::File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(Width)
 		{
-			PropertyTest<float>(obj.width(), m_engine);
+			auto obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->width(), m_engine);
 		}
 		TEST_METHOD(Height)
 		{
-			PropertyTest<float>(obj.height(), m_engine);
+			auto obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->height(), m_engine);
 		}
 		TEST_METHOD(Depth)
 		{
-			PropertyTest<float>(obj.depth(), m_engine);
+			auto obj = file.create<NiPSysBoxEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->depth(), m_engine);
 		}
 	};
 
 	TEST_CLASS(NiPSysCylinderEmitterTests)
 	{
-		nif::NiPSysCylinderEmitter obj;
+		nif::File file{ nif::File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(Radius)
 		{
-			PropertyTest<float>(obj.radius(), m_engine);
+			auto obj = file.create<NiPSysCylinderEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->radius(), m_engine);
 		}
 		TEST_METHOD(Height)
 		{
-			PropertyTest<float>(obj.height(), m_engine);
+			auto obj = file.create<NiPSysCylinderEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->height(), m_engine);
 		}
 	};
 
 	TEST_CLASS(NiPSysSphereEmitterTests)
 	{
-		nif::NiPSysSphereEmitter obj;
+		nif::File file{ nif::File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(Radius)
 		{
-			PropertyTest<float>(obj.radius(), m_engine);
+			auto obj = file.create<NiPSysSphereEmitter>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->radius(), m_engine);
 		}
 	};
 
 	TEST_CLASS(NiPSysEmitterCtlrTests)
 	{
-		nif::NiPSysEmitterCtlr obj;
+		nif::File file{ nif::File::Version::SKYRIM_SE };
 
 		TEST_METHOD(VisibilityInterpolator)
 		{
-			AssignableTest<nif::NiInterpolator, nif::NiBoolInterpolator>(obj.visIplr());
+			auto obj = file.create<NiPSysEmitterCtlr>();
+			Assert::IsNotNull(obj.get());
+
+			auto factory = [this]() { return file.create<NiBoolInterpolator>(); };
+			AssignableTest<nif::NiInterpolator>(obj->visIplr(), factory);
 		}
 	};
 }
@@ -150,9 +207,11 @@ namespace node
 		//Test insertion of controller
 		TEST_METHOD(Controller_single)
 		{
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
 			MockModifiable target1;
 			MockModifiable target2;
-			ConnectorTester<Emitter> tester(std::make_unique<BoxEmitter>());
+			ConnectorTester<Emitter> tester(std::make_unique<BoxEmitter>(file));
 
 			tester.tryConnect<void, IModifiable>(Modifier::TARGET, false, &target1);
 			tester.tryConnect<void, IModifiable>(Modifier::TARGET, false, &target2);
@@ -172,12 +231,14 @@ namespace node
 			//*if another sequence is appended, they all take action on the interface, but the existing sequence does not
 			//*if part of the sequence is disconnected, they receive a disconnect call, but the remaining sequence does not
 
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
 			MockModifiable target;
 			TestRoot root;
 
 			//Make a sequence of modifiers and connect them to an interface
-			Emitter* mod1 = root.newChild<BoxEmitter>();
-			Emitter* mod2 = root.newChild<BoxEmitter>();
+			Emitter* mod1 = root.newChild<BoxEmitter>(file);
+			Emitter* mod2 = root.newChild<BoxEmitter>(file);
 
 			if (Field* f1 = mod1->getField(Modifier::NEXT_MODIFIER))
 				if (Field* f2 = mod2->getField(Modifier::TARGET))
@@ -199,7 +260,7 @@ namespace node
 					c2->onRelease();
 				}
 
-			//Assert mods were added in the corret order
+			//Assert mods were added in the correct order
 			Assert::IsTrue(target.controllers().size() == 2);
 			Assert::IsTrue(target.controllers().find(mod1->controller()) == 0);
 			Assert::IsTrue(target.controllers().find(mod2->controller()) == 1);
@@ -207,8 +268,9 @@ namespace node
 			Assert::IsTrue(mod2->controller().modifierName().get() == "Modifier:1");
 
 			//Make sure the controllers hear name changes
-			nif::NiPSysAgeDeathModifier adm;
-			target.modifiers().insert(0, adm);
+			auto adm = file.create<nif::NiPSysAgeDeathModifier>();
+			Assert::IsNotNull(adm.get());
+			target.modifiers().insert(0, *adm);
 			Assert::IsTrue(mod1->controller().modifierName().get() == "Modifier:1");
 			Assert::IsTrue(mod2->controller().modifierName().get() == "Modifier:2");
 
@@ -240,9 +302,11 @@ namespace node
 				TestConnector(IModifiable& ifc) : Sender<IModifiable>(ifc), SingleConnector(*this, *this) {}
 			};
 
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
 			MockModifiable target;
 			TestRoot root;
-			Emitter* mod1 = root.newChild<BoxEmitter>();
+			Emitter* mod1 = root.newChild<BoxEmitter>(file);
 
 			//Set to white before connecting
 			mod1->object().colour().set({ 1.0f, 1.0f, 1.0f, 1.0f });
@@ -321,9 +385,11 @@ namespace node
 				TestConnector(IModifiable& ifc) : Sender<IModifiable>(ifc), SingleConnector(*this, *this) {}
 			};
 
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
 			MockModifiable target;
 			TestRoot root;
-			Emitter* mod1 = root.newChild<BoxEmitter>();
+			Emitter* mod1 = root.newChild<BoxEmitter>(file);
 
 			//Set life spans to 0 before connecting
 			mod1->object().lifeSpan().set(0.0f);
@@ -422,9 +488,11 @@ namespace node
 				TestConnector(IModifiable& ifc) : Sender<IModifiable>(ifc), SingleConnector(*this, *this) {}
 			};
 
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
 			MockModifiable target;
 			TestRoot root;
-			Emitter* mod1 = root.newChild<BoxEmitter>();
+			Emitter* mod1 = root.newChild<BoxEmitter>(file);
 
 			//Set properties to 0 before connecting
 			mod1->object().speed().set(0.0f);
@@ -533,7 +601,9 @@ namespace node
 				LocalProperty<float> m_stopTime;
 			};
 
-			std::unique_ptr<Emitter> node = std::make_unique<BoxEmitter>();
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
+			std::unique_ptr<Emitter> node = std::make_unique<BoxEmitter>(file);
 			nif::NiPSysEmitterCtlr* ctlr = &node->controller();
 
 			MockController target0;
@@ -571,11 +641,12 @@ namespace node
 			Assert::IsTrue(ctlr->stopTime().get() == target.stopTime().get());
 
 			//Assigning to the interface should assign to node->controller()->interpolator()
-			nif::NiFloatInterpolator iplr;
-			ifc->assign(&iplr);
-			Assert::IsTrue(ctlr->interpolator().isAssigned(&iplr));
+			auto iplr = file.create<nif::NiFloatInterpolator>();
+			Assert::IsNotNull(iplr.get());
+			ifc->assign(iplr.get());
+			Assert::IsTrue(ctlr->interpolator().isAssigned(iplr.get()));
 			ifc->assign(nullptr);
-			Assert::IsFalse(ctlr->interpolator().isAssigned(&iplr));
+			Assert::IsFalse(ctlr->interpolator().isAssigned(iplr.get()));
 
 			//Make sure listeners are removed
 			tester.disconnect<IController<float>>(&target);
@@ -587,7 +658,7 @@ namespace node
 			target.startTime().set(F(m_engine));
 			target.stopTime().set(F(m_engine));
 			//defaults should have been restored, use a new node to compare with
-			std::unique_ptr<Emitter> newNode = std::make_unique<BoxEmitter>();
+			std::unique_ptr<Emitter> newNode = std::make_unique<BoxEmitter>(file);
 			Assert::IsTrue(ctlr->flags().get() == newNode->controller().flags().get());
 			Assert::IsTrue(ctlr->frequency().get() == newNode->controller().frequency().get());
 			Assert::IsTrue(ctlr->phase().get() == newNode->controller().phase().get());
@@ -595,7 +666,114 @@ namespace node
 			Assert::IsTrue(ctlr->stopTime().get() == newNode->controller().stopTime().get());
 		}
 
-		TEST_METHOD(BirthRateControllerLoading)
+		TEST_METHOD(Load_Emitters)
+		{
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
+			auto root = file.create<nif::BSFadeNode>();
+			Assert::IsNotNull(root.get());
+
+			auto psys = file.create<nif::NiParticleSystem>();
+			Assert::IsNotNull(psys.get());
+			root->children().add(*psys);
+
+			//Complete emitter
+			auto mod0 = file.create<nif::NiPSysBoxEmitter>();
+			Assert::IsNotNull(mod0.get());
+			mod0->name().set("BoxEmitter");
+			mod0->emitterObject().assign(root.get());
+
+			auto ctlr0 = file.create<nif::NiPSysEmitterCtlr>();
+			Assert::IsNotNull(ctlr0.get());
+			ctlr0->modifierName().set(mod0->name().get());
+
+			auto iplr0 = file.create<nif::NiFloatInterpolator>();
+			Assert::IsNotNull(iplr0.get());
+			ctlr0->interpolator().assign(iplr0.get());
+
+			auto viplr0 = file.create<nif::NiBoolInterpolator>();
+			Assert::IsNotNull(viplr0.get());
+			ctlr0->visIplr().assign(viplr0.get());
+			psys->modifiers().insert(-1, *mod0);
+			psys->controllers().insert(-1, *ctlr0);
+
+			//incomplete emitters
+			auto mod1 = file.create<nif::NiPSysCylinderEmitter>();
+			Assert::IsNotNull(mod1.get());
+			mod1->name().set("CylEmitter");
+
+			auto ctlr1 = file.create<nif::NiPSysEmitterCtlr>();
+			Assert::IsNotNull(ctlr1.get());
+			ctlr1->modifierName().set(mod1->name().get());
+			psys->modifiers().insert(-1, *mod1);
+			psys->controllers().insert(-1, *ctlr1);
+
+			auto mod2 = file.create<nif::NiPSysSphereEmitter>();
+			Assert::IsNotNull(mod2.get());
+			psys->modifiers().insert(-1, *mod2);
+
+			Constructor c(file);
+			c.makeRoot(&root->getNative());
+
+			Assert::IsTrue(c.size() == 5);
+
+			//Were the correct nodes created?
+			Root* root_node = findNode<Root>(c.nodes(), *root);
+			ParticleSystem* psys_node = findNode<ParticleSystem>(c.nodes(), *psys);
+			BoxEmitter* mod0_node = findNode<BoxEmitter>(c.nodes(), *mod0);
+			CylinderEmitter* mod1_node = findNode<CylinderEmitter>(c.nodes(), *mod1);
+			SphereEmitter* mod2_node = findNode<SphereEmitter>(c.nodes(), *mod2);
+			Assert::IsNotNull(root_node);
+			Assert::IsNotNull(psys_node);
+			Assert::IsNotNull(mod0_node);
+			Assert::IsNotNull(mod1_node);
+			Assert::IsNotNull(mod2_node);
+
+			TestRoot nodeRoot;
+			c.extractNodes(nodeRoot);
+
+			//Were they connected?
+			Assert::IsTrue(areConnected(psys_node->getField(ParticleSystem::MODIFIERS)->connector, mod0_node->getField(Modifier::TARGET)->connector));
+			Assert::IsTrue(areConnected(mod0_node->getField(Modifier::NEXT_MODIFIER)->connector, mod1_node->getField(Modifier::TARGET)->connector));
+			Assert::IsTrue(areConnected(mod1_node->getField(Modifier::NEXT_MODIFIER)->connector, mod2_node->getField(Modifier::TARGET)->connector));
+			Assert::IsTrue(areConnected(mod0_node->getField(VolumeEmitter::EMITTER_OBJECT)->connector, root_node->getField(Node::OBJECT)->connector));
+
+			//Did we mess up the backend?
+			Assert::IsTrue(psys_node->object().getNative().GetModifiers().size() == 6);
+			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[1] == &mod0->getNative());
+			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[2] == &mod1->getNative());
+			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[3] == &mod2->getNative());
+
+			Assert::IsTrue(mod0->getNative().GetEmitterObject() == &root->getNative());
+
+			Assert::IsTrue(psys_node->object().getNative().GetControllers().size() == 4);
+			auto&& ctlrs = psys_node->object().getNative().GetControllers();
+
+			auto it = ctlrs.begin();
+			Niflib::NiPSysEmitterCtlr* c0 = Niflib::DynamicCast<Niflib::NiPSysEmitterCtlr>(*it);
+			Assert::IsNotNull(c0);
+			Assert::IsTrue(c0 == &ctlr0->getNative());
+			Assert::IsTrue(c0->GetModifierName() == mod0->name().get());
+			Assert::IsTrue(c0->GetInterpolator() == &iplr0->getNative());
+			Assert::IsTrue(c0->GetVisibilityInterpolator() == &viplr0->getNative());
+
+			++it;
+			Niflib::NiPSysEmitterCtlr* c1 = Niflib::DynamicCast<Niflib::NiPSysEmitterCtlr>(*it);
+			Assert::IsNotNull(c1);
+			Assert::IsTrue(c1 == &ctlr1->getNative());
+			Assert::IsTrue(c1->GetModifierName() == mod1->name().get());
+			Assert::IsTrue(c1->GetInterpolator() != nullptr);
+			Assert::IsTrue(c1->GetVisibilityInterpolator() != nullptr);
+
+			++it;
+			Niflib::NiPSysEmitterCtlr* c2 = Niflib::DynamicCast<Niflib::NiPSysEmitterCtlr>(*it);
+			Assert::IsNotNull(c2);
+			Assert::IsTrue(c2->GetModifierName() == mod2->name().get());
+			Assert::IsTrue(c2->GetInterpolator() != nullptr);
+			Assert::IsTrue(c2->GetVisibilityInterpolator() != nullptr);
+		}
+
+		TEST_METHOD(Load_BirthRateController)
 		{
 			//We want a separate controller node only if:
 			//A) There is a NiFloatData attached
@@ -611,83 +789,93 @@ namespace node
 			//In case A the node should be a FloatController.
 			//In case B the node should be some "multi-sequence controller" that we don't have yet. 
 
-			nif::BSFadeNode root;
-			nif::NiFloatInterpolator iplrA;
-			nif::NiPSysBoxEmitter emitterA;
-			nif::NiBlendFloatInterpolator iplrB;
-			nif::NiPSysBoxEmitter emitterB;
-			nif::NiFloatInterpolator iplr0;
-			nif::NiPSysBoxEmitter emitter0;
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
+			auto root = file.create<nif::BSFadeNode>();
+			auto iplrA = file.create<nif::NiFloatInterpolator>();
+			auto emitterA = file.create<nif::NiPSysBoxEmitter>();
+			auto iplrB = file.create<nif::NiBlendFloatInterpolator>();
+			auto emitterB = file.create<nif::NiPSysBoxEmitter>();
+			auto iplr0 = file.create<nif::NiFloatInterpolator>();
+			auto emitter0 = file.create<nif::NiPSysBoxEmitter>();
+
+			Assert::IsNotNull(root.get());
+			Assert::IsNotNull(iplrA.get());
+			Assert::IsNotNull(emitterA.get());
+			Assert::IsNotNull(iplrB.get());
+			Assert::IsNotNull(emitterB.get());
+			Assert::IsNotNull(iplr0.get());
+			Assert::IsNotNull(emitter0.get());
 			
 			{//case A
-				ParticleSystem psys_node;
-				root.children().add(psys_node.object());
+				ParticleSystem psys_node(file);
+				root->children().add(psys_node.object());
 
-				emitterA.name().set("A");
-				psys_node.object().modifiers().insert(0, emitterA);
-				nif::NiPSysEmitterCtlr ctlr;
-				ctlr.modifierName().set("A");
-				psys_node.object().controllers().insert(0, ctlr);
-				ctlr.interpolator().assign(&iplrA);
+				emitterA->name().set("A");
+				psys_node.object().modifiers().insert(0, *emitterA);
+				auto ctlr = file.create<nif::NiPSysEmitterCtlr>();
+				ctlr->modifierName().set("A");
+				psys_node.object().controllers().insert(0, *ctlr);
+				ctlr->interpolator().assign(iplrA.get());
 
-				nif::NiFloatData data;
-				iplrA.data().assign(&data);
+				auto data = file.create<nif::NiFloatData>();
+				iplrA->data().assign(data.get());
 
 				//change up the controller settings
-				ctlr.flags().set(75);
-				ctlr.frequency().set(1.4f);
-				ctlr.phase().set(0.6f);
-				ctlr.startTime().set(0.1f);
-				ctlr.stopTime().set(2.8f);
+				ctlr->flags().set(75);
+				ctlr->frequency().set(1.4f);
+				ctlr->phase().set(0.6f);
+				ctlr->startTime().set(0.1f);
+				ctlr->stopTime().set(2.8f);
 			}
 
 			{//case B (placeholder)
-				ParticleSystem psys_node;
-				root.children().add(psys_node.object());
+				ParticleSystem psys_node(file);
+				root->children().add(psys_node.object());
 
-				emitterB.name().set("B");
-				psys_node.object().modifiers().insert(0, emitterB);
-				nif::NiPSysEmitterCtlr ctlr;
-				ctlr.modifierName().set("B");
-				psys_node.object().controllers().insert(0, ctlr);
-				ctlr.interpolator().assign(&iplrB);
+				emitterB->name().set("B");
+				psys_node.object().modifiers().insert(0, *emitterB);
+				auto ctlr = file.create<nif::NiPSysEmitterCtlr>();
+				ctlr->modifierName().set("B");
+				psys_node.object().controllers().insert(0, *ctlr);
+				ctlr->interpolator().assign(iplrB.get());
 
 				//ignore controller settings
 			}
 
 			{//case 0 (no controller node)
-				ParticleSystem psys_node;
-				root.children().add(psys_node.object());
+				ParticleSystem psys_node(file);
+				root->children().add(psys_node.object());
 
-				emitter0.name().set("0");
-				psys_node.object().modifiers().insert(0, emitter0);
-				nif::NiPSysEmitterCtlr ctlr;
-				ctlr.modifierName().set("0");
-				psys_node.object().controllers().insert(0, ctlr);
-				ctlr.interpolator().assign(&iplr0);
+				emitter0->name().set("0");
+				psys_node.object().modifiers().insert(0, *emitter0);
+				auto ctlr = file.create<nif::NiPSysEmitterCtlr>();
+				ctlr->modifierName().set("0");
+				psys_node.object().controllers().insert(0, *ctlr);
+				ctlr->interpolator().assign(iplr0.get());
 
 				//change up the controller settings
-				ctlr.flags().set(77);
-				ctlr.frequency().set(7.4f);
-				ctlr.phase().set(0.2f);
-				ctlr.startTime().set(0.4f);
-				ctlr.stopTime().set(3.6f);
+				ctlr->flags().set(77);
+				ctlr->frequency().set(7.4f);
+				ctlr->phase().set(0.2f);
+				ctlr->startTime().set(0.4f);
+				ctlr->stopTime().set(3.6f);
 			}
 
-			Constructor c;
-			c.makeRoot(&root.getNative());
+			Constructor c(file);
+			c.makeRoot(&root->getNative());
 
 			//Were the correct nodes created?
 			//1 Root, 3 ParticleSystem, 3 BoxEmitter, 1 FloatController
 			Assert::IsTrue(c.size() == 8);
 
-			Root* root_node = findNode<Root>(c.nodes(), root);
-			FloatController* cA_node = findNode<FloatController>(c.nodes(), iplrA);
-			NodeBase* cB_node = findNode<NodeBase>(c.nodes(), iplrB);
-			NodeBase* c0_node = findNode<NodeBase>(c.nodes(), iplr0);
-			Emitter* eA_node = findNode<Emitter>(c.nodes(), emitterA);
-			Emitter* eB_node = findNode<Emitter>(c.nodes(), emitterB);
-			Emitter* e0_node = findNode<Emitter>(c.nodes(), emitter0);
+			Root* root_node = findNode<Root>(c.nodes(), *root);
+			FloatController* cA_node = findNode<FloatController>(c.nodes(), *iplrA);
+			NodeBase* cB_node = findNode<NodeBase>(c.nodes(), *iplrB);
+			NodeBase* c0_node = findNode<NodeBase>(c.nodes(), *iplr0);
+			Emitter* eA_node = findNode<Emitter>(c.nodes(), *emitterA);
+			Emitter* eB_node = findNode<Emitter>(c.nodes(), *emitterB);
+			Emitter* e0_node = findNode<Emitter>(c.nodes(), *emitter0);
 			Assert::IsNotNull(root_node);
 			Assert::IsNotNull(cA_node);
 			Assert::IsNull(cB_node);
@@ -703,9 +891,9 @@ namespace node
 			//Assert::IsTrue(areConnected(cB_node->getField(Controller::TARGET)->connector, eB_node->getField(Emitter::BIRTH_RATE)->connector));
 
 			//Did we mess up the backend?
-			Assert::IsTrue(eA_node->controller().getNative().GetInterpolator() == &iplrA.getNative());
-			Assert::IsTrue(eB_node->controller().getNative().GetInterpolator() == &iplrB.getNative());
-			Assert::IsTrue(e0_node->controller().getNative().GetInterpolator() == &iplr0.getNative());
+			Assert::IsTrue(eA_node->controller().getNative().GetInterpolator() == &iplrA->getNative());
+			Assert::IsTrue(eB_node->controller().getNative().GetInterpolator() == &iplrB->getNative());
+			Assert::IsTrue(e0_node->controller().getNative().GetInterpolator() == &iplr0->getNative());
 
 			//controllerA settings should have been transferred to the node
 			Assert::IsTrue(eA_node->controller().flags().get() == cA_node->flags().get());
@@ -725,9 +913,13 @@ namespace node
 		//Test connection and assignment of an emitter object
 		TEST_METHOD(EmitterObject)
 		{
-			std::unique_ptr<VolumeEmitter> node = std::make_unique<BoxEmitter>();
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
+			std::unique_ptr<VolumeEmitter> node = std::make_unique<BoxEmitter>(file);
 			IAssignable<nif::NiNode>& ass = node->object().emitterObject();
-			AssignableSenderTest(VolumeEmitter::EMITTER_OBJECT, false, std::move(node), ass);
+
+			auto factory = [&file]() { return file.create<nif::NiNode>(); };
+			AssignableSenderTest(VolumeEmitter::EMITTER_OBJECT, false, std::move(node), ass, factory);
 		}
 	};
 

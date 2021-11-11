@@ -24,14 +24,16 @@ namespace nif
 	class NiExtraData : public NiObject
 	{
 	public:
-		NiExtraData(native::NiExtraData* obj);
-		NiExtraData(const NiExtraData& other) = delete;
+		using native_type = native::NiExtraData;
 
+	protected:
+		friend class File;
+		NiExtraData(native_type* obj);
+
+	public:
 		virtual ~NiExtraData() = default;
 
-		NiExtraData& operator=(const NiExtraData&) = delete;
-
-		native::NiExtraData& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<std::string>& name() { return m_name; }
 
@@ -42,15 +44,17 @@ namespace nif
 	class NiStringExtraData : public NiExtraData
 	{
 	public:
-		NiStringExtraData();
-		NiStringExtraData(native::NiStringExtraData* obj);
-		NiStringExtraData(const NiStringExtraData& other) = delete;
+		using native_type = native::NiStringExtraData;
 
+	protected:
+		friend class File;
+		NiStringExtraData();
+		NiStringExtraData(native_type* obj);
+
+	public:
 		virtual ~NiStringExtraData() = default;
 
-		NiStringExtraData& operator=(const NiStringExtraData&) = delete;
-
-		native::NiStringExtraData& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<std::string>& value() { return m_value; }
 

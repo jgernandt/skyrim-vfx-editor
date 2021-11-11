@@ -53,7 +53,7 @@ template<typename T>
 void node::Editor::NodeRoot::addNode()
 {
 	try {
-		auto node = std::make_unique<T>();
+		auto node = std::make_unique<T>(m_file);
 		//Position node at the cursor (constrained to our work area)
 		gui::Floats<2> pos = transformToLocal(*this, gui::Mouse::getPosition());
 		assert(getParent());
@@ -71,7 +71,7 @@ void node::Editor::NodeRoot::addNode()
 	}
 }
 
-node::Editor::Editor(const gui::Floats<2>& size) : m_niVersion{ nif::File::Version::UNKNOWN }
+node::Editor::Editor(const gui::Floats<2>& size)
 {
 	m_size = size;
 }
@@ -93,18 +93,18 @@ public:
 	node::Root* result{ nullptr };
 };
 
-node::Editor::Editor(const gui::Floats<2>& size, const nif::File& file) : m_niVersion{ file.getVersion() }
+node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &file }
 {
 	m_size = size;
 
 	std::unique_ptr<Constructor> c;//assign an object of the right version (there is only one so far)
 
 	if (file.getVersion() == nif::File::Version::SKYRIM || file.getVersion() == nif::File::Version::SKYRIM_SE)
-		c = std::make_unique<Constructor>();
+		c = std::make_unique<Constructor>(file);
 
 	if (c) {
 		try {
-			auto workArea = newChild<NodeRoot>();
+			auto workArea = newChild<NodeRoot>(file);
 
 			//Nodes
 			c->makeRoot(file.getRoot());
@@ -142,7 +142,7 @@ node::Editor::Editor(const gui::Floats<2>& size, const nif::File& file) : m_niVe
 		catch (const std::exception& e) {
 			clearChildren();
 			m_rootNode = nullptr;
-			auto workArea = newChild<NodeRoot>();
+			auto workArea = newChild<NodeRoot>(file);
 			newChild<gui::MessageBox>("Error", e.what());
 
 			//Now we have the appearance we should have, but no way to add nodes. It wouldn't make sense to. 
@@ -225,10 +225,6 @@ HelpWindow::HelpWindow()
 	}
 	else
 		newChild<gui::Text>(std::string("Failed to load ") + DOC_FILE_NAME);
-}
-
-node::Editor::NodeRoot::NodeRoot()
-{
 }
 
 void node::Editor::NodeRoot::frame(gui::FrameDrawer& fd)

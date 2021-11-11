@@ -75,7 +75,7 @@ private:
 	gui::Connector::StateMap m_stateChanges;
 };
 
-node::NodeBase::NodeBase(std::unique_ptr<nif::NiObject>&& obj) :
+node::NodeBase::NodeBase(std::shared_ptr<nif::NiObject>&& obj) :
 	Window(std::string()), m_leftCtlr(*this), m_rightCtlr(*this)
 {
 	assert(obj);
@@ -153,7 +153,7 @@ node::Field* node::NodeBase::getField(const std::string& name)
 void node::NodeBase::removeController(nif::NiTimeController* obj)
 {
 	if (auto it = std::find_if(m_controllers.begin(), m_controllers.end(),
-		[obj](const std::unique_ptr<nif::NiTimeController>& ptr) { return ptr.get() == obj; });
+		[obj](const std::shared_ptr<nif::NiTimeController>& ptr) { return ptr.get() == obj; });
 		it != m_controllers.end())
 	{
 		m_controllers.erase(it);

@@ -23,6 +23,8 @@
 #include "Connector.h"
 #include "Window.h"
 
+#include "File.h"
+
 #include "NiController.h"
 
 //We need to rework the ownership of resources.
@@ -61,7 +63,7 @@ namespace node
 		};
 
 	public:
-		NodeBase(std::unique_ptr<nif::NiObject>&& obj);
+		NodeBase(std::shared_ptr<nif::NiObject>&& obj);
 		NodeBase(const NodeBase&) = delete;
 
 		virtual ~NodeBase();
@@ -88,13 +90,13 @@ namespace node
 			return result.second ? ptr : nullptr;
 		}
 
-		void addObject(std::unique_ptr<nif::NiObject>&& obj) { m_objects.push_back(std::move(obj)); }
-		const std::vector<std::unique_ptr<nif::NiObject>>& getObjects() const { return m_objects; }
+		void addObject(std::shared_ptr<nif::NiObject>&& obj) { m_objects.push_back(std::move(obj)); }
+		const std::vector<std::shared_ptr<nif::NiObject>>& getObjects() const { return m_objects; }
 
 		//We keep the controllers separate from other objects since we expect them to be dynamic
-		void addController(std::unique_ptr<nif::NiTimeController>&& obj) { m_controllers.push_back(std::move(obj)); }
+		void addController(std::shared_ptr<nif::NiTimeController>&& obj) { m_controllers.push_back(std::move(obj)); }
 		void removeController(nif::NiTimeController* obj);
-		const std::vector<std::unique_ptr<nif::NiTimeController>>& getControllers() const { return m_controllers; }
+		const std::vector<std::shared_ptr<nif::NiTimeController>>& getControllers() const { return m_controllers; }
 
 		virtual void addListener(SetListener<nif::NiTimeController>& l) override { m_obsImpl.addListener(l); }
 		virtual void removeListener(SetListener<nif::NiTimeController>& l) override { m_obsImpl.removeListener(l); }
@@ -128,8 +130,8 @@ namespace node
 
 		LeftController m_leftCtlr;
 		RightController m_rightCtlr;
-		std::vector<std::unique_ptr<nif::NiObject>> m_objects;
-		std::vector<std::unique_ptr<nif::NiTimeController>> m_controllers;
+		std::vector<std::shared_ptr<nif::NiObject>> m_objects;
+		std::vector<std::shared_ptr<nif::NiTimeController>> m_controllers;
 		ObservableBase<ISet<nif::NiTimeController>> m_obsImpl;
 		std::map<std::string, std::unique_ptr<Field>> m_fields;
 	};

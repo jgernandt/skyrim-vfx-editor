@@ -24,8 +24,8 @@ namespace node
 	class ScaleModifier final : public Modifier
 	{
 	public:
-		ScaleModifier();
-		ScaleModifier(std::unique_ptr<nif::BSPSysScaleModifier>&& obj);
+		ScaleModifier(nif::File& file);
+		ScaleModifier(std::shared_ptr<nif::BSPSysScaleModifier>&& obj);
 
 		virtual nif::BSPSysScaleModifier& object() override;
 

@@ -63,13 +63,13 @@ public:
 	}
 };
 
-node::RotationModifier::RotationModifier() :
-	RotationModifier(std::make_unique<nif::NiPSysRotationModifier>())
+node::RotationModifier::RotationModifier(nif::File& file) :
+	RotationModifier(file.create<nif::NiPSysRotationModifier>())
 {
 	object().active().set(true);
 }
 
-node::RotationModifier::RotationModifier(std::unique_ptr<nif::NiPSysRotationModifier>&& obj) :
+node::RotationModifier::RotationModifier(std::shared_ptr<nif::NiPSysRotationModifier>&& obj) :
 	Modifier(std::move(obj))
 {
 	setSize({ WIDTH, HEIGHT });

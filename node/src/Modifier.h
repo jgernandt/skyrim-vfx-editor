@@ -44,13 +44,13 @@ namespace node
 		};
 
 	protected:
-		Modifier(std::unique_ptr<nif::NiPSysModifier>&& obj);
+		Modifier(std::shared_ptr<nif::NiPSysModifier>&& obj);
 
 	public:
 		virtual ~Modifier();
 		virtual nif::NiPSysModifier& object() override;
 
-		void addUnknownController(std::unique_ptr<nif::NiPSysModifierCtlr>&& ctlr);
+		void addUnknownController(std::shared_ptr<nif::NiPSysModifierCtlr>&& ctlr);
 
 	protected:
 		void addTargetField(std::shared_ptr<Device>&& device);
@@ -189,7 +189,7 @@ namespace node
 	class DummyModifier final : public Modifier
 	{
 	public:
-		DummyModifier(std::unique_ptr<nif::NiPSysModifier>&& obj);
+		DummyModifier(std::shared_ptr<nif::NiPSysModifier>&& obj);
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 80.0f;

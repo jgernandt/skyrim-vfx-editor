@@ -33,7 +33,7 @@ node::ExtraData::NameField::NameField(const std::string& name, ExtraData& node) 
 	node.newChild<StringInput>(node.object().name());
 }
 
-node::ExtraData::ExtraData(std::unique_ptr<nif::NiExtraData>&& obj) : NodeBase(std::move(obj))
+node::ExtraData::ExtraData(std::shared_ptr<nif::NiExtraData>&& obj) : NodeBase(std::move(obj))
 {
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_XData);
@@ -49,7 +49,7 @@ nif::NiExtraData& node::ExtraData::object()
 }
 
 
-node::StringDataShared::StringDataShared(std::unique_ptr<nif::NiStringExtraData>&& obj) :
+node::StringDataShared::StringDataShared(std::shared_ptr<nif::NiStringExtraData>&& obj) :
 	ExtraData(std::move(obj))
 {
 }
@@ -61,9 +61,9 @@ nif::NiStringExtraData& node::StringDataShared::object()
 }
 
 
-node::StringData::StringData() : StringData(std::make_unique<nif::NiStringExtraData>()) {}
+node::StringData::StringData(nif::File& file) : StringData(file.create<nif::NiStringExtraData>()) {}
 
-node::StringData::StringData(std::unique_ptr<nif::NiStringExtraData>&& obj) : 
+node::StringData::StringData(std::shared_ptr<nif::NiStringExtraData>&& obj) :
 	StringDataShared(std::move(obj))
 {
 	setTitle("String data");
@@ -85,9 +85,9 @@ node::StringData::StringData(std::unique_ptr<nif::NiStringExtraData>&& obj) :
 	getField(TARGET)->connector->setTranslation({ 0.0f, 38.0f });
 }
 
-node::WeaponTypeData::WeaponTypeData() : WeaponTypeData(std::make_unique<nif::NiStringExtraData>()) {}
+node::WeaponTypeData::WeaponTypeData(nif::File& file) : WeaponTypeData(file.create<nif::NiStringExtraData>()) {}
 
-node::WeaponTypeData::WeaponTypeData(std::unique_ptr<nif::NiStringExtraData>&& obj) : 
+node::WeaponTypeData::WeaponTypeData(std::shared_ptr<nif::NiStringExtraData>&& obj) :
 	StringDataShared(std::move(obj))
 {
 	setTitle("Weapon type data");
@@ -118,7 +118,7 @@ node::WeaponTypeData::WeaponTypeData(std::unique_ptr<nif::NiStringExtraData>&& o
 	getField(TARGET)->connector->setTranslation({ 0.0f, 38.0f });
 }
 
-node::DummyExtraData::DummyExtraData(std::unique_ptr<nif::NiExtraData>&& obj) :
+node::DummyExtraData::DummyExtraData(std::shared_ptr<nif::NiExtraData>&& obj) :
 	ExtraData(std::move(obj))
 {
 	setTitle("Extra data");

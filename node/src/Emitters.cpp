@@ -31,7 +31,7 @@ constexpr float DEFAULT_STOPTIME = 1.0f;
 class node::Emitter::BirthRateField final : public Field
 {
 public:
-	BirthRateField(const std::string& name, Emitter& node, std::unique_ptr<nif::NiFloatInterpolator>&& iplr) :
+	BirthRateField(const std::string& name, Emitter& node, std::shared_ptr<nif::NiFloatInterpolator>&& iplr) :
 		Field(name), 
 		m_ctlr{ node.controller() }, 
 		m_iplr{ std::move(iplr) }, 
@@ -39,9 +39,6 @@ public:
 		m_rcvr(node.controller()),
 		m_sndr(m_ifc)
 	{
-		if (!m_iplr) {
-			m_iplr = std::make_unique<nif::NiFloatInterpolator>();
-		}
 		if (m_ctlr.interpolator().isAssigned(nullptr))
 			m_ctlr.interpolator().assign(m_iplr.get());
 
@@ -122,7 +119,7 @@ private:
 	};
 
 	nif::NiPSysEmitterCtlr& m_ctlr;
-	std::unique_ptr<nif::NiFloatInterpolator> m_iplr;
+	std::shared_ptr<nif::NiFloatInterpolator> m_iplr;
 
 	Assignable m_ifc;
 	ControllerReceiver m_rcvr;
@@ -252,14 +249,15 @@ public:
 };
 
 
-node::Emitter::Emitter(std::unique_ptr<nif::NiPSysEmitter>&& obj,
-	std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	std::unique_ptr<nif::NiFloatInterpolator>&& iplr,
-	std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
+node::Emitter::Emitter(nif::File& file, 
+	std::shared_ptr<nif::NiPSysEmitter>&& obj,
+	std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
+	std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
 	Modifier(std::move(obj))
 {
 	if (!ctlr) {
-		ctlr = std::make_unique<nif::NiPSysEmitterCtlr>();
+		ctlr = file.create<nif::NiPSysEmitterCtlr>();
 		ctlr->flags().set(DEFAULT_FLAGS);
 		ctlr->frequency().set(DEFAULT_FREQUENCY);
 		ctlr->phase().set(DEFAULT_PHASE);
@@ -272,8 +270,12 @@ node::Emitter::Emitter(std::unique_ptr<nif::NiPSysEmitter>&& obj,
 	m_modNameLsnr = std::make_unique<ModifierNameListener>(m_ctlr->modifierName());
 	object().name().addListener(*m_modNameLsnr);
 
+	if (!iplr) {
+		iplr = file.create<nif::NiFloatInterpolator>();
+	}
+
 	if (!vis_iplr) {
-		vis_iplr = std::make_unique<nif::NiBoolInterpolator>();
+		vis_iplr = file.create<nif::NiBoolInterpolator>();
 		vis_iplr->value().set(true);
 	}
 	m_visIplr = std::move(vis_iplr);
@@ -429,11 +431,12 @@ void node::Emitter::Device::LifeMoveActivator::deactivate()
 }
 
 
-node::VolumeEmitter::VolumeEmitter(std::unique_ptr<nif::NiPSysVolumeEmitter>&& obj,
-	std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	std::unique_ptr<nif::NiFloatInterpolator>&& iplr,
-	std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	Emitter(std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+node::VolumeEmitter::VolumeEmitter(nif::File& file,
+	std::shared_ptr<nif::NiPSysVolumeEmitter>&& obj,
+	std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
+	std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
+	Emitter(file, std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	newChild<gui::Separator>();
 	newField<EmitterObjectField>(EMITTER_OBJECT, *this);
@@ -461,18 +464,19 @@ node::VolumeEmitter::EmitterMetricField::EmitterMetricField(const std::string& n
 }
 
 
-node::BoxEmitter::BoxEmitter() :
-	BoxEmitter(std::make_unique<nif::NiPSysBoxEmitter>())
+node::BoxEmitter::BoxEmitter(nif::File& file) :
+	BoxEmitter(file, file.create<nif::NiPSysBoxEmitter>())
 {
 	object().colour().set(nif::COL_WHITE);
 	object().elevation().set(0.0f);
 }
 
-node::BoxEmitter::BoxEmitter(std::unique_ptr<nif::NiPSysBoxEmitter>&& obj,
-	std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	std::unique_ptr<nif::NiFloatInterpolator>&& iplr,
-	std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	VolumeEmitter(std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+node::BoxEmitter::BoxEmitter(nif::File& file,
+	std::shared_ptr<nif::NiPSysBoxEmitter>&& obj,
+	std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
+	std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
+	VolumeEmitter(file, std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Box emitter");
 	setSize({ WIDTH, HEIGHT });
@@ -495,18 +499,19 @@ nif::NiPSysBoxEmitter& node::BoxEmitter::object()
 }
 
 
-node::CylinderEmitter::CylinderEmitter() :
-	CylinderEmitter(std::make_unique<nif::NiPSysCylinderEmitter>())
+node::CylinderEmitter::CylinderEmitter(nif::File& file) :
+	CylinderEmitter(file, file.create<nif::NiPSysCylinderEmitter>())
 {
 	object().colour().set(nif::COL_WHITE);
 	object().elevation().set(0.0f);
 }
 
-node::CylinderEmitter::CylinderEmitter(std::unique_ptr<nif::NiPSysCylinderEmitter>&& obj,
-	std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	std::unique_ptr<nif::NiFloatInterpolator>&& iplr,
-	std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	VolumeEmitter(std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+node::CylinderEmitter::CylinderEmitter(nif::File& file,
+	std::shared_ptr<nif::NiPSysCylinderEmitter>&& obj,
+	std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
+	std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
+	VolumeEmitter(file, std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Cylinder emitter");
 	setSize({ WIDTH, HEIGHT });
@@ -527,18 +532,19 @@ nif::NiPSysCylinderEmitter& node::CylinderEmitter::object()
 }
 
 
-node::SphereEmitter::SphereEmitter() :
-	SphereEmitter(std::make_unique<nif::NiPSysSphereEmitter>())
+node::SphereEmitter::SphereEmitter(nif::File& file) :
+	SphereEmitter(file, file.create<nif::NiPSysSphereEmitter>())
 {
 	object().colour().set(nif::COL_WHITE);
 	object().elevation().set(0.0f);
 }
 
-node::SphereEmitter::SphereEmitter(std::unique_ptr<nif::NiPSysSphereEmitter>&& obj,
-	std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	std::unique_ptr<nif::NiFloatInterpolator>&& iplr,
-	std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	VolumeEmitter(std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+node::SphereEmitter::SphereEmitter(nif::File& file,
+	std::shared_ptr<nif::NiPSysSphereEmitter>&& obj,
+	std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
+	std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
+	VolumeEmitter(file, std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Sphere emitter");
 	setSize({ WIDTH, HEIGHT });

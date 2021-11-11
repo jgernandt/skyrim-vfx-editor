@@ -24,8 +24,8 @@ namespace node
 	class RotationModifier final : public Modifier
 	{
 	public:
-		RotationModifier();
-		RotationModifier(std::unique_ptr<nif::NiPSysRotationModifier>&& obj);
+		RotationModifier(nif::File& file);
+		RotationModifier(std::shared_ptr<nif::NiPSysRotationModifier>&& obj);
 
 	public:
 		virtual nif::NiPSysRotationModifier& object() override;

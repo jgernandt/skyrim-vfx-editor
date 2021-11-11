@@ -35,7 +35,7 @@ private:
 	Sender<ISet<nif::NiAVObject>> m_sdr;
 };
 
-node::NodeShared::NodeShared(std::unique_ptr<nif::NiNode>&& obj) : AVObject(std::move(obj))
+node::NodeShared::NodeShared(std::shared_ptr<nif::NiNode>&& obj) : AVObject(std::move(obj))
 {
 	setColour(COL_TITLE, TitleCol_Node);
 	setColour(COL_TITLE_ACTIVE, TitleCol_NodeActive);
@@ -47,9 +47,9 @@ nif::NiNode& node::NodeShared::object()
 	return *static_cast<nif::NiNode*>(getObjects()[0].get());
 }
 
-node::Node::Node() : Node(std::make_unique<nif::NiNode>()) {}
+node::Node::Node(nif::File& file) : Node(file.create<nif::NiNode>()) {}
 
-node::Node::Node(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj))
+node::Node::Node(std::shared_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj))
 {
 	setClosable(true);
 	setTitle("Node");
@@ -70,9 +70,9 @@ node::Node::Node(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj)
 	getField(PARENT)->connector->setTranslation({ 0.0f, 134.0f });
 }
 
-node::Root::Root() : Root(std::make_unique<nif::BSFadeNode>()) {}
+node::Root::Root(nif::File& file) : Root(file.create<nif::BSFadeNode>()) {}
 
-node::Root::Root(std::unique_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj))
+node::Root::Root(std::shared_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj))
 {
 	setTitle("Root");
 	setSize({ WIDTH, HEIGHT });

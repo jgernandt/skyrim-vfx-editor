@@ -29,7 +29,7 @@ namespace node
 	class ObjectNET : public NodeBase
 	{
 	protected:
-		ObjectNET(std::unique_ptr<nif::NiObjectNET>&& obj);
+		ObjectNET(std::shared_ptr<nif::NiObjectNET>&& obj);
 
 	public:
 		virtual ~ObjectNET() = default;
@@ -76,7 +76,7 @@ namespace node
 	class AVObject : public ObjectNET
 	{
 	protected:
-		AVObject(std::unique_ptr<nif::NiAVObject>&& obj);
+		AVObject(std::shared_ptr<nif::NiAVObject>&& obj);
 
 	public:
 		virtual ~AVObject() = default;
@@ -108,7 +108,7 @@ namespace node
 	class DummyAVObject final : public AVObject
 	{
 	public:
-		DummyAVObject(std::unique_ptr<nif::NiAVObject>&& obj);
+		DummyAVObject(std::shared_ptr<nif::NiAVObject>&& obj);
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 105.0f;

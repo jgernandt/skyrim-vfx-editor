@@ -20,7 +20,7 @@
 #include "BSEffectShaderProperty.h"
 
 nif::NiAlphaProperty::NiAlphaProperty() : NiAlphaProperty(new Niflib::NiAlphaProperty) {}
-nif::NiAlphaProperty::NiAlphaProperty(native::NiAlphaProperty* obj) : 
+nif::NiAlphaProperty::NiAlphaProperty(native_type* obj) :
 	NiObjectNET(obj),
 	m_flags(&getNative(), &native::NiAlphaProperty::GetFlags, &native::NiAlphaProperty::SetFlags)
 {}
@@ -33,7 +33,7 @@ nif::native::NiAlphaProperty& nif::NiAlphaProperty::getNative() const
 
 nif::BSEffectShaderProperty::BSEffectShaderProperty() : BSEffectShaderProperty(new Niflib::BSEffectShaderProperty) {}
 
-nif::BSEffectShaderProperty::BSEffectShaderProperty(native::BSEffectShaderProperty* obj) : 
+nif::BSEffectShaderProperty::BSEffectShaderProperty(native_type* obj) :
 	NiObjectNET(obj), 
 	m_emissiveCol(&getNative(), &native::BSEffectShaderProperty::GetEmissiveColor, &native::BSEffectShaderProperty::SetEmissiveColor),
 	m_emissiveMult(&getNative(), &native::BSEffectShaderProperty::GetEmissiveMultiple, &native::BSEffectShaderProperty::SetEmissiveMultiple),

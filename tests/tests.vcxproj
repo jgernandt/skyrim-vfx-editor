@@ -177,7 +177,6 @@
     <ClCompile Include="ForcefieldTests.cpp" />
     <ClCompile Include="math.cpp" />
     <ClCompile Include="ModifiersTests.cpp" />
-    <ClCompile Include="NodeConstructorTests.cpp" />
     <ClCompile Include="ParticleSystemTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

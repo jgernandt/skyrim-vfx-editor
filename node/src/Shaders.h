@@ -25,8 +25,8 @@ namespace node
 	class EffectShader : public NodeBase
 	{
 	public:
-		EffectShader();
-		EffectShader(std::unique_ptr<nif::BSEffectShaderProperty>&& obj);
+		EffectShader(nif::File& file);
+		EffectShader(std::shared_ptr<nif::BSEffectShaderProperty>&& obj);
 
 	public:
 		virtual nif::BSEffectShaderProperty& object() override;

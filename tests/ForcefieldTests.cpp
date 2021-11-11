@@ -7,36 +7,58 @@ namespace nif
 {
 	TEST_CLASS(NiPSysGravityModifierTests)
 	{
-		nif::NiPSysGravityModifier obj;
+		File file{ File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(GravityObject)
 		{
-			AssignableTest<NiNode>(obj.gravityObject());
+			auto obj = file.create<NiPSysGravityModifier>();
+			Assert::IsNotNull(obj.get());
+
+			auto factory = [this]() { return file.create<NiNode>(); };
+			AssignableTest<NiNode>(obj->gravityObject(), factory);
 		}
 		TEST_METHOD(GravityAxis)
 		{
-			PropertyTest<nif::Floats<3>>(obj.gravityAxis(), m_engine);
+			auto obj = file.create<NiPSysGravityModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<nif::Floats<3>>(obj->gravityAxis(), m_engine);
 		}
 		TEST_METHOD(Decay)
 		{
-			PropertyTest<float>(obj.decay(), m_engine);
+			auto obj = file.create<NiPSysGravityModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->decay(), m_engine);
 		}
 		TEST_METHOD(Strength)
 		{
-			PropertyTest<float>(obj.strength(), m_engine);
+			auto obj = file.create<NiPSysGravityModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->strength(), m_engine);
 		}
 		TEST_METHOD(ForceType)
 		{
-			PropertyTest<nif::ForceType>(obj.forceType(), m_engine);
+			auto obj = file.create<NiPSysGravityModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<nif::ForceType>(obj->forceType(), m_engine);
 		}
 		TEST_METHOD(Turbulence)
 		{
-			PropertyTest<float>(obj.turbulence(), m_engine);
+			auto obj = file.create<NiPSysGravityModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->turbulence(), m_engine);
 		}
 		TEST_METHOD(TurbulenceScale)
 		{
-			PropertyTest<float>(obj.turbulenceScale(), m_engine);
+			auto obj = file.create<NiPSysGravityModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->turbulenceScale(), m_engine);
 		}
 	};
 }
@@ -54,9 +76,11 @@ namespace node
 				TestConnector(IModifiable& ifc) : Sender<IModifiable>(ifc), SingleConnector(*this, *this) {}
 			};
 
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
 			MockModifiable target;
 			TestRoot root;
-			GravityModifier* mod1 = root.newChild<PlanarForceField>();
+			GravityModifier* mod1 = root.newChild<PlanarForceField>(file);
 
 			gui::Connector* c1 = nullptr;
 			gui::Connector* c2 = nullptr;
@@ -79,9 +103,13 @@ namespace node
 		//Gravity object should receive Assignable<NiNode>, single
 		TEST_METHOD(GravityObject)
 		{
-			std::unique_ptr<GravityModifier> node = std::make_unique<PlanarForceField>();
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
+			std::unique_ptr<GravityModifier> node = std::make_unique<PlanarForceField>(file);
 			IAssignable<nif::NiNode>& ass = node->object().gravityObject();
-			AssignableSenderTest(GravityModifier::GRAVITY_OBJECT, false, std::move(node), ass);
+
+			auto factory = [&file]() { return file.create<nif::NiNode>(); };
+			AssignableSenderTest(GravityModifier::GRAVITY_OBJECT, false, std::move(node), ass, factory);
 		}
 	};
 }

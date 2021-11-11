@@ -3,84 +3,118 @@
 #include "CommonTests.h"
 #include "nodes.h"
 
+#include "Constructor.h"
+#include "nif_backend.h"
+
 namespace nif
 {
 	TEST_CLASS(NiPSysModifierCtlrTests)
 	{
-		nif::NiPSysEmitterCtlr concrete_obj;
-		nif::NiPSysModifierCtlr& obj = concrete_obj;
-
 		TEST_METHOD(ModifierName)
 		{
-			StringPropertyTest(obj.modifierName());
+			File file{ File::Version::SKYRIM_SE };
+			std::shared_ptr<NiPSysModifierCtlr> obj = file.create<NiPSysEmitterCtlr>();
+			Assert::IsNotNull(obj.get());
+
+			StringPropertyTest(obj->modifierName());
 		}
 	};
 
 	TEST_CLASS(NiPSysModifierTests)
 	{
-		nif::NiPSysRotationModifier concrete_obj;
-		nif::NiPSysModifier& obj = concrete_obj;
+		File file{ File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(Name)
 		{
-			StringPropertyTest(obj.name());
+			std::shared_ptr<NiPSysModifier> obj = file.create<NiPSysRotationModifier>();
+			Assert::IsNotNull(obj.get());
+
+			StringPropertyTest(obj->name());
 		}
 
 		TEST_METHOD(Order)
 		{
-			PropertyTest<unsigned int>(obj.order(), m_engine);
+			std::shared_ptr<NiPSysModifier> obj = file.create<NiPSysRotationModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<unsigned int>(obj->order(), m_engine);
 		}
 
 		TEST_METHOD(Target)
 		{
-			AssignableTest<nif::NiParticleSystem>(obj.target());
+			std::shared_ptr<NiPSysModifier> obj = file.create<NiPSysRotationModifier>();
+			Assert::IsNotNull(obj.get());
+
+			auto factory = [this]() { return file.create<NiParticleSystem>(); };
+			AssignableTest<nif::NiParticleSystem>(obj->target(), factory);
 		}
 
 		TEST_METHOD(Active)
 		{
-			PropertyTest<bool>(obj.active(), m_engine);
+			std::shared_ptr<NiPSysModifier> obj = file.create<NiPSysRotationModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<bool>(obj->active(), m_engine);
 		}
 	};
 
 	TEST_CLASS(NiPSysRotationModifierTests)
 	{
-		nif::NiPSysRotationModifier obj;
+		File file{ File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(Speed)
 		{
-			PropertyTest<float>(obj.speed(), m_engine, 1.0e-4f);
+			auto obj = file.create<NiPSysRotationModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->speed(), m_engine, 1.0e-4f);
 		}
 
 		TEST_METHOD(SpeedVar)
 		{
-			PropertyTest<float>(obj.speedVar(), m_engine, 1.0e-4f);
+			auto obj = file.create<NiPSysRotationModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->speedVar(), m_engine, 1.0e-4f);
 		}
 
 		TEST_METHOD(Angle)
 		{
-			PropertyTest<float>(obj.angle(), m_engine, 1.0e-4f);
+			auto obj = file.create<NiPSysRotationModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->angle(), m_engine, 1.0e-4f);
 		}
 
 		TEST_METHOD(AngleVar)
 		{
-			PropertyTest<float>(obj.angleVar(), m_engine, 1.0e-4f);
+			auto obj = file.create<NiPSysRotationModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->angleVar(), m_engine, 1.0e-4f);
 		}
 
 		TEST_METHOD(RandomSign)
 		{
-			PropertyTest<bool>(obj.randomSign(), m_engine);
+			auto obj = file.create<NiPSysRotationModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<bool>(obj->randomSign(), m_engine);
 		}
 	};
 
 	TEST_CLASS(BSPSysScaleModifierTests)
 	{
-		nif::BSPSysScaleModifier obj;
+		File file{ File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(Scales)
 		{
+			auto obj = file.create<BSPSysScaleModifier>();
+			Assert::IsNotNull(obj.get());
+
 			std::uniform_int_distribution<int> L(1, 20);
 			std::uniform_real_distribution<float> D;
 			for (int N = 0; N < 3; N++) {//run 3 tests
@@ -89,8 +123,8 @@ namespace nif
 				for (size_t i = 0; i < scales.size(); i++)
 					scales[i] = D(m_engine);
 				//Set, get back and compare
-				obj.scales().set(scales);
-				std::vector<float> ret = obj.scales().get();
+				obj->scales().set(scales);
+				std::vector<float> ret = obj->scales().get();
 				Assert::IsTrue(ret == scales);
 			}
 		}
@@ -98,44 +132,71 @@ namespace nif
 
 	TEST_CLASS(BSPSysSimpleColorModifierTests)
 	{
-		nif::BSPSysSimpleColorModifier obj;
+		File file{ File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(FadeInEnd)
 		{
-			PropertyTest<float>(obj.alpha2Begin(), m_engine);
+			auto obj = file.create<BSPSysSimpleColorModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->alpha2Begin(), m_engine);
 		}
 		TEST_METHOD(FadeOutBegin)
 		{
-			PropertyTest<float>(obj.alpha2End(), m_engine);
+			auto obj = file.create<BSPSysSimpleColorModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->alpha2End(), m_engine);
 		}
 		TEST_METHOD(Col1End)
 		{
-			PropertyTest<float>(obj.rgb1End(), m_engine);
+			auto obj = file.create<BSPSysSimpleColorModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->rgb1End(), m_engine);
 		}
 		TEST_METHOD(Col2Begin)
 		{
-			PropertyTest<float>(obj.rgb2Begin(), m_engine);
+			auto obj = file.create<BSPSysSimpleColorModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->rgb2Begin(), m_engine);
 		}
 		TEST_METHOD(Col2End)
 		{
-			PropertyTest<float>(obj.rgb2End(), m_engine);
+			auto obj = file.create<BSPSysSimpleColorModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->rgb2End(), m_engine);
 		}
 		TEST_METHOD(Col3Begin)
 		{
-			PropertyTest<float>(obj.rgb3Begin(), m_engine);
+			auto obj = file.create<BSPSysSimpleColorModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->rgb3Begin(), m_engine);
 		}
 		TEST_METHOD(Col1)
 		{
-			PropertyTest<nif::ColRGBA>(obj.col1(), m_engine);
+			auto obj = file.create<BSPSysSimpleColorModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<nif::ColRGBA>(obj->col1(), m_engine);
 		}
 		TEST_METHOD(Col2)
 		{
-			PropertyTest<nif::ColRGBA>(obj.col2(), m_engine);
+			auto obj = file.create<BSPSysSimpleColorModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<nif::ColRGBA>(obj->col2(), m_engine);
 		}
 		TEST_METHOD(Col3)
 		{
-			PropertyTest<nif::ColRGBA>(obj.col3(), m_engine);
+			auto obj = file.create<BSPSysSimpleColorModifier>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<nif::ColRGBA>(obj->col3(), m_engine);
 		}
 	};
 }
@@ -150,9 +211,11 @@ namespace node
 			//*we can connect to a sender of IModifiable
 			//*we take the expected action on an IModifiable interface
 
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
 			MockModifiable target1;
 			MockModifiable target2;
-			ConnectorTester<Modifier> tester(std::make_unique<RotationModifier>());
+			ConnectorTester<Modifier> tester(std::make_unique<RotationModifier>(file));
 
 			tester.tryConnect<void, IModifiable>(Modifier::TARGET, false, &target1);
 			tester.tryConnect<void, IModifiable>(Modifier::TARGET, false, &target2);
@@ -177,7 +240,10 @@ namespace node
 			//Test that
 			//*we can connect to a receiver of IModifiable
 			//*we expose no interface to them
-			ConnectorTester<Modifier> tester(std::make_unique<RotationModifier>());
+
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
+			ConnectorTester<Modifier> tester(std::make_unique<RotationModifier>(file));
 
 			tester.tryConnect<IModifiable, void>(Modifier::NEXT_MODIFIER, false, nullptr);
 			IModifiable* ifc = tester.tryConnect<IModifiable, void>(Modifier::NEXT_MODIFIER, false, nullptr);
@@ -187,12 +253,14 @@ namespace node
 
 		TEST_METHOD(Sequence)
 		{
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
 			MockModifiable target;
 			TestRoot root;
 
 			//Make a sequence of modifiers and connect them to an interface
-			Modifier* mod1 = root.newChild<RotationModifier>();
-			Modifier* mod2 = root.newChild<RotationModifier>();
+			Modifier* mod1 = root.newChild<RotationModifier>(file);
+			Modifier* mod2 = root.newChild<RotationModifier>(file);
 
 			if (Field* f1 = mod1->getField(Modifier::NEXT_MODIFIER))
 				if (Field* f2 = mod2->getField(Modifier::TARGET))
@@ -224,8 +292,8 @@ namespace node
 			Assert::IsTrue(mod2->object().name().get() == "Modifier:1");
 
 			//Make another sequence
-			Modifier* mod3 = root.newChild<RotationModifier>();
-			Modifier* mod4 = root.newChild<RotationModifier>();
+			Modifier* mod3 = root.newChild<RotationModifier>(file);
+			Modifier* mod4 = root.newChild<RotationModifier>(file);
 			if (Field* f3 = mod3->getField(Modifier::NEXT_MODIFIER))
 				if (Field* f4 = mod4->getField(Modifier::TARGET))
 					if (f3->connector && f4->connector) {
@@ -255,8 +323,9 @@ namespace node
 			Assert::IsTrue(mod4->object().name().get() == "Modifier:3");
 
 			//If a mod is added to the beginning (for whatever reason), the others should update name and order
-			nif::NiPSysAgeDeathModifier adm;
-			target.modifiers().insert(0, adm);
+			auto adm = file.create<nif::NiPSysAgeDeathModifier>();
+			Assert::IsNotNull(adm.get());
+			target.modifiers().insert(0, *adm);
 			Assert::IsTrue(target.modifiers().size() == 5);
 			Assert::IsTrue(target.modifiers().find(mod1->object()) == 1);
 			Assert::IsTrue(target.modifiers().find(mod2->object()) == 2);
@@ -314,6 +383,84 @@ namespace node
 					f1->connector->disconnect();
 			Assert::IsTrue(target.modifiers().size() == 0);
 		}
+
+		TEST_METHOD(Load)
+		{
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
+			auto root = file.create<nif::BSFadeNode>();
+			Assert::IsNotNull(root.get());
+
+			auto psys = file.create<nif::NiParticleSystem>();
+			Assert::IsNotNull(psys.get());
+			root->children().add(*psys);
+
+			auto mod0 = file.create<nif::NiPSysRotationModifier>();
+			Assert::IsNotNull(mod0.get());
+			psys->modifiers().insert(-1, *mod0);
+
+			auto mod1 = file.create<nif::NiPSysGravityModifier>();
+			Assert::IsNotNull(mod1.get());
+			mod1->forceType().set(nif::FORCE_PLANAR);
+			mod1->gravityObject().assign(root.get());
+			psys->modifiers().insert(-1, *mod1);
+
+			auto mod2 = file.create<nif::NiPSysGravityModifier>();
+			Assert::IsNotNull(mod2.get());
+			mod2->forceType().set(nif::FORCE_SPHERICAL);
+			psys->modifiers().insert(-1, *mod2);
+
+			auto mod3 = file.create<nif::BSPSysSimpleColorModifier>();
+			Assert::IsNotNull(mod3.get());
+			psys->modifiers().insert(-1, *mod3);
+
+			auto mod4 = file.create<nif::BSPSysScaleModifier>();
+			Assert::IsNotNull(mod4.get());
+			psys->modifiers().insert(-1, *mod4);
+
+			Constructor c(file);
+			c.makeRoot(&root->getNative());
+
+			Assert::IsTrue(c.size() == 7);
+
+			//Were the correct nodes created?
+			Root* root_node = findNode<Root>(c.nodes(), *root);
+			ParticleSystem* psys_node = findNode<ParticleSystem>(c.nodes(), *psys);
+			RotationModifier* mod0_node = findNode<RotationModifier>(c.nodes(), *mod0);
+			PlanarForceField* mod1_node = findNode<PlanarForceField>(c.nodes(), *mod1);
+			SphericalForceField* mod2_node = findNode<SphericalForceField>(c.nodes(), *mod2);
+			SimpleColourModifier* mod3_node = findNode<SimpleColourModifier>(c.nodes(), *mod3);
+			ScaleModifier* mod4_node = findNode<ScaleModifier>(c.nodes(), *mod4);
+			Assert::IsNotNull(root_node);
+			Assert::IsNotNull(psys_node);
+			Assert::IsNotNull(mod0_node);
+			Assert::IsNotNull(mod1_node);
+			Assert::IsNotNull(mod2_node);
+			Assert::IsNotNull(mod3_node);
+			Assert::IsNotNull(mod4_node);
+
+			TestRoot nodeRoot;
+			c.extractNodes(nodeRoot);
+
+			//Were they connected?
+			Assert::IsTrue(areConnected(psys_node->getField(ParticleSystem::MODIFIERS)->connector, mod0_node->getField(Modifier::TARGET)->connector));
+			Assert::IsTrue(areConnected(mod0_node->getField(Modifier::NEXT_MODIFIER)->connector, mod1_node->getField(Modifier::TARGET)->connector));
+			Assert::IsTrue(areConnected(mod1_node->getField(Modifier::NEXT_MODIFIER)->connector, mod2_node->getField(Modifier::TARGET)->connector));
+			Assert::IsTrue(areConnected(mod2_node->getField(Modifier::NEXT_MODIFIER)->connector, mod3_node->getField(Modifier::TARGET)->connector));
+			Assert::IsTrue(areConnected(mod3_node->getField(Modifier::NEXT_MODIFIER)->connector, mod4_node->getField(Modifier::TARGET)->connector));
+			Assert::IsTrue(areConnected(mod1_node->getField(GravityModifier::GRAVITY_OBJECT)->connector, root_node->getField(Node::OBJECT)->connector));
+
+			//Did we mess up the backend?
+			Assert::IsTrue(psys_node->object().getNative().GetModifiers().size() == 8);
+			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[1] == &mod0->getNative());
+			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[2] == &mod1->getNative());
+			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[3] == &mod2->getNative());
+			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[4] == &mod3->getNative());
+			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[5] == &mod4->getNative());
+
+			Assert::IsTrue(mod1->getNative().GetGravityObject() == &root->getNative());
+		}
+
 	};
 
 	TEST_CLASS(RotationModifierTests)
@@ -327,9 +474,11 @@ namespace node
 				TestConnector(IModifiable& ifc) : Sender<IModifiable>(ifc), SingleConnector(*this, *this) {}
 			};
 
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
 			MockModifiable target;
 			TestRoot root;
-			auto mod1 = root.newChild<RotationModifier>();
+			auto mod1 = root.newChild<RotationModifier>(file);
 
 			gui::Connector* c1 = nullptr;
 			gui::Connector* c2 = nullptr;
@@ -361,9 +510,11 @@ namespace node
 				TestConnector(IModifiable& ifc) : Sender<IModifiable>(ifc), SingleConnector(*this, *this) {}
 			};
 
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
 			MockModifiable target;
 			TestRoot root;
-			auto mod1 = root.newChild<SimpleColourModifier>();
+			auto mod1 = root.newChild<SimpleColourModifier>(file);
 
 			gui::Connector* c1 = nullptr;
 			gui::Connector* c2 = nullptr;

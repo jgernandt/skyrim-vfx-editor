@@ -49,6 +49,7 @@
     <ClCompile Include="src\NiExtraData.cpp" />
     <ClCompile Include="src\nif_conversions.cpp" />
     <ClCompile Include="src\NiNode.cpp" />
+    <ClCompile Include="src\NiObject.cpp" />
     <ClCompile Include="src\NiObjectNET.cpp" />
     <ClCompile Include="src\NiParticleSystem.cpp" />
     <ClCompile Include="src\NiPSysEmitter.cpp" />

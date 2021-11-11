@@ -271,13 +271,13 @@ private:
 	std::unique_ptr<PlotAreaInput> m_inputHandler;
 };
 
-node::ScaleModifier::ScaleModifier() : 
-	ScaleModifier(std::make_unique<nif::BSPSysScaleModifier>())
+node::ScaleModifier::ScaleModifier(nif::File& file) :
+	ScaleModifier(file.create<nif::BSPSysScaleModifier>())
 {
 	object().scales().set({ 0.0f, 1.0f });
 }
 
-node::ScaleModifier::ScaleModifier(std::unique_ptr<nif::BSPSysScaleModifier>&& obj) :
+node::ScaleModifier::ScaleModifier(std::shared_ptr<nif::BSPSysScaleModifier>&& obj) :
 	Modifier(std::move(obj))
 {
 	setSize({ WIDTH, HEIGHT });

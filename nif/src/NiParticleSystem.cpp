@@ -21,7 +21,7 @@
 #include "NiPSysModifier.h"
 
 nif::NiPSysData::NiPSysData() : NiPSysData(new Niflib::NiPSysData) {}
-nif::NiPSysData::NiPSysData(native::NiPSysData* obj) : 
+nif::NiPSysData::NiPSysData(native_type* obj) :
 	NiObject(obj), 
 	m_maxCount(&getNative(), &native::NiPSysData::GetBSMaxVertices, &native::NiPSysData::SetBSMaxVertices),
 	m_subtexOffsets(*this),
@@ -50,7 +50,7 @@ nif::NiParticleSystem::NiParticleSystem() : NiParticleSystem(new Niflib::NiParti
 	//getNative().GetVertexDescriptor().SetUnknown02(8);//unclear if this does anything
 }
 
-nif::NiParticleSystem::NiParticleSystem(native::NiParticleSystem* obj) :
+nif::NiParticleSystem::NiParticleSystem(native_type* obj) :
 	NiAVObject(obj), 
 	m_data(*this),
 	m_modifiers(*this), 

@@ -30,14 +30,16 @@ namespace nif
 	class NiPSysModifierCtlr : public NiSingleInterpController
 	{
 	public:
-		NiPSysModifierCtlr(native::NiPSysModifierCtlr* obj);
-		NiPSysModifierCtlr(const NiPSysModifierCtlr&) = delete;
+		using native_type = native::NiPSysModifierCtlr;
 
+	protected:
+		friend class File;
+		NiPSysModifierCtlr(native_type* obj);
+
+	public:
 		virtual ~NiPSysModifierCtlr() = default;
 
-		NiPSysModifierCtlr& operator=(const NiPSysModifierCtlr&) = delete;
-
-		native::NiPSysModifierCtlr& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<std::string>& modifierName() { return m_modName; }
 
@@ -48,14 +50,16 @@ namespace nif
 	class NiPSysModifier : public NiObject
 	{
 	public:
-		NiPSysModifier(native::NiPSysModifier* obj);
-		NiPSysModifier(const NiPSysModifier&) = delete;
+		using native_type = native::NiPSysModifier;
 
+	protected:
+		friend class File;
+		NiPSysModifier(native_type* obj);
+
+	public:
 		virtual ~NiPSysModifier() = default;
 
-		NiPSysModifier& operator=(const NiPSysModifier&) = delete;
-
-		native::NiPSysModifier& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<std::string>& name() { return m_name; }
 		const IProperty<std::string>& name() const { return m_name; }
@@ -79,58 +83,66 @@ namespace nif
 	class NiPSysUpdateCtlr : public NiTimeController
 	{
 	public:
-		NiPSysUpdateCtlr();
-		NiPSysUpdateCtlr(native::NiPSysUpdateCtlr* obj);
-		NiPSysUpdateCtlr(const NiPSysUpdateCtlr&) = delete;
+		using native_type = native::NiPSysUpdateCtlr;
 
+	protected:
+		friend class File;
+		NiPSysUpdateCtlr();
+		NiPSysUpdateCtlr(native_type* obj);
+
+	public:
 		virtual ~NiPSysUpdateCtlr() = default;
 
-		NiPSysUpdateCtlr& operator=(const NiPSysUpdateCtlr&) = delete;
-
-		native::NiPSysUpdateCtlr& getNative() const;
+		native_type& getNative() const;
 	};
 
 	class NiPSysBoundUpdateModifier : public NiPSysModifier
 	{
 	public:
-		NiPSysBoundUpdateModifier();
-		NiPSysBoundUpdateModifier(native::NiPSysBoundUpdateModifier* obj);
-		NiPSysBoundUpdateModifier(const NiPSysBoundUpdateModifier&) = delete;
+		using native_type = native::NiPSysBoundUpdateModifier;
 
+	protected:
+		friend class File;
+		NiPSysBoundUpdateModifier();
+		NiPSysBoundUpdateModifier(native_type* obj);
+
+	public:
 		virtual ~NiPSysBoundUpdateModifier() = default;
 
-		NiPSysBoundUpdateModifier& operator=(const NiPSysBoundUpdateModifier&) = delete;
-
-		native::NiPSysBoundUpdateModifier& getNative() const;
+		native_type& getNative() const;
 	};
 
 
 	class NiPSysAgeDeathModifier : public NiPSysModifier
 	{
 	public:
-		NiPSysAgeDeathModifier();
-		NiPSysAgeDeathModifier(native::NiPSysAgeDeathModifier* obj);
-		NiPSysAgeDeathModifier(const NiPSysAgeDeathModifier&) = delete;
+		using native_type = native::NiPSysAgeDeathModifier;
 
+	protected:
+		friend class File;
+		NiPSysAgeDeathModifier();
+		NiPSysAgeDeathModifier(native_type* obj);
+
+	public:
 		virtual ~NiPSysAgeDeathModifier() = default;
 
-		NiPSysAgeDeathModifier& operator=(const NiPSysAgeDeathModifier&) = delete;
-
-		native::NiPSysAgeDeathModifier& getNative() const;
+		native_type& getNative() const;
 	};
 
 	class NiPSysGravityModifier : public NiPSysModifier
 	{
 	public:
-		NiPSysGravityModifier();
-		NiPSysGravityModifier(native::NiPSysGravityModifier* obj);
-		NiPSysGravityModifier(const NiPSysGravityModifier&) = delete;
+		using native_type = native::NiPSysGravityModifier;
 
+	protected:
+		friend class File;
+		NiPSysGravityModifier();
+		NiPSysGravityModifier(native_type* obj);
+
+	public:
 		virtual ~NiPSysGravityModifier() = default;
 
-		NiPSysGravityModifier& operator=(const NiPSysGravityModifier&) = delete;
-
-		native::NiPSysGravityModifier& getNative() const;
+		native_type& getNative() const;
 
 		IAssignable<nif::NiNode>& gravityObject() { return m_gravityObj; }
 		IProperty<Floats<3>>& gravityAxis() { return m_gravityAxis; }
@@ -156,15 +168,17 @@ namespace nif
 	class NiPSysPositionModifier : public NiPSysModifier
 	{
 	public:
-		NiPSysPositionModifier();
-		NiPSysPositionModifier(native::NiPSysPositionModifier* obj);
-		NiPSysPositionModifier(const NiPSysPositionModifier&) = delete;
+		using native_type = native::NiPSysPositionModifier;
 
+	protected:
+		friend class File;
+		NiPSysPositionModifier();
+		NiPSysPositionModifier(native_type* obj);
+
+	public:
 		virtual ~NiPSysPositionModifier() = default;
 
-		NiPSysPositionModifier& operator=(const NiPSysPositionModifier&) = delete;
-
-		native::NiPSysPositionModifier& getNative() const;
+		native_type& getNative() const;
 	};
 
 	//Somewhat annoying to have to do this just because we cannot inject this conversion into our current Property template.
@@ -205,15 +219,17 @@ namespace nif
 	class NiPSysRotationModifier : public NiPSysModifier
 	{
 	public:
-		NiPSysRotationModifier();
-		NiPSysRotationModifier(native::NiPSysRotationModifier* obj);
-		NiPSysRotationModifier(const NiPSysRotationModifier&) = delete;
+		using native_type = native::NiPSysRotationModifier;
 
+	protected:
+		friend class File;
+		NiPSysRotationModifier();
+		NiPSysRotationModifier(native_type* obj);
+
+	public:
 		virtual ~NiPSysRotationModifier() = default;
 
-		NiPSysRotationModifier& operator=(const NiPSysRotationModifier&) = delete;
-
-		native::NiPSysRotationModifier& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<float>& speed() { return m_speed; }
 		IProperty<float>& speedVar() { return m_speedVar; }
@@ -278,15 +294,17 @@ namespace nif
 	class BSPSysScaleModifier : public NiPSysModifier
 	{
 	public:
-		BSPSysScaleModifier();
-		BSPSysScaleModifier(native::BSPSysScaleModifier* obj);
-		BSPSysScaleModifier(const BSPSysScaleModifier&) = delete;
+		using native_type = native::BSPSysScaleModifier;
 
+	protected:
+		friend class File;
+		BSPSysScaleModifier();
+		BSPSysScaleModifier(native_type* obj);
+
+	public:
 		virtual ~BSPSysScaleModifier() = default;
 
-		BSPSysScaleModifier& operator=(const BSPSysScaleModifier&) = delete;
-
-		native::BSPSysScaleModifier& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<std::vector<float>>& scales() { return m_scales; }
 
@@ -297,15 +315,17 @@ namespace nif
 	class BSPSysSimpleColorModifier : public NiPSysModifier
 	{
 	public:
-		BSPSysSimpleColorModifier();
-		BSPSysSimpleColorModifier(native::BSPSysSimpleColorModifier* obj);
-		BSPSysSimpleColorModifier(const BSPSysSimpleColorModifier&) = delete;
+		using native_type = native::BSPSysSimpleColorModifier;
 
+	protected:
+		friend class File;
+		BSPSysSimpleColorModifier();
+		BSPSysSimpleColorModifier(native_type* obj);
+
+	public:
 		virtual ~BSPSysSimpleColorModifier() = default;
 
-		BSPSysSimpleColorModifier& operator=(const BSPSysSimpleColorModifier&) = delete;
-
-		native::BSPSysSimpleColorModifier& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<float>& alpha2Begin() { return m_fadeInEnd; }
 		const IProperty<float>& alpha2Begin() const { return m_fadeInEnd; }

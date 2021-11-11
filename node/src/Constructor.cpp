@@ -149,7 +149,7 @@ void node::Constructor::EP_process(nif::native::NiAVObject* obj)
 
 			if (!node) {
 				//We did not recognise this type. Replace it with a dummy object.
-				node = std::make_unique<DummyAVObject>(std::make_unique<nif::NiAVObject>(obj));
+				node = std::make_unique<DummyAVObject>(m_file.get<nif::NiAVObject>(obj));
 			}
 
 			if (dynamic_cast<Root*>(node.get())) {
@@ -194,9 +194,9 @@ std::unique_ptr<node::NodeShared> node::Constructor::process(nif::native::NiNode
 
 	std::unique_ptr<NodeShared> node;
 	if (!obj->GetParent())
-		node = std::make_unique<Root>(std::make_unique<nif::NiNode>(obj));
+		node = std::make_unique<Root>(m_file.get<nif::NiNode>(obj));
 	else
-		node = std::make_unique<Node>(std::make_unique<nif::NiNode>(obj));
+		node = std::make_unique<Node>(m_file.get<nif::NiNode>(obj));
 
 	for (auto&& child : obj->GetChildren()) {
 		EP_process(child);
@@ -219,13 +219,13 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 	assert(obj);
 
 	std::unique_ptr<ParticleSystem> node;
-	std::unique_ptr<nif::NiParticleSystem> psys = std::make_unique<nif::NiParticleSystem>(obj);
-	std::unique_ptr<nif::NiPSysUpdateCtlr> ctlr;
-	std::unique_ptr<nif::NiPSysData> data;
-	std::unique_ptr<nif::NiAlphaProperty> alpha;
-	std::unique_ptr<nif::NiPSysAgeDeathModifier> adm;
-	std::unique_ptr<nif::NiPSysPositionModifier> pm;
-	std::unique_ptr<nif::NiPSysBoundUpdateModifier> bum;
+	std::shared_ptr<nif::NiParticleSystem> psys = m_file.get<nif::NiParticleSystem>(obj);
+	std::shared_ptr<nif::NiPSysUpdateCtlr> ctlr;
+	std::shared_ptr<nif::NiPSysData> data;
+	std::shared_ptr<nif::NiAlphaProperty> alpha;
+	std::shared_ptr<nif::NiPSysAgeDeathModifier> adm;
+	std::shared_ptr<nif::NiPSysPositionModifier> pm;
+	std::shared_ptr<nif::NiPSysBoundUpdateModifier> bum;
 
 	bool incomplete = false;
 	bool irregular = false;
@@ -238,7 +238,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 			s.append(" shares its data with another object");
 			m_warnings.push_back(std::move(s));
 		}
-		data = std::make_unique<nif::NiPSysData>(d);
+		data = m_file.get<nif::NiPSysData>(d);
 	}
 	else
 		incomplete = true;
@@ -249,22 +249,21 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 			// 
 			//NiAlphaPropertyRef clone = StaticCast<NiAlphaProperty>(a->Clone(s_version, s_userVersion));
 			//Clone is broken. Doesn't provide a header for indexed string i/o. We'll do it manually:
-			NiAlphaPropertyRef clone = new NiAlphaProperty;
-			clone->SetFlags(a->GetFlags());
-			clone->SetTestThreshold(a->GetTestThreshold());
+			alpha = m_file.create<nif::NiAlphaProperty>();
+			alpha->getNative().SetFlags(a->GetFlags());
+			alpha->getNative().SetTestThreshold(a->GetTestThreshold());
 			//If, by any chance, there is extra data, we can just add it:
 			for (auto&& ed : a->GetExtraData())
-				clone->AddExtraData(ed);
+				alpha->getNative().AddExtraData(ed);
 			//Controllers, however, would have to be cloned as well. 
 			//Controlled alpha properties are rare, so let's just leave that for another happy day.
 			if (a->IsAnimated())
 				m_warnings.push_back(obj->GetName() + " is sharing a controlled alpha property with another object");
 
-			obj->SetAlphaProperty(clone);
-			alpha = std::make_unique<nif::NiAlphaProperty>(clone);
+			obj->SetAlphaProperty(&alpha->getNative());
 		}
 		else
-			alpha = std::make_unique<nif::NiAlphaProperty>(a);
+			alpha = m_file.get<nif::NiAlphaProperty>(a);
 	}
 	else
 		incomplete = true;
@@ -279,7 +278,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 					s.append(" shares its update controller with another object");
 					m_warnings.push_back(std::move(s));
 				}
-				ctlr = std::make_unique<nif::NiPSysUpdateCtlr>(u);
+				ctlr = m_file.get<nif::NiPSysUpdateCtlr>(u);
 			}
 			else {
 				//there was more than one update ctlr, which is a file error (?)
@@ -322,7 +321,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 					std::string s = obj->GetName() + ":" + (*it)->GetName() + " is used by multiple objects";
 					m_warnings.push_back(std::move(s));
 				}
-				adm = std::make_unique<nif::NiPSysAgeDeathModifier>(derived);
+				adm = m_file.get<nif::NiPSysAgeDeathModifier>(derived);
 			}
 			else {
 				//there was more than one, which is useless (?). Discard it.
@@ -338,7 +337,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 					std::string s = obj->GetName() + ":" + (*it)->GetName() + " is used by multiple objects";
 					m_warnings.push_back(std::move(s));
 				}
-				pm = std::make_unique<nif::NiPSysPositionModifier>(derived);
+				pm = m_file.get<nif::NiPSysPositionModifier>(derived);
 			}
 			else {
 				//there was more than one, which is useless (?). Discard it.
@@ -354,7 +353,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 					std::string s = obj->GetName() + ":" + (*it)->GetName() + " is used by multiple objects";
 					m_warnings.push_back(std::move(s));
 				}
-				bum = std::make_unique<nif::NiPSysBoundUpdateModifier>(derived);
+				bum = m_file.get<nif::NiPSysBoundUpdateModifier>(derived);
 			}
 			else {
 				//there was more than one, which is useless (?). Discard it.
@@ -393,7 +392,7 @@ std::unique_ptr<node::ParticleSystem> node::Constructor::process(nif::native::Ni
 		m_warnings.push_back(s);
 	}
 
-	node = std::make_unique<ParticleSystem>(std::move(psys), std::move(data), std::move(alpha), std::move(ctlr), std::move(adm), std::move(pm), std::move(bum));
+	node = std::make_unique<ParticleSystem>(m_file, std::move(psys), std::move(data), std::move(alpha), std::move(ctlr), std::move(adm), std::move(pm), std::move(bum));
 
 	if (node->subtexCount().get() == nif::SubtextureCount{ 0, 0 })
 		m_warnings.push_back(obj->GetName() + " has an irregular texture atlas layout. Edits to this field cannot be undone");
@@ -422,7 +421,7 @@ void node::Constructor::EP_process(nif::native::NiExtraData* obj)
 				node = process(static_cast<Niflib::NiStringExtraData*>(obj));
 
 			if (!node)
-				node = std::make_unique<DummyExtraData>(std::make_unique<nif::NiExtraData>(obj));
+				node = std::make_unique<DummyExtraData>(m_file.get<nif::NiExtraData>(obj));
 
 			m_objectMap.insert({ obj, m_nodes.size() });
 			m_nodes.push_back(std::move(node));
@@ -437,9 +436,9 @@ std::unique_ptr<node::StringDataShared> node::Constructor::process(nif::native::
 	std::unique_ptr<StringDataShared> node;
 
 	if (obj->GetName() == "Prn")
-		node = std::make_unique<WeaponTypeData>(std::make_unique<nif::NiStringExtraData>(obj));
+		node = std::make_unique<WeaponTypeData>(m_file.get<nif::NiStringExtraData>(obj));
 	else
-		node = std::make_unique<StringData>(std::make_unique<nif::NiStringExtraData>(obj));
+		node = std::make_unique<StringData>(m_file.get<nif::NiStringExtraData>(obj));
 
 	return std::move(node);
 }
@@ -458,21 +457,21 @@ void node::Constructor::EP_process(nif::native::NiPSysModifier* obj, const CtlrL
 				node = process(static_cast<Niflib::NiPSysRotationModifier*>(obj), ctlrs);
 			else if (obj->GetType().IsSameType(Niflib::BSPSysScaleModifier::TYPE))
 				node = std::make_unique<ScaleModifier>(
-					std::make_unique<nif::BSPSysScaleModifier>(
+					m_file.get<nif::BSPSysScaleModifier>(
 						static_cast<Niflib::BSPSysScaleModifier*>(obj)));
 			else if (obj->GetType().IsSameType(Niflib::BSPSysSimpleColorModifier::TYPE))
 				node = std::make_unique<SimpleColourModifier>(
-					std::make_unique<nif::BSPSysSimpleColorModifier>(
+					m_file.get<nif::BSPSysSimpleColorModifier>(
 						static_cast<Niflib::BSPSysSimpleColorModifier*>(obj)));
 
 			if (!node) {
-				node = std::make_unique<DummyModifier>(std::make_unique<nif::NiPSysModifier>(obj));
+				node = std::make_unique<DummyModifier>(m_file.get<nif::NiPSysModifier>(obj));
 				//Add controllers
 				for (auto&& c : ctlrs) {
 					if (Niflib::NiPSysModifierCtlr* ctlr = Niflib::DynamicCast<Niflib::NiPSysModifierCtlr>(c);
 						ctlr && ctlr->GetModifierName() == obj->GetName())
 					{
-						node->addUnknownController(std::make_unique<nif::NiPSysModifierCtlr>(ctlr));
+						node->addUnknownController(m_file.get<nif::NiPSysModifierCtlr>(ctlr));
 					}
 				}
 			}
@@ -495,15 +494,15 @@ std::unique_ptr<node::Emitter> node::Constructor::process(nif::native::NiPSysEmi
 	assert(obj);
 
 	std::unique_ptr<Emitter> node;
-	std::unique_ptr<nif::NiPSysEmitterCtlr> emitterCtlr;
-	std::unique_ptr<nif::NiFloatInterpolator> brIplr;
-	std::unique_ptr<nif::NiBoolInterpolator> visIplr;
+	std::shared_ptr<nif::NiPSysEmitterCtlr> emitterCtlr;
+	std::shared_ptr<nif::NiFloatInterpolator> brIplr;
+	std::shared_ptr<nif::NiBoolInterpolator> visIplr;
 
 	for (auto&& c : ctlrs) {
 		if (NiPSysEmitterCtlr* ctlr = DynamicCast<NiPSysEmitterCtlr>(c);
 			ctlr && ctlr->GetModifierName() == obj->GetName())
 		{
-			emitterCtlr = std::make_unique<nif::NiPSysEmitterCtlr>(static_cast<NiPSysEmitterCtlr*>(ctlr));
+			emitterCtlr = m_file.get<nif::NiPSysEmitterCtlr>(static_cast<NiPSysEmitterCtlr*>(ctlr));
 			//Do we care to look for duplicates? Probably not, right?
 			break;
 		}
@@ -514,7 +513,7 @@ std::unique_ptr<node::Emitter> node::Constructor::process(nif::native::NiPSysEmi
 			if (NiFloatInterpolator* f_iplr = DynamicCast<NiFloatInterpolator>(iplr); 
 				f_iplr && f_iplr->GetData() == nullptr) 
 			{
-				brIplr = std::make_unique<nif::NiFloatInterpolator>(f_iplr);
+				brIplr = m_file.get<nif::NiFloatInterpolator>(f_iplr);
 			}
 			else {
 				//This iplr should be processed as a separate node
@@ -532,7 +531,7 @@ std::unique_ptr<node::Emitter> node::Constructor::process(nif::native::NiPSysEmi
 			if (NiBoolInterpolator* b_iplr = DynamicCast<NiBoolInterpolator>(iplr);
 				b_iplr && (b_iplr->GetData() == nullptr || b_iplr->GetData()->GetKeys().size() < 3))
 			{
-				visIplr = std::make_unique<nif::NiBoolInterpolator>(b_iplr);
+				visIplr = m_file.get<nif::NiBoolInterpolator>(b_iplr);
 			}
 			else {
 				//This iplr should be processed as a separate node
@@ -554,20 +553,20 @@ std::unique_ptr<node::Emitter> node::Constructor::process(nif::native::NiPSysEmi
 		}
 
 		if (obj->GetType().IsSameType(Niflib::NiPSysBoxEmitter::TYPE))
-			node = std::make_unique<BoxEmitter>(
-				std::make_unique<nif::NiPSysBoxEmitter>(static_cast<Niflib::NiPSysBoxEmitter*>(obj)),
+			node = std::make_unique<BoxEmitter>(m_file,
+				m_file.get<nif::NiPSysBoxEmitter>(static_cast<Niflib::NiPSysBoxEmitter*>(obj)),
 				std::move(emitterCtlr),
 				std::move(brIplr),
 				std::move(visIplr));
 		else if (obj->GetType().IsSameType(Niflib::NiPSysCylinderEmitter::TYPE))
-			node = std::make_unique<CylinderEmitter>(
-				std::make_unique<nif::NiPSysCylinderEmitter>(static_cast<Niflib::NiPSysCylinderEmitter*>(obj)),
+			node = std::make_unique<CylinderEmitter>(m_file,
+				m_file.get<nif::NiPSysCylinderEmitter>(static_cast<Niflib::NiPSysCylinderEmitter*>(obj)),
 				std::move(emitterCtlr),
 				std::move(brIplr),
 				std::move(visIplr));
 		else if (obj->GetType().IsSameType(Niflib::NiPSysSphereEmitter::TYPE))
-			node = std::make_unique<SphereEmitter>(
-				std::make_unique<nif::NiPSysSphereEmitter>(static_cast<Niflib::NiPSysSphereEmitter*>(obj)),
+			node = std::make_unique<SphereEmitter>(m_file,
+				m_file.get<nif::NiPSysSphereEmitter>(static_cast<Niflib::NiPSysSphereEmitter*>(obj)),
 				std::move(emitterCtlr),
 				std::move(brIplr),
 				std::move(visIplr));
@@ -581,7 +580,7 @@ std::unique_ptr<node::Emitter> node::Constructor::process(nif::native::NiPSysEmi
 					ctlr && ctlr->GetModifierName() == obj->GetName())
 				{
 					//node->addLifeSpanController... e.g.
-					node->addUnknownController(std::make_unique<nif::NiPSysModifierCtlr>(ctlr));
+					node->addUnknownController(m_file.get<nif::NiPSysModifierCtlr>(ctlr));
 				}
 		}
 	}
@@ -596,9 +595,9 @@ std::unique_ptr<node::GravityModifier> node::Constructor::process(nif::native::N
 	std::unique_ptr<GravityModifier> node;
 
 	if (obj->GetForceType() == Niflib::FORCE_PLANAR)
-		node = std::make_unique<PlanarForceField>(std::make_unique<nif::NiPSysGravityModifier>(obj));
+		node = std::make_unique<PlanarForceField>(m_file.get<nif::NiPSysGravityModifier>(obj));
 	else if (obj->GetForceType() == Niflib::FORCE_SPHERICAL)
-		node = std::make_unique<SphericalForceField>(std::make_unique<nif::NiPSysGravityModifier>(obj));
+		node = std::make_unique<SphericalForceField>(m_file.get<nif::NiPSysGravityModifier>(obj));
 
 	if (node) {
 		//Connect to our gravity object
@@ -616,7 +615,7 @@ std::unique_ptr<node::GravityModifier> node::Constructor::process(nif::native::N
 			if (Niflib::NiPSysModifierCtlr* ctlr = Niflib::DynamicCast<Niflib::NiPSysModifierCtlr>(c);
 				ctlr && ctlr->GetModifierName() == obj->GetName())
 			{
-				node->addUnknownController(std::make_unique<nif::NiPSysModifierCtlr>(ctlr));
+				node->addUnknownController(m_file.get<nif::NiPSysModifierCtlr>(ctlr));
 			}
 		}
 	}
@@ -628,13 +627,13 @@ std::unique_ptr<node::RotationModifier> node::Constructor::process(nif::native::
 {
 	assert(obj);
 
-	auto node = std::make_unique<RotationModifier>(std::make_unique<nif::NiPSysRotationModifier>(obj));
+	auto node = std::make_unique<RotationModifier>(m_file.get<nif::NiPSysRotationModifier>(obj));
 	//Look for property controllers
 	for (auto&& c : ctlrs) {
 		if (Niflib::NiPSysModifierCtlr* ctlr = Niflib::DynamicCast<Niflib::NiPSysModifierCtlr>(c);
 			ctlr && ctlr->GetModifierName() == obj->GetName())
 		{
-			node->addUnknownController(std::make_unique<nif::NiPSysModifierCtlr>(ctlr));
+			node->addUnknownController(m_file.get<nif::NiPSysModifierCtlr>(ctlr));
 		}
 	}
 
@@ -645,7 +644,7 @@ void node::Constructor::EP_process(nif::native::BSEffectShaderProperty* obj)
 {
 	if (obj) {
 		if (auto it = m_objectMap.find(obj); it == m_objectMap.end()) {
-			auto node = std::make_unique<EffectShader>(std::make_unique<nif::BSEffectShaderProperty>(obj));
+			auto node = std::make_unique<EffectShader>(m_file.get<nif::BSEffectShaderProperty>(obj));
 
 			m_objectMap.insert({ obj, m_nodes.size() });
 			m_nodes.push_back(std::move(node));
@@ -664,10 +663,10 @@ void node::Constructor::EP_process(nif::native::NiInterpolator* obj, const nif::
 			}
 			else if (obj->GetType().IsSameType(Niflib::NiFloatInterpolator::TYPE)) {
 				Niflib::NiFloatInterpolator* fiplr = Niflib::StaticCast<Niflib::NiFloatInterpolator>(obj);
-				std::unique_ptr<nif::NiFloatData> data;
+				std::shared_ptr<nif::NiFloatData> data;
 				if (Niflib::NiFloatData* d = fiplr->GetData())
-					data = std::make_unique<nif::NiFloatData>(d);
-				auto ctlr_node = std::make_unique<FloatController>(std::make_unique<nif::NiFloatInterpolator>(fiplr), std::move(data));
+					data = m_file.get<nif::NiFloatData>(d);
+				auto ctlr_node = std::make_unique<FloatController>(m_file, m_file.get<nif::NiFloatInterpolator>(fiplr), std::move(data));
 				ctlr_node->flags().set(ctlr.GetFlags());
 				ctlr_node->frequency().set(ctlr.GetFrequency());
 				ctlr_node->phase().set(ctlr.GetPhase());

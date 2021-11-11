@@ -25,14 +25,16 @@ namespace nif
 	class NiObjectNET : public NiObject
 	{
 	public:
-		NiObjectNET(native::NiObjectNET* obj);
-		NiObjectNET(const NiObjectNET& other) = delete;
+		using native_type = native::NiObjectNET;
 
+	protected:
+		friend class File;
+		NiObjectNET(native_type* obj);
+
+	public:
 		virtual ~NiObjectNET() = default;
 
-		NiObjectNET& operator=(const NiObjectNET&) = delete;
-
-		native::NiObjectNET& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<std::string>& name() { return m_name; }
 		ISet<NiExtraData>& extraData() { return m_extraData; }

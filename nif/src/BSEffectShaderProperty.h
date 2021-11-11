@@ -37,15 +37,17 @@ namespace nif
 	class NiAlphaProperty : public NiObjectNET
 	{
 	public:
-		NiAlphaProperty();
-		NiAlphaProperty(native::NiAlphaProperty* obj);
-		NiAlphaProperty(const NiAlphaProperty&) = delete;
+		using native_type = native::NiAlphaProperty;
 
+	protected:
+		friend class File;
+		NiAlphaProperty();
+		NiAlphaProperty(native_type* obj);
+
+	public:
 		virtual ~NiAlphaProperty() = default;
 
-		NiAlphaProperty& operator=(const NiAlphaProperty&) = delete;
-
-		native::NiAlphaProperty& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<unsigned short>& flags() { return m_flags; }
 
@@ -56,15 +58,17 @@ namespace nif
 	class BSEffectShaderProperty : public NiObjectNET
 	{
 	public:
-		BSEffectShaderProperty();
-		BSEffectShaderProperty(native::BSEffectShaderProperty* obj);
-		BSEffectShaderProperty(const BSEffectShaderProperty&) = delete;
+		using native_type = native::BSEffectShaderProperty;
 
+	protected:
+		friend class File;
+		BSEffectShaderProperty();
+		BSEffectShaderProperty(native_type* obj);
+
+	public:
 		virtual ~BSEffectShaderProperty() = default;
 
-		BSEffectShaderProperty& operator=(const BSEffectShaderProperty&) = delete;
-
-		native::BSEffectShaderProperty& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<ColRGBA>& emissiveCol() { return m_emissiveCol; }
 		IProperty<float>& emissiveMult() { return m_emissiveMult; }

@@ -24,8 +24,8 @@ namespace node
 	class SimpleColourModifier final : public Modifier
 	{
 	public:
-		SimpleColourModifier();
-		SimpleColourModifier(std::unique_ptr<nif::BSPSysSimpleColorModifier>&& obj);
+		SimpleColourModifier(nif::File& file);
+		SimpleColourModifier(std::shared_ptr<nif::BSPSysSimpleColorModifier>&& obj);
 
 		virtual nif::BSPSysSimpleColorModifier& object() override;
 

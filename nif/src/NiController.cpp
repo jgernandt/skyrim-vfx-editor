@@ -19,7 +19,7 @@
 #include "pch.h"
 #include "NiController.h"
 
-nif::NiInterpolator::NiInterpolator(native::NiInterpolator* obj) : NiObject(obj) {}
+nif::NiInterpolator::NiInterpolator(native_type* obj) : NiObject(obj) {}
 
 nif::native::NiInterpolator& nif::NiInterpolator::getNative() const
 {
@@ -29,7 +29,7 @@ nif::native::NiInterpolator& nif::NiInterpolator::getNative() const
 
 
 nif::NiBoolData::NiBoolData() : NiBoolData(new Niflib::NiBoolData) {}
-nif::NiBoolData::NiBoolData(native::NiBoolData* obj) : 
+nif::NiBoolData::NiBoolData(native_type* obj) :
 	NiObject(obj), 
 	m_keyType(obj, &native::NiBoolData::GetKeyType, &native::NiBoolData::SetKeyType)
 {}
@@ -43,12 +43,11 @@ nif::native::NiBoolData& nif::NiBoolData::getNative() const
 
 nif::NiBoolInterpolator::NiBoolInterpolator() : NiBoolInterpolator(new Niflib::NiBoolInterpolator) {}
 
-nif::NiBoolInterpolator::NiBoolInterpolator(native::NiBoolInterpolator* obj) :
+nif::NiBoolInterpolator::NiBoolInterpolator(native_type* obj) :
 	NiInterpolator(obj),
 	m_value(&getNative(), &native::NiBoolInterpolator::GetBoolValue, &native::NiBoolInterpolator::SetBoolValue),
 	m_data(&getNative(), &native::NiBoolInterpolator::GetData, &native::NiBoolInterpolator::SetData)
-{
-}
+{}
 
 nif::native::NiBoolInterpolator& nif::NiBoolInterpolator::getNative() const
 {
@@ -58,7 +57,7 @@ nif::native::NiBoolInterpolator& nif::NiBoolInterpolator::getNative() const
 
 
 nif::NiFloatData::NiFloatData() : NiFloatData(new Niflib::NiFloatData) {}
-nif::NiFloatData::NiFloatData(native::NiFloatData* obj) : 
+nif::NiFloatData::NiFloatData(native_type* obj) :
 	NiObject(obj),
 	m_keyType(obj, &native::NiFloatData::GetKeyType, &native::NiFloatData::SetKeyType),
 	m_keys(*this)
@@ -369,7 +368,7 @@ IVectorProperty<nif::TBC>::element nif::NiFloatData::IplnData::TBCs::at(int i)
 
 nif::NiFloatInterpolator::NiFloatInterpolator() : NiFloatInterpolator(new Niflib::NiFloatInterpolator) {}
 
-nif::NiFloatInterpolator::NiFloatInterpolator(native::NiFloatInterpolator* obj) : 
+nif::NiFloatInterpolator::NiFloatInterpolator(native_type* obj) :
 	NiInterpolator(obj),
 	m_value(&getNative(), &native::NiFloatInterpolator::GetFloatValue, &native::NiFloatInterpolator::SetFloatValue),
 	m_data(&getNative(), &native::NiFloatInterpolator::GetData, &native::NiFloatInterpolator::SetData)
@@ -384,7 +383,7 @@ nif::native::NiFloatInterpolator& nif::NiFloatInterpolator::getNative() const
 
 
 nif::NiBlendBoolInterpolator::NiBlendBoolInterpolator() : NiBlendBoolInterpolator(new Niflib::NiBlendBoolInterpolator) {}
-nif::NiBlendBoolInterpolator::NiBlendBoolInterpolator(native::NiBlendBoolInterpolator* obj) : NiInterpolator(obj) {}
+nif::NiBlendBoolInterpolator::NiBlendBoolInterpolator(native_type* obj) : NiInterpolator(obj) {}
 
 nif::native::NiBlendBoolInterpolator& nif::NiBlendBoolInterpolator::getNative() const
 {
@@ -394,7 +393,7 @@ nif::native::NiBlendBoolInterpolator& nif::NiBlendBoolInterpolator::getNative() 
 
 
 nif::NiBlendFloatInterpolator::NiBlendFloatInterpolator() : NiBlendFloatInterpolator(new Niflib::NiBlendFloatInterpolator) {}
-nif::NiBlendFloatInterpolator::NiBlendFloatInterpolator(native::NiBlendFloatInterpolator* obj) : NiInterpolator(obj) {}
+nif::NiBlendFloatInterpolator::NiBlendFloatInterpolator(native_type* obj) : NiInterpolator(obj) {}
 
 nif::native::NiBlendFloatInterpolator& nif::NiBlendFloatInterpolator::getNative() const
 {
@@ -403,7 +402,7 @@ nif::native::NiBlendFloatInterpolator& nif::NiBlendFloatInterpolator::getNative(
 }
 
 
-nif::NiTimeController::NiTimeController(native::NiTimeController* obj) :
+nif::NiTimeController::NiTimeController(native_type* obj) :
 	NiObject(obj),
 	m_flags(&getNative(), &native::NiTimeController::GetFlags, &native::NiTimeController::SetFlags),
 	m_frequency(&getNative(), &native::NiTimeController::GetFrequency, &native::NiTimeController::SetFrequency),
@@ -419,7 +418,7 @@ nif::native::NiTimeController& nif::NiTimeController::getNative() const
 }
 
 
-nif::NiSingleInterpController::NiSingleInterpController(native::NiSingleInterpController* obj) :
+nif::NiSingleInterpController::NiSingleInterpController(native_type* obj) :
 	NiTimeController(obj),
 	m_iplr(&getNative(), &native::NiSingleInterpController::GetInterpolator, &native::NiSingleInterpController::SetInterpolator)
 {

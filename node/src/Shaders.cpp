@@ -169,7 +169,8 @@ private:
 	} m_prop;
 };
 
-node::EffectShader::EffectShader() : EffectShader(std::make_unique<nif::BSEffectShaderProperty>())
+node::EffectShader::EffectShader(nif::File& file) : 
+	EffectShader(file.create<nif::BSEffectShaderProperty>())
 {
 	object().shaderFlags1().set(nif::ShaderFlag1::ZBUFFER_TEST, true);
 	object().shaderFlags2().set(nif::ShaderFlag2::VERTEX_COLOUR, true);
@@ -177,7 +178,7 @@ node::EffectShader::EffectShader() : EffectShader(std::make_unique<nif::BSEffect
 	object().emissiveMult().set(1.0f);
 }
 
-node::EffectShader::EffectShader(std::unique_ptr<nif::BSEffectShaderProperty>&& obj) :
+node::EffectShader::EffectShader(std::shared_ptr<nif::BSEffectShaderProperty>&& obj) :
 	NodeBase(std::move(obj))
 {
 	setClosable(true);

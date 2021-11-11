@@ -25,17 +25,18 @@ namespace nif
 	class NiPSysEmitterCtlr : public NiPSysModifierCtlr
 	{
 	public:
-		NiPSysEmitterCtlr();
-		NiPSysEmitterCtlr(native::NiPSysEmitterCtlr* obj);
-		NiPSysEmitterCtlr(const NiPSysEmitterCtlr&) = delete;
+		using native_type = native::NiPSysEmitterCtlr;
 
+	protected:
+		friend class File;
+		NiPSysEmitterCtlr();
+		NiPSysEmitterCtlr(native_type* obj);
+
+	public:
 		virtual ~NiPSysEmitterCtlr() = default;
 
-		NiPSysEmitterCtlr& operator=(const NiPSysEmitterCtlr&) = delete;
+		native_type& getNative() const;
 
-		native::NiPSysEmitterCtlr& getNative() const;
-
-		//NiPSysEmitterCtlr
 		IAssignable<NiInterpolator>& visIplr() { return m_visIplr; }
 
 	private:
@@ -45,14 +46,16 @@ namespace nif
 	class NiPSysEmitter : public NiPSysModifier
 	{
 	public:
-		NiPSysEmitter(native::NiPSysEmitter* obj);
-		NiPSysEmitter(const NiPSysEmitter&) = delete;
+		using native_type = native::NiPSysEmitter;
 
+	protected:
+		friend class File;
+		NiPSysEmitter(native_type* obj);
+
+	public:
 		virtual ~NiPSysEmitter() = default;
 
-		NiPSysEmitter& operator=(const NiPSysEmitter&) = delete;
-
-		native::NiPSysEmitter& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<ColRGBA>& colour() { return m_colour; }
 
@@ -131,14 +134,16 @@ namespace nif
 	class NiPSysVolumeEmitter : public NiPSysEmitter
 	{
 	public:
-		NiPSysVolumeEmitter(native::NiPSysVolumeEmitter* obj);
-		NiPSysVolumeEmitter(const NiPSysVolumeEmitter&) = delete;
+		using native_type = native::NiPSysVolumeEmitter;
 
+	protected:
+		friend class File;
+		NiPSysVolumeEmitter(native_type* obj);
+
+	public:
 		virtual ~NiPSysVolumeEmitter() = default;
 
-		NiPSysVolumeEmitter& operator=(const NiPSysVolumeEmitter&) = delete;
-
-		native::NiPSysVolumeEmitter& getNative() const;
+		native_type& getNative() const;
 
 		IAssignable<NiNode>& emitterObject() { return m_emtrObj; }
 
@@ -149,15 +154,17 @@ namespace nif
 	class NiPSysBoxEmitter : public NiPSysVolumeEmitter
 	{
 	public:
-		NiPSysBoxEmitter();
-		NiPSysBoxEmitter(native::NiPSysBoxEmitter* obj);
-		NiPSysBoxEmitter(const NiPSysBoxEmitter&) = delete;
+		using native_type = native::NiPSysBoxEmitter;
 
+	protected:
+		friend class File;
+		NiPSysBoxEmitter();
+		NiPSysBoxEmitter(native_type* obj);
+
+	public:
 		virtual ~NiPSysBoxEmitter() = default;
 
-		NiPSysBoxEmitter& operator=(const NiPSysBoxEmitter&) = delete;
-
-		native::NiPSysBoxEmitter& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<float>& width() { return m_width; }
 		IProperty<float>& height() { return m_height; }
@@ -172,15 +179,17 @@ namespace nif
 	class NiPSysCylinderEmitter : public NiPSysVolumeEmitter
 	{
 	public:
-		NiPSysCylinderEmitter();
-		NiPSysCylinderEmitter(native::NiPSysCylinderEmitter* obj);
-		NiPSysCylinderEmitter(const NiPSysCylinderEmitter&) = delete;
+		using native_type = native::NiPSysCylinderEmitter;
 
+	protected:
+		friend class File;
+		NiPSysCylinderEmitter();
+		NiPSysCylinderEmitter(native_type* obj);
+
+	public:
 		virtual ~NiPSysCylinderEmitter() = default;
 
-		NiPSysCylinderEmitter& operator=(const NiPSysCylinderEmitter&) = delete;
-
-		native::NiPSysCylinderEmitter& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<float>& radius() { return m_radius; }
 		IProperty<float>& height() { return m_height; }
@@ -193,15 +202,17 @@ namespace nif
 	class NiPSysSphereEmitter : public NiPSysVolumeEmitter
 	{
 	public:
-		NiPSysSphereEmitter();
-		NiPSysSphereEmitter(native::NiPSysSphereEmitter* obj);
-		NiPSysSphereEmitter(const NiPSysSphereEmitter&) = delete;
+		using native_type = native::NiPSysSphereEmitter;
 
+	protected:
+		friend class File;
+		NiPSysSphereEmitter();
+		NiPSysSphereEmitter(native_type* obj);
+
+	public:
 		virtual ~NiPSysSphereEmitter() = default;
 
-		NiPSysSphereEmitter& operator=(const NiPSysSphereEmitter&) = delete;
-
-		native::NiPSysSphereEmitter& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<float>& radius() { return m_radius; }
 

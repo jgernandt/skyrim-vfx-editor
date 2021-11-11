@@ -27,15 +27,17 @@ namespace nif
 	class NiPSysData : public NiObject
 	{
 	public:
-		NiPSysData();
-		NiPSysData(native::NiPSysData* obj);
-		NiPSysData(const NiPSysData&) = delete;
+		using native_type = native::NiPSysData;
 
+	protected:
+		friend class File;
+		NiPSysData();
+		NiPSysData(native_type* obj);
+
+	public:
 		virtual ~NiPSysData() = default;
 
-		NiPSysData& operator=(const NiPSysData&) = delete;
-
-		native::NiPSysData& getNative() const;
+		native_type& getNative() const;
 
 		IProperty<unsigned short>& maxCount() { return m_maxCount; }
 		IProperty<std::vector<SubtextureOffset>>& subtexOffsets() { return m_subtexOffsets; }
@@ -65,15 +67,17 @@ namespace nif
 	class NiParticleSystem : public NiAVObject
 	{
 	public:
-		NiParticleSystem();
-		NiParticleSystem(native::NiParticleSystem* obj);
-		NiParticleSystem(const NiParticleSystem&) = delete;
+		using native_type = native::NiParticleSystem;
 
+	protected:
+		friend class File;
+		NiParticleSystem();
+		NiParticleSystem(native_type* obj);
+
+	public:
 		virtual ~NiParticleSystem() = default;
 
-		NiParticleSystem& operator=(const NiParticleSystem&) = delete;
-
-		native::NiParticleSystem& getNative() const;
+		native_type& getNative() const;
 
 		IAssignable<NiPSysData>& data() { return m_data; }
 
@@ -133,5 +137,4 @@ namespace nif
 
 		Property<bool> m_worldSpace;
 	};
-
 }

@@ -24,14 +24,16 @@ namespace nif
 	class NiAVObject : public NiObjectNET
 	{
 	public:
-		NiAVObject(native::NiAVObject* obj);
-		NiAVObject(const NiAVObject& other) = delete;
+		using native_type = native::NiAVObject;
 
+	protected:
+		friend class File;
+		NiAVObject(native_type* obj);
+
+	public:
 		virtual ~NiAVObject() = default;
 
-		NiAVObject& operator=(const NiAVObject&) = delete;
-
-		native::NiAVObject& getNative() const;
+		native_type& getNative() const;
 
 		Transformable& transform() { return m_transform; }
 

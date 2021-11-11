@@ -20,7 +20,7 @@
 #include "NiPSysEmitter.h"
 
 nif::NiPSysEmitterCtlr::NiPSysEmitterCtlr() : NiPSysEmitterCtlr(new Niflib::NiPSysEmitterCtlr) {}
-nif::NiPSysEmitterCtlr::NiPSysEmitterCtlr(native::NiPSysEmitterCtlr* obj) : 
+nif::NiPSysEmitterCtlr::NiPSysEmitterCtlr(native_type* obj) :
 	NiPSysModifierCtlr(obj), 
 	m_visIplr(&getNative(), &native::NiPSysEmitterCtlr::GetVisibilityInterpolator, &native::NiPSysEmitterCtlr::SetVisibilityInterpolator)
 {}
@@ -32,7 +32,7 @@ nif::native::NiPSysEmitterCtlr& nif::NiPSysEmitterCtlr::getNative() const
 }
 
 
-nif::NiPSysEmitter::NiPSysEmitter(native::NiPSysEmitter* obj) : 
+nif::NiPSysEmitter::NiPSysEmitter(native_type* obj) :
 	NiPSysModifier(obj), 
 	m_colour(&getNative(), &native::NiPSysEmitter::GetInitialColor, &native::NiPSysEmitter::SetInitialColor),
 	m_lifeSpan(&getNative(), &native::NiPSysEmitter::GetLifeSpan, &native::NiPSysEmitter::SetLifeSpan),
@@ -54,7 +54,7 @@ nif::native::NiPSysEmitter& nif::NiPSysEmitter::getNative() const
 }
 
 
-nif::NiPSysVolumeEmitter::NiPSysVolumeEmitter(native::NiPSysVolumeEmitter* obj) : 
+nif::NiPSysVolumeEmitter::NiPSysVolumeEmitter(native_type* obj) :
 	NiPSysEmitter(obj), 
 	m_emtrObj(&getNative(), &native::NiPSysVolumeEmitter::GetEmitterObject, &native::NiPSysVolumeEmitter::SetEmitterObject)
 {}
@@ -67,7 +67,7 @@ nif::native::NiPSysVolumeEmitter& nif::NiPSysVolumeEmitter::getNative() const
 
 
 nif::NiPSysBoxEmitter::NiPSysBoxEmitter() : NiPSysBoxEmitter(new Niflib::NiPSysBoxEmitter) {}
-nif::NiPSysBoxEmitter::NiPSysBoxEmitter(native::NiPSysBoxEmitter* obj) : 
+nif::NiPSysBoxEmitter::NiPSysBoxEmitter(native_type* obj) :
 	NiPSysVolumeEmitter(obj), 
 	m_width(&getNative(), &native::NiPSysBoxEmitter::GetWidth, &native::NiPSysBoxEmitter::SetWidth),
 	m_height(&getNative(), &native::NiPSysBoxEmitter::GetHeight, &native::NiPSysBoxEmitter::SetHeight),
@@ -136,15 +136,13 @@ void nif::NiPSysEmitter::EmitterElevationVar::set(const float& f)
 
 nif::NiPSysCylinderEmitter::NiPSysCylinderEmitter() : 
 	NiPSysCylinderEmitter(new Niflib::NiPSysCylinderEmitter)
-{
-}
+{}
 
-nif::NiPSysCylinderEmitter::NiPSysCylinderEmitter(native::NiPSysCylinderEmitter* obj) :
+nif::NiPSysCylinderEmitter::NiPSysCylinderEmitter(native_type* obj) :
 	NiPSysVolumeEmitter(obj),
 	m_radius(&getNative(), &native::NiPSysCylinderEmitter::GetRadius, &native::NiPSysCylinderEmitter::SetRadius),
 	m_height(&getNative(), &native::NiPSysCylinderEmitter::GetHeight, &native::NiPSysCylinderEmitter::SetHeight)
-{
-}
+{}
 
 nif::native::NiPSysCylinderEmitter& nif::NiPSysCylinderEmitter::getNative() const
 {
@@ -155,14 +153,12 @@ nif::native::NiPSysCylinderEmitter& nif::NiPSysCylinderEmitter::getNative() cons
 
 nif::NiPSysSphereEmitter::NiPSysSphereEmitter() :
 	NiPSysSphereEmitter(new Niflib::NiPSysSphereEmitter)
-{
-}
+{}
 
-nif::NiPSysSphereEmitter::NiPSysSphereEmitter(native::NiPSysSphereEmitter* obj) :
+nif::NiPSysSphereEmitter::NiPSysSphereEmitter(native_type* obj) :
 	NiPSysVolumeEmitter(obj),
 	m_radius(&getNative(), &native::NiPSysSphereEmitter::GetRadius, &native::NiPSysSphereEmitter::SetRadius)
-{
-}
+{}
 
 nif::native::NiPSysSphereEmitter& nif::NiPSysSphereEmitter::getNative() const
 {

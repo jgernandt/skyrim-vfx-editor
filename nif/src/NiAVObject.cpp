@@ -21,10 +21,9 @@
 #include "NiNode.h"
 
 
-nif::NiAVObject::NiAVObject(native::NiAVObject* obj) :
+nif::NiAVObject::NiAVObject(native_type* obj) :
 	NiObjectNET(obj), m_transform(*this)
-{
-}
+{}
 
 nif::native::NiAVObject& nif::NiAVObject::getNative() const
 {

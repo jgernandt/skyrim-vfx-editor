@@ -19,7 +19,7 @@
 #include "pch.h"
 #include "NiExtraData.h"
 
-nif::NiExtraData::NiExtraData(native::NiExtraData* obj) : 
+nif::NiExtraData::NiExtraData(native_type* obj) :
 	NiObject(obj), 
 	m_name(&getNative(), &native::NiExtraData::GetName, &native::NiExtraData::SetName)
 {
@@ -38,7 +38,7 @@ nif::NiStringExtraData::NiStringExtraData() :
 	assert(m_ptr && m_ptr->GetType().IsSameType(Niflib::NiStringExtraData::TYPE));
 }
 
-nif::NiStringExtraData::NiStringExtraData(native::NiStringExtraData* obj) :
+nif::NiStringExtraData::NiStringExtraData(native_type* obj) :
 	NiExtraData(obj), 
 	m_value(&getNative(), &native::NiStringExtraData::GetData, &native::NiStringExtraData::SetData)
 {

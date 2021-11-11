@@ -25,15 +25,17 @@ namespace nif
 	class NiNode : public NiAVObject
 	{
 	public:
-		NiNode();
-		NiNode(native::NiNode* obj);
-		NiNode(const NiNode& other) = delete;
+		using native_type = native::NiNode;
 
+	protected:
+		friend class File;
+		NiNode();
+		NiNode(native_type* obj);
+
+	public:
 		virtual ~NiNode() = default;
 
-		NiNode& operator=(const NiNode&) = delete;
-
-		native::NiNode& getNative() const;
+		native_type& getNative() const;
 
 		ISet<NiAVObject>& children() { return m_children; }
 
@@ -55,14 +57,16 @@ namespace nif
 	class BSFadeNode : public NiNode
 	{
 	public:
-		BSFadeNode();
-		BSFadeNode(native::BSFadeNode* obj);
-		BSFadeNode(const BSFadeNode& other) = delete;
+		using native_type = native::BSFadeNode;
 
+	protected:
+		friend class File;
+		BSFadeNode();
+		BSFadeNode(native_type* obj);
+
+	public:
 		virtual ~BSFadeNode() = default;
 
-		BSFadeNode& operator=(const BSFadeNode&) = delete;
-
-		native::BSFadeNode& getNative() const;
+		native_type& getNative() const;
 	};
 }

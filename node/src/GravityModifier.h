@@ -26,7 +26,7 @@ namespace node
 	public:
 		virtual ~GravityModifier() = default;
 	protected:
-		GravityModifier(std::unique_ptr<nif::NiPSysGravityModifier>&& obj);
+		GravityModifier(std::shared_ptr<nif::NiPSysGravityModifier>&& obj);
 
 	public:
 		virtual nif::NiPSysGravityModifier& object() override;
@@ -51,8 +51,8 @@ namespace node
 	class PlanarForceField final : public GravityModifier
 	{
 	public:
-		PlanarForceField();
-		PlanarForceField(std::unique_ptr<nif::NiPSysGravityModifier>&& obj);
+		PlanarForceField(nif::File& file);
+		PlanarForceField(std::shared_ptr<nif::NiPSysGravityModifier>&& obj);
 
 		constexpr static const char* GRAVITY_AXIS = "Direction";
 		constexpr static const char* WORLD_ALIGNED = "World aligned";
@@ -68,8 +68,8 @@ namespace node
 	class SphericalForceField final : public GravityModifier
 	{
 	public:
-		SphericalForceField();
-		SphericalForceField(std::unique_ptr<nif::NiPSysGravityModifier>&& obj);
+		SphericalForceField(nif::File& file);
+		SphericalForceField(std::shared_ptr<nif::NiPSysGravityModifier>&& obj);
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 210.0f;

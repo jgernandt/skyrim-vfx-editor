@@ -422,8 +422,8 @@ private:
 	Limiter<std::greater_equal<float>> m_a2EndGr;
 };
 
-node::SimpleColourModifier::SimpleColourModifier() :
-	SimpleColourModifier(std::make_unique<nif::BSPSysSimpleColorModifier>())
+node::SimpleColourModifier::SimpleColourModifier(nif::File& file) :
+	SimpleColourModifier(file.create<nif::BSPSysSimpleColorModifier>())
 {
 	object().col1().set({ 1.0f, 0.0f, 0.0f, 0.0f });
 	object().col2().set(nif::COL_GREEN);
@@ -438,7 +438,7 @@ node::SimpleColourModifier::SimpleColourModifier() :
 	object().alpha2End().set(0.9f);
 }
 
-node::SimpleColourModifier::SimpleColourModifier(std::unique_ptr<nif::BSPSysSimpleColorModifier>&& obj) :
+node::SimpleColourModifier::SimpleColourModifier(std::shared_ptr<nif::BSPSysSimpleColorModifier>&& obj) :
 	Modifier(std::move(obj))
 {
 	setSize({ WIDTH, HEIGHT });

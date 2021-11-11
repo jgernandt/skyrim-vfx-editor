@@ -28,7 +28,7 @@ nif::NiNode::NiNode() : NiNode(new Niflib::NiNode)
 	getNative().SetFlags(14U);
 }
 
-nif::NiNode::NiNode(native::NiNode* obj) : NiAVObject(obj), m_children(*this) {}
+nif::NiNode::NiNode(native_type* obj) : NiAVObject(obj), m_children(*this) {}
 
 nif::native::NiNode& nif::NiNode::getNative() const
 {
@@ -45,7 +45,7 @@ nif::BSFadeNode::BSFadeNode() : BSFadeNode(new Niflib::BSFadeNode)
 	getNative().SetFlags(14U);
 }
 
-nif::BSFadeNode::BSFadeNode(native::BSFadeNode* obj) : NiNode(obj) {}
+nif::BSFadeNode::BSFadeNode(native_type* obj) : NiNode(obj) {}
 
 nif::native::BSFadeNode& nif::BSFadeNode::getNative() const
 {

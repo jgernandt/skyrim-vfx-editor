@@ -19,7 +19,7 @@
 #include "pch.h"
 #include "NiPSysModifier.h"
 
-nif::NiPSysModifierCtlr::NiPSysModifierCtlr(native::NiPSysModifierCtlr* obj) : 
+nif::NiPSysModifierCtlr::NiPSysModifierCtlr(native_type* obj) :
 	NiSingleInterpController(obj), 
 	m_modName(&getNative(), &native::NiPSysModifierCtlr::GetModifierName, &native::NiPSysModifierCtlr::SetModifierName)
 {}
@@ -31,7 +31,7 @@ nif::native::NiPSysModifierCtlr& nif::NiPSysModifierCtlr::getNative() const
 }
 
 
-nif::NiPSysModifier::NiPSysModifier(native::NiPSysModifier* obj) : 
+nif::NiPSysModifier::NiPSysModifier(native_type* obj) :
 	NiObject(obj),
 	m_name(&getNative(), &native::NiPSysModifier::GetName, &native::NiPSysModifier::SetName),
 	m_order(&getNative(), &native::NiPSysModifier::GetOrder, &native::NiPSysModifier::SetOrder),
@@ -47,7 +47,7 @@ nif::native::NiPSysModifier& nif::NiPSysModifier::getNative() const
 
 
 nif::NiPSysUpdateCtlr::NiPSysUpdateCtlr() : NiPSysUpdateCtlr(new Niflib::NiPSysUpdateCtlr) {}
-nif::NiPSysUpdateCtlr::NiPSysUpdateCtlr(native::NiPSysUpdateCtlr* obj) : NiTimeController(obj) {}
+nif::NiPSysUpdateCtlr::NiPSysUpdateCtlr(native_type* obj) : NiTimeController(obj) {}
 
 nif::native::NiPSysUpdateCtlr& nif::NiPSysUpdateCtlr::getNative() const
 {
@@ -60,7 +60,7 @@ nif::NiPSysBoundUpdateModifier::NiPSysBoundUpdateModifier() :
 	NiPSysBoundUpdateModifier(new Niflib::NiPSysBoundUpdateModifier)
 {}
 
-nif::NiPSysBoundUpdateModifier::NiPSysBoundUpdateModifier(native::NiPSysBoundUpdateModifier* obj) :
+nif::NiPSysBoundUpdateModifier::NiPSysBoundUpdateModifier(native_type* obj) :
 	NiPSysModifier(obj)
 {}
 
@@ -72,7 +72,7 @@ nif::native::NiPSysBoundUpdateModifier& nif::NiPSysBoundUpdateModifier::getNativ
 
 
 nif::NiPSysAgeDeathModifier::NiPSysAgeDeathModifier() : NiPSysAgeDeathModifier(new Niflib::NiPSysAgeDeathModifier) {}
-nif::NiPSysAgeDeathModifier::NiPSysAgeDeathModifier(native::NiPSysAgeDeathModifier* obj) : NiPSysModifier(obj) {}
+nif::NiPSysAgeDeathModifier::NiPSysAgeDeathModifier(native_type* obj) : NiPSysModifier(obj) {}
 
 nif::native::NiPSysAgeDeathModifier& nif::NiPSysAgeDeathModifier::getNative() const
 {
@@ -82,7 +82,7 @@ nif::native::NiPSysAgeDeathModifier& nif::NiPSysAgeDeathModifier::getNative() co
 
 
 nif::NiPSysGravityModifier::NiPSysGravityModifier() : NiPSysGravityModifier(new Niflib::NiPSysGravityModifier) {}
-nif::NiPSysGravityModifier::NiPSysGravityModifier(native::NiPSysGravityModifier* obj) : 
+nif::NiPSysGravityModifier::NiPSysGravityModifier(native_type* obj) :
 	NiPSysModifier(obj),
 	m_gravityObj(&getNative(), &native::NiPSysGravityModifier::GetGravityObject, &native::NiPSysGravityModifier::SetGravityObject),
 	m_gravityAxis(&getNative(), &native::NiPSysGravityModifier::GetGravityAxis, &native::NiPSysGravityModifier::SetGravityAxis),
@@ -102,7 +102,7 @@ nif::native::NiPSysGravityModifier& nif::NiPSysGravityModifier::getNative() cons
 
 
 nif::NiPSysPositionModifier::NiPSysPositionModifier() : NiPSysPositionModifier(new Niflib::NiPSysPositionModifier) {}
-nif::NiPSysPositionModifier::NiPSysPositionModifier(native::NiPSysPositionModifier* obj) : NiPSysModifier(obj) {}
+nif::NiPSysPositionModifier::NiPSysPositionModifier(native_type* obj) : NiPSysModifier(obj) {}
 
 nif::native::NiPSysPositionModifier& nif::NiPSysPositionModifier::getNative() const
 {
@@ -112,7 +112,7 @@ nif::native::NiPSysPositionModifier& nif::NiPSysPositionModifier::getNative() co
 
 
 nif::NiPSysRotationModifier::NiPSysRotationModifier() : NiPSysRotationModifier(new Niflib::NiPSysRotationModifier) {}
-nif::NiPSysRotationModifier::NiPSysRotationModifier(native::NiPSysRotationModifier* obj) : 
+nif::NiPSysRotationModifier::NiPSysRotationModifier(native_type* obj) :
 	NiPSysModifier(obj),
 	m_speed(*this),
 	m_speedVar(*this),
@@ -133,7 +133,7 @@ nif::native::NiPSysRotationModifier& nif::NiPSysRotationModifier::getNative() co
 
 
 nif::BSPSysScaleModifier::BSPSysScaleModifier() : BSPSysScaleModifier(new Niflib::BSPSysScaleModifier) {}
-nif::BSPSysScaleModifier::BSPSysScaleModifier(native::BSPSysScaleModifier* obj) :
+nif::BSPSysScaleModifier::BSPSysScaleModifier(native_type* obj) :
 	NiPSysModifier(obj),
 	m_scales(&getNative(), &native::BSPSysScaleModifier::GetScales, &native::BSPSysScaleModifier::SetScales)
 {}
@@ -146,7 +146,7 @@ nif::native::BSPSysScaleModifier& nif::BSPSysScaleModifier::getNative() const
 
 
 nif::BSPSysSimpleColorModifier::BSPSysSimpleColorModifier() : BSPSysSimpleColorModifier(new Niflib::BSPSysSimpleColorModifier) {}
-nif::BSPSysSimpleColorModifier::BSPSysSimpleColorModifier(native::BSPSysSimpleColorModifier* obj) :
+nif::BSPSysSimpleColorModifier::BSPSysSimpleColorModifier(native_type* obj) :
 	NiPSysModifier(obj),
 	m_fadeInEnd(&getNative(), &native::BSPSysSimpleColorModifier::GetFadeInEnd, &native::BSPSysSimpleColorModifier::SetFadeInEnd),
 	m_fadeOutBegin(&getNative(), &native::BSPSysSimpleColorModifier::GetFadeOutBegin, &native::BSPSysSimpleColorModifier::SetFadeOutBegin),

@@ -54,8 +54,8 @@ namespace node
 	class FloatController final : public NodeBase
 	{
 	public:
-		FloatController();
-		FloatController(std::unique_ptr<nif::NiFloatInterpolator>&& iplr, std::unique_ptr<nif::NiFloatData>&& data);
+		FloatController(nif::File& file);
+		FloatController(nif::File& file, std::shared_ptr<nif::NiFloatInterpolator>&& iplr, std::shared_ptr<nif::NiFloatData>&& data);
 		~FloatController();
 
 		virtual nif::NiFloatInterpolator& object() override;
@@ -107,7 +107,7 @@ namespace node
 		//which seems to be causing more problems than it solves.
 		//We'll need a major refactor of NodeBase (and all existing nodes) to complete it,
 		//but this is the first step.
-		std::unique_ptr<nif::NiFloatData> m_data;
+		std::shared_ptr<nif::NiFloatData> m_data;
 
 		class TargetField;
 	};

@@ -22,23 +22,37 @@
 
 namespace nif
 {
-	//These objects are effectively references. This is likely to cause confusion down the road.
 	class NiObject
 	{
 	public:
-		NiObject(native::NiObject* obj) : m_ptr(obj) { assert(obj); }//disallow null references
-		NiObject(const NiObject&) = delete;
-
-		virtual ~NiObject() = default;
-
-		NiObject& operator=(const NiObject&) = delete;
-
-		native::NiObject& getNative() const { return *m_ptr; }
+		using native_type = native::NiObject;
 
 	protected:
-		ni_ptr<native::NiObject> m_ptr;
+		friend class File;
+		NiObject(native_type* obj);
+
+	public:
+		NiObject(const NiObject&) = delete;
+		NiObject(NiObject&&) = delete;
+
+		virtual ~NiObject();
+
+		NiObject& operator=(const NiObject&) = delete;
+		NiObject& operator=(NiObject&&) = delete;
+
+		//I don't like exposing this. Do we really need it?
+		native_type& getNative() const { return *m_ptr; }
+
+		friend bool operator==(const NiObject& lhs, const NiObject& rhs) { return lhs.m_ptr == rhs.m_ptr; }
+		friend bool operator!=(const NiObject& lhs, const NiObject& rhs) { return !(lhs == rhs); }
+		friend bool operator<(const NiObject& lhs, const NiObject& rhs) { return lhs.m_ptr < rhs.m_ptr; }
+		friend bool operator>(const NiObject& lhs, const NiObject& rhs) { return rhs < lhs; }
+		friend bool operator<=(const NiObject& lhs, const NiObject& rhs) { return !(rhs < lhs); }
+		friend bool operator>=(const NiObject& lhs, const NiObject& rhs) { return !(lhs < rhs); }
+
+	protected:
+		class File* m_file{ nullptr };
+		native::NiObject* const m_ptr;
 	};
 
-	inline bool operator==(const NiObject& l, const NiObject& r) { return &l.getNative() == &r.getNative(); }
-	inline bool operator!=(const NiObject& l, const NiObject& r) { return !(l == r); }
 }

@@ -8,17 +8,23 @@ namespace nif
 {
 	TEST_CLASS(NiFloatDataTests)
 	{
-		nif::NiFloatData obj;
+		File file{ File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(KeyType)
 		{
-			enumPropertyTest<nif::KeyType>(obj.keyType(), 
+			auto obj = file.create<NiFloatData>();
+			Assert::IsNotNull(obj.get());
+
+			enumPropertyTest<nif::KeyType>(obj->keyType(), 
 				{ KeyType::LINEAR, KeyType::QUADRATIC, KeyType::TBC, KeyType::XYZ_ROTATION, KeyType::CONSTANT });
 		}
 
 		TEST_METHOD(Keys)
 		{
+			auto obj = file.create<NiFloatData>();
+			Assert::IsNotNull(obj.get());
+
 			std::uniform_real_distribution<float> D;
 			auto key = [this, &D]()
 			{
@@ -32,86 +38,117 @@ namespace nif
 			{
 				return TBC{ D(m_engine), D(m_engine), D(m_engine) };
 			};
-			VectorPropertyTest(obj.iplnData().keys(), key);
-			VectorPropertyTest(obj.iplnData().tangents(), tan);
-			VectorPropertyTest(obj.iplnData().tbc(), tbc);
+			VectorPropertyTest(obj->iplnData().keys(), key);
+			VectorPropertyTest(obj->iplnData().tangents(), tan);
+			VectorPropertyTest(obj->iplnData().tbc(), tbc);
 		}
 
 	};
 
 	TEST_CLASS(NiBoolInterpolatorTests)
 	{
-		nif::NiBoolInterpolator obj;
+		File file{ File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(Value)
 		{
-			PropertyTest<bool>(obj.value(), m_engine);
+			auto obj = file.create<NiBoolInterpolator>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<bool>(obj->value(), m_engine);
 		}
 
 		TEST_METHOD(Data)
 		{
-			AssignableTest<nif::NiBoolData>(obj.data());
+			auto obj = file.create<NiBoolInterpolator>();
+			Assert::IsNotNull(obj.get());
+
+			auto factory = [this]() { return file.create<NiBoolData>(); };
+			AssignableTest<nif::NiBoolData>(obj->data(), factory);
 		}
 	};
 
 	TEST_CLASS(NiFloatInterpolatorTests)
 	{
-		nif::NiFloatInterpolator obj;
+		File file{ File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(Value)
 		{
-			PropertyTest<float>(obj.value(), m_engine);
+			auto obj = file.create<NiFloatInterpolator>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->value(), m_engine);
 		}
 
 		TEST_METHOD(Data)
 		{
-			AssignableTest<nif::NiFloatData>(obj.data());
+			auto obj = file.create<NiFloatInterpolator>();
+			Assert::IsNotNull(obj.get());
+
+			auto factory = [this]() { return file.create<NiFloatData>(); };
+			AssignableTest<nif::NiFloatData>(obj->data(), factory);
 		}
 	};
 
 	TEST_CLASS(NiTimeControllerTests)
 	{
-		nif::NiPSysEmitterCtlr concrete_obj;
-		nif::NiTimeController& obj = concrete_obj;
+		File file{ File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(Flags)
 		{
-			PropertyTest<unsigned short>(obj.flags(), m_engine);
+			std::shared_ptr<NiTimeController> obj = file.create<NiPSysEmitterCtlr>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<unsigned short>(obj->flags(), m_engine);
 		}
 
 		TEST_METHOD(Frequency)
 		{
-			PropertyTest<float>(obj.frequency(), m_engine);
+			std::shared_ptr<NiTimeController> obj = file.create<NiPSysEmitterCtlr>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->frequency(), m_engine);
 		}
 
 		TEST_METHOD(Phase)
 		{
-			PropertyTest<float>(obj.phase(), m_engine);
+			std::shared_ptr<NiTimeController> obj = file.create<NiPSysEmitterCtlr>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->phase(), m_engine);
 		}
 
 		TEST_METHOD(StartTime)
 		{
-			PropertyTest<float>(obj.startTime(), m_engine);
+			std::shared_ptr<NiTimeController> obj = file.create<NiPSysEmitterCtlr>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->startTime(), m_engine);
 		}
 
 		TEST_METHOD(StopTime)
 		{
-			PropertyTest<float>(obj.stopTime(), m_engine);
+			std::shared_ptr<NiTimeController> obj = file.create<NiPSysEmitterCtlr>();
+			Assert::IsNotNull(obj.get());
+
+			PropertyTest<float>(obj->stopTime(), m_engine);
 		}
 	};
 
 	TEST_CLASS(NiSingleInterpControllerTests)
 	{
-		nif::NiPSysEmitterCtlr concrete_obj;
-		nif::NiSingleInterpController& obj = concrete_obj;
+		File file{ File::Version::SKYRIM_SE };
 		std::mt19937 m_engine;
 
 		TEST_METHOD(Interpolator)
 		{
-			AssignableTest<nif::NiInterpolator, nif::NiFloatInterpolator>(obj.interpolator());
+			std::shared_ptr<NiSingleInterpController> obj = file.create<NiPSysEmitterCtlr>();
+			Assert::IsNotNull(obj.get());
+
+			auto factory = [this]() { return file.create<NiFloatInterpolator>(); };
+			AssignableTest<nif::NiInterpolator>(obj->interpolator(), factory);
 		}
 	};
 }
@@ -129,7 +166,9 @@ namespace node
 		//Multiconnector would probably work here, but doesn't seem very useful. Let's wait with that.
 		TEST_METHOD(Target)
 		{
-			std::unique_ptr<FloatController> node = std::make_unique<FloatController>();
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+
+			std::unique_ptr<FloatController> node = std::make_unique<FloatController>(file);
 			nif::NiInterpolator* obj = &node->object();
 
 			MockAssignable<nif::NiInterpolator> target0;
