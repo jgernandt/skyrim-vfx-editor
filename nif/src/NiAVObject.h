@@ -35,21 +35,28 @@ namespace nif
 
 		native_type& getNative() const;
 
-		Transformable& transform() { return m_transform; }
+		Transformable& transform();
+		std::shared_ptr<Transformable> transform_ptr();
 
 	private:
 		struct AVObjectTransform final : Transformable
 		{
 			AVObjectTransform(NiAVObject& super);
-			
-			virtual IProperty<translation_t>& translation() final override { return m_T; }
-			virtual IProperty<rotation_t>& rotation() final override { return m_R; }
-			virtual IProperty<scale_t>& scale() final override { return m_S; }
+
+			virtual IProperty<translation_t>& translation() override;
+			virtual IProperty<rotation_t>& rotation() override;
+			virtual IProperty<scale_t>& scale() override;
+
+			virtual std::shared_ptr<IProperty<translation_t>> translation_ptr() override;
+			virtual std::shared_ptr<IProperty<rotation_t>> rotation_ptr() override;
+			virtual std::shared_ptr<IProperty<scale_t>> scale_ptr() override;
 
 		private:
 			Property<translation_t, native::translation_t> m_T;
 			Property<rotation_t, native::rotation_t> m_R;
 			Property<scale_t> m_S;
+
+			NiAVObject& m_super;
 
 		} m_transform;
 	};

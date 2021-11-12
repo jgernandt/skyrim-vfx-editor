@@ -18,6 +18,7 @@
 
 #include "pch.h"
 #include "NiController.h"
+#include "File.h"
 
 nif::NiInterpolator::NiInterpolator(native_type* obj) : NiObject(obj) {}
 
@@ -67,6 +68,50 @@ nif::native::NiFloatData& nif::NiFloatData::getNative() const
 {
 	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiFloatData::TYPE));
 	return static_cast<native::NiFloatData&>(*m_ptr);
+}
+
+std::shared_ptr<IProperty<nif::KeyType>> nif::NiFloatData::keyType_ptr()
+{
+	return forwardPtr(&m_keyType);
+}
+
+std::shared_ptr<nif::InterpolationData<float>> nif::NiFloatData::iplnData_ptr()
+{
+	return forwardPtr(&m_keys);
+}
+
+nif::NiFloatData::IplnData::IplnData(NiFloatData& super) :
+	m_keys(super), m_tans(super), m_tbcs(super), m_super{ super }
+{}
+
+IVectorProperty<nif::Key<float>>& nif::NiFloatData::IplnData::keys()
+{
+	return m_keys;
+}
+
+IVectorProperty<nif::Tangent<float>>& nif::NiFloatData::IplnData::tangents()
+{
+	return m_tans;
+}
+
+IVectorProperty<nif::TBC>& nif::NiFloatData::IplnData::tbc()
+{
+	return m_tbcs;
+}
+
+std::shared_ptr<IVectorProperty<nif::Key<float>>> nif::NiFloatData::IplnData::keys_ptr()
+{
+	return m_super.forwardPtr(&m_keys);
+}
+
+std::shared_ptr<IVectorProperty<nif::Tangent<float>>> nif::NiFloatData::IplnData::tangents_ptr()
+{
+	return m_super.forwardPtr(&m_tans);
+}
+
+std::shared_ptr<IVectorProperty<nif::TBC>> nif::NiFloatData::IplnData::tbc_ptr()
+{
+	return m_super.forwardPtr(&m_tbcs);
 }
 
 std::vector<nif::Key<float>> nif::NiFloatData::IplnData::Keys::get() const
@@ -160,12 +205,6 @@ int nif::NiFloatData::IplnData::Keys::erase(int i)
 	return i;
 }
 
-IVectorProperty<nif::Key<float>>::element nif::NiFloatData::IplnData::Keys::at(int i)
-{
-	assert(i >= 0 && static_cast<size_t>(i) < m_super.getNative().GetKeysRef().size());
-	return element(*this, i);
-}
-
 std::vector<nif::Tangent<float>> nif::NiFloatData::IplnData::Tangents::get() const
 {
 	auto&& keys = m_super.getNative().GetKeysRef();
@@ -255,12 +294,6 @@ int nif::NiFloatData::IplnData::Tangents::erase(int i)
 	m_super.m_keys.m_tbcs.notifyErase(i);
 
 	return i;
-}
-
-IVectorProperty<nif::Tangent<float>>::element nif::NiFloatData::IplnData::Tangents::at(int i)
-{
-	assert(i >= 0 && static_cast<size_t>(i) < m_super.getNative().GetKeysRef().size());
-	return element(*this, i);
 }
 
 std::vector<nif::TBC> nif::NiFloatData::IplnData::TBCs::get() const
@@ -357,12 +390,6 @@ int nif::NiFloatData::IplnData::TBCs::erase(int i)
 	m_super.m_keys.m_tans.notifyErase(i);
 
 	return i;
-}
-
-IVectorProperty<nif::TBC>::element nif::NiFloatData::IplnData::TBCs::at(int i)
-{
-	assert(i >= 0 && static_cast<size_t>(i) < m_super.getNative().GetKeysRef().size());
-	return element(*this, i);
 }
 
 

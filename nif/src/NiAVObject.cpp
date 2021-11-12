@@ -19,7 +19,7 @@
 #include "pch.h"
 #include "NiAVObject.h"
 #include "NiNode.h"
-
+#include "File.h"
 
 nif::NiAVObject::NiAVObject(native_type* obj) :
 	NiObjectNET(obj), m_transform(*this)
@@ -31,10 +31,51 @@ nif::native::NiAVObject& nif::NiAVObject::getNative() const
 	return static_cast<native::NiAVObject&>(*m_ptr);
 }
 
+nif::Transformable& nif::NiAVObject::transform()
+{
+	return m_transform;
+}
+
+std::shared_ptr<nif::Transformable> nif::NiAVObject::transform_ptr()
+{
+	return forwardPtr(&m_transform);
+}
+
 nif::NiAVObject::AVObjectTransform::AVObjectTransform(NiAVObject& super) :
+	m_super{ super },
 	m_T(&super.getNative(), &native::NiAVObject::GetLocalTranslation, &native::NiAVObject::SetLocalTranslation),
 	m_R(&super.getNative(), &native::NiAVObject::GetLocalRotation, &native::NiAVObject::SetLocalRotation),
 	m_S(&super.getNative(), &native::NiAVObject::GetLocalScale, &native::NiAVObject::SetLocalScale)
 {
+}
+
+IProperty<nif::translation_t>& nif::NiAVObject::AVObjectTransform::translation()
+{
+	return m_T;
+}
+
+IProperty<nif::rotation_t>& nif::NiAVObject::AVObjectTransform::rotation()
+{
+	return m_R;
+}
+
+IProperty<nif::scale_t>& nif::NiAVObject::AVObjectTransform::scale()
+{
+	return m_S;
+}
+
+std::shared_ptr<IProperty<nif::translation_t>> nif::NiAVObject::AVObjectTransform::translation_ptr()
+{
+	return m_super.forwardPtr(&m_T);
+}
+
+std::shared_ptr<IProperty<nif::rotation_t>> nif::NiAVObject::AVObjectTransform::rotation_ptr()
+{
+	return m_super.forwardPtr(&m_R);
+}
+
+std::shared_ptr<IProperty<nif::scale_t>> nif::NiAVObject::AVObjectTransform::scale_ptr()
+{
+	return m_super.forwardPtr(&m_S);
 }
 

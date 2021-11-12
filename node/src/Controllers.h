@@ -63,8 +63,8 @@ namespace node
 		IProperty<unsigned short>& flags() { return m_flags; }
 		IProperty<float>& frequency() { return m_frequency; }
 		IProperty<float>& phase() { return m_phase; }
-		IProperty<float>& startTime() { return m_startTime; }
-		IProperty<float>& stopTime() { return m_stopTime; }
+		IProperty<float>& startTime() { return *m_startTime; }
+		IProperty<float>& stopTime() { return *m_stopTime; }
 
 	private:
 		void openKeyEditor();
@@ -100,8 +100,8 @@ namespace node
 		FlagsProperty m_flags;
 		LocalProperty<float> m_frequency;
 		LocalProperty<float> m_phase;
-		LocalProperty<float> m_startTime;
-		LocalProperty<float> m_stopTime;
+		std::shared_ptr<LocalProperty<float>> m_startTime;
+		std::shared_ptr<LocalProperty<float>> m_stopTime;
 
 		//We are moving away from the previous design of letting NodeBase own all objects,
 		//which seems to be causing more problems than it solves.

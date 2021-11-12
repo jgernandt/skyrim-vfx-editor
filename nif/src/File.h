@@ -37,9 +37,12 @@ namespace nif
 			SKYRIM_SE,
 		};
 
+		using index_type = std::map<native::NiObject*, std::weak_ptr<nif::NiObject>>;
+
 	public:
 		File(Version version = Version::UNKNOWN) : m_version{ version } {}
 		File(const std::filesystem::path& path);
+		~File();
 
 		template<typename T, typename... Args>
 		[[nodiscard]] std::shared_ptr<T> create(Args&&... args) 
@@ -50,11 +53,13 @@ namespace nif
 			//Catch allocation errors, not ctor exceptions (that's the caller's problem).
 			// Actually, add this later. We're not checking for failure in our current code.
 			//try {
-				//Do it this way until everything goes through here
+				//make_shared cannot access protected ctors. What we need is allocate_shared with a custom allocator.
 				result = std::shared_ptr<T>(new T(std::forward<Args>(args)...));
 				//result = std::make_shared<T>(std::forward<Args>(args)...);
 				std::static_pointer_cast<NiObject>(result)->m_file = this;
-				addToIndex(std::static_pointer_cast<NiObject>(result)->m_ptr, result);
+				std::static_pointer_cast<NiObject>(result)->m_it =
+					addToIndex(std::static_pointer_cast<NiObject>(result)->m_ptr, result);
+				std::static_pointer_cast<NiObject>(result)->m_index = &m_index;
 			//}
 			//catch (const std::bad_alloc&) {
 			//	result.reset();
@@ -76,9 +81,12 @@ namespace nif
 				if (!result) {
 					//recreate
 					//try {
+						//make_shared cannot access protected ctors. What we need is allocate_shared with a custom allocator.
 						result = std::shared_ptr<T>(new T(obj));
 						//result = std::make_shared<T>(obj);
 						std::static_pointer_cast<NiObject>(result)->m_file = this;
+						std::static_pointer_cast<NiObject>(result)->m_it = it;
+						std::static_pointer_cast<NiObject>(result)->m_index = &m_index;
 						it->second = std::weak_ptr<NiObject>(result);
 					//}
 					//catch (const std::bad_alloc&) {
@@ -104,14 +112,14 @@ namespace nif
 		static void write(native::NiObject* root, Version version, const std::filesystem::path& path);
 
 	private:
-		void addToIndex(native::NiObject* obj, const std::shared_ptr<NiObject>& ptr);
+		index_type::const_iterator addToIndex(native::NiObject* obj, const std::shared_ptr<NiObject>& ptr);
 
 	private:
 		Version m_version{ Version::UNKNOWN };
 		ni_ptr<native::NiObject> m_root;
 
 		//TODO: garbage collection (if first.GetNumRefs() == 1 && second.expired())
-		std::map<native::NiObject*, std::weak_ptr<nif::NiObject>> m_index;
+		index_type m_index;
 	};
 
 }

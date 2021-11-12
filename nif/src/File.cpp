@@ -48,16 +48,30 @@ nif::File::File(const std::filesystem::path& path)
 	}
 }
 
-void nif::File::addToIndex(native::NiObject* obj, const std::shared_ptr<NiObject>& ptr)
+nif::File::~File()
+{
+	for (auto&& item : m_index) {
+		if (item.first)
+			item.first->SubtractRef();
+	}
+}
+
+nif::File::index_type::const_iterator nif::File::addToIndex(
+	native::NiObject* obj, const std::shared_ptr<NiObject>& ptr)
 {
 	if (obj) {
 		if (auto result = m_index.insert({ obj, ptr }); result.second) {
 			obj->AddRef();
+			return result.first;
 		}
 		//else ignore? fail? this is an error!
-		else
+		else {
 			assert(false);
+			return m_index.end();
+		}
 	}
+	else
+		return m_index.end();
 }
 
 void nif::File::addFadeNode(native::NiNode* parent)

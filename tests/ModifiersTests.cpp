@@ -4,7 +4,6 @@
 #include "nodes.h"
 
 #include "Constructor.h"
-#include "nif_backend.h"
 
 namespace nif
 {

@@ -65,19 +65,24 @@ private:
 };
 
 node::FloatController::FloatController(nif::File& file) : 
-	FloatController(file, file.create<nif::NiFloatInterpolator>(), std::shared_ptr<nif::NiFloatData>())
+	FloatController(file, file.create<nif::NiFloatInterpolator>(), file.create<nif::NiFloatData>())
 {
 	flags().set(DEFAULT_FLAGS);
 	frequency().set(DEFAULT_FREQUENCY);
 	phase().set(DEFAULT_PHASE);
 	startTime().set(DEFAULT_STARTTIME);
 	stopTime().set(DEFAULT_STOPTIME);
+	m_data->keyType().set(nif::KeyType::LINEAR);
+	m_data->iplnData().keys().set({ { startTime().get(), 0.0f }, { stopTime().get(), 0.0f } });
 }
 
 node::FloatController::FloatController(nif::File& file,
 	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
 	std::shared_ptr<nif::NiFloatData>&& data) :
-	NodeBase(std::move(iplr)), m_data{ std::move(data) }
+	NodeBase(std::move(iplr)), 
+	m_startTime{ std::make_shared<LocalProperty<float>>() },
+	m_stopTime{ std::make_shared<LocalProperty<float>>() },
+	m_data{ std::move(data) }
 {
 	//Remember to have Constructor set our properties before connecting us!
 
@@ -133,7 +138,8 @@ nif::NiFloatInterpolator& node::FloatController::object()
 
 void node::FloatController::openKeyEditor()
 {
-	auto c = std::make_unique<FloatKeyEditor>(*m_data, startTime(), stopTime());
+	auto c = std::make_unique<FloatKeyEditor>(m_data->keyType_ptr(), m_data->iplnData_ptr(), 
+		m_startTime, m_stopTime);
 	c->open();
 	asyncInvoke<gui::AddChild>(std::move(c), this, false);
 }

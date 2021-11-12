@@ -26,7 +26,7 @@ class IVectorProperty : public IObservable<IVectorProperty<T>>
 {
 public:
 	using container = std::vector<T>;
-	class element;
+	//class element;
 	//class iterator;
 public:
 	virtual ~IVectorProperty() = default;
@@ -34,7 +34,8 @@ public:
 	//virtual iterator begin() = 0;
 	//virtual iterator end() = 0;
 
-	virtual element at(int) = 0;
+	//drop the element objects for now
+	//virtual std::shared_ptr<IProperty<T>> at(int) = 0;
 
 	//Regular property functions
 	virtual container get() const = 0;
@@ -60,12 +61,11 @@ public:
 	virtual void onSet(int, const T&) {}
 	virtual void onInsert(int) {}
 	virtual void onErase(int) {}
-	virtual void onDestroy() {}
 };
 template<typename T>
 using VectorPropertyListener = IListener<IVectorProperty<T>>;
 
-template<typename T>
+/*template<typename T>
 class IVectorProperty<T>::element final : public PropertyBase<T>, public VectorPropertyListener<T>
 {
 public:
@@ -101,17 +101,6 @@ public:
 		}
 	}
 
-	/*Should send insert/erase instead, will be more predictable
-	virtual void onSet(const std::vector<T>& list) override
-	{
-		if (valid() && static_cast<size_t>(m_index) < list.size())
-			this->notify(list[m_index]);//we don't know if our element actually changed
-		else
-			invalidate();
-
-		//Or should this always invalidate us? 
-		//Techically, the whole list has been replaced. Our element no longer exists.
-	}*/
 	virtual void onSet(int i, const T & t) override
 	{
 		assert(i >= 0);
@@ -132,7 +121,6 @@ public:
 		else if (i < m_index)
 			m_index--;
 	}
-	virtual void onDestroy() override { m_index = -1; }//we must not remove listener here
 
 private:
 	void invalidate()
@@ -148,7 +136,7 @@ private:
 private:
 	IVectorProperty<T>* m_list;
 	int m_index;
-};
+};*/
 
 namespace nif
 {
@@ -156,13 +144,7 @@ namespace nif
 	class VectorPropertyBase : public IVectorProperty<T>
 	{
 	public:
-		virtual ~VectorPropertyBase()
-		{
-			for (VectorPropertyListener<T>* l : m_obs.getListeners()) {
-				assert(l);
-				l->onDestroy();
-			}
-		}
+		virtual ~VectorPropertyBase() = default;
 
 		virtual void addListener(VectorPropertyListener<T>& l) final override
 		{

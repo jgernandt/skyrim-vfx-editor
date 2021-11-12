@@ -45,6 +45,10 @@ namespace nif
 		virtual IProperty<translation_t>& translation() = 0;
 		virtual IProperty<rotation_t>& rotation() = 0;
 		virtual IProperty<scale_t>& scale() = 0;
+
+		virtual std::shared_ptr<IProperty<translation_t>> translation_ptr() = 0;
+		virtual std::shared_ptr<IProperty<rotation_t>> rotation_ptr() = 0;
+		virtual std::shared_ptr<IProperty<scale_t>> scale_ptr() = 0;
 	};
 
 	template<typename T>
@@ -56,6 +60,10 @@ namespace nif
 		virtual IVectorProperty<Key<T>>& keys() = 0;
 		virtual IVectorProperty<Tangent<T>>& tangents() = 0;
 		virtual IVectorProperty<TBC>& tbc() = 0;
+
+		virtual std::shared_ptr<IVectorProperty<Key<T>>> keys_ptr() = 0;
+		virtual std::shared_ptr<IVectorProperty<Tangent<T>>> tangents_ptr() = 0;
+		virtual std::shared_ptr<IVectorProperty<TBC>> tbc_ptr() = 0;
 	};
 }
 

@@ -106,9 +106,15 @@ public:
 	std::vector<gui::IComponent*> found;
 };
 
-node::FloatKeyEditor::FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& tStart, IProperty<float>& tStop) :
-	m_keys{ data.iplnData() }, m_keyType{ data.keyType() }
+node::FloatKeyEditor::FloatKeyEditor(
+	std::shared_ptr<IProperty<nif::KeyType>>&& keyType,
+	std::shared_ptr<nif::InterpolationData<float>>&& keys,
+	std::shared_ptr<IProperty<float>>&& tStart,
+	std::shared_ptr<IProperty<float>>&& tStop) :
+	m_keyType{ keyType }, m_keys{ keys }
 {
+	assert(m_keyType && m_keys && tStart && tStop);
+
 	setSize({ 640.0f, 480.0f });
 
 	//We need:
@@ -123,7 +129,7 @@ node::FloatKeyEditor::FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& t
 	item->setSize({ 200.0f, -1.0f });
 	item->newChild<gui::Text>("Interpolation");
 	using selector_type = gui::Selector<nif::KeyType, IProperty<nif::KeyType>>;
-	auto selector = item->newChild<selector_type>(data.keyType(), std::string(),
+	auto selector = item->newChild<selector_type>(*keyType, std::string(),
 		selector_type::ItemList{
 			{ nif::KeyType::CONSTANT, "Constant" },
 			{ nif::KeyType::LINEAR, "Linear" },
@@ -132,10 +138,10 @@ node::FloatKeyEditor::FloatKeyEditor(nif::NiFloatData& data, IProperty<float>& t
 	m_plot = newChild<gui::Plot>();
 
 	//The initial curve is created by the callback from keyType.
-	m_keyType.addListener(*this);
+	m_keyType->addListener(*this);
 
 	//determine limits
-	gui::Floats<2> xlims = {tStart.get(), tStop.get()};
+	gui::Floats<2> xlims = { tStart->get(), tStop->get() };
 	if (float diff = xlims[1] - xlims[0]; diff > 0.0f) {
 		xlims[0] -= 0.25f * diff;
 		xlims[1] += 0.25f * diff;
@@ -178,7 +184,7 @@ node::FloatKeyEditor::~FloatKeyEditor()
 	//Exiting the program while we are open will make this invalid.
 	//The property is destroyed before we are. 
 	//We need to refactor NodeBase to solve this.
-	m_keyType.removeListener(*this);
+	m_keyType->removeListener(*this);
 }
 
 void node::FloatKeyEditor::onClose()
@@ -206,10 +212,10 @@ void node::FloatKeyEditor::onSet(const nif::KeyType& type)
 		curve = std::make_unique<ConstantInterpolant>();
 		break;
 	case nif::KeyType::LINEAR:
-		curve = std::make_unique<LinearInterpolant>(m_keys.keys());
+		curve = std::make_unique<LinearInterpolant>(m_keys->keys_ptr());
 		break;
 	case nif::KeyType::QUADRATIC:
-		curve = std::make_unique<QuadraticInterpolant>(m_keys.keys(), m_keys.tangents());
+		curve = std::make_unique<QuadraticInterpolant>(m_keys->keys_ptr(), m_keys->tangents_ptr());
 		break;
 	}
 	if (curve) {
@@ -446,14 +452,18 @@ void node::FloatKeyEditor::updateAxisUnits()
 }
 
 class node::FloatKeyEditor::LinearInterpolant::LinearHandle final : 
-	public gui::Component, public PropertyListener<nif::Key<float>>
+	public gui::Component, public VectorPropertyListener<nif::Key<float>>
 {
 public:
-	LinearHandle(IVectorProperty<nif::Key<float>>::element p) : m_property{ p }
+	LinearHandle(const std::shared_ptr<IVectorProperty<nif::Key<float>>>& p, int index) : 
+		m_property{ p }, m_index{ index }
 	{ 
-		m_property.addListener(*this);
+		assert(m_property);
+		nif::Key<float> key = m_property->get(m_index);
+		m_translation = { key.key, key.value };
+		m_property->addListener(*this);//does not receive call immediately
 	}
-	~LinearHandle() { m_property.removeListener(*this); }
+	~LinearHandle() { m_property->removeListener(*this); }
 
 	virtual void frame(gui::FrameDrawer& fd) override 
 	{
@@ -467,28 +477,26 @@ public:
 		//The command cannot rely on calling this function, since we will
 		//not survive. It needs our interface to the data model. But our
 		//element interface is also temporary. This won't work!
-		m_property.set({t[0], t[1]});
+		m_property->set(m_index, {t[0], t[1]});
 	}
 
 	virtual void setFocussed(bool on) override {}
 	virtual void setSelected(bool on) override { m_selected = on; }
 
-	virtual void onSet(const nif::Key<float>& key) override
+	virtual void onSet(int i, const nif::Key<float>& key) override
 	{
-		m_translation = { key.key, key.value };
+		if (i == m_index)
+			m_translation = { key.key, key.value };
 	}
 
 private:
-	IVectorProperty<nif::Key<float>>::element m_property;
-
-	//Could be a dummy handle if we are an endpoint
-	LinearHandle* m_prev{ nullptr };
-	LinearHandle* m_next{ nullptr };
+	std::shared_ptr<IVectorProperty<nif::Key<float>>> m_property;
+	int m_index;
 
 	bool m_selected{ false };
 };
 
-node::FloatKeyEditor::LinearInterpolant::LinearInterpolant(IVectorProperty<nif::Key<float>>& keys) :
+node::FloatKeyEditor::LinearInterpolant::LinearInterpolant(std::shared_ptr<IVectorProperty<nif::Key<float>>>&& keys) :
 	m_keys{ keys }
 {
 	//We need handles to manipulate our keys. Nothing fancy, just something that can be dragged around.
@@ -497,17 +505,17 @@ node::FloatKeyEditor::LinearInterpolant::LinearInterpolant(IVectorProperty<nif::
 	// property and let them keep track of it through a listener?
 	// 
 	//The interpolation might be most convenient to draw ourselves.
+	assert(m_keys);
+	m_keys->addListener(*this);
 
-	m_keys.addListener(*this);
-
-	m_data = m_keys.get();
+	m_data = m_keys->get();
 	for (size_t i = 0; i < m_data.size(); i++)
-		newChild<LinearHandle>(m_keys.at(i));
+		newChild<LinearHandle>(m_keys, i);
 }
 
 node::FloatKeyEditor::LinearInterpolant::~LinearInterpolant()
 {
-	m_keys.removeListener(*this);
+	m_keys->removeListener(*this);
 }
 
 void node::FloatKeyEditor::LinearInterpolant::frame(gui::FrameDrawer& fd)

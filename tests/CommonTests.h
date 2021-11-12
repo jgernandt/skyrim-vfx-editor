@@ -546,8 +546,15 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 		virtual void onSet(int i, const T& t) override { m_lastI = i; m_lastT = t; }
 		virtual void onInsert(int i) override { m_lastInsert = i; }
 		virtual void onErase(int i) override { m_lastErase = i; }
-		virtual void onDestroy() override {}
 
+		//check if any value or a given value was set
+		bool wasSet()
+		{
+			bool result = m_lastI != -1;
+			m_lastT = T();
+			m_lastI = -1;
+			return result;
+		}
 		bool wasSet(int i, const T& t)
 		{
 			bool result = m_lastI == i && m_lastT == t;
@@ -622,15 +629,15 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 		element = generator();
 
 	//create element properties
-	std::vector<typename IVectorProperty<T>::element> elements;
-	std::array<ElementListener, SIZE> lsnrs;
+	//std::vector<typename IVectorProperty<T>::element> elements;
+	//std::array<ElementListener, SIZE> lsnrs;
 
-	elements.reserve(SIZE);
-	for (int i = 0; i < SIZE; i++) {
-		elements.push_back(list.at(i));
-		elements[i].addListener(lsnrs[i]);
-		Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
-	}
+	//elements.reserve(SIZE);
+	//for (int i = 0; i < SIZE; i++) {
+	//	elements.push_back(list.at(i));
+	//	elements[i].addListener(lsnrs[i]);
+	//	Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
+	//}
 
 	//get/set element
 	int i = 0;
@@ -645,9 +652,9 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 	i = 0;
 	for (T& element : container) {
 		Assert::IsTrue(list.get(i) == element);
-		Assert::IsTrue(elements[i].get() == element);
+		//Assert::IsTrue(elements[i].get() == element);
 
-		Assert::IsTrue(lsnrs[i].wasSet(element));
+		//Assert::IsTrue(lsnrs[i].wasSet(element));
 
 		i++;
 	}
@@ -655,13 +662,13 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 	i = 0;
 	for (T& element : container) {
 		list.set(i, element);
-		Assert::IsFalse(l.wasSet(i, element));
-		Assert::IsFalse(lsnrs[i].wasSet(element));
+		Assert::IsFalse(l.wasSet());
+		//Assert::IsFalse(lsnrs[i].wasSet(element));
 		i++;
 	}
 
 	//set through element property (same procedure)
-	i = 0;
+	/*i = 0;
 	for (T& element : container) {
 		element = generator();
 		elements[i].set(element);
@@ -686,13 +693,13 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 		Assert::IsFalse(l.wasSet(i, element));
 		Assert::IsFalse(lsnrs[i].wasSet(element));
 		i++;
-	}
+	}*/
 
 	//insert/erase
-	std::vector<IVectorProperty<T>::element> newElements;
-	std::array<ElementListener, SIZE + 1> newLsnrs;
+	//std::vector<IVectorProperty<T>::element> newElements;
+	//std::array<ElementListener, SIZE + 1> newLsnrs;
 
-	newElements.reserve(SIZE + 1);
+	//newElements.reserve(SIZE + 1);
 	typename std::vector<T>::iterator it = container.begin();
 	for (int i = 0; i < SIZE + 1; i++) {
 		//generate a new element
@@ -706,9 +713,9 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 		Assert::IsTrue(l.wasInserted(i));
 		Assert::IsTrue(inserted == i);
 
-		newElements.push_back(list.at(inserted));
-		newElements[i].addListener(newLsnrs[i]);
-		Assert::IsTrue(newLsnrs[i].wasSet(newElements[i].get()));
+		//newElements.push_back(list.at(inserted));
+		//newElements[i].addListener(newLsnrs[i]);
+		//Assert::IsTrue(newLsnrs[i].wasSet(newElements[i].get()));
 
 		//and erase
 		int next = list.erase(inserted);
@@ -729,16 +736,18 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 
 	list.set(container);
 	Assert::IsTrue(list.get() == container);
+	Assert::IsTrue(l.wasSet());
 	Assert::IsTrue(l.wasInserted(SIZE_LARGE - 1));
 
 	//element listeners should have been called
-	for (int i = 0; i < SIZE; i++)
-		Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
+	//for (int i = 0; i < SIZE; i++)
+	//	Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
 
 	//resetting should not call listeners
 	list.set(container);
-	for (int i = 0; i < SIZE; i++)
-		Assert::IsFalse(lsnrs[i].wasSet(list.get(i)));
+	Assert::IsFalse(l.wasSet());
+	//for (int i = 0; i < SIZE; i++)
+	//	Assert::IsFalse(lsnrs[i].wasSet(list.get(i)));
 
 	//get/set smaller container
 	container.resize(SIZE_SMALL);
@@ -747,10 +756,11 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 
 	list.set(container);
 	Assert::IsTrue(list.get() == container);
+	Assert::IsTrue(l.wasSet());
 	Assert::IsTrue(l.wasErased(SIZE_SMALL));
 
 	//element listeners that were not erased should have been called
-	for (int i = 0; i < SIZE_SMALL; i++)
+	/*for (int i = 0; i < SIZE_SMALL; i++)
 		Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
 
 	//erased elements should not have been called (test for any value here)
@@ -768,6 +778,7 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 		Assert::IsFalse(lsnrs[i].wasSet(list.get(i)));
 	for (int i = 0; i < SIZE + 1; i++)
 		Assert::IsFalse(newLsnrs[i].wasSet());//test for any value here
+		*/
 }
 
 

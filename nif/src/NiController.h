@@ -99,16 +99,22 @@ namespace nif
 		native::NiFloatData& getNative() const;
 
 		IProperty<KeyType>& keyType() { return m_keyType; }
+		std::shared_ptr<IProperty<KeyType>> keyType_ptr();
 		InterpolationData<float>& iplnData() { return m_keys; }
+		std::shared_ptr<InterpolationData<float>> iplnData_ptr();
 
 	private:
 		struct IplnData final : InterpolationData<float>
 		{
-			IplnData(NiFloatData& super) : m_keys(super), m_tans(super), m_tbcs(super) {}
+			IplnData(NiFloatData& super);
 
-			virtual IVectorProperty<Key<float>>& keys() override { return m_keys; }
-			virtual IVectorProperty<Tangent<float>>& tangents() override { return m_tans; }
-			virtual IVectorProperty<TBC>& tbc() override { return m_tbcs; }
+			virtual IVectorProperty<Key<float>>& keys() override;
+			virtual IVectorProperty<Tangent<float>>& tangents() override;
+			virtual IVectorProperty<TBC>& tbc() override;
+
+			virtual std::shared_ptr<IVectorProperty<Key<float>>> keys_ptr() override;
+			virtual std::shared_ptr<IVectorProperty<Tangent<float>>> tangents_ptr() override;
+			virtual std::shared_ptr<IVectorProperty<TBC>> tbc_ptr() override;
 
 			class Keys;
 			class Tangents;
@@ -118,8 +124,6 @@ namespace nif
 			{
 			public:
 				Keys(NiFloatData& super) : m_super{ super } {}
-
-				virtual element at(int i) override;
 
 				virtual container get() const override;
 				virtual void set(const container& c) override;
@@ -139,8 +143,6 @@ namespace nif
 			{
 			public:
 				Tangents(NiFloatData& super) : m_super{ super } {}
-
-				virtual element at(int i) override;
 
 				virtual container get() const override;
 				virtual void set(const container& c) override;
@@ -162,8 +164,6 @@ namespace nif
 			public:
 				TBCs(NiFloatData& super) : m_super{ super } {}
 
-				virtual element at(int i) override;
-
 				virtual container get() const override;
 				virtual void set(const container& c) override;
 
@@ -182,6 +182,8 @@ namespace nif
 			Keys m_keys;
 			Tangents m_tans;
 			TBCs m_tbcs;
+
+			NiFloatData& m_super;
 		};
 		Property<KeyType, native::KeyType> m_keyType;
 		IplnData m_keys;

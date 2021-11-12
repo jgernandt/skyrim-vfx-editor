@@ -18,6 +18,7 @@
 
 #pragma once
 #include <cassert>
+#include <map>
 #include "nif_concepts.h"
 
 namespace nif
@@ -51,8 +52,23 @@ namespace nif
 		friend bool operator>=(const NiObject& lhs, const NiObject& rhs) { return !(lhs < rhs); }
 
 	protected:
+		template<typename T>
+		std::shared_ptr<T> forwardPtr(T* target)
+		{
+			assert(m_index && m_it != m_index->end() && !m_it->second.expired());
+			return std::shared_ptr<T>(m_it->second.lock(), target);
+		}
+
+	protected:
 		class File* m_file{ nullptr };
-		native::NiObject* const m_ptr;
+		native::NiObject* m_ptr;
+
+	private:
+		std::map<native::NiObject*, std::weak_ptr<nif::NiObject>>::const_iterator m_it;
+
+		//For troubleshooting; use to test if our iterator is still valid 
+		//(it should be as long as we exist!)
+		std::map<native::NiObject*, std::weak_ptr<nif::NiObject>>* m_index;
 	};
 
 }
