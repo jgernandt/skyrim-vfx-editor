@@ -19,9 +19,18 @@
 #include "pch.h"
 #include "File.h"
 
+#include "NiNode.h"
+
 namespace Niflib
 {
 	NiObjectRef FindRoot(std::vector<NiObjectRef> const& objects);
+}
+
+nif::File::File(Version version) : m_version{ version }
+{
+	m_rootNode = create<BSFadeNode>();
+	if (m_rootNode)
+		m_rootNode->name().set("NewFile.nif");
 }
 
 nif::File::File(const std::filesystem::path& path)
@@ -44,7 +53,8 @@ nif::File::File(const std::filesystem::path& path)
 				m_version = Version::SKYRIM_SE;
 		}
 
-		m_root.reset(static_cast<Niflib::NiObject*>(root));
+		if (Niflib::NiNode* node = Niflib::DynamicCast<Niflib::NiNode>(root))
+			m_rootNode = get<NiNode>(node);
 	}
 }
 
@@ -74,14 +84,6 @@ nif::File::index_type::const_iterator nif::File::addToIndex(
 		return m_index.end();
 }
 
-void nif::File::addFadeNode(native::NiNode* parent)
-{
-	auto ptr = new Niflib::BSFadeNode;
-	addToIndex(ptr, {});
-	ptr->SetName("NewFile.nif");
-	m_root.reset(ptr);
-}
-
 bool nif::File::isCompatible(Version version) const
 {
 	switch (version) {
@@ -96,14 +98,10 @@ bool nif::File::isCompatible(Version version) const
 
 void nif::File::write(const std::filesystem::path& path)
 {
-	write(m_root.get(), m_version, path);
-}
-
-void nif::File::write(native::NiObject* root, Version version, const std::filesystem::path& path)
-{
+	auto root = &m_rootNode->getNative();
 	if (!path.empty() && root) {
 		Niflib::NifInfo fileInfo;
-		switch (version) {
+		switch (m_version) {
 		case Version::SKYRIM:
 			fileInfo.version = 0x14020007;
 			fileInfo.userVersion = 12;
@@ -116,7 +114,7 @@ void nif::File::write(native::NiObject* root, Version version, const std::filesy
 			break;
 		}
 
-		fileInfo.exportInfo1 = "VFX Editor";
+		fileInfo.exportInfo1 = "SVFX Editor";
 		fileInfo.exportInfo2 = "Niflib";
 
 		ofstream out(path, ofstream::binary);

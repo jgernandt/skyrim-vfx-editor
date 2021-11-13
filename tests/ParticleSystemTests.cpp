@@ -434,7 +434,7 @@ namespace node
 		{
 			nif::File file{ nif::File::Version::SKYRIM_SE };
 
-			auto root = file.create<nif::BSFadeNode>();
+			auto root = file.getRoot();
 			Assert::IsNotNull(root.get());
 
 			auto psys = file.create<nif::NiParticleSystem>();
@@ -466,7 +466,7 @@ namespace node
 			psys->modifiers().insert(-1, *mod2);
 
 			Constructor c(file);
-			c.makeRoot(&root->getNative());
+			c.makeRoot();
 
 			Assert::IsTrue(c.size() == 2);
 
@@ -509,7 +509,7 @@ namespace node
 		{
 			nif::File file{ nif::File::Version::SKYRIM_SE };
 
-			auto root = file.create<nif::BSFadeNode>();
+			auto root = file.getRoot();
 			Assert::IsNotNull(root.get());
 
 			auto psys = file.create<nif::NiParticleSystem>();
@@ -517,7 +517,7 @@ namespace node
 			root->children().add(*psys);
 
 			Constructor c(file);
-			c.makeRoot(&root->getNative());
+			c.makeRoot();
 
 			Assert::IsTrue(c.size() == 2);
 
@@ -556,7 +556,7 @@ namespace node
 		{
 			nif::File file{ nif::File::Version::SKYRIM_SE };
 
-			auto root = file.create<nif::BSFadeNode>();
+			auto root = file.getRoot();
 			Assert::IsNotNull(root.get());
 
 			auto psys = file.create<nif::NiParticleSystem>();
@@ -589,7 +589,7 @@ namespace node
 			psys->modifiers().insert(0, *mod3);
 
 			Constructor c(file);
-			c.makeRoot(&root->getNative());
+			c.makeRoot();
 
 			Assert::IsTrue(c.size() == 2);
 

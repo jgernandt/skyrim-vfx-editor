@@ -176,6 +176,7 @@
     <ClCompile Include="ExtraDataTests.cpp" />
     <ClCompile Include="ForcefieldTests.cpp" />
     <ClCompile Include="math.cpp" />
+    <ClCompile Include="memory.cpp" />
     <ClCompile Include="ModifiersTests.cpp" />
     <ClCompile Include="ParticleSystemTests.cpp" />
     <ClCompile Include="pch.cpp">

@@ -21,25 +21,24 @@
 #include "nodes.h"
 #include "Positioner.h"
 
-//We need to know about the nif backend, which is somewhat stupid, but the alternatives seem unreasonably complicated
+//We need to know about the nif backend, which is somewhat stupid, but the alternatives seem unreasonably complicated.
+//Update: I think we can avoid it now that File knows of all created interfaces.
 #include "nif_backend.h"
 
-void node::Constructor::makeRoot(const nif::ni_ptr<nif::native::NiObject>& root)
+void node::Constructor::makeRoot()
 {
-	//Exceptional cases: root is null or not a NiNode. What do we do?
-	//Create one and leave a warning? Just throw?
+	Niflib::NiNode* root = nullptr;
+	if (auto rootPtr = m_file.getRoot())
+		root = &rootPtr->getNative();
 
 	if (!root) {
 		throw std::runtime_error("File has no root");
 	}
-	else if (!root->GetType().IsDerivedType(Niflib::NiNode::TYPE)) {
-		throw std::runtime_error("Invalid root");
-	}
 	else {
 		//Leave room for the root node (maybe vanity, but I'd prefer it to be first)
 		m_nodes.resize(1);
-		EP_process(static_cast<Niflib::NiAVObject*>(root.get()));
-		for (auto&& ctlr : static_cast<Niflib::NiObjectNET*>(root.get())->GetControllers()) {
+		EP_process(static_cast<Niflib::NiAVObject*>(root));
+		for (auto&& ctlr : static_cast<Niflib::NiObjectNET*>(root)->GetControllers()) {
 			if (Niflib::DynamicCast<Niflib::NiControllerManager>(ctlr)) {
 				m_warnings.push_back("This file contains behaviour-controlled animations. This functionality is not yet supported, and any edit to this file may break it.");
 				break;

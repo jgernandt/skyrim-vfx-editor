@@ -65,7 +65,7 @@ void app::Document::Invoker::redo()
 	}
 }
 
-void app::Document::Invoker::flush()
+void app::Document::Invoker::clear()
 {
 	m_pending.clear();
 }
@@ -74,9 +74,8 @@ app::Document::Document(const gui::Floats<2>& size)
 {
 	m_size = size;
 
-	m_file = nif::File(nif::File::Version::SKYRIM_SE);
-	m_file.addFadeNode();
-	m_nodeEditor = newChild<node::Editor>(m_size, m_file);
+	m_file = std::make_unique<nif::File>(nif::File::Version::SKYRIM_SE);
+	m_nodeEditor = newChild<node::Editor>(m_size, *m_file);
 
 	//If, for any reason, we add a message box here and the file is empty, the popups break.
 	//Doing the exact same thing on a doc created later works fine.
@@ -112,14 +111,19 @@ app::Document::Document(const gui::Floats<2>& size, const std::filesystem::path&
 			throw std::runtime_error("File not found");
 		//(let's leave it at that for now)
 
-		m_file = nif::File(path);//may throw
-		m_nodeEditor = newChild<node::Editor>(m_size, m_file);//should catch warnings, may throw serious errors
+		m_file = std::make_unique<nif::File>(path);//may throw
+		m_nodeEditor = newChild<node::Editor>(m_size, *m_file);//should catch warnings, may throw serious errors
 	}
 	catch (const std::exception& e) {
-		m_file = nif::File();
+		m_file = std::make_unique<nif::File>();
 		m_nodeEditor = newChild<node::Editor>(m_size);
 		newChild<gui::MessageBox>("Error", e.what());
 	}
+}
+
+app::Document::~Document()
+{
+	clearChildren();
 }
 
 void app::Document::frame(gui::FrameDrawer& fd)
@@ -149,7 +153,8 @@ void app::Document::setFilePath(const std::filesystem::path& path)
 void app::Document::write()
 {
 	try {
-		m_file.write(m_targetPath);
+		if (m_file)
+			m_file->write(m_targetPath);
 	}
 	catch (const std::exception& e) {
 		addChild(std::make_unique<gui::MessageBox>("Error", e.what()));

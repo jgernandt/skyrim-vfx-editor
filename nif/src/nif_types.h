@@ -229,79 +229,7 @@ namespace nif
 		using scale_t = float;
 
 		using KeyType = Niflib::KeyType;
-
-		template<typename T> void ref(T*) { static_assert(false, "ref must be explicitly specialised"); }
-		template<typename T> void rel(T*) { static_assert(false, "rel must be explicitly specialised"); }
-
-		template<> void ref(native::NiObject*);
-		template<> void rel(native::NiObject*);
-		template<> void ref(native::NiAVObject*);
-		template<> void rel(native::NiAVObject*);
-		template<> void ref(native::NiNode*);
-		template<> void rel(native::NiNode*);
 	}
-
-	template<typename T>
-	class ni_ptr
-	{
-	public:
-		ni_ptr() : m_obj{ nullptr } {}
-		ni_ptr(std::nullptr_t) : m_obj{ nullptr } {}
-		template<typename Y>
-		ni_ptr(Y* obj) : m_obj{ obj } { native::ref(m_obj); }
-
-		ni_ptr(const ni_ptr& other) : ni_ptr(other.get()) {}
-		template<typename Y>
-		ni_ptr(const ni_ptr<Y>& other) : ni_ptr(other.get()) {}
-
-		~ni_ptr() { native::rel(m_obj); }
-
-		ni_ptr& operator=(const ni_ptr& other) 
-		{
-			if (m_obj != other.m_obj) {
-				native::rel(m_obj);
-				m_obj = other.m_obj;
-				native::ref(m_obj);
-			}
-			return *this;
-		}
-		template<typename Y>
-		ni_ptr<T>& operator=(const ni_ptr<Y>& other) { return this = ni_ptr<T>(other); }
-
-		//Let's worry about moving some other time
-		//template<typename Y>
-		//ni_ptr(ni_ptr<Y>&& other) noexcept : m_obj{ other.m_obj } { other.m_obj = nullptr; }
-
-		/*template<typename Y>
-		ni_ptr<T>& operator=(ni_ptr<Y>&& other)
-		{
-			if (other != this) {
-				native::rel(m_obj);
-				m_obj = other.m_obj;
-				other.m_obj = nullptr;
-			}
-			return *this;
-		}*/
-
-		template<typename Y>
-		void reset(Y* ptr)
-		{
-			if (ptr != m_obj) {
-				native::rel(m_obj);
-				m_obj = ptr;
-				native::ref(m_obj);
-			}
-		}
-
-		T* get() const { return m_obj; }
-		T& operator*() const { return *m_obj; }
-		T* operator->() const { return m_obj; }
-		explicit operator bool() const { return m_obj; }
-
-	private:
-		template<typename Y> friend class ni_ptr;
-		T* m_obj;
-	};
 
 	template<typename T>
 	struct NifConverter

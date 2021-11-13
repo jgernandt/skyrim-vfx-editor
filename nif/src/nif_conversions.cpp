@@ -25,21 +25,6 @@ static bool equalToWithin(float l, float r, float relTol)
 	return abs(l - r) <= absTol;
 }
 
-template<> void nif::native::ref(NiObject* obj)
-{
-	if (obj)
-		obj->AddRef();
-}
-template<> void nif::native::rel(NiObject* obj)
-{
-	if (obj)
-		obj->SubtractRef();
-}
-template<> void nif::native::ref(NiAVObject* obj) { ref(static_cast<native::NiObject*>(obj)); }
-template<> void nif::native::rel(NiAVObject* obj) { rel(static_cast<native::NiObject*>(obj)); }
-template<> void nif::native::ref(NiNode* obj) { ref(static_cast<native::NiObject*>(obj)); }
-template<> void nif::native::rel(NiNode* obj) { rel(static_cast<native::NiObject*>(obj)); }
-
 
 std::array<float, 3> nif::NifConverter<std::array<float, 3>>::convert(const Niflib::Color3& f)
 {

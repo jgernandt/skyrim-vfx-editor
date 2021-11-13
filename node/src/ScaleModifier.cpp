@@ -52,6 +52,7 @@ public:
 		item->newChild<AddButton>(node.object().scales());
 		
 		node.object().scales().addListener(*this);
+		onSet(node.object().scales().get());
 	}
 
 	virtual void onSet(const std::vector<float>& v) override

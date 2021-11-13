@@ -140,7 +140,7 @@ namespace node
 		{
 			nif::File file{ nif::File::Version::SKYRIM_SE };
 
-			auto root = file.create<nif::BSFadeNode>();
+			auto root = file.getRoot();
 			Assert::IsNotNull(root.get());
 
 			auto psys0 = file.create<nif::NiParticleSystem>();
@@ -166,7 +166,7 @@ namespace node
 			psys2->shaderProperty().assign(shader12.get());
 
 			Constructor c(file);
-			c.makeRoot(&root->getNative());
+			c.makeRoot();
 
 			Assert::IsTrue(c.size() == 6);
 

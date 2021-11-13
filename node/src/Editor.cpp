@@ -107,7 +107,7 @@ node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &fil
 			auto workArea = newChild<NodeRoot>(file);
 
 			//Nodes
-			c->makeRoot(file.getRoot());
+			c->makeRoot();
 			c->extractNodes(*workArea);
 
 			for (auto&& warning : c->warnings())

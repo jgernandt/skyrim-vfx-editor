@@ -35,6 +35,9 @@ namespace app
 	public:
 		Document(const gui::Floats<2>& size);
 		Document(const gui::Floats<2>& size, const std::filesystem::path& path);
+
+		~Document();
+
 		virtual void frame(gui::FrameDrawer& fd) override;
 		virtual void setSize(const gui::Floats<2>& size) override;
 		virtual gui::IInvoker* getInvoker() override { return &m_invoker; }
@@ -59,7 +62,7 @@ namespace app
 			virtual void redo() override;
 
 			bool empty() const { return m_pending.empty(); }
-			void flush();
+			void clear();
 
 		private:
 			std::deque<CommandPtr> m_pending;
@@ -67,7 +70,7 @@ namespace app
 			std::list<CommandPtr>::iterator m_next{ m_history.begin() };
 		};
 
-		nif::File m_file;
+		std::unique_ptr<nif::File> m_file;
 		Invoker m_invoker;
 		std::filesystem::path m_targetPath;
 		node::Editor* m_nodeEditor{ nullptr };

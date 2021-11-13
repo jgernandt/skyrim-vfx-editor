@@ -62,7 +62,7 @@ namespace node
 
 			nif::File file{ nif::File::Version::SKYRIM_SE };
 
-			auto root = file.create<nif::BSFadeNode>();
+			auto root = file.getRoot();
 			Assert::IsNotNull(root.get());
 
 			auto s1 = file.create<nif::NiStringExtraData>();
@@ -102,7 +102,7 @@ namespace node
 			}
 
 			Constructor c(file);
-			c.makeRoot(&root->getNative());
+			c.makeRoot();
 
 			Assert::IsTrue(c.size() == 12);
 

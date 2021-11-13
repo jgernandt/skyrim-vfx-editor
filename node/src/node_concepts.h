@@ -21,6 +21,10 @@
 
 namespace node
 {
+	//Alias the ptr type used by the data model
+	template<typename T>
+	using ni_ptr = std::shared_ptr<T>;
+
 	//A wrapper that allows reserving positions at the beginning and end of a sequence
 	template<typename T>
 	class ReservableSequence final : public OSequence<T>

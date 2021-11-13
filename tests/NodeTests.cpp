@@ -157,7 +157,7 @@ namespace node
 		TEST_METHOD(Load_hierarchy) {
 			nif::File file{ nif::File::Version::SKYRIM_SE };
 
-			auto root = file.create<nif::BSFadeNode>();
+			auto root = file.getRoot();
 			Assert::IsNotNull(root.get());
 
 			auto c1 = file.create<nif::NiNode>();
@@ -173,7 +173,7 @@ namespace node
 			c1->children().add(*c1c1);
 
 			Constructor c(file);
-			c.makeRoot(&root->getNative());
+			c.makeRoot();
 
 			Assert::IsTrue(c.size() == 4);
 

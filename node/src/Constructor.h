@@ -33,7 +33,7 @@ namespace node
 		Constructor(nif::File& file) : m_file{ file } {}
 		~Constructor() {}
 
-		void makeRoot(const nif::ni_ptr<nif::native::NiObject>& root);
+		void makeRoot();
 
 		std::vector<std::string>& warnings() { return m_warnings; }
 

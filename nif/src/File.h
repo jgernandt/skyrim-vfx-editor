@@ -24,6 +24,8 @@
 
 namespace nif
 {
+	class NiNode;
+
 	class File
 	{
 	public:
@@ -40,8 +42,12 @@ namespace nif
 		using index_type = std::map<native::NiObject*, std::weak_ptr<nif::NiObject>>;
 
 	public:
-		File(Version version = Version::UNKNOWN) : m_version{ version } {}
+		File(Version version = Version::UNKNOWN);
 		File(const std::filesystem::path& path);
+
+		File(const File&) = delete;
+		File& operator=(const File&) = delete;
+
 		~File();
 
 		template<typename T, typename... Args>
@@ -99,24 +105,18 @@ namespace nif
 			return result;
 		}
 
-		//Add a new node under the given one (is this really how we want to do it?).
-		//Update: it is not. Will be changed!
-		void addFadeNode(native::NiNode* parent = nullptr);
-
-		ni_ptr<native::NiObject> getRoot() const { return m_root; }
+		std::shared_ptr<NiNode> getRoot() const { return m_rootNode; }
 		Version getVersion() const { return m_version; }
 		bool isCompatible(Version version) const;
 
 		void write(const std::filesystem::path& path);
-
-		static void write(native::NiObject* root, Version version, const std::filesystem::path& path);
 
 	private:
 		index_type::const_iterator addToIndex(native::NiObject* obj, const std::shared_ptr<NiObject>& ptr);
 
 	private:
 		Version m_version{ Version::UNKNOWN };
-		ni_ptr<native::NiObject> m_root;
+		std::shared_ptr<NiNode> m_rootNode;
 
 		//TODO: garbage collection (if first.GetNumRefs() == 1 && second.expired())
 		index_type m_index;
