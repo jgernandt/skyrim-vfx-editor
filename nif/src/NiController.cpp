@@ -70,16 +70,6 @@ nif::native::NiFloatData& nif::NiFloatData::getNative() const
 	return static_cast<native::NiFloatData&>(*m_ptr);
 }
 
-std::shared_ptr<nif::Property<nif::KeyType>> nif::NiFloatData::keyType_ptr()
-{
-	return forwardPtr(&m_keyType);
-}
-
-std::shared_ptr<nif::InterpolationData<float>> nif::NiFloatData::iplnData_ptr()
-{
-	return forwardPtr(&m_keys);
-}
-
 nif::NiFloatData::IplnData::IplnData(NiFloatData& super) :
 	m_keys(super), m_tans(super), m_tbcs(super), m_super{ super }
 {}
@@ -97,21 +87,6 @@ nif::VectorProperty<nif::Tangent<float>>& nif::NiFloatData::IplnData::tangents()
 nif::VectorProperty<nif::TBC>& nif::NiFloatData::IplnData::tbc()
 {
 	return m_tbcs;
-}
-
-std::shared_ptr<nif::VectorProperty<nif::Key<float>>> nif::NiFloatData::IplnData::keys_ptr()
-{
-	return m_super.forwardPtr(&m_keys);
-}
-
-std::shared_ptr<nif::VectorProperty<nif::Tangent<float>>> nif::NiFloatData::IplnData::tangents_ptr()
-{
-	return m_super.forwardPtr(&m_tans);
-}
-
-std::shared_ptr<nif::VectorProperty<nif::TBC>> nif::NiFloatData::IplnData::tbc_ptr()
-{
-	return m_super.forwardPtr(&m_tbcs);
 }
 
 std::vector<nif::Key<float>> nif::NiFloatData::IplnData::Keys::get() const

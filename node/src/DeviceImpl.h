@@ -20,7 +20,7 @@
 #include <cassert>
 #include <vector>
 #include "Devices.h"
-#include "nif_concepts.h"
+#include "data_model.h"
 
 namespace node
 {

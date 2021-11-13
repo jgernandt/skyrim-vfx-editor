@@ -20,6 +20,7 @@
 #include <cassert>
 #include <map>
 #include "nif_types.h"
+#include "Observable.h"
 
 namespace nif
 {
@@ -52,34 +53,22 @@ namespace nif
 		friend bool operator<=(const NiObject& lhs, const NiObject& rhs) { return !(rhs < lhs); }
 		friend bool operator>=(const NiObject& lhs, const NiObject& rhs) { return !(lhs < rhs); }
 
-		template<typename T, typename BlockType>
-		static std::shared_ptr<T> make_field_ptr(const std::shared_ptr<BlockType>& obj, T BlockType::* field)
-		{
-			if (obj && field)
-				return std::shared_ptr<T>(obj, &(obj.get()->*field));
-			else
-				return std::shared_ptr<T>();
-		}
-
-	protected:
-		template<typename T>
-		std::shared_ptr<T> forwardPtr(T* target)
-		{
-			assert(m_index && m_it != m_index->end() && !m_it->second.expired());
-			return std::shared_ptr<T>(m_it->second.lock(), target);
-		}
 
 	protected:
 		class File* m_file{ nullptr };//lets us search for other blocks if we want
 		native::NiObject* m_ptr;
-
-	private:
-		std::map<native::NiObject*, std::weak_ptr<nif::NiObject>>::const_iterator m_it;
-
-		//For troubleshooting; use to test if our iterator is still valid 
-		//(it should be as long as we exist!)
-		std::map<native::NiObject*, std::weak_ptr<nif::NiObject>>* m_index{ nullptr };
 	};
+
+	//Convenience (and safety?) function for redirecting pointers to a field
+	template<typename T, typename BlockType>
+	inline std::shared_ptr<T> make_field_ptr(const std::shared_ptr<BlockType>& obj, T* field)
+	{
+		if (obj && field) {
+			return std::shared_ptr<T>(obj, field);
+		}
+		else
+			return std::shared_ptr<T>();
+	}
 }
 
-#include "nif_concepts.h"
+#include "data_model.h"

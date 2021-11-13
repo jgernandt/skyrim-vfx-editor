@@ -17,7 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "node_concepts.h"
+#include "data_model.h"
 #include "traits.h"
 
 template<typename T>

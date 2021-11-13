@@ -25,7 +25,7 @@
     <ClInclude Include="src\nif_backend.h" />
     <ClInclude Include="src\BSEffectShaderProperty.h" />
     <ClInclude Include="src\NiController.h" />
-    <ClInclude Include="src\nif_concepts.h" />
+    <ClInclude Include="src\data_model.h" />
     <ClInclude Include="src\NiAVObject.h" />
     <ClInclude Include="src\File.h" />
     <ClInclude Include="src\NiExtraData.h" />

@@ -48,9 +48,6 @@
     <ClInclude Include="src\NiPSysEmitter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\nif_concepts.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\NiPSysModifier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -82,6 +79,9 @@
       <Filter>Header Files\Data model</Filter>
     </ClInclude>
     <ClInclude Include="src\DataField.h">
+      <Filter>Header Files\Data model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\data_model.h">
       <Filter>Header Files\Data model</Filter>
     </ClInclude>
   </ItemGroup>

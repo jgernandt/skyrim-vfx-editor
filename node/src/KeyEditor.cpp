@@ -213,10 +213,12 @@ void node::FloatKeyEditor::onSet(const nif::KeyType& type)
 		curve = std::make_unique<ConstantInterpolant>();
 		break;
 	case nif::KeyType::LINEAR:
-		curve = std::make_unique<LinearInterpolant>(m_keys->keys_ptr());
+		curve = std::make_unique<LinearInterpolant>(nif::make_field_ptr(m_keys, &m_keys->keys()));
 		break;
 	case nif::KeyType::QUADRATIC:
-		curve = std::make_unique<QuadraticInterpolant>(m_keys->keys_ptr(), m_keys->tangents_ptr());
+		curve = std::make_unique<QuadraticInterpolant>(
+			nif::make_field_ptr(m_keys, &m_keys->keys()), 
+			nif::make_field_ptr(m_keys, &m_keys->tangents()));
 		break;
 	}
 	if (curve) {

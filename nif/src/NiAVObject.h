@@ -25,7 +25,6 @@ namespace nif
 	{
 	public:
 		using native_type = native::NiAVObject;
-		//constexpr static OProperty<translation_t> NiAVObject::* TRANSLATION
 
 	protected:
 		friend class File;
@@ -37,7 +36,6 @@ namespace nif
 		native_type& getNative() const;
 
 		Transformable& transform();
-		std::shared_ptr<Transformable> transform_ptr();
 
 	private:
 		class AVObjectTransform final : public Transformable
@@ -48,10 +46,6 @@ namespace nif
 			virtual Property<translation_t>& translation() override;
 			virtual Property<rotation_t>& rotation() override;
 			virtual Property<scale_t>& scale() override;
-
-			virtual std::shared_ptr<Property<translation_t>> translation_ptr() override;
-			virtual std::shared_ptr<Property<rotation_t>> rotation_ptr() override;
-			virtual std::shared_ptr<Property<scale_t>> scale_ptr() override;
 
 		private:
 			PropertyFcn<translation_t, NiAVObject, native::translation_t> m_T;

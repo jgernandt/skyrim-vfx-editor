@@ -138,7 +138,9 @@ nif::NiFloatInterpolator& node::FloatController::object()
 
 void node::FloatController::openKeyEditor()
 {
-	auto c = std::make_unique<FloatKeyEditor>(m_data->keyType_ptr(), m_data->iplnData_ptr(), 
+	auto c = std::make_unique<FloatKeyEditor>(
+		nif::make_field_ptr(m_data, &m_data->keyType()), 
+		nif::make_field_ptr(m_data, &m_data->iplnData()),
 		m_startTime, m_stopTime);
 	c->open();
 	asyncInvoke<gui::AddChild>(std::move(c), this, false);

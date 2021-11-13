@@ -99,9 +99,7 @@ namespace nif
 		native::NiFloatData& getNative() const;
 
 		Property<KeyType>& keyType() { return m_keyType; }
-		std::shared_ptr<Property<KeyType>> keyType_ptr();
 		InterpolationData<float>& iplnData() { return m_keys; }
-		std::shared_ptr<InterpolationData<float>> iplnData_ptr();
 
 	private:
 		struct IplnData final : InterpolationData<float>
@@ -111,10 +109,6 @@ namespace nif
 			virtual VectorProperty<Key<float>>& keys() override;
 			virtual VectorProperty<Tangent<float>>& tangents() override;
 			virtual VectorProperty<TBC>& tbc() override;
-
-			virtual std::shared_ptr<VectorProperty<Key<float>>> keys_ptr() override;
-			virtual std::shared_ptr<VectorProperty<Tangent<float>>> tangents_ptr() override;
-			virtual std::shared_ptr<VectorProperty<TBC>> tbc_ptr() override;
 
 			class Keys;
 			class Tangents;

@@ -18,7 +18,7 @@
 
 #pragma once
 #include "NiObject.h"
-#include "File.h"
+//#include "File.h"
 #include "Observable.h"
 
 namespace nif
@@ -29,6 +29,9 @@ namespace nif
 	template<typename T>
 	class NiObject::DataField : public IObservable<T>
 	{
+	public:
+		using field_type = IObservable<T>;
+
 	private:
 		/*class OurUnsubscriber final : public Unsubscriber
 		{

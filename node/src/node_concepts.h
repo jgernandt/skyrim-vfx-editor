@@ -17,7 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "nif_concepts.h"
+#include "data_model.h"
 
 namespace node
 {

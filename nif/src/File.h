@@ -57,9 +57,9 @@ namespace nif
 				result = std::shared_ptr<T>(new T(std::forward<Args>(args)...));
 				//result = std::make_shared<T>(std::forward<Args>(args)...);
 				std::static_pointer_cast<NiObject>(result)->m_file = this;
-				std::static_pointer_cast<NiObject>(result)->m_it =
+				//std::static_pointer_cast<NiObject>(result)->m_it =
 					addToIndex(std::static_pointer_cast<NiObject>(result)->m_ptr, result);
-				std::static_pointer_cast<NiObject>(result)->m_index = &m_index;
+				//std::static_pointer_cast<NiObject>(result)->m_index = &m_index;
 			//}
 			//catch (const std::bad_alloc&) {
 			//	result.reset();
@@ -85,8 +85,8 @@ namespace nif
 						result = std::shared_ptr<T>(new T(obj));
 						//result = std::make_shared<T>(obj);
 						std::static_pointer_cast<NiObject>(result)->m_file = this;
-						std::static_pointer_cast<NiObject>(result)->m_it = it;
-						std::static_pointer_cast<NiObject>(result)->m_index = &m_index;
+						//std::static_pointer_cast<NiObject>(result)->m_it = it;
+						//std::static_pointer_cast<NiObject>(result)->m_index = &m_index;
 						it->second = std::weak_ptr<NiObject>(result);
 					//}
 					//catch (const std::bad_alloc&) {
