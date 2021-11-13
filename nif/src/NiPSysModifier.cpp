@@ -21,7 +21,7 @@
 
 nif::NiPSysModifierCtlr::NiPSysModifierCtlr(native_type* obj) :
 	NiSingleInterpController(obj), 
-	m_modName(&getNative(), &native::NiPSysModifierCtlr::GetModifierName, &native::NiPSysModifierCtlr::SetModifierName)
+	m_modName(*this, &getNative(), &native::NiPSysModifierCtlr::GetModifierName, &native::NiPSysModifierCtlr::SetModifierName)
 {}
 
 nif::native::NiPSysModifierCtlr& nif::NiPSysModifierCtlr::getNative() const
@@ -33,10 +33,10 @@ nif::native::NiPSysModifierCtlr& nif::NiPSysModifierCtlr::getNative() const
 
 nif::NiPSysModifier::NiPSysModifier(native_type* obj) :
 	NiObject(obj),
-	m_name(&getNative(), &native::NiPSysModifier::GetName, &native::NiPSysModifier::SetName),
-	m_order(&getNative(), &native::NiPSysModifier::GetOrder, &native::NiPSysModifier::SetOrder),
-	m_target(&getNative(), &native::NiPSysModifier::GetTarget, &native::NiPSysModifier::SetTarget),
-	m_active(&getNative(), &native::NiPSysModifier::GetActive, &native::NiPSysModifier::SetActive)
+	m_name(*this, &getNative(), &native::NiPSysModifier::GetName, &native::NiPSysModifier::SetName),
+	m_order(*this, &getNative(), &native::NiPSysModifier::GetOrder, &native::NiPSysModifier::SetOrder),
+	m_target(*this, &getNative(), &native::NiPSysModifier::GetTarget, &native::NiPSysModifier::SetTarget),
+	m_active(*this, &getNative(), &native::NiPSysModifier::GetActive, &native::NiPSysModifier::SetActive)
 {}
 
 nif::native::NiPSysModifier& nif::NiPSysModifier::getNative() const
@@ -84,14 +84,14 @@ nif::native::NiPSysAgeDeathModifier& nif::NiPSysAgeDeathModifier::getNative() co
 nif::NiPSysGravityModifier::NiPSysGravityModifier() : NiPSysGravityModifier(new Niflib::NiPSysGravityModifier) {}
 nif::NiPSysGravityModifier::NiPSysGravityModifier(native_type* obj) :
 	NiPSysModifier(obj),
-	m_gravityObj(&getNative(), &native::NiPSysGravityModifier::GetGravityObject, &native::NiPSysGravityModifier::SetGravityObject),
-	m_gravityAxis(&getNative(), &native::NiPSysGravityModifier::GetGravityAxis, &native::NiPSysGravityModifier::SetGravityAxis),
-	m_decay(&getNative(), &native::NiPSysGravityModifier::GetDecay, &native::NiPSysGravityModifier::SetDecay),
-	m_strength(&getNative(), &native::NiPSysGravityModifier::GetStrength, &native::NiPSysGravityModifier::SetStrength),
-	m_forceType(&getNative(), &native::NiPSysGravityModifier::GetForceType, &native::NiPSysGravityModifier::SetForceType),
-	m_turbulence(&getNative(), &native::NiPSysGravityModifier::GetTurbulence, &native::NiPSysGravityModifier::SetTurbulence),
-	m_turbulenceScale(&getNative(), &native::NiPSysGravityModifier::GetTurbulenceScale, &native::NiPSysGravityModifier::SetTurbulenceScale),
-	m_worldAligned(&getNative(), &native::NiPSysGravityModifier::GetWorldAligned, &native::NiPSysGravityModifier::SetWorldAligned)
+	m_gravityObj(*this, &getNative(), &native::NiPSysGravityModifier::GetGravityObject, &native::NiPSysGravityModifier::SetGravityObject),
+	m_gravityAxis(*this, &getNative(), &native::NiPSysGravityModifier::GetGravityAxis, &native::NiPSysGravityModifier::SetGravityAxis),
+	m_decay(*this, &getNative(), &native::NiPSysGravityModifier::GetDecay, &native::NiPSysGravityModifier::SetDecay),
+	m_strength(*this, &getNative(), &native::NiPSysGravityModifier::GetStrength, &native::NiPSysGravityModifier::SetStrength),
+	m_forceType(*this, &getNative(), &native::NiPSysGravityModifier::GetForceType, &native::NiPSysGravityModifier::SetForceType),
+	m_turbulence(*this, &getNative(), &native::NiPSysGravityModifier::GetTurbulence, &native::NiPSysGravityModifier::SetTurbulence),
+	m_turbulenceScale(*this, &getNative(), &native::NiPSysGravityModifier::GetTurbulenceScale, &native::NiPSysGravityModifier::SetTurbulenceScale),
+	m_worldAligned(*this, &getNative(), &native::NiPSysGravityModifier::GetWorldAligned, &native::NiPSysGravityModifier::SetWorldAligned)
 {}
 
 nif::native::NiPSysGravityModifier& nif::NiPSysGravityModifier::getNative() const
@@ -122,7 +122,7 @@ nif::NiPSysRotationModifier::NiPSysRotationModifier(native_type* obj) :
 	//m_speedVar(&getNative(), &native::NiPSysRotationModifier::GetRotationSpeedVar, &native::NiPSysRotationModifier::SetRotationSpeedVar),
 	//m_angle(&getNative(), &native::NiPSysRotationModifier::GetRotationAngle, &native::NiPSysRotationModifier::SetRotationAngle),
 	//m_angleVar(&getNative(), &native::NiPSysRotationModifier::GetRotationAngleVar, &native::NiPSysRotationModifier::SetRotationAngleVar),
-	m_randomSign(&getNative(), &native::NiPSysRotationModifier::GetRandomSpeedSign, &native::NiPSysRotationModifier::SetRandomSpeedSign)
+	m_randomSign(*this, &getNative(), &native::NiPSysRotationModifier::GetRandomSpeedSign, &native::NiPSysRotationModifier::SetRandomSpeedSign)
 {}
 
 nif::native::NiPSysRotationModifier& nif::NiPSysRotationModifier::getNative() const
@@ -135,7 +135,7 @@ nif::native::NiPSysRotationModifier& nif::NiPSysRotationModifier::getNative() co
 nif::BSPSysScaleModifier::BSPSysScaleModifier() : BSPSysScaleModifier(new Niflib::BSPSysScaleModifier) {}
 nif::BSPSysScaleModifier::BSPSysScaleModifier(native_type* obj) :
 	NiPSysModifier(obj),
-	m_scales(&getNative(), &native::BSPSysScaleModifier::GetScales, &native::BSPSysScaleModifier::SetScales)
+	m_scales(*this, &getNative(), &native::BSPSysScaleModifier::GetScales, &native::BSPSysScaleModifier::SetScales)
 {}
 
 nif::native::BSPSysScaleModifier& nif::BSPSysScaleModifier::getNative() const
@@ -148,17 +148,17 @@ nif::native::BSPSysScaleModifier& nif::BSPSysScaleModifier::getNative() const
 nif::BSPSysSimpleColorModifier::BSPSysSimpleColorModifier() : BSPSysSimpleColorModifier(new Niflib::BSPSysSimpleColorModifier) {}
 nif::BSPSysSimpleColorModifier::BSPSysSimpleColorModifier(native_type* obj) :
 	NiPSysModifier(obj),
-	m_fadeInEnd(&getNative(), &native::BSPSysSimpleColorModifier::GetFadeInEnd, &native::BSPSysSimpleColorModifier::SetFadeInEnd),
-	m_fadeOutBegin(&getNative(), &native::BSPSysSimpleColorModifier::GetFadeOutBegin, &native::BSPSysSimpleColorModifier::SetFadeOutBegin),
-	m_col1End(&getNative(), &native::BSPSysSimpleColorModifier::GetColor1End, &native::BSPSysSimpleColorModifier::SetColor1End),
-	m_col2Begin(&getNative(), &native::BSPSysSimpleColorModifier::GetColor2Begin, &native::BSPSysSimpleColorModifier::SetColor2Begin),
-	m_col2End(&getNative(), &native::BSPSysSimpleColorModifier::GetColor2End, &native::BSPSysSimpleColorModifier::SetColor2End),
-	m_col3Begin(&getNative(), &native::BSPSysSimpleColorModifier::GetColor3Begin, &native::BSPSysSimpleColorModifier::SetColor3Begin),
-	m_col1([this]() { return nif_type_conversion<ColRGBA>::from(getNative().GetColor(0)); },
+	m_fadeInEnd(*this, &getNative(), &native::BSPSysSimpleColorModifier::GetFadeInEnd, &native::BSPSysSimpleColorModifier::SetFadeInEnd),
+	m_fadeOutBegin(*this, &getNative(), &native::BSPSysSimpleColorModifier::GetFadeOutBegin, &native::BSPSysSimpleColorModifier::SetFadeOutBegin),
+	m_col1End(*this, &getNative(), &native::BSPSysSimpleColorModifier::GetColor1End, &native::BSPSysSimpleColorModifier::SetColor1End),
+	m_col2Begin(*this, &getNative(), &native::BSPSysSimpleColorModifier::GetColor2Begin, &native::BSPSysSimpleColorModifier::SetColor2Begin),
+	m_col2End(*this, &getNative(), &native::BSPSysSimpleColorModifier::GetColor2End, &native::BSPSysSimpleColorModifier::SetColor2End),
+	m_col3Begin(*this, &getNative(), &native::BSPSysSimpleColorModifier::GetColor3Begin, &native::BSPSysSimpleColorModifier::SetColor3Begin),
+	m_col1(*this, [this]() { return nif_type_conversion<ColRGBA>::from(getNative().GetColor(0)); },
 		[this](const ColRGBA& col) { getNative().SetColor(0, nif_type_conversion<native::ColRGBA>::from(col)); }),
-	m_col2([this]() { return nif_type_conversion<ColRGBA>::from(getNative().GetColor(1)); },
+	m_col2(*this, [this]() { return nif_type_conversion<ColRGBA>::from(getNative().GetColor(1)); },
 		[this](const ColRGBA& col) { getNative().SetColor(1, nif_type_conversion<native::ColRGBA>::from(col)); }),
-	m_col3([this]() { return nif_type_conversion<ColRGBA>::from(getNative().GetColor(2)); },
+	m_col3(*this, [this]() { return nif_type_conversion<ColRGBA>::from(getNative().GetColor(2)); },
 		[this](const ColRGBA& col) { getNative().SetColor(2, nif_type_conversion<native::ColRGBA>::from(col)); })
 {}
 
@@ -170,52 +170,53 @@ nif::native::BSPSysSimpleColorModifier& nif::BSPSysSimpleColorModifier::getNativ
 
 float nif::NiPSysRotationModifier::Speed::get() const
 {
-	return static_cast<math::deg>(math::rad(m_super.getNative().GetRotationSpeed())).value;
+	return static_cast<math::deg>(math::rad(nativePtr()->GetRotationSpeed())).value;
 }
 
 void nif::NiPSysRotationModifier::Speed::set(const float& f)
 {
 	if (f != get()) {
-		m_super.getNative().SetRotationSpeed(static_cast<math::rad>(math::deg(f)).value);
+		nativePtr()->SetRotationSpeed(static_cast<math::rad>(math::deg(f)).value);
 		notify(f);
 	}
 }
 
 float nif::NiPSysRotationModifier::SpeedVar::get() const
 {
-	return static_cast<math::deg>(math::rad(m_super.getNative().GetRotationSpeedVar())).value;
+	return static_cast<math::deg>(math::rad(nativePtr()->GetRotationSpeedVar())).value;
 }
 
 void nif::NiPSysRotationModifier::SpeedVar::set(const float& f)
 {
 	if (f != get()) {
-		m_super.getNative().SetRotationSpeedVar(static_cast<math::rad>(math::deg(f)).value);
+		nativePtr()->SetRotationSpeedVar(static_cast<math::rad>(math::deg(f)).value);
 		notify(f);
 	}
 }
 
 float nif::NiPSysRotationModifier::Angle::get() const
 {
-	return static_cast<math::deg>(math::rad(m_super.getNative().GetRotationAngle())).value;
+	return static_cast<math::deg>(math::rad(nativePtr()->GetRotationAngle())).value;
 }
 
 void nif::NiPSysRotationModifier::Angle::set(const float& f)
 {
 	if (f != get()) {
-		m_super.getNative().SetRotationAngle(static_cast<math::rad>(math::deg(f)).value);
+		nativePtr()->SetRotationAngle(static_cast<math::rad>(math::deg(f)).value);
 		notify(f);
 	}
 }
 
 float nif::NiPSysRotationModifier::AngleVar::get() const
 {
-	return static_cast<math::deg>(math::rad(m_super.getNative().GetRotationAngleVar())).value;
+	
+	return static_cast<math::deg>(math::rad(nativePtr()->GetRotationAngleVar())).value;
 }
 
 void nif::NiPSysRotationModifier::AngleVar::set(const float& f)
 {
 	if (f != get()) {
-		m_super.getNative().SetRotationAngleVar(static_cast<math::rad>(math::deg(f)).value);
+		nativePtr()->SetRotationAngleVar(static_cast<math::rad>(math::deg(f)).value);
 		notify(f);
 	}
 }

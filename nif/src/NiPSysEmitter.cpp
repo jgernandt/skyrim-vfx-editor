@@ -22,7 +22,7 @@
 nif::NiPSysEmitterCtlr::NiPSysEmitterCtlr() : NiPSysEmitterCtlr(new Niflib::NiPSysEmitterCtlr) {}
 nif::NiPSysEmitterCtlr::NiPSysEmitterCtlr(native_type* obj) :
 	NiPSysModifierCtlr(obj), 
-	m_visIplr(&getNative(), &native::NiPSysEmitterCtlr::GetVisibilityInterpolator, &native::NiPSysEmitterCtlr::SetVisibilityInterpolator)
+	m_visIplr(*this, &getNative(), &native::NiPSysEmitterCtlr::GetVisibilityInterpolator, &native::NiPSysEmitterCtlr::SetVisibilityInterpolator)
 {}
 
 nif::native::NiPSysEmitterCtlr& nif::NiPSysEmitterCtlr::getNative() const
@@ -34,13 +34,13 @@ nif::native::NiPSysEmitterCtlr& nif::NiPSysEmitterCtlr::getNative() const
 
 nif::NiPSysEmitter::NiPSysEmitter(native_type* obj) :
 	NiPSysModifier(obj), 
-	m_colour(&getNative(), &native::NiPSysEmitter::GetInitialColor, &native::NiPSysEmitter::SetInitialColor),
-	m_lifeSpan(&getNative(), &native::NiPSysEmitter::GetLifeSpan, &native::NiPSysEmitter::SetLifeSpan),
-	m_lifeSpanVar(&getNative(), &native::NiPSysEmitter::GetLifeSpanVar, &native::NiPSysEmitter::SetLifeSpanVar),
-	m_size(&getNative(), &native::NiPSysEmitter::GetInitialRadius, &native::NiPSysEmitter::SetInitialRadius),
-	m_sizeVar(&getNative(), &native::NiPSysEmitter::GetInitialRadiusVar, &native::NiPSysEmitter::SetInitialRadiusVar),
-	m_speed(&getNative(), &native::NiPSysEmitter::GetSpeed, &native::NiPSysEmitter::SetSpeed),
-	m_speedVar(&getNative(), &native::NiPSysEmitter::GetSpeedVar, &native::NiPSysEmitter::SetSpeedVar),
+	m_colour(*this, &getNative(), &native::NiPSysEmitter::GetInitialColor, &native::NiPSysEmitter::SetInitialColor),
+	m_lifeSpan(*this, &getNative(), &native::NiPSysEmitter::GetLifeSpan, &native::NiPSysEmitter::SetLifeSpan),
+	m_lifeSpanVar(*this, &getNative(), &native::NiPSysEmitter::GetLifeSpanVar, &native::NiPSysEmitter::SetLifeSpanVar),
+	m_size(*this, &getNative(), &native::NiPSysEmitter::GetInitialRadius, &native::NiPSysEmitter::SetInitialRadius),
+	m_sizeVar(*this, &getNative(), &native::NiPSysEmitter::GetInitialRadiusVar, &native::NiPSysEmitter::SetInitialRadiusVar),
+	m_speed(*this, &getNative(), &native::NiPSysEmitter::GetSpeed, &native::NiPSysEmitter::SetSpeed),
+	m_speedVar(*this, &getNative(), &native::NiPSysEmitter::GetSpeedVar, &native::NiPSysEmitter::SetSpeedVar),
 	m_azimuth(*this),
 	m_azimuthVar(*this),
 	m_elevation(*this),
@@ -56,7 +56,7 @@ nif::native::NiPSysEmitter& nif::NiPSysEmitter::getNative() const
 
 nif::NiPSysVolumeEmitter::NiPSysVolumeEmitter(native_type* obj) :
 	NiPSysEmitter(obj), 
-	m_emtrObj(&getNative(), &native::NiPSysVolumeEmitter::GetEmitterObject, &native::NiPSysVolumeEmitter::SetEmitterObject)
+	m_emtrObj(*this, &getNative(), &native::NiPSysVolumeEmitter::GetEmitterObject, &native::NiPSysVolumeEmitter::SetEmitterObject)
 {}
 
 nif::native::NiPSysVolumeEmitter& nif::NiPSysVolumeEmitter::getNative() const
@@ -69,9 +69,9 @@ nif::native::NiPSysVolumeEmitter& nif::NiPSysVolumeEmitter::getNative() const
 nif::NiPSysBoxEmitter::NiPSysBoxEmitter() : NiPSysBoxEmitter(new Niflib::NiPSysBoxEmitter) {}
 nif::NiPSysBoxEmitter::NiPSysBoxEmitter(native_type* obj) :
 	NiPSysVolumeEmitter(obj), 
-	m_width(&getNative(), &native::NiPSysBoxEmitter::GetWidth, &native::NiPSysBoxEmitter::SetWidth),
-	m_height(&getNative(), &native::NiPSysBoxEmitter::GetHeight, &native::NiPSysBoxEmitter::SetHeight),
-	m_depth(&getNative(), &native::NiPSysBoxEmitter::GetDepth, &native::NiPSysBoxEmitter::SetDepth)
+	m_width(*this, &getNative(), &native::NiPSysBoxEmitter::GetWidth, &native::NiPSysBoxEmitter::SetWidth),
+	m_height(*this, &getNative(), &native::NiPSysBoxEmitter::GetHeight, &native::NiPSysBoxEmitter::SetHeight),
+	m_depth(*this, &getNative(), &native::NiPSysBoxEmitter::GetDepth, &native::NiPSysBoxEmitter::SetDepth)
 {}
 
 nif::native::NiPSysBoxEmitter& nif::NiPSysBoxEmitter::getNative() const
@@ -83,52 +83,52 @@ nif::native::NiPSysBoxEmitter& nif::NiPSysBoxEmitter::getNative() const
 
 float nif::NiPSysEmitter::EmitterAzimuth::get() const
 {
-	return static_cast<math::deg>(math::rad(m_super.getNative().GetPlanarAngle())).value;
+	return static_cast<math::deg>(math::rad(nativePtr()->GetPlanarAngle())).value;
 }
 
 void nif::NiPSysEmitter::EmitterAzimuth::set(const float& f)
 {
 	if (f != get()) {
-		m_super.getNative().SetPlanarAngle(static_cast<math::rad>(math::deg(f)).value);
+		nativePtr()->SetPlanarAngle(static_cast<math::rad>(math::deg(f)).value);
 		notify(f);
 	}
 }
 
 float nif::NiPSysEmitter::EmitterAzimuthVar::get() const
 {
-	return static_cast<math::deg>(math::rad(m_super.getNative().GetPlanarAngleVar())).value;
+	return static_cast<math::deg>(math::rad(nativePtr()->GetPlanarAngleVar())).value;
 }
 
 void nif::NiPSysEmitter::EmitterAzimuthVar::set(const float& f)
 {
 	if (f != get()) {
-		m_super.getNative().SetPlanarAngleVar(static_cast<math::rad>(math::deg(f)).value);
+		nativePtr()->SetPlanarAngleVar(static_cast<math::rad>(math::deg(f)).value);
 		notify(f);
 	}
 }
 
 float nif::NiPSysEmitter::EmitterElevation::get() const
 {
-	return 90.0f - static_cast<math::deg>(math::rad(m_super.getNative().GetDeclination())).value;
+	return 90.0f - static_cast<math::deg>(math::rad(nativePtr()->GetDeclination())).value;
 }
 
 void nif::NiPSysEmitter::EmitterElevation::set(const float& f)
 {
 	if (f != get()) {
-		m_super.getNative().SetDeclination(static_cast<math::rad>(math::deg(90.0f - f)).value);
+		nativePtr()->SetDeclination(static_cast<math::rad>(math::deg(90.0f - f)).value);
 		notify(f);
 	}
 }
 
 float nif::NiPSysEmitter::EmitterElevationVar::get() const
 {
-	return static_cast<math::deg>(math::rad(m_super.getNative().GetDeclinationVar())).value;
+	return static_cast<math::deg>(math::rad(nativePtr()->GetDeclinationVar())).value;
 }
 
 void nif::NiPSysEmitter::EmitterElevationVar::set(const float& f)
 {
 	if (f != get()) {
-		m_super.getNative().SetDeclinationVar(static_cast<math::rad>(math::deg(f)).value);
+		nativePtr()->SetDeclinationVar(static_cast<math::rad>(math::deg(f)).value);
 		notify(f);
 	}
 }
@@ -140,8 +140,8 @@ nif::NiPSysCylinderEmitter::NiPSysCylinderEmitter() :
 
 nif::NiPSysCylinderEmitter::NiPSysCylinderEmitter(native_type* obj) :
 	NiPSysVolumeEmitter(obj),
-	m_radius(&getNative(), &native::NiPSysCylinderEmitter::GetRadius, &native::NiPSysCylinderEmitter::SetRadius),
-	m_height(&getNative(), &native::NiPSysCylinderEmitter::GetHeight, &native::NiPSysCylinderEmitter::SetHeight)
+	m_radius(*this, &getNative(), &native::NiPSysCylinderEmitter::GetRadius, &native::NiPSysCylinderEmitter::SetRadius),
+	m_height(*this, &getNative(), &native::NiPSysCylinderEmitter::GetHeight, &native::NiPSysCylinderEmitter::SetHeight)
 {}
 
 nif::native::NiPSysCylinderEmitter& nif::NiPSysCylinderEmitter::getNative() const
@@ -157,7 +157,7 @@ nif::NiPSysSphereEmitter::NiPSysSphereEmitter() :
 
 nif::NiPSysSphereEmitter::NiPSysSphereEmitter(native_type* obj) :
 	NiPSysVolumeEmitter(obj),
-	m_radius(&getNative(), &native::NiPSysSphereEmitter::GetRadius, &native::NiPSysSphereEmitter::SetRadius)
+	m_radius(*this, &getNative(), &native::NiPSysSphereEmitter::GetRadius, &native::NiPSysSphereEmitter::SetRadius)
 {}
 
 nif::native::NiPSysSphereEmitter& nif::NiPSysSphereEmitter::getNative() const

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Assignable.h" />
+    <ClInclude Include="src\DataField.h" />
     <ClInclude Include="src\VectorProperty.h" />
     <ClInclude Include="src\nif_backend.h" />
     <ClInclude Include="src\BSEffectShaderProperty.h" />

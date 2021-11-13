@@ -36,10 +36,10 @@ public:
 
 	virtual ReservableSequence<nif::NiPSysModifier>& modifiers() override { return m_mods; }
 	virtual ReservableSequence<nif::NiTimeController>& controllers() override { return m_ctlrs; }
-	virtual ISet<Modifier::Requirement>& requirements() override { return m_reqs; }
+	virtual IObservable<ISet<Modifier::Requirement>>& requirements() override { return m_reqs; }
 
 private:
-	struct Requirements : ISet<Modifier::Requirement>
+	struct Requirements : IObservable<ISet<Modifier::Requirement>>
 	{
 		Requirements(ParticleSystem& node,
 			ReservableSequence<nif::NiPSysModifier>& mods,
@@ -50,8 +50,8 @@ private:
 		virtual bool has(const Modifier::Requirement&) const override;
 		virtual size_t size() const override { return 0; }//doesn't really make sense on us
 
-		virtual void addListener(SetListener<Modifier::Requirement>&) override {}
-		virtual void removeListener(SetListener<Modifier::Requirement>&) override {}
+		virtual void addListener(nif::SetListener<Modifier::Requirement>&) override {}
+		virtual void removeListener(nif::SetListener<Modifier::Requirement>&) override {}
 
 	private:
 		std::map<Modifier::Requirement, std::unique_ptr<ModifierRequirement>> m_mngrs;
@@ -289,6 +289,7 @@ node::ParticleSystem::ParticleSystem(nif::File& file,
 	m_subtexCount.set(nif::nif_type_conversion<nif::SubtextureCount>::from(data().subtexOffsets().get()));
 	m_subtexLsnr = std::make_unique<SetterListener<nif::SubtextureCount, std::vector<nif::SubtextureOffset>>>(data().subtexOffsets());
 	m_subtexCount.addListener(*m_subtexLsnr);
+	m_subtexLsnr->onSet(m_subtexCount.get());
 
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_Geom);

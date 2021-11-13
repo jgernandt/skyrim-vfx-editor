@@ -200,12 +200,12 @@ namespace node
 			ifc->startTime().addListener(l4);
 			ifc->stopTime().addListener(l5);
 
-			//they should be signalled on addition
-			Assert::IsTrue(l1.isSignalled() && l1.result() == tester.getNode()->flags().get());	l1.reset();
-			Assert::IsTrue(l2.isSignalled() && l2.result() == tester.getNode()->frequency().get());	l2.reset();
-			Assert::IsTrue(l3.isSignalled() && l3.result() == tester.getNode()->phase().get());	l3.reset();
-			Assert::IsTrue(l4.isSignalled() && l4.result() == tester.getNode()->startTime().get()); l4.reset();
-			Assert::IsTrue(l5.isSignalled() && l5.result() == tester.getNode()->stopTime().get()); l5.reset();
+			//they should NOT be signalled on addition - not anymore!
+			Assert::IsFalse(l1.isSignalled() && l1.result() == tester.getNode()->flags().get());	l1.reset();
+			Assert::IsFalse(l2.isSignalled() && l2.result() == tester.getNode()->frequency().get());	l2.reset();
+			Assert::IsFalse(l3.isSignalled() && l3.result() == tester.getNode()->phase().get());	l3.reset();
+			Assert::IsFalse(l4.isSignalled() && l4.result() == tester.getNode()->startTime().get()); l4.reset();
+			Assert::IsFalse(l5.isSignalled() && l5.result() == tester.getNode()->stopTime().get()); l5.reset();
 
 			//Set one property at a time. Only the right listener should be signalled.
 			tester.getNode()->flags().set(I(m_engine));

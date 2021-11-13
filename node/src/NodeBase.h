@@ -51,8 +51,7 @@ namespace node
 		DOWN
 	};
 
-	class NodeBase :
-		public gui::Window, public IObservable<ISet<nif::NiTimeController>>
+	class NodeBase : public gui::Window
 	{
 	public:
 		class failed_construction final :
@@ -98,9 +97,6 @@ namespace node
 		void removeController(nif::NiTimeController* obj);
 		const std::vector<std::shared_ptr<nif::NiTimeController>>& getControllers() const { return m_controllers; }
 
-		virtual void addListener(SetListener<nif::NiTimeController>& l) override { m_obsImpl.addListener(l); }
-		virtual void removeListener(SetListener<nif::NiTimeController>& l) override { m_obsImpl.removeListener(l); }
-
 	protected:
 		//quick workaround to avoid relying on our destructor for safe disconnection
 		void disconnect();
@@ -132,7 +128,6 @@ namespace node
 		RightController m_rightCtlr;
 		std::vector<std::shared_ptr<nif::NiObject>> m_objects;
 		std::vector<std::shared_ptr<nif::NiTimeController>> m_controllers;
-		ObservableBase<ISet<nif::NiTimeController>> m_obsImpl;
 		std::map<std::string, std::unique_ptr<Field>> m_fields;
 	};
 

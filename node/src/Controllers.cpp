@@ -50,11 +50,11 @@ private:
 	public:
 		Controller(FloatController& node) : m_node{ node } {}
 
-		virtual IProperty<unsigned short>& flags() override { return m_node.flags(); }
-		virtual IProperty<float>& frequency() override { return m_node.frequency(); }
-		virtual IProperty<float>& phase() override { return m_node.phase(); }
-		virtual IProperty<float>& startTime() override { return m_node.startTime(); }
-		virtual IProperty<float>& stopTime() override { return m_node.stopTime(); }
+		virtual IObservable<IProperty<unsigned short>>& flags() override { return m_node.flags(); }
+		virtual IObservable<IProperty<float>>& frequency() override { return m_node.frequency(); }
+		virtual IObservable<IProperty<float>>& phase() override { return m_node.phase(); }
+		virtual IObservable<IProperty<float>>& startTime() override { return m_node.startTime(); }
+		virtual IObservable<IProperty<float>>& stopTime() override { return m_node.stopTime(); }
 
 	private:
 		FloatController& m_node;

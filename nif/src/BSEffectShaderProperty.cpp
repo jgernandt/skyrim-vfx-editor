@@ -22,7 +22,7 @@
 nif::NiAlphaProperty::NiAlphaProperty() : NiAlphaProperty(new Niflib::NiAlphaProperty) {}
 nif::NiAlphaProperty::NiAlphaProperty(native_type* obj) :
 	NiObjectNET(obj),
-	m_flags(&getNative(), &native::NiAlphaProperty::GetFlags, &native::NiAlphaProperty::SetFlags)
+	m_flags(*this, &getNative(), &native::NiAlphaProperty::GetFlags, &native::NiAlphaProperty::SetFlags)
 {}
 
 nif::native::NiAlphaProperty& nif::NiAlphaProperty::getNative() const
@@ -35,10 +35,10 @@ nif::BSEffectShaderProperty::BSEffectShaderProperty() : BSEffectShaderProperty(n
 
 nif::BSEffectShaderProperty::BSEffectShaderProperty(native_type* obj) :
 	NiObjectNET(obj), 
-	m_emissiveCol(&getNative(), &native::BSEffectShaderProperty::GetEmissiveColor, &native::BSEffectShaderProperty::SetEmissiveColor),
-	m_emissiveMult(&getNative(), &native::BSEffectShaderProperty::GetEmissiveMultiple, &native::BSEffectShaderProperty::SetEmissiveMultiple),
-	m_sourceTex(&getNative(), &native::BSEffectShaderProperty::GetSourceTexture, &native::BSEffectShaderProperty::SetSourceTexture),
-	m_greyscaleTex(&getNative(), &native::BSEffectShaderProperty::GetGreyscaleTexture, &native::BSEffectShaderProperty::SetGreyscaleTexture),
+	m_emissiveCol(*this, &getNative(), &native::BSEffectShaderProperty::GetEmissiveColor, &native::BSEffectShaderProperty::SetEmissiveColor),
+	m_emissiveMult(*this, &getNative(), &native::BSEffectShaderProperty::GetEmissiveMultiple, &native::BSEffectShaderProperty::SetEmissiveMultiple),
+	m_sourceTex(*this, &getNative(), &native::BSEffectShaderProperty::GetSourceTexture, &native::BSEffectShaderProperty::SetSourceTexture),
+	m_greyscaleTex(*this, &getNative(), &native::BSEffectShaderProperty::GetGreyscaleTexture, &native::BSEffectShaderProperty::SetGreyscaleTexture),
 	m_shaderFlags1(*this), 
 	m_shaderFlags2(*this)
 {}

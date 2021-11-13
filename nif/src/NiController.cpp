@@ -32,7 +32,7 @@ nif::native::NiInterpolator& nif::NiInterpolator::getNative() const
 nif::NiBoolData::NiBoolData() : NiBoolData(new Niflib::NiBoolData) {}
 nif::NiBoolData::NiBoolData(native_type* obj) :
 	NiObject(obj), 
-	m_keyType(obj, &native::NiBoolData::GetKeyType, &native::NiBoolData::SetKeyType)
+	m_keyType(*this, obj, &native::NiBoolData::GetKeyType, &native::NiBoolData::SetKeyType)
 {}
 
 nif::native::NiBoolData& nif::NiBoolData::getNative() const
@@ -46,8 +46,8 @@ nif::NiBoolInterpolator::NiBoolInterpolator() : NiBoolInterpolator(new Niflib::N
 
 nif::NiBoolInterpolator::NiBoolInterpolator(native_type* obj) :
 	NiInterpolator(obj),
-	m_value(&getNative(), &native::NiBoolInterpolator::GetBoolValue, &native::NiBoolInterpolator::SetBoolValue),
-	m_data(&getNative(), &native::NiBoolInterpolator::GetData, &native::NiBoolInterpolator::SetData)
+	m_value(*this, &getNative(), &native::NiBoolInterpolator::GetBoolValue, &native::NiBoolInterpolator::SetBoolValue),
+	m_data(*this, &getNative(), &native::NiBoolInterpolator::GetData, &native::NiBoolInterpolator::SetData)
 {}
 
 nif::native::NiBoolInterpolator& nif::NiBoolInterpolator::getNative() const
@@ -60,7 +60,7 @@ nif::native::NiBoolInterpolator& nif::NiBoolInterpolator::getNative() const
 nif::NiFloatData::NiFloatData() : NiFloatData(new Niflib::NiFloatData) {}
 nif::NiFloatData::NiFloatData(native_type* obj) :
 	NiObject(obj),
-	m_keyType(obj, &native::NiFloatData::GetKeyType, &native::NiFloatData::SetKeyType),
+	m_keyType(*this, obj, &native::NiFloatData::GetKeyType, &native::NiFloatData::SetKeyType),
 	m_keys(*this)
 {}
 
@@ -70,7 +70,7 @@ nif::native::NiFloatData& nif::NiFloatData::getNative() const
 	return static_cast<native::NiFloatData&>(*m_ptr);
 }
 
-std::shared_ptr<IProperty<nif::KeyType>> nif::NiFloatData::keyType_ptr()
+std::shared_ptr<nif::Property<nif::KeyType>> nif::NiFloatData::keyType_ptr()
 {
 	return forwardPtr(&m_keyType);
 }
@@ -84,39 +84,39 @@ nif::NiFloatData::IplnData::IplnData(NiFloatData& super) :
 	m_keys(super), m_tans(super), m_tbcs(super), m_super{ super }
 {}
 
-IVectorProperty<nif::Key<float>>& nif::NiFloatData::IplnData::keys()
+nif::VectorProperty<nif::Key<float>>& nif::NiFloatData::IplnData::keys()
 {
 	return m_keys;
 }
 
-IVectorProperty<nif::Tangent<float>>& nif::NiFloatData::IplnData::tangents()
+nif::VectorProperty<nif::Tangent<float>>& nif::NiFloatData::IplnData::tangents()
 {
 	return m_tans;
 }
 
-IVectorProperty<nif::TBC>& nif::NiFloatData::IplnData::tbc()
+nif::VectorProperty<nif::TBC>& nif::NiFloatData::IplnData::tbc()
 {
 	return m_tbcs;
 }
 
-std::shared_ptr<IVectorProperty<nif::Key<float>>> nif::NiFloatData::IplnData::keys_ptr()
+std::shared_ptr<nif::VectorProperty<nif::Key<float>>> nif::NiFloatData::IplnData::keys_ptr()
 {
 	return m_super.forwardPtr(&m_keys);
 }
 
-std::shared_ptr<IVectorProperty<nif::Tangent<float>>> nif::NiFloatData::IplnData::tangents_ptr()
+std::shared_ptr<nif::VectorProperty<nif::Tangent<float>>> nif::NiFloatData::IplnData::tangents_ptr()
 {
 	return m_super.forwardPtr(&m_tans);
 }
 
-std::shared_ptr<IVectorProperty<nif::TBC>> nif::NiFloatData::IplnData::tbc_ptr()
+std::shared_ptr<nif::VectorProperty<nif::TBC>> nif::NiFloatData::IplnData::tbc_ptr()
 {
 	return m_super.forwardPtr(&m_tbcs);
 }
 
 std::vector<nif::Key<float>> nif::NiFloatData::IplnData::Keys::get() const
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	std::vector<Key<float>> result;
 	result.reserve(keys.size());
 	for (auto&& key : keys)
@@ -127,7 +127,7 @@ std::vector<nif::Key<float>> nif::NiFloatData::IplnData::Keys::get() const
 
 void nif::NiFloatData::IplnData::Keys::set(const std::vector<Key<float>>& keys)
 {
-	auto&& dest = m_super.getNative().GetKeysRef();
+	auto&& dest = nativePtr()->GetKeysRef();
 
 	//first erase excess
 	for (size_t i = dest.size(); i > keys.size(); i--)
@@ -153,7 +153,7 @@ void nif::NiFloatData::IplnData::Keys::set(const std::vector<Key<float>>& keys)
 
 nif::Key<float> nif::NiFloatData::IplnData::Keys::get(int i) const
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
 
 	return { keys[i].time, keys[i].data };
@@ -161,7 +161,7 @@ nif::Key<float> nif::NiFloatData::IplnData::Keys::get(int i) const
 
 void nif::NiFloatData::IplnData::Keys::set(int i, const Key<float>& key)
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
 
 	if (key.key != keys[i].time || key.value != keys[i].data) {
@@ -173,7 +173,7 @@ void nif::NiFloatData::IplnData::Keys::set(int i, const Key<float>& key)
 
 int nif::NiFloatData::IplnData::Keys::insert(int i, const Key<float>& key)
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0);
 
 	std::vector<Niflib::Key<float>>::iterator it;
@@ -186,28 +186,28 @@ int nif::NiFloatData::IplnData::Keys::insert(int i, const Key<float>& key)
 
 	keys.insert(it, Niflib::Key<float>{key.key, key.value, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
 	notifyInsert(i);
-	m_super.m_keys.m_tans.notifyInsert(i);
-	m_super.m_keys.m_tbcs.notifyInsert(i);
+	block().m_keys.m_tans.notifyInsert(i);
+	block().m_keys.m_tbcs.notifyInsert(i);
 
 	return i;
 }
 
 int nif::NiFloatData::IplnData::Keys::erase(int i)
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
 
 	keys.erase(keys.begin() + i);
 	notifyErase(i);
-	m_super.m_keys.m_tans.notifyErase(i);
-	m_super.m_keys.m_tbcs.notifyErase(i);
+	block().m_keys.m_tans.notifyErase(i);
+	block().m_keys.m_tbcs.notifyErase(i);
 
 	return i;
 }
 
 std::vector<nif::Tangent<float>> nif::NiFloatData::IplnData::Tangents::get() const
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	std::vector<Tangent<float>> result;
 	result.reserve(keys.size());
 	for (auto&& key : keys)
@@ -218,7 +218,7 @@ std::vector<nif::Tangent<float>> nif::NiFloatData::IplnData::Tangents::get() con
 
 void nif::NiFloatData::IplnData::Tangents::set(const std::vector<Tangent<float>>& keys)
 {
-	auto&& dest = m_super.getNative().GetKeysRef();
+	auto&& dest = nativePtr()->GetKeysRef();
 
 	//first erase excess
 	for (size_t i = dest.size(); i > keys.size(); i--)
@@ -244,7 +244,7 @@ void nif::NiFloatData::IplnData::Tangents::set(const std::vector<Tangent<float>>
 
 nif::Tangent<float> nif::NiFloatData::IplnData::Tangents::get(int i) const
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
 
 	return { keys[i].forward_tangent, keys[i].backward_tangent };
@@ -252,7 +252,7 @@ nif::Tangent<float> nif::NiFloatData::IplnData::Tangents::get(int i) const
 
 void nif::NiFloatData::IplnData::Tangents::set(int i, const Tangent<float>& tan)
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
 
 	if (tan.forward != keys[i].forward_tangent || tan.backward != keys[i].backward_tangent) {
@@ -264,7 +264,7 @@ void nif::NiFloatData::IplnData::Tangents::set(int i, const Tangent<float>& tan)
 
 int nif::NiFloatData::IplnData::Tangents::insert(int i, const Tangent<float>& tan)
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0);
 
 	std::vector<Niflib::Key<float>>::iterator it;
@@ -277,28 +277,28 @@ int nif::NiFloatData::IplnData::Tangents::insert(int i, const Tangent<float>& ta
 
 	keys.insert(it, Niflib::Key<float>{0.0f, 0.0f, tan.forward, tan.backward, 0.0f, 0.0f, 0.0f });
 	notifyInsert(i);
-	m_super.m_keys.m_keys.notifyInsert(i);
-	m_super.m_keys.m_tbcs.notifyInsert(i);
+	block().m_keys.m_keys.notifyInsert(i);
+	block().m_keys.m_tbcs.notifyInsert(i);
 
 	return i;
 }
 
 int nif::NiFloatData::IplnData::Tangents::erase(int i)
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
 
 	keys.erase(keys.begin() + i);
 	notifyErase(i);
-	m_super.m_keys.m_keys.notifyErase(i);
-	m_super.m_keys.m_tbcs.notifyErase(i);
+	block().m_keys.m_keys.notifyErase(i);
+	block().m_keys.m_tbcs.notifyErase(i);
 
 	return i;
 }
 
 std::vector<nif::TBC> nif::NiFloatData::IplnData::TBCs::get() const
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	std::vector<TBC> result;
 	result.reserve(keys.size());
 	for (auto&& key : keys)
@@ -309,7 +309,7 @@ std::vector<nif::TBC> nif::NiFloatData::IplnData::TBCs::get() const
 
 void nif::NiFloatData::IplnData::TBCs::set(const std::vector<TBC>& keys)
 {
-	auto&& dest = m_super.getNative().GetKeysRef();
+	auto&& dest = nativePtr()->GetKeysRef();
 
 	//first erase excess
 	for (size_t i = dest.size(); i > keys.size(); i--)
@@ -339,7 +339,7 @@ void nif::NiFloatData::IplnData::TBCs::set(const std::vector<TBC>& keys)
 
 nif::TBC nif::NiFloatData::IplnData::TBCs::get(int i) const
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
 
 	return { keys[i].tension, keys[i].bias, keys[i].continuity };
@@ -347,7 +347,7 @@ nif::TBC nif::NiFloatData::IplnData::TBCs::get(int i) const
 
 void nif::NiFloatData::IplnData::TBCs::set(int i, const TBC& tbc)
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
 
 	if (tbc.tension != keys[i].tension || tbc.bias != keys[i].bias || tbc.continuity != keys[i].continuity) {
@@ -360,7 +360,7 @@ void nif::NiFloatData::IplnData::TBCs::set(int i, const TBC& tbc)
 
 int nif::NiFloatData::IplnData::TBCs::insert(int i, const TBC& tbc)
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0);
 
 	std::vector<Niflib::Key<float>>::iterator it;
@@ -373,21 +373,21 @@ int nif::NiFloatData::IplnData::TBCs::insert(int i, const TBC& tbc)
 
 	keys.insert(it, Niflib::Key<float>{0.0f, 0.0f, 0.0f, 0.0f, tbc.tension, tbc.bias, tbc.continuity });
 	notifyInsert(i);
-	m_super.m_keys.m_keys.notifyInsert(i);
-	m_super.m_keys.m_tans.notifyInsert(i);
+	block().m_keys.m_keys.notifyInsert(i);
+	block().m_keys.m_tans.notifyInsert(i);
 
 	return i;
 }
 
 int nif::NiFloatData::IplnData::TBCs::erase(int i)
 {
-	auto&& keys = m_super.getNative().GetKeysRef();
+	auto&& keys = nativePtr()->GetKeysRef();
 	assert(i >= 0 && static_cast<size_t>(i) < keys.size());
 
 	keys.erase(keys.begin() + i);
 	notifyErase(i);
-	m_super.m_keys.m_keys.notifyErase(i);
-	m_super.m_keys.m_tans.notifyErase(i);
+	block().m_keys.m_keys.notifyErase(i);
+	block().m_keys.m_tans.notifyErase(i);
 
 	return i;
 }
@@ -397,8 +397,8 @@ nif::NiFloatInterpolator::NiFloatInterpolator() : NiFloatInterpolator(new Niflib
 
 nif::NiFloatInterpolator::NiFloatInterpolator(native_type* obj) :
 	NiInterpolator(obj),
-	m_value(&getNative(), &native::NiFloatInterpolator::GetFloatValue, &native::NiFloatInterpolator::SetFloatValue),
-	m_data(&getNative(), &native::NiFloatInterpolator::GetData, &native::NiFloatInterpolator::SetData)
+	m_value(*this, &getNative(), &native::NiFloatInterpolator::GetFloatValue, &native::NiFloatInterpolator::SetFloatValue),
+	m_data(*this, &getNative(), &native::NiFloatInterpolator::GetData, &native::NiFloatInterpolator::SetData)
 {
 }
 
@@ -431,11 +431,11 @@ nif::native::NiBlendFloatInterpolator& nif::NiBlendFloatInterpolator::getNative(
 
 nif::NiTimeController::NiTimeController(native_type* obj) :
 	NiObject(obj),
-	m_flags(&getNative(), &native::NiTimeController::GetFlags, &native::NiTimeController::SetFlags),
-	m_frequency(&getNative(), &native::NiTimeController::GetFrequency, &native::NiTimeController::SetFrequency),
-	m_phase(&getNative(), &native::NiTimeController::GetPhase, &native::NiTimeController::SetPhase),
-	m_startTime(&getNative(), &native::NiTimeController::GetStartTime, &native::NiTimeController::SetStartTime),
-	m_stopTime(&getNative(), &native::NiTimeController::GetStopTime, &native::NiTimeController::SetStopTime)
+	m_flags(*this, &getNative(), &native::NiTimeController::GetFlags, &native::NiTimeController::SetFlags),
+	m_frequency(*this, &getNative(), &native::NiTimeController::GetFrequency, &native::NiTimeController::SetFrequency),
+	m_phase(*this, &getNative(), &native::NiTimeController::GetPhase, &native::NiTimeController::SetPhase),
+	m_startTime(*this, &getNative(), &native::NiTimeController::GetStartTime, &native::NiTimeController::SetStartTime),
+	m_stopTime(*this, &getNative(), &native::NiTimeController::GetStopTime, &native::NiTimeController::SetStopTime)
 {}
 
 nif::native::NiTimeController& nif::NiTimeController::getNative() const
@@ -447,7 +447,7 @@ nif::native::NiTimeController& nif::NiTimeController::getNative() const
 
 nif::NiSingleInterpController::NiSingleInterpController(native_type* obj) :
 	NiTimeController(obj),
-	m_iplr(&getNative(), &native::NiSingleInterpController::GetInterpolator, &native::NiSingleInterpController::SetInterpolator)
+	m_iplr(*this, &getNative(), &native::NiSingleInterpController::GetInterpolator, &native::NiSingleInterpController::SetInterpolator)
 {
 }
 

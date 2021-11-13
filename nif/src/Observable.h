@@ -28,8 +28,15 @@ public:
 	virtual void call(const T&) = 0;
 };
 
+/*class Unsubscriber
+{
+public:
+	virtual ~Unsubscriber() = default;
+	virtual void unsub() = 0;
+};*/
+
 template<typename T>
-class IObservable
+class IObservable : public T
 {
 public:
 	virtual ~IObservable() = default;
@@ -37,11 +44,28 @@ public:
 	virtual void addListener(IListener<T>&) = 0;
 	virtual void removeListener(IListener<T>&) = 0;
 
+	//Postpone this change. It may or may not be a good idea.
+	//[[nodiscard]] virtual std::unique_ptr<Unsubscriber> addListener(IListener<T>&) = 0;
+
 };
 
 template<typename T>
-class ObservableBase final : public IObservable<T>
+class ObservableBase : public IObservable<T>
 {
+private:
+	/*class BaseUnsubscriber final : public Unsubscriber
+	{
+	public:
+		BaseUnsubscriber(ObservableBase<T>& target, IListener<T>& lsnr) :
+			m_target{ target }, m_lsnr{ lsnr } {}
+		~BaseUnsubscriber() { unsub(); }
+
+		virtual void unsub() override { m_target.removeListener(m_lsnr); }
+
+	private:
+		ObservableBase<T>& m_target;
+		IListener<T>& m_lsnr;
+	};*/
 public:
 	virtual ~ObservableBase() = default;
 
@@ -50,15 +74,35 @@ public:
 		if (auto it = std::find(m_listeners.begin(), m_listeners.end(), &l); it == m_listeners.end())
 			m_listeners.push_back(&l);
 	}
-
 	virtual void removeListener(IListener<T>& l) final override
 	{
 		if (auto it = std::find(m_listeners.begin(), m_listeners.end(), &l); it != m_listeners.end())
 			m_listeners.erase(it);
 	}
 
+protected:
 	const std::vector<IListener<T>*>& getListeners() const { return m_listeners; }
+
+	/* 
+public:
+	[[nodiscard]] virtual std::unique_ptr<Unsubscriber> addListener(IListener<T>& l) final override
+	{
+		if (auto it = std::find(m_listeners.begin(), m_listeners.end(), &l); it == m_listeners.end()) {
+			m_listeners.push_back(&l);
+			return std::make_unique<BaseUnsubscriber>(*this, l);
+		}
+		else
+			return std::unique_ptr<Unsubscriber>();
+	}
+
+private:
+	void removeListener(IListener<T>& l)
+	{
+		if (auto it = std::find(m_listeners.begin(), m_listeners.end(), &l); it != m_listeners.end())
+			m_listeners.erase(it);
+	}*/
 
 private:
 	std::vector<IListener<T>*> m_listeners;
 };
+

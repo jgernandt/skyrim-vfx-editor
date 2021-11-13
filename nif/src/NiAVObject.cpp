@@ -43,38 +43,38 @@ std::shared_ptr<nif::Transformable> nif::NiAVObject::transform_ptr()
 
 nif::NiAVObject::AVObjectTransform::AVObjectTransform(NiAVObject& super) :
 	m_super{ super },
-	m_T(&super.getNative(), &native::NiAVObject::GetLocalTranslation, &native::NiAVObject::SetLocalTranslation),
-	m_R(&super.getNative(), &native::NiAVObject::GetLocalRotation, &native::NiAVObject::SetLocalRotation),
-	m_S(&super.getNative(), &native::NiAVObject::GetLocalScale, &native::NiAVObject::SetLocalScale)
+	m_T(m_super, &super.getNative(), &native::NiAVObject::GetLocalTranslation, &native::NiAVObject::SetLocalTranslation),
+	m_R(m_super, &super.getNative(), &native::NiAVObject::GetLocalRotation, &native::NiAVObject::SetLocalRotation),
+	m_S(m_super, &super.getNative(), &native::NiAVObject::GetLocalScale, &native::NiAVObject::SetLocalScale)
 {
 }
 
-IProperty<nif::translation_t>& nif::NiAVObject::AVObjectTransform::translation()
+nif::Property<nif::translation_t>& nif::NiAVObject::AVObjectTransform::translation()
 {
 	return m_T;
 }
 
-IProperty<nif::rotation_t>& nif::NiAVObject::AVObjectTransform::rotation()
+nif::Property<nif::rotation_t>& nif::NiAVObject::AVObjectTransform::rotation()
 {
 	return m_R;
 }
 
-IProperty<nif::scale_t>& nif::NiAVObject::AVObjectTransform::scale()
+nif::Property<nif::scale_t>& nif::NiAVObject::AVObjectTransform::scale()
 {
 	return m_S;
 }
 
-std::shared_ptr<IProperty<nif::translation_t>> nif::NiAVObject::AVObjectTransform::translation_ptr()
+std::shared_ptr<nif::Property<nif::translation_t>> nif::NiAVObject::AVObjectTransform::translation_ptr()
 {
 	return m_super.forwardPtr(&m_T);
 }
 
-std::shared_ptr<IProperty<nif::rotation_t>> nif::NiAVObject::AVObjectTransform::rotation_ptr()
+std::shared_ptr<nif::Property<nif::rotation_t>> nif::NiAVObject::AVObjectTransform::rotation_ptr()
 {
 	return m_super.forwardPtr(&m_R);
 }
 
-std::shared_ptr<IProperty<nif::scale_t>> nif::NiAVObject::AVObjectTransform::scale_ptr()
+std::shared_ptr<nif::Property<nif::scale_t>> nif::NiAVObject::AVObjectTransform::scale_ptr()
 {
 	return m_super.forwardPtr(&m_S);
 }

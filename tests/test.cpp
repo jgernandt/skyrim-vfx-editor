@@ -11,7 +11,7 @@ namespace test
 		std::mt19937 m_engine;
 
 		template<size_t N>
-		struct PropertyTester : PropertyBase<std::array<float, N>>
+		struct PropertyTester : ObservableBase<IProperty<std::array<float, N>>>
 		{
 			virtual std::array<float, N> get() const override
 			{
@@ -24,7 +24,8 @@ namespace test
 					//perturb the data
 					for (size_t i = 0; i < N; i++)
 						data[i] += data[i] * delta(engine) * (sign(engine) ? 1.0f : -1.0f);
-					this->notify(data);
+					for (auto&& l : getListeners())
+						l->onSet(data);
 				}
 			}
 
@@ -42,8 +43,8 @@ namespace test
 		TEST_METHOD(PropertyTest)
 		{
 			PropertyTester<3> tester;
-			::PropertyTest<std::array<float, 3>>(static_cast<IProperty<std::array<float, 3>>&>(tester), m_engine, tester.upper, true, 100);
-			::PropertyTest<std::array<float, 3>>(static_cast<IProperty<std::array<float, 3>>&>(tester), m_engine, tester.lower, false, 100);
+			::PropertyTest<std::array<float, 3>>(tester, m_engine, tester.upper, true, 100);
+			::PropertyTest<std::array<float, 3>>(tester, m_engine, tester.lower, false, 100);
 		}
 	};
 }

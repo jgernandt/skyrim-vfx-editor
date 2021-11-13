@@ -148,7 +148,7 @@ public:
 	}
 
 private:
-	struct FlagsProperty : IProperty<std::array<bool, 2>>
+	struct FlagsProperty : IObservable<IProperty<std::array<bool, 2>>>
 	{
 		FlagsProperty(nif::BSEffectShaderProperty& obj) : m_obj{ obj } {}
 		virtual std::array<bool, 2> get() const override
@@ -161,8 +161,8 @@ private:
 			m_obj.shaderFlags1().set(nif::ShaderFlag1::PALETTE_COLOUR, val[0]);
 			m_obj.shaderFlags1().set(nif::ShaderFlag1::PALETTE_ALPHA, val[1]);
 		}
-		virtual void addListener(PropertyListener<std::array<bool, 2>>& l) override {}
-		virtual void removeListener(PropertyListener<std::array<bool, 2>>& l) override {}
+		virtual void addListener(nif::PropertyListener<std::array<bool, 2>>& l) override {}
+		virtual void removeListener(nif::PropertyListener<std::array<bool, 2>>& l) override {}
 
 		nif::BSEffectShaderProperty& m_obj;
 

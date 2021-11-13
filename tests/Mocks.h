@@ -2,76 +2,60 @@
 #include "node_concepts.h"
 
 template<typename T>
-class MockAssignable final : public IAssignable<T>
+class MockAssignable final : public ObservableBase<IAssignable<T>>
 {
 public:
 	virtual void assign(T* t) override 
 	{ 
 		m_assigned = t;
-		for (AssignableListener<T>* l : m_obsImpl.getListeners()) {
+		for (auto l : this->getListeners()) {
 			assert(l);
 			l->onAssign(t);
 		}
 	}
 	virtual bool isAssigned(T* t) const override { return t == m_assigned; }
 
-	virtual void addListener(AssignableListener<T>& l) final override { m_obsImpl.addListener(l); }
-	virtual void removeListener(AssignableListener<T>& l) final override { m_obsImpl.removeListener(l); }
-
 	T* assigned() const { return m_assigned; }
 
 private:
 	T* m_assigned{ nullptr };
-	ObservableBase<IAssignable<T>> m_obsImpl;
 };
 
 template<typename T>
-class MockProperty final : public IProperty<T>
+class MockProperty final : public ObservableBase<IProperty<T>>
 {
 public:
 	virtual T get() const override { return m_value; }
 	virtual void set(const T& t) override 
 	{ 
 		m_value = t;
-		for (PropertyListener<T>* l : m_obsImpl.getListeners()) {
+		for (auto l : this->getListeners()) {
 			assert(l);
 			l->onSet(t);
 		}
 	}
 
-	virtual void addListener(PropertyListener<T>& l) final override
-	{
-		m_obsImpl.addListener(l);
-		l.onSet(this->get());
-	}
-	virtual void removeListener(PropertyListener<T>& l) final override { m_obsImpl.removeListener(l); }
-
 private:
 	T m_value{ T() };
-	ObservableBase<IProperty<T>> m_obsImpl;
 };
 
 //This is only meant for class types
 template<typename T>
-class MockSet final : public ISet<T>
+class MockSet final : public ObservableBase<ISet<T>>
 {
 public:
 	virtual void add(const T& t) override { m_set.insert(&t); }
 	virtual void remove(const T& t) override { m_set.erase(&t); }
 	virtual bool has(const T& t) const override { return m_set.find(&t) != m_set.end(); }
 
-	virtual void addListener(SetListener<T>& l) final override { m_obsImpl.addListener(l); }
-	virtual void removeListener(SetListener<T>& l) final override { m_obsImpl.removeListener(l); }
-
 	virtual size_t size() const override { return m_set.size(); }
 
 private:
 	std::set<const T*> m_set;
-	ObservableBase<ISet<T>> m_obsImpl;
 };
 
 template<typename T>
-class MockSequence final : public ISequence<T>
+class MockSequence final : public ObservableBase<ISequence<T>>
 {
 public:
 	virtual size_t insert(size_t pos, const T& t) override
@@ -82,9 +66,9 @@ public:
 		else
 			m_seq.push_back(&t);
 
-		for (SequenceListener<T>* l : m_obsImpl.getListeners()) {
+		for (auto l : this->getListeners()) {
 			assert(l);
-			l->onInsert(*this, pos);
+			l->onInsert(pos);
 		}
 
 		return result;
@@ -96,9 +80,9 @@ public:
 		m_seq.erase(m_seq.begin() + pos);
 		size_t result = pos < m_seq.size() ? pos : -1;
 
-		for (SequenceListener<T>* l : m_obsImpl.getListeners()) {
+		for (auto l : this->getListeners()) {
 			assert(l);
-			l->onErase(*this, pos);
+			l->onErase(pos);
 		}
 
 		return result;
@@ -114,14 +98,10 @@ public:
 		return result;
 	}
 
-	virtual void addListener(SequenceListener<T>& l) final override { m_obsImpl.addListener(l); }
-	virtual void removeListener(SequenceListener<T>& l) final override { m_obsImpl.removeListener(l); }
-
 	virtual size_t size() const override { return m_seq.size(); }
 
 private:
 	std::vector<const T*> m_seq;
-	ObservableBase<ISequence<T>> m_obsImpl;
 };
 
 template<typename T>
@@ -144,7 +124,7 @@ private:
 };
 
 template<typename T>
-class MockPropertyListener final : public PropertyListener<T>
+class MockPropertyListener final : public nif::PropertyListener<T>
 {
 public:
 	virtual void onSet(const T& t) override
@@ -162,7 +142,7 @@ private:
 	bool m_signalled{ false };
 };
 
-template<typename T>
+/*template<typename T>
 class MockObservable final : public IObservable<T>
 {
 public:
@@ -182,25 +162,21 @@ public:
 
 private:
 	std::vector<IListener<T>*> m_listeners;
-};
+};*/
 
 #include "Modifier.h"
-class MockRequirementsSet : public ISet<node::Modifier::Requirement>
+class MockRequirementsSet : public ObservableBase<ISet<node::Modifier::Requirement>>
 {
 public:
 	virtual void add(const node::Modifier::Requirement& t) override { m_set.insert(t); }
 	virtual void remove(const node::Modifier::Requirement& t) override { m_set.erase(t); }
 	virtual bool has(const node::Modifier::Requirement& t) const override { return m_set.find(t) != m_set.end(); }
 
-	virtual void addListener(SetListener<node::Modifier::Requirement>& l) final override { m_obsImpl.addListener(l); }
-	virtual void removeListener(SetListener<node::Modifier::Requirement>& l) final override { m_obsImpl.removeListener(l); }
-
 	size_t count(node::Modifier::Requirement req) const { return m_set.count(req); }
 	virtual size_t size() const override { return m_set.size(); }
 
 private:
 	std::multiset<node::Modifier::Requirement> m_set;
-	ObservableBase<ISet<node::Modifier::Requirement>> m_obsImpl;
 };
 struct MockModifiable : node::IModifiable
 {

@@ -39,29 +39,28 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<unsigned short>& maxCount() { return m_maxCount; }
-		IProperty<std::vector<SubtextureOffset>>& subtexOffsets() { return m_subtexOffsets; }
-		IProperty<bool>& hasColour() { return m_hasColour; }
-		IProperty<bool>& hasRotationAngles() { return m_hasRotationAngles; }
-		IProperty<bool>& hasRotationSpeeds() { return m_hasRotationSpeeds; }
+		Property<unsigned short>& maxCount() { return m_maxCount; }
+		Property<std::vector<SubtextureOffset>>& subtexOffsets() { return m_subtexOffsets; }
+		Property<bool>& hasColour() { return m_hasColour; }
+		Property<bool>& hasRotationAngles() { return m_hasRotationAngles; }
+		Property<bool>& hasRotationSpeeds() { return m_hasRotationSpeeds; }
 
 	private:
-		Property<unsigned short> m_maxCount;
+		PropertyFcn<unsigned short, NiPSysData> m_maxCount;
 
-		struct SubtexOffsets : PropertyBase<std::vector<SubtextureOffset>>
+		struct SubtexOffsets : PropertyBase<std::vector<SubtextureOffset>, NiPSysData>
 		{
-			SubtexOffsets(NiPSysData& super) : m_super{ super } {}
+			SubtexOffsets(NiPSysData& block) : 
+				PropertyBase<std::vector<SubtextureOffset>, NiPSysData>(block) {}
 
 			virtual std::vector<SubtextureOffset> get() const override;
 			virtual void set(const std::vector<SubtextureOffset>& offsets) override;
 
-			NiPSysData& m_super;
-
 		} m_subtexOffsets;
 
-		Property<bool> m_hasColour;
-		Property<bool> m_hasRotationAngles;
-		Property<bool> m_hasRotationSpeeds;
+		PropertyFcn<bool, NiPSysData> m_hasColour;
+		PropertyFcn<bool, NiPSysData> m_hasRotationAngles;
+		PropertyFcn<bool, NiPSysData> m_hasRotationSpeeds;
 	};
 
 	class NiParticleSystem : public NiAVObject
@@ -79,62 +78,59 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IAssignable<NiPSysData>& data() { return m_data; }
-
-		ISequence<NiPSysModifier>& modifiers() { return m_modifiers; }
-
-		IAssignable<BSEffectShaderProperty>& shaderProperty() { return m_shader; }
-		IAssignable<NiAlphaProperty>& alphaProperty() { return m_alpha; }
-
-		IProperty<bool>& worldSpace() { return m_worldSpace; }
+		Assignable	<NiPSysData>&				data()				{ return m_data; }
+		Sequence	<NiPSysModifier>&			modifiers()			{ return m_modifiers; }
+		Assignable	<BSEffectShaderProperty>&	shaderProperty()	{ return m_shader; }
+		Assignable	<NiAlphaProperty>&			alphaProperty()		{ return m_alpha; }
+		Property	<bool>&						worldSpace()		{ return m_worldSpace; }
 
 	private:
-		struct Data final : AssignableBase<NiPSysData>
+		struct Data final : AssignableBase<NiPSysData, NiParticleSystem>
 		{
-			Data(NiParticleSystem& super) : m_super{ super } {}
+			Data(NiParticleSystem& super) : 
+				AssignableBase<NiPSysData, NiParticleSystem>{ super } {}
 
 			virtual void assign(NiPSysData* data) override;
 			virtual bool isAssigned(NiPSysData* data) const override;
 
-			NiParticleSystem& m_super;
+		};
 
-		} m_data;
-
-		struct Modifiers final : SequenceBase<NiPSysModifier>
+		struct Modifiers final : SequenceBase<NiPSysModifier, NiParticleSystem>
 		{
-			Modifiers(NiParticleSystem& super) : m_super{ super } {}
+			Modifiers(NiParticleSystem& block) : 
+				SequenceBase<NiPSysModifier, NiParticleSystem>(block) {}
 
 			virtual size_t insert(size_t pos, const NiPSysModifier& mod) override;
 			virtual size_t erase(size_t pos) override;
 			virtual size_t find(const NiPSysModifier& mod) const override;
 			virtual size_t size() const override;
 
-			NiParticleSystem& m_super;
+		};
 
-		} m_modifiers;
-
-		struct ShaderProperty final : AssignableBase<BSEffectShaderProperty>
+		struct ShaderProperty final : AssignableBase<BSEffectShaderProperty, NiParticleSystem>
 		{
-			ShaderProperty(NiParticleSystem& super) : m_super{ super } {}
+			ShaderProperty(NiParticleSystem& block) :
+				AssignableBase<BSEffectShaderProperty, NiParticleSystem>(block) {}
 
 			virtual void assign(BSEffectShaderProperty* shader) override;
 			virtual bool isAssigned(BSEffectShaderProperty* shader) const override;
 
-			NiParticleSystem& m_super;
+		};
 
-		} m_shader;
-
-		struct AlphaProperty final : AssignableBase<NiAlphaProperty>
+		struct AlphaProperty final : AssignableBase<NiAlphaProperty, NiParticleSystem>
 		{
-			AlphaProperty(NiParticleSystem& super) : m_super{ super } {}
+			AlphaProperty(NiParticleSystem& block) :
+				AssignableBase<NiAlphaProperty, NiParticleSystem>(block) {}
 
 			virtual void assign(NiAlphaProperty* alpha) override;
 			virtual bool isAssigned(NiAlphaProperty* alpha) const override;
 
-			NiParticleSystem& m_super;
+		};
 
-		} m_alpha;
-
-		Property<bool> m_worldSpace;
+		Data m_data;
+		Modifiers m_modifiers;
+		ShaderProperty m_shader;
+		AlphaProperty m_alpha;
+		PropertyFcn<bool, NiParticleSystem> m_worldSpace;
 	};
 }

@@ -22,7 +22,7 @@
 
 nif::NiObjectNET::NiObjectNET(native_type* obj) :
 	NiObject(obj), 
-	m_name(&getNative(), &native::NiObjectNET::GetName, &native::NiObjectNET::SetName),
+	m_name(*this, &getNative(), &native::NiObjectNET::GetName, &native::NiObjectNET::SetName),
 	m_extraData(*this), m_controllers(*this)
 {
 }
@@ -36,7 +36,7 @@ nif::native::NiObjectNET& nif::NiObjectNET::getNative() const
 void nif::NiObjectNET::ExtraData::add(const NiExtraData& obj)
 {
 	if (!has(obj)) {
-		m_super.getNative().AddExtraData(&obj.getNative());
+		nativePtr()->AddExtraData(&obj.getNative());
 		notifyAdd(obj);
 	}
 }
@@ -44,14 +44,14 @@ void nif::NiObjectNET::ExtraData::add(const NiExtraData& obj)
 void nif::NiObjectNET::ExtraData::remove(const NiExtraData& obj)
 {
 	if (has(obj)) {
-		m_super.getNative().RemoveExtraData(&obj.getNative());
+		nativePtr()->RemoveExtraData(&obj.getNative());
 		notifyRemove(obj);
 	}
 }
 
 bool nif::NiObjectNET::ExtraData::has(const NiExtraData& obj) const
 {
-	for (auto&& data : m_super.getNative().GetExtraData())
+	for (auto&& data : nativePtr()->GetExtraData())
 		if (data == &obj.getNative())
 			return true;
 
@@ -60,7 +60,7 @@ bool nif::NiObjectNET::ExtraData::has(const NiExtraData& obj) const
 
 size_t nif::NiObjectNET::ExtraData::size() const
 {
-	return m_super.getNative().GetExtraData().size();
+	return nativePtr()->GetExtraData().size();
 }
 
 size_t nif::NiObjectNET::Controllers::insert(size_t pos, const NiTimeController& obj)
@@ -76,11 +76,11 @@ size_t nif::NiObjectNET::Controllers::insert(size_t pos, const NiTimeController&
 		//	last = last->GetNextController();
 		assert(!obj.getNative().GetNextController());//not necessarily an error, but let's treat it like one for now
 
-		auto ctlrs = m_super.getNative().GetControllers();
+		auto ctlrs = nativePtr()->GetControllers();
 		result = std::min(pos, ctlrs.size());
 
 		if (result == 0)
-			m_super.getNative().AddController(&obj.getNative());
+			nativePtr()->AddController(&obj.getNative());
 		else {
 			//We want to access the controller *before* our position, since it should point to us
 			size_t pos_bef = std::min(pos - 1, ctlrs.size() - 1);
@@ -91,7 +91,7 @@ size_t nif::NiObjectNET::Controllers::insert(size_t pos, const NiTimeController&
 			(*it)->SetNextController(&obj.getNative());
 		}
 
-		obj.getNative().SetTarget(&m_super.getNative());
+		obj.getNative().SetTarget(nativePtr());
 
 		notifyInsert(result);
 	}
@@ -108,11 +108,11 @@ size_t nif::NiObjectNET::Controllers::erase(size_t pos)
 	//	m_super.getNative().RemoveController(&obj.getNative());
 	//return pos;
 
-	auto ctlrs = m_super.getNative().GetControllers();
+	auto ctlrs = nativePtr()->GetControllers();
 	assert(pos < ctlrs.size());
 
 	if (pos == 0)
-		m_super.getNative().RemoveController(ctlrs.front());
+		nativePtr()->RemoveController(ctlrs.front());
 	else {
 		auto it = ctlrs.begin();
 		for (size_t i = 0; i < pos - 1; i++)
@@ -135,7 +135,7 @@ size_t nif::NiObjectNET::Controllers::erase(size_t pos)
 size_t nif::NiObjectNET::Controllers::find(const NiTimeController& obj) const
 {
 	size_t result = std::numeric_limits<size_t>::max();
-	auto ctlrs = m_super.getNative().GetControllers();
+	auto ctlrs = nativePtr()->GetControllers();
 	auto it = ctlrs.begin();
 	for (size_t i = 0; i < ctlrs.size(); i++) {
 		if (*it == &obj.getNative()) {
@@ -149,5 +149,5 @@ size_t nif::NiObjectNET::Controllers::find(const NiTimeController& obj) const
 
 size_t nif::NiObjectNET::Controllers::size() const
 {
-	return m_super.getNative().GetControllers().size();
+	return nativePtr()->GetControllers().size();
 }

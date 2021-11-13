@@ -19,9 +19,10 @@
 #pragma once
 #include <cassert>
 #include "Observable.h"
+#include "DataField.h"
 
 template<typename T>
-class ISequence : public IObservable<ISequence<T>>
+class ISequence
 {
 public:
 	virtual ~ISequence() = default;
@@ -34,45 +35,58 @@ public:
 };
 
 template<typename T>
+using OSequence = IObservable<ISequence<T>>;
+
+template<typename T>
 class IListener<ISequence<T>>
 {
 public:
 	virtual ~IListener() = default;
 
-	virtual void onInsert(const ISequence<T>&, size_t) {}
-	virtual void onErase(const ISequence<T>&, size_t) {}
+	virtual void onInsert(size_t) {}
+	virtual void onErase(size_t) {}
 };
-template<typename T>
-using SequenceListener = IListener<ISequence<T>>;
 
 namespace nif
 {
 	template<typename T>
-	class SequenceBase : public ISequence<T>
+	using Sequence = NiObject::DataField<ISequence<T>>;
+
+	template<typename T>
+	using SequenceListener = IListener<ISequence<T>>;
+
+	template<typename T, typename BlockType>
+	class SequenceBase : public Sequence<T>
 	{
 	public:
+		SequenceBase(BlockType& block) : Sequence<T>(block) {}
 		virtual ~SequenceBase() = default;
 
-		virtual void addListener(SequenceListener<T>& l) final override { m_obs.addListener(l); }
-		virtual void removeListener(SequenceListener<T>& l) final override { m_obs.removeListener(l); }
-
 	protected:
+		typename BlockType::native_type* nativePtr() const
+		{
+			assert(this->m_block);
+			return &static_cast<BlockType*>(this->m_block)->getNative();
+		}
+		typename BlockType& block() const
+		{
+			assert(this->m_block);
+			return *static_cast<BlockType*>(this->m_block);
+		}
+
 		void notifyInsert(size_t pos) const
 		{
-			for (SequenceListener<T>* l : m_obs.getListeners()) {
+			for (SequenceListener<T>* l : this->m_lsnrs) {
 				assert(l);
-				l->onInsert(*this, pos);
+				l->onInsert(pos);
 			}
 		}
 		void notifyErase(size_t pos) const
 		{
-			for (SequenceListener<T>* l : m_obs.getListeners()) {
+			for (SequenceListener<T>* l : this->m_lsnrs) {
 				assert(l);
-				l->onErase(*this, pos);
+				l->onErase(pos);
 			}
 		}
-
-	private:
-		ObservableBase<ISequence<T>> m_obs;
 	};
 }

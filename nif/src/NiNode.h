@@ -37,19 +37,17 @@ namespace nif
 
 		native_type& getNative() const;
 
-		ISet<NiAVObject>& children() { return m_children; }
+		Set<NiAVObject>& children() { return m_children; }
 
 	private:
-		struct NodeChildren : SetBase<NiAVObject>
+		struct NodeChildren : SetBase<NiAVObject, NiNode>
 		{
-			NodeChildren(NiNode& super) : m_super{ super } {}
+			NodeChildren(NiNode& block) : SetBase<NiAVObject, NiNode>(block) {}
 
 			virtual void add(const NiAVObject& obj) override;
 			virtual void remove(const NiAVObject& obj) override;
 			virtual bool has(const NiAVObject& obj) const override;
 			virtual size_t size() const override;
-
-			NiNode& m_super;
 
 		} m_children;
 	};

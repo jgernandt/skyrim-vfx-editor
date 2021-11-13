@@ -41,10 +41,10 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<std::string>& modifierName() { return m_modName; }
+		Property<std::string>& modifierName() { return m_modName; }
 
 	private:
-		Property<std::string> m_modName;
+		PropertyFcn<std::string, NiPSysModifierCtlr> m_modName;
 	};
 
 	class NiPSysModifier : public NiObject
@@ -61,23 +61,23 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<std::string>& name() { return m_name; }
-		const IProperty<std::string>& name() const { return m_name; }
+		Property			<std::string>&		name()			{ return m_name; }
+		const Property		<std::string>&		name() const	{ return m_name; }
 		
-		IProperty<unsigned int>& order() { return m_order; }
-		const IProperty<unsigned int>& order() const { return m_order; }
+		Property			<unsigned int>&		order()			{ return m_order; }
+		const Property		<unsigned int>&		order() const	{ return m_order; }
 
-		IAssignable<NiParticleSystem>& target() { return m_target; }
-		const IAssignable<NiParticleSystem>& target() const { return m_target; }
+		Assignable			<NiParticleSystem>& target()		{ return m_target; }
+		const Assignable	<NiParticleSystem>& target() const	{ return m_target; }
 
-		IProperty<bool>& active() { return m_active; }
-		const IProperty<bool>& active() const { return m_active; }
+		Property			<bool>&				active()		{ return m_active; }
+		const Property		<bool>&				active() const	{ return m_active; }
 
 	private:
-		Property<std::string> m_name;
-		Property<unsigned int> m_order;
-		Assignable<NiParticleSystem> m_target;
-		Property<bool> m_active;
+		PropertyFcn<std::string, NiPSysModifier> m_name;
+		PropertyFcn<unsigned int, NiPSysModifier> m_order;
+		AssignableFcn<NiParticleSystem, NiPSysModifier> m_target;
+		PropertyFcn<bool, NiPSysModifier> m_active;
 	};
 
 	class NiPSysUpdateCtlr : public NiTimeController
@@ -144,24 +144,24 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IAssignable<nif::NiNode>& gravityObject() { return m_gravityObj; }
-		IProperty<Floats<3>>& gravityAxis() { return m_gravityAxis; }
-		IProperty<float>& decay() { return m_decay; }
-		IProperty<float>& strength() { return m_strength; }
-		IProperty<ForceType>& forceType() { return m_forceType; }
-		IProperty<float>& turbulence() { return m_turbulence; }
-		IProperty<float>& turbulenceScale() { return m_turbulenceScale; }
-		IProperty<bool>& worldAligned() { return m_worldAligned; }
+		Assignable		<NiNode>&		gravityObject()		{ return m_gravityObj; }
+		Property		<Floats<3>>&	gravityAxis()		{ return m_gravityAxis; }
+		Property		<float>&		decay()				{ return m_decay; }
+		Property		<float>&		strength()			{ return m_strength; }
+		Property		<ForceType>&	forceType()			{ return m_forceType; }
+		Property		<float>&		turbulence()		{ return m_turbulence; }
+		Property		<float>&		turbulenceScale()	{ return m_turbulenceScale; }
+		Property		<bool>&			worldAligned()		{ return m_worldAligned; }
 
 	private:
-		Assignable<nif::NiNode> m_gravityObj;
-		Property<Floats<3>, native::float3_t> m_gravityAxis;
-		Property<float> m_decay;
-		Property<float> m_strength;
-		Property<ForceType, native::ForceType> m_forceType;
-		Property<float> m_turbulence;
-		Property<float> m_turbulenceScale; 
-		Property<bool> m_worldAligned;
+		AssignableFcn<NiNode, NiPSysGravityModifier> m_gravityObj;
+		PropertyFcn<Floats<3>, NiPSysGravityModifier, native::float3_t> m_gravityAxis;
+		PropertyFcn<float, NiPSysGravityModifier> m_decay;
+		PropertyFcn<float, NiPSysGravityModifier> m_strength;
+		PropertyFcn<ForceType, NiPSysGravityModifier, native::ForceType> m_forceType;
+		PropertyFcn<float, NiPSysGravityModifier> m_turbulence;
+		PropertyFcn<float, NiPSysGravityModifier> m_turbulenceScale;
+		PropertyFcn<bool, NiPSysGravityModifier> m_worldAligned;
 	};
 
 
@@ -184,7 +184,7 @@ namespace nif
 	//Somewhat annoying to have to do this just because we cannot inject this conversion into our current Property template.
 	//We should be able to fix that, but it only comes into play in a few places right now.
 	//Edit: This fails the get/set tests in some release builds. Can't see an obvious reason. Ignore this design for now.
-	template<typename T, typename ObjType>
+	/*template<typename T, typename ObjType>
 	class DegRadConverter final : public PropertyBase<T>
 	{
 	public:
@@ -214,7 +214,7 @@ namespace nif
 	private:
 		std::function<T()> m_get;
 		std::function<void(const T&)> m_set;
-	};
+	};*/
 
 	class NiPSysRotationModifier : public NiPSysModifier
 	{
@@ -231,51 +231,47 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<float>& speed() { return m_speed; }
-		IProperty<float>& speedVar() { return m_speedVar; }
-		IProperty<float>& angle() { return m_angle; }
-		IProperty<float>& angleVar() { return m_angleVar; }
-		IProperty<bool>& randomSign() { return m_randomSign; }
+		Property<float>& speed() { return m_speed; }
+		Property<float>& speedVar() { return m_speedVar; }
+		Property<float>& angle() { return m_angle; }
+		Property<float>& angleVar() { return m_angleVar; }
+		Property<bool>& randomSign() { return m_randomSign; }
 
 	private:
-		struct Speed : PropertyBase<float>
+		struct Speed : PropertyBase<float, NiPSysRotationModifier>
 		{
-			Speed(NiPSysRotationModifier& super) : m_super{ super } {}
+			Speed(NiPSysRotationModifier& block) : 
+				PropertyBase<float, NiPSysRotationModifier>(block) {}
 
 			virtual float get() const override;
 			virtual void set(const float& f) override;
-
-			NiPSysRotationModifier& m_super;
 
 		};
-		struct SpeedVar : PropertyBase<float>
+		struct SpeedVar : PropertyBase<float, NiPSysRotationModifier>
 		{
-			SpeedVar(NiPSysRotationModifier& super) : m_super{ super } {}
+			SpeedVar(NiPSysRotationModifier& block) : 
+				PropertyBase<float, NiPSysRotationModifier>(block) {}
 
 			virtual float get() const override;
 			virtual void set(const float& f) override;
-
-			NiPSysRotationModifier& m_super;
 
 		};
-		struct Angle : PropertyBase<float>
+		struct Angle : PropertyBase<float, NiPSysRotationModifier>
 		{
-			Angle(NiPSysRotationModifier& super) : m_super{ super } {}
+			Angle(NiPSysRotationModifier& block) : 
+				PropertyBase<float, NiPSysRotationModifier>(block) {}
 
 			virtual float get() const override;
 			virtual void set(const float& f) override;
-
-			NiPSysRotationModifier& m_super;
 
 		};
-		struct AngleVar : PropertyBase<float>
+		struct AngleVar : PropertyBase<float, NiPSysRotationModifier>
 		{
-			AngleVar(NiPSysRotationModifier& super) : m_super{ super } {}
+			AngleVar(NiPSysRotationModifier& block) : 
+				PropertyBase<float, NiPSysRotationModifier>(block) {}
 
 			virtual float get() const override;
 			virtual void set(const float& f) override;
-
-			NiPSysRotationModifier& m_super;
 
 		};
 
@@ -288,7 +284,7 @@ namespace nif
 		//DegRadConverter<float, native::NiPSysRotationModifier> m_speedVar;
 		//DegRadConverter<float, native::NiPSysRotationModifier> m_angle;
 		//DegRadConverter<float, native::NiPSysRotationModifier> m_angleVar;
-		Property<bool> m_randomSign;
+		PropertyFcn<bool, NiPSysRotationModifier> m_randomSign;
 	};
 
 	class BSPSysScaleModifier : public NiPSysModifier
@@ -306,10 +302,10 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<std::vector<float>>& scales() { return m_scales; }
+		Property<std::vector<float>>& scales() { return m_scales; }
 
 	private:
-		Property<std::vector<float>> m_scales;
+		PropertyFcn<std::vector<float>, BSPSysScaleModifier> m_scales;
 	};
 
 	class BSPSysSimpleColorModifier : public NiPSysModifier
@@ -327,34 +323,42 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<float>& alpha2Begin() { return m_fadeInEnd; }
-		const IProperty<float>& alpha2Begin() const { return m_fadeInEnd; }
-		IProperty<float>& alpha2End() { return m_fadeOutBegin; }
-		const IProperty<float>& alpha2End() const { return m_fadeOutBegin; }
-		IProperty<float>& rgb1End() { return m_col1End; }
-		const IProperty<float>& rgb1End() const { return m_col1End; }
-		IProperty<float>& rgb2Begin() { return m_col2Begin; }
-		const IProperty<float>& rgb2Begin() const { return m_col2Begin; }
-		IProperty<float>& rgb2End() { return m_col2End; }
-		const IProperty<float>& rgb2End() const { return m_col2End; }
-		IProperty<float>& rgb3Begin() { return m_col3Begin; }
-		const IProperty<float>& rgb3Begin() const { return m_col3Begin; }
-		IProperty<nif::ColRGBA>& col1() { return m_col1; }
-		const IProperty<nif::ColRGBA>& col1() const { return m_col1; }
-		IProperty<nif::ColRGBA>& col2() { return m_col2; }
-		const IProperty<nif::ColRGBA>& col2() const { return m_col2; }
-		IProperty<nif::ColRGBA>& col3() { return m_col3; }
-		const IProperty<nif::ColRGBA>& col3() const { return m_col3; }
+		Property<float>& alpha2Begin() { return m_fadeInEnd; }
+		const Property<float>& alpha2Begin() const { return m_fadeInEnd; }
+
+		Property<float>& alpha2End() { return m_fadeOutBegin; }
+		const Property<float>& alpha2End() const { return m_fadeOutBegin; }
+
+		Property<float>& rgb1End() { return m_col1End; }
+		const Property<float>& rgb1End() const { return m_col1End; }
+
+		Property<float>& rgb2Begin() { return m_col2Begin; }
+		const Property<float>& rgb2Begin() const { return m_col2Begin; }
+
+		Property<float>& rgb2End() { return m_col2End; }
+		const Property<float>& rgb2End() const { return m_col2End; }
+
+		Property<float>& rgb3Begin() { return m_col3Begin; }
+		const Property<float>& rgb3Begin() const { return m_col3Begin; }
+
+		Property<nif::ColRGBA>& col1() { return m_col1; }
+		const Property<nif::ColRGBA>& col1() const { return m_col1; }
+
+		Property<nif::ColRGBA>& col2() { return m_col2; }
+		const Property<nif::ColRGBA>& col2() const { return m_col2; }
+
+		Property<nif::ColRGBA>& col3() { return m_col3; }
+		const Property<nif::ColRGBA>& col3() const { return m_col3; }
 
 	private:
-		Property<float> m_fadeInEnd;
-		Property<float> m_fadeOutBegin;
-		Property<float> m_col1End;
-		Property<float> m_col2Begin;
-		Property<float> m_col2End;
-		Property<float> m_col3Begin;
-		Property<nif::ColRGBA> m_col1;
-		Property<nif::ColRGBA> m_col2;
-		Property<nif::ColRGBA> m_col3;
+		PropertyFcn<float, BSPSysSimpleColorModifier> m_fadeInEnd;
+		PropertyFcn<float, BSPSysSimpleColorModifier> m_fadeOutBegin;
+		PropertyFcn<float, BSPSysSimpleColorModifier> m_col1End;
+		PropertyFcn<float, BSPSysSimpleColorModifier> m_col2Begin;
+		PropertyFcn<float, BSPSysSimpleColorModifier> m_col2End;
+		PropertyFcn<float, BSPSysSimpleColorModifier> m_col3Begin;
+		PropertyFcn<nif::ColRGBA, BSPSysSimpleColorModifier> m_col1;
+		PropertyFcn<nif::ColRGBA, BSPSysSimpleColorModifier> m_col2;
+		PropertyFcn<nif::ColRGBA, BSPSysSimpleColorModifier> m_col3;
 	};
 }

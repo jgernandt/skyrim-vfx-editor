@@ -40,6 +40,7 @@ void node::UpdateRequirement::activate()
 	size_t order = m_mods.reserve(-1, m_mod);
 	m_mods.addListener(m_modLsnr);
 	m_mod.order().addListener(m_ordLsnr);
+	m_ordLsnr.onSet(m_mod.order().get());
 	m_mod.order().set(order);
 
 	m_ctlrs.reserve(-1, m_ctlr);
@@ -78,6 +79,7 @@ void node::MovementRequirement::activate()
 	size_t order = m_mods.reserve(-1, m_mod);
 	m_mods.addListener(m_modLsnr);
 	m_mod.order().addListener(m_ordLsnr);
+	m_ordLsnr.onSet(m_mod.order().get());
 	m_mod.order().set(order);
 }
 
@@ -108,6 +110,7 @@ void node::LifetimeRequirement::activate()
 	size_t order = m_mods.reserve(0, m_mod);
 	m_mods.addListener(m_modLsnr);
 	m_mod.order().addListener(m_ordLsnr);
+	m_ordLsnr.onSet(m_mod.order().get());
 	m_mod.order().set(order);
 
 	m_mod.name().set("Modifier:" + std::to_string(order));

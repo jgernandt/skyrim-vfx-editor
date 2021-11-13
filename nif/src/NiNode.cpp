@@ -57,7 +57,7 @@ void nif::NiNode::NodeChildren::add(const NiAVObject& obj)
 {
 	if (!has(obj)) {
 		assert(!obj.getNative().GetParent());//Should be cleared before calling us
-		m_super.getNative().AddChild(&obj.getNative());
+		nativePtr()->AddChild(&obj.getNative());
 		notifyAdd(obj);
 	}
 }
@@ -65,14 +65,14 @@ void nif::NiNode::NodeChildren::add(const NiAVObject& obj)
 void nif::NiNode::NodeChildren::remove(const NiAVObject& obj)
 {
 	if (has(obj)) {
-		m_super.getNative().RemoveChild(&obj.getNative());
+		nativePtr()->RemoveChild(&obj.getNative());
 		notifyRemove(obj);
 	}
 }
 
 bool nif::NiNode::NodeChildren::has(const NiAVObject& obj) const
 {
-	for (auto&& child : m_super.getNative().GetChildren())
+	for (auto&& child : nativePtr()->GetChildren())
 		if (child == &obj.getNative())
 			return true;
 
@@ -81,5 +81,5 @@ bool nif::NiNode::NodeChildren::has(const NiAVObject& obj) const
 
 size_t nif::NiNode::NodeChildren::size() const
 {
-	return m_super.getNative().GetChildren().size();
+	return nativePtr()->GetChildren().size();
 }

@@ -60,18 +60,18 @@ public:
 
 private:
 	//We need to wrap m_ctlr->interpolator(), since we want to override assign(nullptr)
-	class Assignable final : public IAssignable<nif::NiInterpolator>
+	class Assignable final : public IObservable<IAssignable<nif::NiInterpolator>>
 	{
 	public:
-		Assignable(IAssignable<nif::NiInterpolator>& ifc) : 
+		Assignable(IObservable<IAssignable<nif::NiInterpolator>>& ifc) :
 			m_ifc{ ifc } {}
 
 		virtual void assign(nif::NiInterpolator* iplr) override { m_ifc.assign(iplr ? iplr : m_default); }
 		virtual bool isAssigned(nif::NiInterpolator* iplr) const override { return m_ifc.isAssigned(iplr); }
-		virtual void addListener(AssignableListener<nif::NiInterpolator>& l) override { m_ifc.addListener(l); }
-		virtual void removeListener(AssignableListener<nif::NiInterpolator>& l) override { m_ifc.removeListener(l); }
+		virtual void addListener(nif::AssignableListener<nif::NiInterpolator>& l) override { m_ifc.addListener(l); }
+		virtual void removeListener(nif::AssignableListener<nif::NiInterpolator>& l) override { m_ifc.removeListener(l); }
 
-		IAssignable<nif::NiInterpolator>& m_ifc;
+		IObservable<IAssignable<nif::NiInterpolator>>& m_ifc;
 		nif::NiFloatInterpolator* m_default{ nullptr };
 	};
 	//This will be universally useful, so we'll move this definition later
@@ -93,6 +93,13 @@ private:
 			ifc.phase().addListener(m_lPhase);
 			ifc.startTime().addListener(m_lStartTime);
 			ifc.stopTime().addListener(m_lStopTime);
+
+			//we need to set the current values
+			m_lFlags.onSet(ifc.flags().get());
+			m_lFrequency.onSet(ifc.frequency().get());
+			m_lPhase.onSet(ifc.phase().get());
+			m_lStartTime.onSet(ifc.startTime().get());
+			m_lStopTime.onSet(ifc.stopTime().get());
 		}
 		virtual void onDisconnect(IController<float>& ifc) override
 		{
@@ -269,6 +276,7 @@ node::Emitter::Emitter(nif::File& file,
 
 	m_modNameLsnr = std::make_unique<ModifierNameListener>(m_ctlr->modifierName());
 	object().name().addListener(*m_modNameLsnr);
+	m_modNameLsnr->onSet(object().name().get());
 
 	if (!iplr) {
 		iplr = file.create<nif::NiFloatInterpolator>();
@@ -382,7 +390,7 @@ void node::Emitter::Device::ColourActivator::activate(ISet<Requirement>* target)
 {
 	m_target = target;
 	m_prop.addListener(*this);
-	//we'll get a call here...
+	onSet(m_prop.get());
 }
 
 void node::Emitter::Device::ColourActivator::deactivate()
@@ -413,8 +421,9 @@ void node::Emitter::Device::LifeMoveActivator::activate(ISet<Requirement>* targe
 {
 	m_target = target;
 	m_prop.addListener(*this);
+	onSet(m_prop.get());
 	m_var.addListener(*this);
-	//we'll get a call here...
+	onSet(m_var.get());
 }
 
 void node::Emitter::Device::LifeMoveActivator::deactivate()

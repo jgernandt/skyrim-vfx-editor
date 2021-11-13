@@ -34,9 +34,9 @@ T* findNode(const std::vector<std::unique_ptr<node::NodeBase>>& nodes, const nif
 //Test that an Assignable can in fact be assigned to.
 //Requires a function object that produces objects of type T.
 template<typename T, typename FactoryType>
-void AssignableTest(IAssignable<T>& ass, FactoryType& factory)
+void AssignableTest(IObservable<IAssignable<T>>& ass, FactoryType& factory)
 {
-	struct Listener : AssignableListener<T>
+	struct Listener : nif::AssignableListener<T>
 	{
 		virtual void onAssign(T* t) 
 		{
@@ -128,17 +128,18 @@ void FlagTest(nif::FlagSet<T>& set, std::vector<T> flags)
 }
 
 //Test that a Property can in fact be read from and written to
-template<typename T, typename GeneratorType, typename PropertyType = IProperty<T>>
+template<typename T, typename GeneratorType>
 void PropertyTest(
-	PropertyType& prop,
+	IObservable<IProperty<T>>& prop,
 	GeneratorType& g, 
 	typename util::array_traits<T>::element_type relTol = typename util::array_traits<T>::element_type(), 
 	bool positive = true, 
 	int n_tests = 3)
 {
+	using PropertyType = IObservable<IProperty<T>>;
 	using ElementType = typename util::array_traits<T>::element_type;
 
-	struct Listener : IListener<PropertyType>
+	struct Listener : IListener<IProperty<T>>
 	{
 		virtual void onSet(const T& t) override
 		{
@@ -159,24 +160,24 @@ void PropertyTest(
 
 	Listener l;
 	prop.addListener(l);
-	Assert::IsTrue(l.wasSet());
+	//Assert::IsTrue(l.wasSet());//no longer expected!
 
 	if constexpr (std::is_same<ElementType, bool>::value) {
 
 		if (util::array_traits<T>::size == 1) {
 			//Just try setting both ways
-			bool start = util::property_traits<PropertyType>::get(prop);
+			bool start = prop.get();
 
-			util::property_traits<PropertyType>::set(prop, !start);
-			Assert::IsTrue((util::property_traits<PropertyType>::get(prop) == !start) == positive);
+			prop.set(!start);
+			Assert::IsTrue((prop.get() == !start) == positive);
 			Assert::IsTrue(l.wasSet());
 
-			util::property_traits<PropertyType>::set(prop, start);
-			Assert::IsTrue((util::property_traits<PropertyType>::get(prop) == start) == positive);
+			prop.set(start);
+			Assert::IsTrue((prop.get() == start) == positive);
 			Assert::IsTrue(l.wasSet());
 
 			//Resetting should not call listener
-			util::property_traits<PropertyType>::set(prop, start);
+			prop.set(start);
 			Assert::IsFalse(l.wasSet());
 		}
 		else {
@@ -190,9 +191,9 @@ void PropertyTest(
 				for (size_t j = 0; j < util::array_traits<T>::size; j++)
 					util::array_traits<T>::at(exp, j) = static_cast<bool>(D(g));
 
-				util::property_traits<PropertyType>::set(prop, exp);
+				prop.set(exp);
 
-				T act = util::property_traits<PropertyType>::get(prop);
+				T act = prop.get();
 				//Compare elementwise
 				for (size_t j = 0; j < util::array_traits<T>::size; j++) {
 					ElementType act_j = util::array_traits<T>::at(act, j);
@@ -201,7 +202,7 @@ void PropertyTest(
 				}
 				Assert::IsTrue(l.wasSet());
 				//Resetting should not call listener
-				util::property_traits<PropertyType>::set(prop, exp);
+				prop.set(exp);
 				Assert::IsFalse(l.wasSet());
 			}
 		}
@@ -218,10 +219,10 @@ void PropertyTest(
 			for (size_t j = 0; j < util::array_traits<T>::size; j++)
 				util::array_traits<T>::at(exp, j) = D(g);
 
-			util::property_traits<PropertyType>::set(prop, exp);
+			prop.set(exp);
 
 			//Compare elementwise
-			T act = util::property_traits<PropertyType>::get(prop);
+			T act = prop.get();
 			for (size_t j = 0; j < util::array_traits<T>::size; j++) {
 				ElementType act_j = util::array_traits<T>::at(act, j);
 				ElementType exp_j = util::array_traits<T>::at(exp, j);
@@ -229,7 +230,7 @@ void PropertyTest(
 			}
 			Assert::IsTrue(l.wasSet());
 			//Resetting should not call listener
-			util::property_traits<PropertyType>::set(prop, exp);
+			prop.set(exp);
 			Assert::IsFalse(l.wasSet());
 		}
 	}
@@ -245,10 +246,10 @@ void PropertyTest(
 			for (size_t j = 0; j < util::array_traits<T>::size; j++)
 				util::array_traits<T>::at(exp, j) = D(g);
 
-			util::property_traits<PropertyType>::set(prop, exp);
+			prop.set(exp);
 
 			//Compare elementwise
-			T act = util::property_traits<PropertyType>::get(prop);
+			T act = prop.get();
 			for (size_t j = 0; j < util::array_traits<T>::size; j++) {
 				ElementType act_j = util::array_traits<T>::at(act, j);
 				ElementType exp_j = util::array_traits<T>::at(exp, j);
@@ -260,7 +261,7 @@ void PropertyTest(
 			Assert::IsTrue(l.wasSet());
 			//Resetting should not call listener (unless the actual value was different due to rounding)
 			if (exp == act) {
-				util::property_traits<PropertyType>::set(prop, exp);
+				prop.set(exp);
 				Assert::IsFalse(l.wasSet());
 			}
 		}
@@ -273,14 +274,14 @@ void PropertyTest(
 }
 
 template<typename T>
-void enumPropertyTest(IProperty<T>& prop, std::vector<T>&& values)
+void enumPropertyTest(IObservable<IProperty<T>>& prop, std::vector<T>&& values)
 {
 	static_assert(std::is_enum<T>::value);
 
-	class Listener final : public PropertyListener<T>
+	class Listener final : public nif::PropertyListener<T>
 	{
 	public:
-		Listener(IProperty<T>& prop) : m_prop{ prop } { m_prop.addListener(*this); }
+		Listener(IObservable<IProperty<T>>& prop) : m_prop{ prop } { m_prop.addListener(*this); }
 		~Listener() { m_prop.removeListener(*this); }
 
 		virtual void onSet(const T& t) override
@@ -298,7 +299,7 @@ void enumPropertyTest(IProperty<T>& prop, std::vector<T>&& values)
 		}
 
 	private:
-		IProperty<T>& m_prop;
+		IObservable<IProperty<T>>& m_prop;
 		T m_last{ T() };
 		bool m_signalled{ false };
 	};
@@ -316,7 +317,7 @@ void enumPropertyTest(IProperty<T>& prop, std::vector<T>&& values)
 	}
 }
 
-inline void StringPropertyTest(IProperty<std::string>& p)
+inline void StringPropertyTest(IObservable<IProperty<std::string>>& p)
 {
 	//Good enough, I guess
 	constexpr const char* test = "agoansegiersnnvksd";
@@ -331,15 +332,15 @@ inline void StringPropertyTest(IProperty<std::string>& p)
 //Test that a Sequence does in fact insert and erase elements in the proper order.
 //Requires a function object that produces shared_ptr to objects of type T.
 template<typename T, typename FactoryType>
-void SequenceTest(ISequence<T>& seq, const FactoryType& factory)
+void SequenceTest(IObservable<ISequence<T>>& seq, const FactoryType& factory)
 {
-	struct Listener : SequenceListener<T>
+	struct Listener : nif::SequenceListener<T>
 	{
-		virtual void onInsert(const ISequence<T>&, size_t pos)
+		virtual void onInsert(size_t pos)
 		{
 			m_inserted = pos;
 		}
-		virtual void onErase(const ISequence<T>&, size_t pos)
+		virtual void onErase(size_t pos)
 		{
 			m_erased = pos;
 		}
@@ -441,9 +442,9 @@ void SequenceTest(ISequence<T>& seq, const FactoryType& factory)
 //Test that a Set does in fact add and remove objects passed to it.
 //Requires a function object that produces shared_ptr to objects of type T.
 template<typename T, typename FactoryType>
-void SetTest(ISet<T>& set, const FactoryType& factory)
+void SetTest(IObservable<ISet<T>>& set, const FactoryType& factory)
 {
-	struct Listener : SetListener<T>
+	struct Listener : nif::SetListener<T>
 	{
 		virtual void onAdd(const T& t)
 		{
@@ -535,12 +536,12 @@ void SetTest(ISet<T>& set, const FactoryType& factory)
 //Test a vector property. Requires an overload of operator== for type T.
 //Requires a function object that generates T's for testing.
 template<typename T, typename GeneratorType>
-void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
+void VectorPropertyTest(IObservable<IVectorProperty<T>>& list, GeneratorType generator)
 {
-	class Listener : public VectorPropertyListener<T>
+	class Listener : public nif::VectorPropertyListener<T>
 	{
 	public:
-		Listener(IVectorProperty<T>& list) : m_list{ list } { m_list.addListener(*this); }
+		Listener(IObservable<IVectorProperty<T>>& list) : m_list{ list } { m_list.addListener(*this); }
 		~Listener() { m_list.removeListener(*this); }
 
 		virtual void onSet(int i, const T& t) override { m_lastI = i; m_lastT = t; }
@@ -576,7 +577,7 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 		}
 
 	private:
-		IVectorProperty<T>& m_list;
+		IObservable<IVectorProperty<T>>& m_list;
 		const std::vector<T>* m_lastCtnr{ nullptr };
 		T m_lastT{ T() };
 		int m_lastI{ -1 };
@@ -584,7 +585,7 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 		int m_lastErase{ -1 };
 	};
 
-	class ElementListener final : public PropertyListener<T>
+	/*class ElementListener final : public nif::PropertyListener<T>
 	{
 	public:
 		ElementListener() {}
@@ -614,7 +615,7 @@ void VectorPropertyTest(IVectorProperty<T>& list, GeneratorType generator)
 	private:
 		T m_last{ T() };
 		bool m_signalled{ false };
-	};
+	};*/
 
 	constexpr int SIZE = 10;
 	constexpr int SIZE_LARGE = 13;

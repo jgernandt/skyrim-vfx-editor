@@ -36,36 +36,32 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<std::string>& name() { return m_name; }
-		ISet<NiExtraData>& extraData() { return m_extraData; }
-		ISequence<NiTimeController>& controllers() { return m_controllers; }
+		Property<std::string>& name() { return m_name; }
+		Set<NiExtraData>& extraData() { return m_extraData; }
+		Sequence<NiTimeController>& controllers() { return m_controllers; }
 
 	private:
-		Property<std::string> m_name;
+		PropertyFcn<std::string, NiObjectNET> m_name;
 
-		struct ExtraData final : SetBase<NiExtraData>
+		struct ExtraData final : SetBase<NiExtraData, NiObjectNET>
 		{
-			ExtraData(NiObjectNET& super) : m_super{ super } {}
+			ExtraData(NiObjectNET& block) : SetBase<NiExtraData, NiObjectNET>{ block } {}
 
 			virtual void add(const NiExtraData& obj) override;
 			virtual void remove(const NiExtraData& obj) override;
 			virtual bool has(const NiExtraData& obj) const override;
 			virtual size_t size() const override;
 
-			NiObjectNET& m_super;
-
 		} m_extraData;
 
-		struct Controllers final : SequenceBase<NiTimeController>
+		struct Controllers final : SequenceBase<NiTimeController, NiObjectNET>
 		{
-			Controllers(NiObjectNET& super) : m_super{ super } {}
+			Controllers(NiObjectNET& block) : SequenceBase<NiTimeController, NiObjectNET>{ block } {}
 
 			virtual size_t insert(size_t pos, const NiTimeController& obj) override;
 			virtual size_t erase(size_t pos) override;
 			virtual size_t find(const NiTimeController& obj) const override;
 			virtual size_t size() const override;
-
-			NiObjectNET& m_super;
 
 		} m_controllers;
 

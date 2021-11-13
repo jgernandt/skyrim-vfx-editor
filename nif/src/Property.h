@@ -18,11 +18,12 @@
 
 #pragma once
 #include <cassert>
+#include <functional>
 #include "Observable.h"
-#include "nif_types.h"
+#include "DataField.h"
 
 template<typename T>
-class IProperty : public IObservable<IProperty<T>>
+class IProperty
 {
 public:
 	virtual ~IProperty() = default;
@@ -32,6 +33,9 @@ public:
 };
 
 template<typename T>
+using OProperty = IObservable<IProperty<T>>;
+
+template<typename T>
 class IListener<IProperty<T>>
 {
 public:
@@ -39,54 +43,62 @@ public:
 
 	virtual void onSet(const T&) {}
 };
-template<typename T>
-using PropertyListener = IListener<IProperty<T>>;
-
-template<typename T>
-class PropertyBase : public IProperty<T>
-{
-public:
-	virtual ~PropertyBase() = default;
-
-	virtual void addListener(PropertyListener<T>& l) final override
-	{
-		m_obs.addListener(l);
-		l.onSet(this->get());
-	}
-	virtual void removeListener(PropertyListener<T>& l) final override { m_obs.removeListener(l); }
-
-protected:
-	void notify(const T& t)
-	{
-		for (PropertyListener<T>* l : m_obs.getListeners()) {
-			assert(l);
-			l->onSet(t);
-		}
-	}
-
-private:
-	ObservableBase<IProperty<T>> m_obs;
-};
 
 namespace nif
 {
+	template<typename T>
+	using Property = NiObject::DataField<IProperty<T>>;
+
+	template<typename T>
+	using PropertyListener = IListener<IProperty<T>>;
+
+	template<typename T, typename BlockType>
+	class PropertyBase : public Property<T>
+	{
+	public:
+		PropertyBase(BlockType& block) : Property<T>(block) {}
+		virtual ~PropertyBase() = default;
+
+	protected:
+		typename BlockType::native_type* nativePtr() const
+		{
+			assert(this->m_block);
+			return &static_cast<BlockType*>(this->m_block)->getNative();
+		}
+		typename BlockType& block() const
+		{
+			assert(this->m_block);
+			return *static_cast<BlockType*>(this->m_block);
+		}
+
+		void notify(const T& t)
+		{
+			for (PropertyListener<T>* l : this->m_lsnrs) {
+				assert(l);
+				l->onSet(t);
+			}
+		}
+	};
+
 	//Typically, ArgType would be T (e.g. when T=float) or const & to some native type.
 	//The latter typically means that RetType is this native type. It may, occasionally, be lvalue reference to it.
 	template<typename T,
+		typename BlockType,
 		typename NativeType = T,
 		//typename ArgType = T,
 		//typename RetType = typename std::remove_cv<typename std::remove_reference<T>::type>::type, 
 		template<typename> typename Converter = NifConverter>
-	class Property final : public PropertyBase<T>
+	class PropertyFcn final : public PropertyBase<T, BlockType>
 	{
 	public:
-		Property(const std::function<T()>& get, const std::function<void(const T&)>& set) :
-			m_get{ get }, m_set{ set } {}
+		PropertyFcn(BlockType& block, const std::function<T()>& get, const std::function<void(const T&)>& set) :
+			PropertyBase<T, BlockType>(block), m_get{ get }, m_set{ set } {}
 
 		//RetType may be the native type or any reference thereto.
 		//ArgType may be the native type, rvalue reference to the native type or const lvalue reference to the native type.
 		template<typename ObjType, typename RetType, typename ArgType, typename BaseType>
-		Property(ObjType* obj, RetType(BaseType::* g)() const, void(BaseType::* s)(ArgType)) :
+		PropertyFcn(BlockType& block, ObjType* obj, RetType(BaseType::* g)() const, void(BaseType::* s)(ArgType)) :
+			PropertyBase<T, BlockType>(block),
 			m_get{ [obj, g]() -> T { return util::type_conversion<T, Converter<T>>::from((obj->*g)()); } },
 			m_set{ [obj, s](const T& t) { (obj->*s)(util::type_conversion<NativeType, Converter<NativeType>>::from(t)); } }
 			//m_get{ std::bind(g, obj) },
@@ -98,8 +110,8 @@ namespace nif
 
 		//non-const getter
 		template<typename ObjType, typename RetType, typename ArgType>
-		Property(ObjType* obj, RetType(ObjType::* g)(), void(ObjType::* s)(ArgType)) :
-			Property(obj, (RetType(ObjType::*)() const)g, s) {}
+		PropertyFcn(BlockType& block, ObjType* obj, RetType(ObjType::* g)(), void(ObjType::* s)(ArgType)) :
+			PropertyFcn(block, obj, (RetType(ObjType::*)() const)g, s) {}
 		//	m_get{ [obj, g]() -> T { return util::type_conversion<T, Converter<T>>::from((obj->*g)()); } },
 		//	m_set{ [obj, s](const T& t) { (obj->*s)(util::type_conversion<NativeType, Converter<NativeType>>::from(t)); } }
 		//{ assert(obj && g && s); }

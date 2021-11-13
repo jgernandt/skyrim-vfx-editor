@@ -39,9 +39,6 @@ public:
 	{
 		m_bitfield.set(((static_cast<FieldType>(t) << Offset) & MASK) | (m_bitfield.get() & ~MASK));
 	}
-	//we don't really want this to be observable directly, do we?
-	virtual void addListener(PropertyListener<T>&) override { assert(false); }
-	virtual void removeListener(PropertyListener<T>&) override { assert(false); }
 
 private:
 	constexpr static FieldType MASK = ~(~FieldType(0) << Width) << Offset;
@@ -60,11 +57,11 @@ namespace node
 
 		virtual nif::NiFloatInterpolator& object() override;
 
-		IProperty<unsigned short>& flags() { return m_flags; }
-		IProperty<float>& frequency() { return m_frequency; }
-		IProperty<float>& phase() { return m_phase; }
-		IProperty<float>& startTime() { return *m_startTime; }
-		IProperty<float>& stopTime() { return *m_stopTime; }
+		IObservable<IProperty<unsigned short>>& flags() { return m_flags; }
+		IObservable<IProperty<float>>& frequency() { return m_frequency; }
+		IObservable<IProperty<float>>& phase() { return m_phase; }
+		IObservable<IProperty<float>>& startTime() { return *m_startTime; }
+		IObservable<IProperty<float>>& stopTime() { return *m_stopTime; }
 
 	private:
 		void openKeyEditor();

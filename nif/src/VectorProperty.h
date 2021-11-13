@@ -20,9 +20,10 @@
 #include <cassert>
 #include "Observable.h"
 #include "Property.h"
+#include "DataField.h"
 
 template<typename T>
-class IVectorProperty : public IObservable<IVectorProperty<T>>
+class IVectorProperty
 {
 public:
 	using container = std::vector<T>;
@@ -51,19 +52,70 @@ public:
 };
 
 template<typename T>
+using OVector = IObservable<IVectorProperty<T>>;
+
+template<typename T>
 class IListener<IVectorProperty<T>>
 {
 public:
 	virtual ~IListener() = default;
 
-	//Should send insert/erase instead, will be more predictable
-	//virtual void onSet(const typename IVectorProperty<T>::container&) {}
 	virtual void onSet(int, const T&) {}
 	virtual void onInsert(int) {}
 	virtual void onErase(int) {}
 };
-template<typename T>
-using VectorPropertyListener = IListener<IVectorProperty<T>>;
+
+
+namespace nif
+{
+	template<typename T>
+	using VectorProperty = NiObject::DataField<IVectorProperty<T>>;
+
+	template<typename T>
+	using VectorPropertyListener = IListener<IVectorProperty<T>>;
+
+	template<typename T, typename BlockType>
+	class VectorPropertyBase : public VectorProperty<T>
+	{
+	public:
+		VectorPropertyBase(BlockType& block) : VectorProperty<T>(block) {}
+		virtual ~VectorPropertyBase() = default;
+
+	protected:
+		typename BlockType::native_type* nativePtr() const
+		{
+			assert(this->m_block);
+			return &static_cast<BlockType*>(this->m_block)->getNative();
+		}
+		typename BlockType& block() const
+		{
+			assert(this->m_block);
+			return *static_cast<BlockType*>(this->m_block);
+		}
+
+		void notifySet(int i, const T& t) const
+		{
+			for (VectorPropertyListener<T>* l : this->m_lsnrs) {
+				assert(l);
+				l->onSet(i, t);
+			}
+		}
+		void notifyInsert(int i) const
+		{
+			for (VectorPropertyListener<T>* l : this->m_lsnrs) {
+				assert(l);
+				l->onInsert(i);
+			}
+		}
+		void notifyErase(int i) const
+		{
+			for (VectorPropertyListener<T>* l : this->m_lsnrs) {
+				assert(l);
+				l->onErase(i);
+			}
+		}
+	};
+}
 
 /*template<typename T>
 class IVectorProperty<T>::element final : public PropertyBase<T>, public VectorPropertyListener<T>
@@ -137,56 +189,3 @@ private:
 	IVectorProperty<T>* m_list;
 	int m_index;
 };*/
-
-namespace nif
-{
-	template<typename T>
-	class VectorPropertyBase : public IVectorProperty<T>
-	{
-	public:
-		virtual ~VectorPropertyBase() = default;
-
-		virtual void addListener(VectorPropertyListener<T>& l) final override
-		{
-			m_obs.addListener(l);
-		}
-		virtual void removeListener(VectorPropertyListener<T>& l) final override
-		{
-			m_obs.removeListener(l);
-		}
-
-	protected:
-		/*Should send insert/erase instead, will be more predictable
-		void notifySet(const typename IVectorProperty<T>::container& t) const
-		{
-			for (VectorPropertyListener<T>* l : m_obs.getListeners()) {
-				assert(l);
-				l->onSet(t);
-			}
-		}*/
-		void notifySet(int i, const T& t) const
-		{
-			for (VectorPropertyListener<T>* l : m_obs.getListeners()) {
-				assert(l);
-				l->onSet(i, t);
-			}
-		}
-		void notifyInsert(int i) const
-		{
-			for (VectorPropertyListener<T>* l : m_obs.getListeners()) {
-				assert(l);
-				l->onInsert(i);
-			}
-		}
-		void notifyErase(int i) const
-		{
-			for (VectorPropertyListener<T>* l : m_obs.getListeners()) {
-				assert(l);
-				l->onErase(i);
-			}
-		}
-
-	private:
-		ObservableBase<IVectorProperty<T>> m_obs;
-	};
-}

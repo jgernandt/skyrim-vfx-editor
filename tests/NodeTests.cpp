@@ -54,7 +54,7 @@ namespace nif
 			PropertyTest<nif::translation_t>(obj->transform().translation(), m_engine);
 
 			//Umm, what are we testing here, exactly? Isn't this stupid?
-			struct CustomProperty : PropertyBase<math::Rotation::EulerAngles>
+			struct CustomProperty : ObservableBase<IProperty<math::Rotation::EulerAngles>>
 			{
 				CustomProperty(IProperty<nif::rotation_t>& p) : prop{ p } {}
 				virtual math::Rotation::EulerAngles get() const override
@@ -66,7 +66,8 @@ namespace nif
 				{
 					if (val != get()) {
 						prop.set(math::Rotation(val));
-						notify(val);
+						for (auto&& l : getListeners())
+							l->onSet(val);
 					}
 				}
 
@@ -75,7 +76,7 @@ namespace nif
 
 			} custom(obj->transform().rotation());
 
-			PropertyTest<math::Rotation::euler_type>(static_cast<IProperty<math::Rotation::EulerAngles>&>(custom), m_engine, 1.0e-3f);
+			PropertyTest<math::Rotation::euler_type>(custom, m_engine, 1.0e-3f);
 
 			PropertyTest<float>(obj->transform().scale(), m_engine);
 		}

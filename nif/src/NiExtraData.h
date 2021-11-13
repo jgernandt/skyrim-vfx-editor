@@ -35,10 +35,10 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<std::string>& name() { return m_name; }
+		Property<std::string>& name() { return m_name; }
 
 	private:
-		Property<std::string> m_name;
+		PropertyFcn<std::string, NiExtraData> m_name;
 	};
 
 	class NiStringExtraData : public NiExtraData
@@ -56,9 +56,9 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<std::string>& value() { return m_value; }
+		Property<std::string>& value() { return m_value; }
 
 	private:
-		Property<std::string> m_value;
+		PropertyFcn<std::string, NiExtraData> m_value;
 	};
 }

@@ -107,10 +107,10 @@ public:
 };
 
 node::FloatKeyEditor::FloatKeyEditor(
-	std::shared_ptr<IProperty<nif::KeyType>>&& keyType,
+	std::shared_ptr<OProperty<nif::KeyType>>&& keyType,
 	std::shared_ptr<nif::InterpolationData<float>>&& keys,
-	std::shared_ptr<IProperty<float>>&& tStart,
-	std::shared_ptr<IProperty<float>>&& tStop) :
+	std::shared_ptr<OProperty<float>>&& tStart,
+	std::shared_ptr<OProperty<float>>&& tStop) :
 	m_keyType{ keyType }, m_keys{ keys }
 {
 	assert(m_keyType && m_keys && tStart && tStop);
@@ -139,6 +139,7 @@ node::FloatKeyEditor::FloatKeyEditor(
 
 	//The initial curve is created by the callback from keyType.
 	m_keyType->addListener(*this);
+	onSet(m_keyType->get());
 
 	//determine limits
 	gui::Floats<2> xlims = { tStart->get(), tStop->get() };
@@ -452,10 +453,10 @@ void node::FloatKeyEditor::updateAxisUnits()
 }
 
 class node::FloatKeyEditor::LinearInterpolant::LinearHandle final : 
-	public gui::Component, public VectorPropertyListener<nif::Key<float>>
+	public gui::Component, public nif::VectorPropertyListener<nif::Key<float>>
 {
 public:
-	LinearHandle(const std::shared_ptr<IVectorProperty<nif::Key<float>>>& p, int index) : 
+	LinearHandle(const std::shared_ptr<OVector<nif::Key<float>>>& p, int index) :
 		m_property{ p }, m_index{ index }
 	{ 
 		assert(m_property);
@@ -490,13 +491,13 @@ public:
 	}
 
 private:
-	std::shared_ptr<IVectorProperty<nif::Key<float>>> m_property;
+	std::shared_ptr<OVector<nif::Key<float>>> m_property;
 	int m_index;
 
 	bool m_selected{ false };
 };
 
-node::FloatKeyEditor::LinearInterpolant::LinearInterpolant(std::shared_ptr<IVectorProperty<nif::Key<float>>>&& keys) :
+node::FloatKeyEditor::LinearInterpolant::LinearInterpolant(std::shared_ptr<OVector<nif::Key<float>>>&& keys) :
 	m_keys{ keys }
 {
 	//We need handles to manipulate our keys. Nothing fancy, just something that can be dragged around.

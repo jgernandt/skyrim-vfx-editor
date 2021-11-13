@@ -62,10 +62,10 @@ namespace node
 			virtual void onDisconnect(IModifiable & ifc) override;
 
 		private:
-			class ColourActivator final : public PropertyListener<nif::ColRGBA>
+			class ColourActivator final : public nif::PropertyListener<nif::ColRGBA>
 			{
 			public:
-				ColourActivator(IProperty<nif::ColRGBA>& prop) : m_prop{ prop } {}
+				ColourActivator(IObservable<IProperty<nif::ColRGBA>>& prop) : m_prop{ prop } {}
 
 				virtual void onSet(const nif::ColRGBA& f) override;
 
@@ -73,15 +73,17 @@ namespace node
 				void deactivate();
 
 			private:
-				IProperty<nif::ColRGBA>& m_prop;
+				IObservable<IProperty<nif::ColRGBA>>& m_prop;
 				ISet<Requirement>* m_target{ nullptr };
 				bool m_active{ false };
 			};
 
-			class LifeMoveActivator final : public PropertyListener<float>
+			class LifeMoveActivator final : public nif::PropertyListener<float>
 			{
 			public:
-				LifeMoveActivator(IProperty<float>& prop, IProperty<float>& var, Requirement req) :
+				LifeMoveActivator(IObservable<IProperty<float>>& prop, 
+					IObservable<IProperty<float>>& var, 
+					Requirement req) :
 					m_prop{ prop }, m_var{ var }, m_req{ req } {}
 
 				virtual void onSet(const float& f) override;
@@ -90,8 +92,8 @@ namespace node
 				void deactivate();
 
 			private:
-				IProperty<float>& m_prop;
-				IProperty<float>& m_var;
+				IObservable<IProperty<float>>& m_prop;
+				IObservable<IProperty<float>>& m_var;
 				Requirement m_req;
 				ISet<Requirement>* m_target{ nullptr };
 				bool m_active{ false };

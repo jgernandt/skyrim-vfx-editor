@@ -60,21 +60,21 @@ namespace node
 		constexpr static const char* NEXT_MODIFIER = "Next modifier";
 
 		//Updates modifier order to match position in the sequence
-		class OrderListener : public SequenceListener<nif::NiPSysModifier>
+		class OrderListener : public nif::SequenceListener<nif::NiPSysModifier>
 		{
 		public:
 			OrderListener(IProperty<unsigned int>& order) :
 				m_order{ order } {}
 
-			virtual void onInsert(const ISequence<nif::NiPSysModifier>&, size_t pos) override;
-			virtual void onErase(const ISequence<nif::NiPSysModifier>&, size_t pos) override;
+			virtual void onInsert(size_t pos) override;
+			virtual void onErase(size_t pos) override;
 
 		private:
 			IProperty<unsigned int>& m_order;
 		};
 
 		//Updates modifier name to match its order
-		class NameListener : public PropertyListener<unsigned int>
+		class NameListener : public nif::PropertyListener<unsigned int>
 		{
 		public:
 			NameListener(IProperty<std::string>& name) :
@@ -87,7 +87,7 @@ namespace node
 		};
 
 		//Updates one string to match another string (useful for the modifier name on a NiPSysModifierCtlr)
-		class ModifierNameListener : public PropertyListener<std::string>
+		class ModifierNameListener : public nif::PropertyListener<std::string>
 		{
 		public:
 			ModifierNameListener(IProperty<std::string>& name) :
@@ -160,9 +160,9 @@ namespace node
 	public:
 		virtual ~IModifiable() = default;
 
-		virtual ISequence<nif::NiPSysModifier>& modifiers() = 0;
-		virtual ISequence<nif::NiTimeController>& controllers() = 0;
-		virtual ISet<Modifier::Requirement>& requirements() = 0;
+		virtual IObservable<ISequence<nif::NiPSysModifier>>& modifiers() = 0;
+		virtual IObservable<ISequence<nif::NiTimeController>>& controllers() = 0;
+		virtual IObservable<ISet<Modifier::Requirement>>& requirements() = 0;
 
 		//When connecting a mod: 
 		//*insert the modifier

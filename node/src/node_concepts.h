@@ -23,10 +23,10 @@ namespace node
 {
 	//A wrapper that allows reserving positions at the beginning and end of a sequence
 	template<typename T>
-	class ReservableSequence final : public ISequence<T>
+	class ReservableSequence final : public OSequence<T>
 	{
 	public:
-		ReservableSequence(ISequence<T>& seq) : m_seq{ seq } 
+		ReservableSequence(IObservable<ISequence<T>>& seq) : m_seq{ seq }
 		{
 			m_lim[1] = m_seq.size();
 		}
@@ -62,8 +62,8 @@ namespace node
 		virtual size_t find(const T& obj) const final override { return m_seq.find(obj); }
 		virtual size_t size() const override { return m_seq.size(); }
 
-		virtual void addListener(SequenceListener<T>& l) final override { m_seq.addListener(l); }
-		virtual void removeListener(SequenceListener<T>& l) final override { m_seq.removeListener(l); }
+		virtual void addListener(nif::SequenceListener<T>& l) final override { m_seq.addListener(l); }
+		virtual void removeListener(nif::SequenceListener<T>& l) final override { m_seq.removeListener(l); }
 
 		size_t reserve(size_t pos, const T& obj)
 		{
@@ -84,7 +84,7 @@ namespace node
 		}
 
 	private:
-		ISequence<T>& m_seq;
+		OSequence<T>& m_seq;
 		size_t m_lim[2]{ 0, 0 };//the min and max pos allowed for inserts
 	};
 
@@ -94,15 +94,15 @@ namespace node
 	public:
 		virtual ~IController() = default;
 
-		virtual IProperty<unsigned short>& flags() = 0;
-		virtual IProperty<float>& frequency() = 0;
-		virtual IProperty<float>& phase() = 0;
-		virtual IProperty<float>& startTime() = 0;
-		virtual IProperty<float>& stopTime() = 0;
+		virtual OProperty<unsigned short>& flags() = 0;
+		virtual OProperty<float>& frequency() = 0;
+		virtual OProperty<float>& phase() = 0;
+		virtual OProperty<float>& startTime() = 0;
+		virtual OProperty<float>& stopTime() = 0;
 	}; 
 
 	template<typename T>
-	class LocalProperty : public PropertyBase<T>
+	class LocalProperty : public ObservableBase<IProperty<T>>
 	{
 	public:
 		LocalProperty(const T& def = T()) : m_val{ def } {}
@@ -113,7 +113,10 @@ namespace node
 		{
 			if (val != m_val) {
 				m_val = val;
-				this->notify(val);
+				for (auto&& l : this->getListeners()) {
+					assert(l);
+					l->onSet(val);
+				}
 			}
 		}
 
@@ -123,7 +126,7 @@ namespace node
 
 	//May need a conversion before setting
 	template<typename T, typename TargetType = T, template<typename> typename ConverterType = nif::NifConverter>
-	class SetterListener : public PropertyListener<T>
+	class SetterListener : public nif::PropertyListener<T>
 	{
 	public:
 		SetterListener(IProperty<TargetType>& prop) : m_ifc{ prop } {}

@@ -19,9 +19,10 @@
 #pragma once
 #include <cassert>
 #include "Observable.h"
+#include "DataField.h"
 
 template<typename T>
-class ISet : public IObservable<ISet<T>>
+class ISet
 {
 public:
 	virtual ~ISet() = default;
@@ -33,6 +34,9 @@ public:
 };
 
 template<typename T>
+using OSet = IObservable<ISet<T>>;
+
+template<typename T>
 class IListener<ISet<T>>
 {
 public:
@@ -41,37 +45,47 @@ public:
 	virtual void onAdd(const T&) {}
 	virtual void onRemove(const T&) {}
 };
-template<typename T>
-using SetListener = IListener<ISet<T>>;
 
 namespace nif
 {
 	template<typename T>
-	class SetBase : public ISet<T>
+	using Set = NiObject::DataField<ISet<T>>;
+
+	template<typename T>
+	using SetListener = IListener<ISet<T>>;
+
+	template<typename T, typename BlockType>
+	class SetBase : public Set<T>
 	{
 	public:
+		SetBase(BlockType& block) : Set<T>(block) {}
 		virtual ~SetBase() = default;
 
-		virtual void addListener(SetListener<T>& l) final override { m_obs.addListener(l); }
-		virtual void removeListener(SetListener<T>& l) final override { m_obs.removeListener(l); }
-
 	protected:
+		typename BlockType::native_type* nativePtr() const
+		{
+			assert(this->m_block);
+			return &static_cast<BlockType*>(this->m_block)->getNative();
+		}
+		typename BlockType& block() const
+		{
+			assert(this->m_block);
+			return *static_cast<BlockType*>(this->m_block);
+		}
+
 		void notifyAdd(const T& t) const
 		{
-			for (SetListener<T>* l : m_obs.getListeners()) {
+			for (SetListener<T>* l : this->m_lsnrs) {
 				assert(l);
 				l->onAdd(t);
 			}
 		}
 		void notifyRemove(const T& t) const
 		{
-			for (SetListener<T>* l : m_obs.getListeners()) {
+			for (SetListener<T>* l : this->m_lsnrs) {
 				assert(l);
 				l->onRemove(t);
 			}
 		}
-
-	private:
-		ObservableBase<ISet<T>> m_obs;
 	};
 }

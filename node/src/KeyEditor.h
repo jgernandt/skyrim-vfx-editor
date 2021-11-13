@@ -7,14 +7,14 @@
 namespace node
 {
 	class FloatKeyEditor final : 
-		public gui::Popup, public PropertyListener<nif::KeyType>, public gui::MouseHandler
+		public gui::Popup, public nif::PropertyListener<nif::KeyType>, public gui::MouseHandler
 	{
 	public:
 		FloatKeyEditor(
-			std::shared_ptr<IProperty<nif::KeyType>>&& keyType, 
+			std::shared_ptr<OProperty<nif::KeyType>>&& keyType,
 			std::shared_ptr<nif::InterpolationData<float>>&& keys,
-			std::shared_ptr<IProperty<float>>&& tStart,
-			std::shared_ptr<IProperty<float>>&& tStop);
+			std::shared_ptr<OProperty<float>>&& tStart,
+			std::shared_ptr<OProperty<float>>&& tStop);
 
 		~FloatKeyEditor();
 
@@ -52,12 +52,12 @@ namespace node
 			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(); }
 		};
 		class LinearInterpolant final : 
-			public Interpolant, public VectorPropertyListener<nif::Key<float>>
+			public Interpolant, public nif::VectorPropertyListener<nif::Key<float>>
 		{
 		public:
 			class LinearHandle;
 		public:
-			LinearInterpolant(std::shared_ptr<IVectorProperty<nif::Key<float>>>&& keys);
+			LinearInterpolant(std::shared_ptr<OVector<nif::Key<float>>>&& keys);
 			~LinearInterpolant();
 
 			virtual void frame(gui::FrameDrawer& fd) override;
@@ -71,17 +71,17 @@ namespace node
 			virtual void onErase(int i) override {}
 
 		private:
-			std::shared_ptr<IVectorProperty<nif::Key<float>>> m_keys;
+			std::shared_ptr<OVector<nif::Key<float>>> m_keys;
 			//unless we add a way to iterate through the property (good idea?), 
 			//we should store a copy:
 			std::vector<nif::Key<float>> m_data;
 		};
 		class QuadraticInterpolant final :
-			public Interpolant, public VectorPropertyListener<nif::Key<float>>
+			public Interpolant, public nif::VectorPropertyListener<nif::Key<float>>
 		{
 		public:
-			QuadraticInterpolant(std::shared_ptr<IVectorProperty<nif::Key<float>>>&& keys, 
-				std::shared_ptr<IVectorProperty<nif::Tangent<float>>>&& tans) {}
+			QuadraticInterpolant(std::shared_ptr<OVector<nif::Key<float>>>&& keys,
+				std::shared_ptr<OVector<nif::Tangent<float>>>&& tans) {}
 
 			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(); }
 
@@ -93,7 +93,7 @@ namespace node
 			virtual void onErase(int i) override {}
 		};
 
-		std::shared_ptr<IProperty<nif::KeyType>> m_keyType;
+		std::shared_ptr<OProperty<nif::KeyType>> m_keyType;
 		std::shared_ptr<nif::InterpolationData<float>> m_keys;
 
 		gui::Plot* m_plot{ nullptr };

@@ -48,6 +48,10 @@ void node::Modifier::addUnknownController(std::shared_ptr<nif::NiPSysModifierCtl
 	if (ctlr) {
 		m_lsnrs.push_back(std::make_unique<ModifierNameListener>(ctlr->modifierName()));
 		object().name().addListener(*m_lsnrs.back());
+
+		//I don't remember if this matters, but when I wrote this the listener was called on addition
+		m_lsnrs.back()->onSet(object().name().get());
+
 		NodeBase::addController(std::move(ctlr));
 	}
 }
@@ -59,7 +63,7 @@ void node::Modifier::addTargetField(std::shared_ptr<Device>&& device)
 }
 
 
-void node::Modifier::OrderListener::onInsert(const ISequence<nif::NiPSysModifier>&, size_t pos)
+void node::Modifier::OrderListener::onInsert(size_t pos)
 {
 	if (pos <= m_order.get()) {
 		//we have been pushed back
@@ -69,7 +73,7 @@ void node::Modifier::OrderListener::onInsert(const ISequence<nif::NiPSysModifier
 	//else ignore
 }
 
-void node::Modifier::OrderListener::onErase(const ISequence<nif::NiPSysModifier>&, size_t pos)
+void node::Modifier::OrderListener::onErase(size_t pos)
 {
 	//if pos == order, we were erased ourselves!
 	if (pos < m_order.get()) {
@@ -92,6 +96,7 @@ void node::Modifier::Device::onConnect(IModifiable& ifc)
 
 	ifc.modifiers().addListener(m_modLsnr);//update order if sequence changes
 	m_mod.order().addListener(m_ordLsnr);//update name if order changes
+	m_ordLsnr.onSet(m_mod.order().get());
 
 	m_mod.order().set(order);
 

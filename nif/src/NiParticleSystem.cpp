@@ -23,11 +23,11 @@
 nif::NiPSysData::NiPSysData() : NiPSysData(new Niflib::NiPSysData) {}
 nif::NiPSysData::NiPSysData(native_type* obj) :
 	NiObject(obj), 
-	m_maxCount(&getNative(), &native::NiPSysData::GetBSMaxVertices, &native::NiPSysData::SetBSMaxVertices),
+	m_maxCount(*this, &getNative(), &native::NiPSysData::GetBSMaxVertices, &native::NiPSysData::SetBSMaxVertices),
 	m_subtexOffsets(*this),
-	m_hasColour(&getNative(), &native::NiPSysData::GetHasVertexColors, &native::NiPSysData::SetHasVertexColors),
-	m_hasRotationAngles(&getNative(), &native::NiPSysData::GetHasRotationAngles, &native::NiPSysData::SetHasRotationAngles),
-	m_hasRotationSpeeds(&getNative(), &native::NiPSysData::GetHasRotationSpeeds, &native::NiPSysData::SetHasRotationSpeeds)
+	m_hasColour(*this, &getNative(), &native::NiPSysData::GetHasVertexColors, &native::NiPSysData::SetHasVertexColors),
+	m_hasRotationAngles(*this, &getNative(), &native::NiPSysData::GetHasRotationAngles, &native::NiPSysData::SetHasRotationAngles),
+	m_hasRotationSpeeds(*this, &getNative(), &native::NiPSysData::GetHasRotationSpeeds, &native::NiPSysData::SetHasRotationSpeeds)
 {}
 
 nif::native::NiPSysData& nif::NiPSysData::getNative() const
@@ -56,7 +56,7 @@ nif::NiParticleSystem::NiParticleSystem(native_type* obj) :
 	m_modifiers(*this), 
 	m_shader(*this), 
 	m_alpha(*this), 
-	m_worldSpace(&getNative(), &native::NiParticleSystem::GetWorldSpace, &native::NiParticleSystem::SetWorldSpace)
+	m_worldSpace(*this, &getNative(), &native::NiParticleSystem::GetWorldSpace, &native::NiParticleSystem::SetWorldSpace)
 {
 }
 
@@ -68,13 +68,13 @@ nif::native::NiParticleSystem& nif::NiParticleSystem::getNative() const
 
 void nif::NiParticleSystem::Data::assign(NiPSysData* data)
 {
-	m_super.getNative().SetData(data ? &data->getNative() : nullptr);
+	nativePtr()->SetData(data ? &data->getNative() : nullptr);
 	notify(data);
 }
 
 bool nif::NiParticleSystem::Data::isAssigned(NiPSysData* shader) const
 {
-	return m_super.getNative().GetData() == (shader ? &shader->getNative() : nullptr);
+	return nativePtr()->GetData() == (shader ? &shader->getNative() : nullptr);
 }
 
 size_t nif::NiParticleSystem::Modifiers::insert(size_t pos, const NiPSysModifier& mod)
@@ -83,7 +83,7 @@ size_t nif::NiParticleSystem::Modifiers::insert(size_t pos, const NiPSysModifier
 	if (size_t current = find(mod); current == -1) {
 		assert(mod.target().isAssigned(nullptr));//we cannot take someone else's modifier
 
-		auto&& mods = m_super.getNative().GetModifiers();
+		auto&& mods = nativePtr()->GetModifiers();
 		result = std::min(pos, mods.size());
 
 		if (result == pos)
@@ -92,7 +92,7 @@ size_t nif::NiParticleSystem::Modifiers::insert(size_t pos, const NiPSysModifier
 			mods.push_back(&mod.getNative());
 
 		//A bit dodgy to set target on a const ref. Maybe this should be done at a higher level?
-		mod.getNative().SetTarget(&m_super.getNative());
+		mod.getNative().SetTarget(nativePtr());
 
 		notifyInsert(result);
 	}
@@ -115,7 +115,7 @@ size_t nif::NiParticleSystem::Modifiers::erase(size_t pos)
 
 	return pos;*/
 
-	auto&& mods = m_super.getNative().GetModifiers();
+	auto&& mods = nativePtr()->GetModifiers();
 	assert(pos < mods.size());
 
 	mods[pos]->SetTarget(nullptr);
@@ -131,7 +131,7 @@ size_t nif::NiParticleSystem::Modifiers::find(const NiPSysModifier& mod) const
 {
 	size_t result = std::numeric_limits<size_t>::max();
 
-	auto&& mods = m_super.getNative().GetModifiers();
+	auto&& mods = nativePtr()->GetModifiers();
 	for (size_t i = 0; i < mods.size(); i++)
 		if (mods[i] == &mod.getNative()) {
 			result = i;
@@ -143,44 +143,44 @@ size_t nif::NiParticleSystem::Modifiers::find(const NiPSysModifier& mod) const
 
 size_t nif::NiParticleSystem::Modifiers::size() const
 {
-	return m_super.getNative().GetModifiers().size();
+	return nativePtr()->GetModifiers().size();
 }
 
 void nif::NiParticleSystem::ShaderProperty::assign(BSEffectShaderProperty* shader)
 {
-	m_super.getNative().SetShaderProperty(shader ? &shader->getNative() : nullptr);
+	nativePtr()->SetShaderProperty(shader ? &shader->getNative() : nullptr);
 	notify(shader);
 }
 
 bool nif::NiParticleSystem::ShaderProperty::isAssigned(BSEffectShaderProperty* shader) const
 {
-	return m_super.getNative().GetShaderProperty() == (shader ? &shader->getNative() : nullptr);
+	return nativePtr()->GetShaderProperty() == (shader ? &shader->getNative() : nullptr);
 }
 
 void nif::NiParticleSystem::AlphaProperty::assign(NiAlphaProperty* alpha)
 {
-	m_super.getNative().SetAlphaProperty(alpha ? &alpha->getNative() : nullptr);
+	nativePtr()->SetAlphaProperty(alpha ? &alpha->getNative() : nullptr);
 	notify(alpha);
 }
 
 bool nif::NiParticleSystem::AlphaProperty::isAssigned(NiAlphaProperty* alpha) const
 {
-	return m_super.getNative().GetAlphaProperty() == (alpha ? &alpha->getNative() : nullptr);
+	return nativePtr()->GetAlphaProperty() == (alpha ? &alpha->getNative() : nullptr);
 }
 
 std::vector<nif::SubtextureOffset> nif::NiPSysData::SubtexOffsets::get() const
 {
 	std::vector<SubtextureOffset> result;
-	for (auto&& offs : m_super.getNative().GetSubtextureOffsets())
+	for (auto&& offs : nativePtr()->GetSubtextureOffsets())
 		result.push_back(nif_type_conversion<SubtextureOffset>::from(offs));
 	return result;
 }
 
 void nif::NiPSysData::SubtexOffsets::set(const std::vector<SubtextureOffset>& offsets)
 {
-	m_super.getNative().SetHasSubtextures(!offsets.empty());
+	nativePtr()->SetHasSubtextures(!offsets.empty());
 
-	std::vector<Niflib::Vector4>& target = m_super.getNative().GetSubtextureOffsets();
+	std::vector<Niflib::Vector4>& target = nativePtr()->GetSubtextureOffsets();
 	target.resize(offsets.size());
 	for (size_t i = 0; i < target.size(); i++)
 		target[i] = nif_type_conversion<Niflib::Vector4>::from(offsets[i]);

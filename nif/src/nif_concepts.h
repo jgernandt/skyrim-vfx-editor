@@ -42,13 +42,13 @@ namespace nif
 	public:
 		virtual ~Transformable() = default;
 
-		virtual IProperty<translation_t>& translation() = 0;
-		virtual IProperty<rotation_t>& rotation() = 0;
-		virtual IProperty<scale_t>& scale() = 0;
+		virtual Property<translation_t>& translation() = 0;
+		virtual Property<rotation_t>& rotation() = 0;
+		virtual Property<scale_t>& scale() = 0;
 
-		virtual std::shared_ptr<IProperty<translation_t>> translation_ptr() = 0;
-		virtual std::shared_ptr<IProperty<rotation_t>> rotation_ptr() = 0;
-		virtual std::shared_ptr<IProperty<scale_t>> scale_ptr() = 0;
+		virtual std::shared_ptr<Property<translation_t>> translation_ptr() = 0;
+		virtual std::shared_ptr<Property<rotation_t>> rotation_ptr() = 0;
+		virtual std::shared_ptr<Property<scale_t>> scale_ptr() = 0;
 	};
 
 	template<typename T>
@@ -57,13 +57,13 @@ namespace nif
 	public:
 		virtual ~InterpolationData() = default;
 
-		virtual IVectorProperty<Key<T>>& keys() = 0;
-		virtual IVectorProperty<Tangent<T>>& tangents() = 0;
-		virtual IVectorProperty<TBC>& tbc() = 0;
+		virtual VectorProperty<Key<T>>& keys() = 0;
+		virtual VectorProperty<Tangent<T>>& tangents() = 0;
+		virtual VectorProperty<TBC>& tbc() = 0;
 
-		virtual std::shared_ptr<IVectorProperty<Key<T>>> keys_ptr() = 0;
-		virtual std::shared_ptr<IVectorProperty<Tangent<T>>> tangents_ptr() = 0;
-		virtual std::shared_ptr<IVectorProperty<TBC>> tbc_ptr() = 0;
+		virtual std::shared_ptr<VectorProperty<Key<T>>> keys_ptr() = 0;
+		virtual std::shared_ptr<VectorProperty<Tangent<T>>> tangents_ptr() = 0;
+		virtual std::shared_ptr<VectorProperty<TBC>> tbc_ptr() = 0;
 	};
 }
 

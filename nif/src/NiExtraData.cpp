@@ -21,7 +21,7 @@
 
 nif::NiExtraData::NiExtraData(native_type* obj) :
 	NiObject(obj), 
-	m_name(&getNative(), &native::NiExtraData::GetName, &native::NiExtraData::SetName)
+	m_name(*this, &getNative(), &native::NiExtraData::GetName, &native::NiExtraData::SetName)
 {
 }
 
@@ -40,7 +40,7 @@ nif::NiStringExtraData::NiStringExtraData() :
 
 nif::NiStringExtraData::NiStringExtraData(native_type* obj) :
 	NiExtraData(obj), 
-	m_value(&getNative(), &native::NiStringExtraData::GetData, &native::NiStringExtraData::SetData)
+	m_value(*this, &getNative(), &native::NiStringExtraData::GetData, &native::NiStringExtraData::SetData)
 {
 }
 

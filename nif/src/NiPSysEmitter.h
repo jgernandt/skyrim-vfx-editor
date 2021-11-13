@@ -37,10 +37,10 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IAssignable<NiInterpolator>& visIplr() { return m_visIplr; }
+		Assignable<NiInterpolator>& visIplr() { return m_visIplr; }
 
 	private:
-		Assignable<NiInterpolator> m_visIplr;
+		AssignableFcn<NiInterpolator, NiPSysEmitterCtlr> m_visIplr;
 	};
 
 	class NiPSysEmitter : public NiPSysModifier
@@ -57,74 +57,70 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<ColRGBA>& colour() { return m_colour; }
+		Property<ColRGBA>& colour() { return m_colour; }
 
-		IProperty<float>& lifeSpan() { return m_lifeSpan; }
-		IProperty<float>& lifeSpanVar() { return m_lifeSpanVar; }
+		Property<float>& lifeSpan() { return m_lifeSpan; }
+		Property<float>& lifeSpanVar() { return m_lifeSpanVar; }
 
-		IProperty<float>& size() { return m_size; }
-		IProperty<float>& sizeVar() { return m_sizeVar; }
+		Property<float>& size() { return m_size; }
+		Property<float>& sizeVar() { return m_sizeVar; }
 
-		IProperty<float>& speed() { return m_speed; }
-		IProperty<float>& speedVar() { return m_speedVar; }
+		Property<float>& speed() { return m_speed; }
+		Property<float>& speedVar() { return m_speedVar; }
 
-		IProperty<float>& azimuth() { return m_azimuth; }
-		IProperty<float>& azimuthVar() { return m_azimuthVar; }
+		Property<float>& azimuth() { return m_azimuth; }
+		Property<float>& azimuthVar() { return m_azimuthVar; }
 
-		IProperty<float>& elevation() { return m_elevation; }
-		IProperty<float>& elevationVar() { return m_elevationVar; }
+		Property<float>& elevation() { return m_elevation; }
+		Property<float>& elevationVar() { return m_elevationVar; }
 
 	private:
 
-		Property<ColRGBA, native::ColRGBA> m_colour;
-		Property<float> m_lifeSpan;
-		Property<float> m_lifeSpanVar;
-		Property<float> m_size;
-		Property<float> m_sizeVar;
-		Property<float> m_speed;
-		Property<float> m_speedVar;
+		PropertyFcn<ColRGBA, NiPSysEmitter, native::ColRGBA> m_colour;
+		PropertyFcn<float, NiPSysEmitter> m_lifeSpan;
+		PropertyFcn<float, NiPSysEmitter> m_lifeSpanVar;
+		PropertyFcn<float, NiPSysEmitter> m_size;
+		PropertyFcn<float, NiPSysEmitter> m_sizeVar;
+		PropertyFcn<float, NiPSysEmitter> m_speed;
+		PropertyFcn<float, NiPSysEmitter> m_speedVar;
 
-		struct EmitterAzimuth : PropertyBase<float>
+		struct EmitterAzimuth : PropertyBase<float, NiPSysEmitter>
 		{
-			EmitterAzimuth(NiPSysEmitter& super) : m_super{ super } {}
+			EmitterAzimuth(NiPSysEmitter& block) : 
+				PropertyBase<float, NiPSysEmitter>{ block } {}
 
 			virtual float get() const override;
 			virtual void set(const float& f) override;
-
-			NiPSysEmitter& m_super;
 
 		} m_azimuth;
 
-		struct EmitterAzimuthVar : PropertyBase<float>
+		struct EmitterAzimuthVar : PropertyBase<float, NiPSysEmitter>
 		{
-			EmitterAzimuthVar(NiPSysEmitter& super) : m_super{ super } {}
+			EmitterAzimuthVar(NiPSysEmitter& block) : 
+				PropertyBase<float, NiPSysEmitter>{ block } {}
 
 			virtual float get() const override;
 			virtual void set(const float& f) override;
-
-			NiPSysEmitter& m_super;
 
 		} m_azimuthVar;
 
-		struct EmitterElevation : PropertyBase<float>
+		struct EmitterElevation : PropertyBase<float, NiPSysEmitter>
 		{
-			EmitterElevation(NiPSysEmitter& super) : m_super{ super } {}
+			EmitterElevation(NiPSysEmitter& block) : 
+				PropertyBase<float, NiPSysEmitter>{ block } {}
 
 			virtual float get() const override;
 			virtual void set(const float& f) override;
-
-			NiPSysEmitter& m_super;
 
 		} m_elevation;
 
-		struct EmitterElevationVar : PropertyBase<float>
+		struct EmitterElevationVar : PropertyBase<float, NiPSysEmitter>
 		{
-			EmitterElevationVar(NiPSysEmitter& super) : m_super{ super } {}
+			EmitterElevationVar(NiPSysEmitter& block) : 
+				PropertyBase<float, NiPSysEmitter>{ block } {}
 
 			virtual float get() const override;
 			virtual void set(const float& f) override;
-
-			NiPSysEmitter& m_super;
 
 		} m_elevationVar;
 	};
@@ -145,10 +141,10 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IAssignable<NiNode>& emitterObject() { return m_emtrObj; }
+		Assignable<NiNode>& emitterObject() { return m_emtrObj; }
 
 	private:
-		Assignable<NiNode> m_emtrObj;
+		AssignableFcn<NiNode, NiPSysVolumeEmitter> m_emtrObj;
 	};
 
 	class NiPSysBoxEmitter : public NiPSysVolumeEmitter
@@ -166,14 +162,14 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<float>& width() { return m_width; }
-		IProperty<float>& height() { return m_height; }
-		IProperty<float>& depth() { return m_depth; }
+		Property<float>& width() { return m_width; }
+		Property<float>& height() { return m_height; }
+		Property<float>& depth() { return m_depth; }
 
 	private:
-		Property<float> m_width;
-		Property<float> m_height;
-		Property<float> m_depth;
+		PropertyFcn<float, NiPSysBoxEmitter> m_width;
+		PropertyFcn<float, NiPSysBoxEmitter> m_height;
+		PropertyFcn<float, NiPSysBoxEmitter> m_depth;
 	};
 	
 	class NiPSysCylinderEmitter : public NiPSysVolumeEmitter
@@ -191,12 +187,12 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<float>& radius() { return m_radius; }
-		IProperty<float>& height() { return m_height; }
+		Property<float>& radius() { return m_radius; }
+		Property<float>& height() { return m_height; }
 
 	private:
-		Property<float> m_radius;
-		Property<float> m_height;
+		PropertyFcn<float, NiPSysCylinderEmitter> m_radius;
+		PropertyFcn<float, NiPSysCylinderEmitter> m_height;
 	};
 
 	class NiPSysSphereEmitter : public NiPSysVolumeEmitter
@@ -214,9 +210,9 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<float>& radius() { return m_radius; }
+		Property<float>& radius() { return m_radius; }
 
 	private:
-		Property<float> m_radius;
+		PropertyFcn<float, NiPSysSphereEmitter> m_radius;
 	};
 }

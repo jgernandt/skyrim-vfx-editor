@@ -19,7 +19,7 @@
 #pragma once
 #include <cassert>
 #include <map>
-#include "nif_concepts.h"
+#include "nif_types.h"
 
 namespace nif
 {
@@ -27,6 +27,7 @@ namespace nif
 	{
 	public:
 		using native_type = native::NiObject;
+		template<typename T> class DataField;
 
 	protected:
 		friend class File;
@@ -51,6 +52,15 @@ namespace nif
 		friend bool operator<=(const NiObject& lhs, const NiObject& rhs) { return !(rhs < lhs); }
 		friend bool operator>=(const NiObject& lhs, const NiObject& rhs) { return !(lhs < rhs); }
 
+		template<typename T, typename BlockType>
+		static std::shared_ptr<T> make_field_ptr(const std::shared_ptr<BlockType>& obj, T BlockType::* field)
+		{
+			if (obj && field)
+				return std::shared_ptr<T>(obj, &(obj.get()->*field));
+			else
+				return std::shared_ptr<T>();
+		}
+
 	protected:
 		template<typename T>
 		std::shared_ptr<T> forwardPtr(T* target)
@@ -60,7 +70,7 @@ namespace nif
 		}
 
 	protected:
-		class File* m_file{ nullptr };
+		class File* m_file{ nullptr };//lets us search for other blocks if we want
 		native::NiObject* m_ptr;
 
 	private:
@@ -68,7 +78,8 @@ namespace nif
 
 		//For troubleshooting; use to test if our iterator is still valid 
 		//(it should be as long as we exist!)
-		std::map<native::NiObject*, std::weak_ptr<nif::NiObject>>* m_index;
+		std::map<native::NiObject*, std::weak_ptr<nif::NiObject>>* m_index{ nullptr };
 	};
-
 }
+
+#include "nif_concepts.h"

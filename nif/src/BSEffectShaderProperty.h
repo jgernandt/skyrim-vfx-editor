@@ -49,10 +49,10 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<unsigned short>& flags() { return m_flags; }
+		Property<unsigned short>& flags() { return m_flags; }
 
 	private:
-		Property<unsigned short> m_flags;//should be a FlagSet<unsigned short>, but I can't be bothered right now
+		PropertyFcn<unsigned short, NiAlphaProperty> m_flags;//should be a FlagSet<unsigned short>, but I can't be bothered right now
 	};
 
 	class BSEffectShaderProperty : public NiObjectNET
@@ -70,18 +70,18 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<ColRGBA>& emissiveCol() { return m_emissiveCol; }
-		IProperty<float>& emissiveMult() { return m_emissiveMult; }
-		IProperty<std::string>& sourceTex() { return m_sourceTex; }
-		IProperty<std::string>& greyscaleTex() { return m_greyscaleTex; }
+		Property<ColRGBA>& emissiveCol() { return m_emissiveCol; }
+		Property<float>& emissiveMult() { return m_emissiveMult; }
+		Property<std::string>& sourceTex() { return m_sourceTex; }
+		Property<std::string>& greyscaleTex() { return m_greyscaleTex; }
 		FlagSet<ShaderFlag1>& shaderFlags1() { return m_shaderFlags1; }
 		FlagSet<ShaderFlag2>& shaderFlags2() { return m_shaderFlags2; }
 
 	private:
-		Property<ColRGBA, native::ColRGBA> m_emissiveCol;
-		Property<float> m_emissiveMult;
-		Property<std::string> m_sourceTex;
-		Property<std::string> m_greyscaleTex;
+		PropertyFcn<ColRGBA, BSEffectShaderProperty, native::ColRGBA> m_emissiveCol;
+		PropertyFcn<float, BSEffectShaderProperty> m_emissiveMult;
+		PropertyFcn<std::string, BSEffectShaderProperty> m_sourceTex;
+		PropertyFcn<std::string, BSEffectShaderProperty> m_greyscaleTex;
 
 		struct ShaderFlag1Set : FlagSet<ShaderFlag1>
 		{

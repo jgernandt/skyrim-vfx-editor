@@ -20,10 +20,11 @@
 #include <cassert>
 #include <functional>
 #include "Observable.h"
+#include "DataField.h"
 
-//like a Property for class types
+
 template<typename T>
-class IAssignable : public IObservable<IAssignable<T>>
+class IAssignable
 {
 public:
 	virtual ~IAssignable() = default;
@@ -33,6 +34,9 @@ public:
 };
 
 template<typename T>
+using OAssignable = IObservable<IAssignable<T>>;
+
+template<typename T>
 class IListener<IAssignable<T>>
 {
 public:
@@ -40,43 +44,55 @@ public:
 
 	virtual void onAssign(T*) {}
 };
-template<typename T>
-using AssignableListener = IListener<IAssignable<T>>;
 
 namespace nif
 {
 	template<typename T>
-	class AssignableBase : public IAssignable<T>
+	using Assignable = NiObject::DataField<IAssignable<T>>;
+
+	template<typename T>
+	using AssignableListener = IListener<IAssignable<T>>;
+
+	template<typename T, typename BlockType>
+	class AssignableBase : public Assignable<T>
 	{
 	public:
+		AssignableBase(BlockType& block) : Assignable<T>(block) {}
 		virtual ~AssignableBase() = default;
 
-		virtual void addListener(AssignableListener<T>& l) final override { m_obs.addListener(l); }
-		virtual void removeListener(AssignableListener<T>& l) final override { m_obs.removeListener(l); }
-
 	protected:
+		typename BlockType::native_type* nativePtr() const
+		{
+			assert(this->m_block);
+			return &static_cast<BlockType*>(this->m_block)->getNative();
+		}
+		typename BlockType& block() const
+		{
+			assert(this->m_block);
+			return *static_cast<BlockType*>(this->m_block);
+		}
+
 		void notify(T* t)
 		{
-			for (AssignableListener<T>* l : m_obs.getListeners()) {
+			for (AssignableListener<T>* l : this->m_lsnrs) {
 				assert(l);
 				l->onAssign(t);
 			}
 		}
-
-	private:
-		ObservableBase<IAssignable<T>> m_obs;
 	};
 
-	template<typename T>
-	class Assignable final : public AssignableBase<T>
+	template<typename T, typename BlockType>
+	class AssignableFcn final : public AssignableBase<T, BlockType>
 	{
 	public:
-		using native_type = typename std::remove_reference<decltype(std::declval<T>().getNative())>::type;
+		using native_type = typename T::native_type;
+		//using native_type = typename std::remove_reference<decltype(std::declval<T>().getNative())>::type;
 
 	public:
 		//RetType and ArgType here may be Niflib::Ref<native_type>, or a pointer to some type related to native_type
 		template<typename ObjType, typename RetType, typename BaseType>
-		Assignable(ObjType* obj, RetType(BaseType::* g)() const, void(BaseType::* s)(native_type*)) :
+		AssignableFcn(BlockType& block, ObjType* obj, RetType(BaseType::* g)() const, void(BaseType::* s)(native_type*)) :
+			AssignableBase<T, BlockType>(block),
 			m_get{ std::bind(g, obj) },
 			m_set{ std::bind(s, obj, std::placeholders::_1) }
 		{

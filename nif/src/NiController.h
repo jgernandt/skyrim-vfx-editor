@@ -51,10 +51,10 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<KeyType>& keyType() { return m_keyType; }
+		Property<KeyType>& keyType() { return m_keyType; }
 
 	private:
-		Property<KeyType, native::KeyType> m_keyType;
+		PropertyFcn<KeyType, NiBoolData, native::KeyType> m_keyType;
 	};
 
 	class NiBoolInterpolator : public NiInterpolator
@@ -72,15 +72,15 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<bool>& value() { return m_value; }
-		const IProperty<bool>& value() const { return m_value; }
+		Property<bool>& value() { return m_value; }
+		const Property<bool>& value() const { return m_value; }
 
-		IAssignable<NiBoolData>& data() { return m_data; }
-		const IAssignable<NiBoolData>& data() const { return m_data; }
+		Assignable<NiBoolData>& data() { return m_data; }
+		const Assignable<NiBoolData>& data() const { return m_data; }
 
 	private:
-		Property<bool> m_value;
-		Assignable<NiBoolData> m_data;
+		PropertyFcn<bool, NiBoolInterpolator> m_value;
+		AssignableFcn<NiBoolData, NiBoolInterpolator> m_data;
 	};
 
 	class NiFloatData : public NiObject
@@ -98,8 +98,8 @@ namespace nif
 
 		native::NiFloatData& getNative() const;
 
-		IProperty<KeyType>& keyType() { return m_keyType; }
-		std::shared_ptr<IProperty<KeyType>> keyType_ptr();
+		Property<KeyType>& keyType() { return m_keyType; }
+		std::shared_ptr<Property<KeyType>> keyType_ptr();
 		InterpolationData<float>& iplnData() { return m_keys; }
 		std::shared_ptr<InterpolationData<float>> iplnData_ptr();
 
@@ -108,22 +108,23 @@ namespace nif
 		{
 			IplnData(NiFloatData& super);
 
-			virtual IVectorProperty<Key<float>>& keys() override;
-			virtual IVectorProperty<Tangent<float>>& tangents() override;
-			virtual IVectorProperty<TBC>& tbc() override;
+			virtual VectorProperty<Key<float>>& keys() override;
+			virtual VectorProperty<Tangent<float>>& tangents() override;
+			virtual VectorProperty<TBC>& tbc() override;
 
-			virtual std::shared_ptr<IVectorProperty<Key<float>>> keys_ptr() override;
-			virtual std::shared_ptr<IVectorProperty<Tangent<float>>> tangents_ptr() override;
-			virtual std::shared_ptr<IVectorProperty<TBC>> tbc_ptr() override;
+			virtual std::shared_ptr<VectorProperty<Key<float>>> keys_ptr() override;
+			virtual std::shared_ptr<VectorProperty<Tangent<float>>> tangents_ptr() override;
+			virtual std::shared_ptr<VectorProperty<TBC>> tbc_ptr() override;
 
 			class Keys;
 			class Tangents;
 			class TBCs;
 
-			class Keys final : public VectorPropertyBase<Key<float>>
+			class Keys final : public VectorPropertyBase<Key<float>, NiFloatData>
 			{
 			public:
-				Keys(NiFloatData& super) : m_super{ super } {}
+				Keys(NiFloatData& block) : 
+					VectorPropertyBase<Key<float>, NiFloatData>(block) {}
 
 				virtual container get() const override;
 				virtual void set(const container& c) override;
@@ -136,13 +137,12 @@ namespace nif
 
 				friend class Tangents;
 				friend class TBCs;
-
-				NiFloatData& m_super;
 			};
-			class Tangents final : public VectorPropertyBase<Tangent<float>>
+			class Tangents final : public VectorPropertyBase<Tangent<float>, NiFloatData>
 			{
 			public:
-				Tangents(NiFloatData& super) : m_super{ super } {}
+				Tangents(NiFloatData& block) : 
+					VectorPropertyBase<Tangent<float>, NiFloatData>(block) {}
 
 				virtual container get() const override;
 				virtual void set(const container& c) override;
@@ -155,14 +155,11 @@ namespace nif
 
 				friend class Keys;
 				friend class TBCs;
-
-				NiFloatData& m_super;
 			};
-			class TBCs final :
-				public VectorPropertyBase<TBC>
+			class TBCs final : public VectorPropertyBase<TBC, NiFloatData>
 			{
 			public:
-				TBCs(NiFloatData& super) : m_super{ super } {}
+				TBCs(NiFloatData& block) : VectorPropertyBase<TBC, NiFloatData>(block) {}
 
 				virtual container get() const override;
 				virtual void set(const container& c) override;
@@ -175,8 +172,6 @@ namespace nif
 
 				friend class Keys;
 				friend class Tangents;
-
-				NiFloatData& m_super;
 			};
 
 			Keys m_keys;
@@ -185,7 +180,7 @@ namespace nif
 
 			NiFloatData& m_super;
 		};
-		Property<KeyType, native::KeyType> m_keyType;
+		PropertyFcn<KeyType, NiFloatData, native::KeyType> m_keyType;
 		IplnData m_keys;
 	};
 
@@ -204,15 +199,15 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IProperty<float>& value() { return m_value; }
-		const IProperty<float>& value() const { return m_value; }
+		Property<float>& value() { return m_value; }
+		const Property<float>& value() const { return m_value; }
 
-		IAssignable<NiFloatData>& data() { return m_data; }
-		const IAssignable<NiFloatData>& data() const { return m_data; }
+		Assignable<NiFloatData>& data() { return m_data; }
+		const Assignable<NiFloatData>& data() const { return m_data; }
 
 	private:
-		Property<float> m_value;
-		Assignable<NiFloatData> m_data;
+		PropertyFcn<float, NiFloatInterpolator> m_value;
+		AssignableFcn<NiFloatData, NiFloatInterpolator> m_data;
 	};
 
 	class NiBlendBoolInterpolator : public NiInterpolator//skipping NiBlendInterpolator for now
@@ -261,22 +256,21 @@ namespace nif
 
 		native_type& getNative() const;
 
-		//NiTimeController
 		//disallow assigning to these?
-		//IAssignable<NiTimeController>& nextCtlr();
-		//IAssignable<NiObjectNET>& target();
-		IProperty<unsigned short>& flags() { return m_flags; }
-		IProperty<float>& frequency() { return m_frequency; }
-		IProperty<float>& phase() { return m_phase; }
-		IProperty<float>& startTime() { return m_startTime; }
-		IProperty<float>& stopTime() { return m_stopTime; }
+		//Assignable<NiTimeController>& nextCtlr();
+		//Assignable<NiObjectNET>& target();
+		Property<unsigned short>& flags() { return m_flags; }
+		Property<float>& frequency() { return m_frequency; }
+		Property<float>& phase() { return m_phase; }
+		Property<float>& startTime() { return m_startTime; }
+		Property<float>& stopTime() { return m_stopTime; }
 
 	private:
-		Property<unsigned short> m_flags;
-		Property<float> m_frequency;
-		Property<float> m_phase;
-		Property<float> m_startTime;
-		Property<float> m_stopTime;
+		PropertyFcn<unsigned short, NiTimeController> m_flags;
+		PropertyFcn<float, NiTimeController> m_frequency;
+		PropertyFcn<float, NiTimeController> m_phase;
+		PropertyFcn<float, NiTimeController> m_startTime;
+		PropertyFcn<float, NiTimeController> m_stopTime;
 	};
 
 	class NiSingleInterpController : public NiTimeController
@@ -293,9 +287,9 @@ namespace nif
 
 		native_type& getNative() const;
 
-		IAssignable<NiInterpolator>& interpolator() { return m_iplr; }
+		Assignable<NiInterpolator>& interpolator() { return m_iplr; }
 
 	private:
-		Assignable<NiInterpolator> m_iplr;
+		AssignableFcn<NiInterpolator, NiSingleInterpController> m_iplr;
 	};
 }
