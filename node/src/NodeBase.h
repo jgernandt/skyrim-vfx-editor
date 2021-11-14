@@ -62,7 +62,7 @@ namespace node
 		};
 
 	public:
-		NodeBase(std::shared_ptr<nif::NiObject>&& obj);
+		NodeBase();
 		NodeBase(const NodeBase&) = delete;
 
 		virtual ~NodeBase();
@@ -72,30 +72,25 @@ namespace node
 		virtual void accept(gui::Visitor& v) override;
 		virtual void onClose() override;
 
-		virtual nif::NiObject& object();
+		virtual nif::NiObject& object() = 0;
 
 		gui::Connector* addConnector(const std::string& label, ConnectorType type, std::unique_ptr<gui::Connector>&& obj);
 
+		//Fields systems is undergoing major revision. May be removed altogether.
+		//Currently we keep pointers here, but our derived classes own the resources.
+		//We do not touch them during destruction.
 		Field* getField(const std::string& name);
 
 		template<typename T, typename... Args>
-		T* newField(const std::string& name, Args&&... args)
+		[[nodiscard]] std::unique_ptr<T> newField(const std::string& name, Args&&... args)
 		{
 			//ctor of T should add any components to us and fill itself out
 			auto obj = std::make_unique<T>(name, std::forward<Args>(args)...);
-			T* ptr = obj.get();
-			auto result = m_fields.insert({ name, std::move(obj) });
+			auto result = m_fields.insert({ name, obj.get() });
 			//result is pair<iterator, bool>
-			return result.second ? ptr : nullptr;
+			assert(result.second);
+			return obj;
 		}
-
-		void addObject(std::shared_ptr<nif::NiObject>&& obj) { m_objects.push_back(std::move(obj)); }
-		const std::vector<std::shared_ptr<nif::NiObject>>& getObjects() const { return m_objects; }
-
-		//We keep the controllers separate from other objects since we expect them to be dynamic
-		void addController(std::shared_ptr<nif::NiTimeController>&& obj) { m_controllers.push_back(std::move(obj)); }
-		void removeController(nif::NiTimeController* obj);
-		const std::vector<std::shared_ptr<nif::NiTimeController>>& getControllers() const { return m_controllers; }
 
 	protected:
 		//quick workaround to avoid relying on our destructor for safe disconnection
@@ -126,60 +121,6 @@ namespace node
 
 		LeftController m_leftCtlr;
 		RightController m_rightCtlr;
-		std::vector<std::shared_ptr<nif::NiObject>> m_objects;
-		std::vector<std::shared_ptr<nif::NiTimeController>> m_controllers;
-		std::map<std::string, std::unique_ptr<Field>> m_fields;
+		std::map<std::string, Field*> m_fields;
 	};
-
-	/*template<typename ObjectType>
-	class SimpleNode : public NodeBase
-	{
-	public:
-		SimpleNode(std::unique_ptr<ObjectType>&& obj) : m_object{ std::move(obj) } {}
-		virtual ~SimpleNode()
-		{
-			//Disconnect all our fields
-			for (auto&& field : m_fields) {
-				assert(field.second);
-				if (field.second->connector)
-					field.second->connector->disconnect();
-			}
-
-			//Shouldn't be needed, but might as well:
-			m_fields.clear();
-
-			//To be very safe, we should (1) remove the Connectors, (2) clear the Fields, (3) let m_object expire.
-			//This is the reverse order of their construction, and their chain of dependence.
-			//However, just disconnecting should be fine.
-		}
-
-		ObjectType& object() { assert(m_object); return *m_object; }
-
-	protected:
-		std::unique_ptr<ObjectType> m_object;
-	};
-
-	//Drop SimpleNode and merge this functionality into NodeBase?
-	class CompoundNode : public NodeBase
-	{
-	public:
-		CompoundNode() = default;
-
-		virtual ~CompoundNode()
-		{
-			for (auto&& field : m_fields) {
-				assert(field.second);
-				if (field.second->connector)
-					field.second->connector->disconnect();
-			}
-			m_fields.clear();
-		}
-
-	protected:
-		void addObject(std::unique_ptr<nif::NiObject>&& obj) { m_objects.push_back(std::move(obj)); }
-		const std::vector<std::unique_ptr<nif::NiObject>>& getObjects() const { return m_objects; }
-
-	private:
-		std::vector<std::unique_ptr<nif::NiObject>> m_objects;
-	};*/
 }

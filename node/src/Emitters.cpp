@@ -257,36 +257,45 @@ public:
 
 
 node::Emitter::Emitter(nif::File& file, 
-	std::shared_ptr<nif::NiPSysEmitter>&& obj,
-	std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
-	std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	Modifier(std::move(obj))
+	ni_ptr<nif::NiPSysEmitter>&& obj,
+	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+	ni_ptr<nif::NiFloatInterpolator>&& iplr,
+	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
+	Modifier(std::move(obj)),
+	m_ctlr{ std::move(ctlr) },
+	//iplr goes to BirthRateField
+	m_visIplr{ std::move(vis_iplr) }
 {
-	if (!ctlr) {
-		ctlr = file.create<nif::NiPSysEmitterCtlr>();
-		ctlr->flags().set(DEFAULT_FLAGS);
-		ctlr->frequency().set(DEFAULT_FREQUENCY);
-		ctlr->phase().set(DEFAULT_PHASE);
-		ctlr->startTime().set(DEFAULT_STARTTIME);
-		ctlr->stopTime().set(DEFAULT_STOPTIME);
-	}
-	m_ctlr = ctlr.get();
-	addController(std::move(ctlr));
+	if (!m_ctlr) {
+		m_ctlr = file.create<nif::NiPSysEmitterCtlr>();
+		if (!m_ctlr)
+			throw std::runtime_error("Failed to create NiPSysEmitterCtlr");
 
-	m_modNameLsnr = std::make_unique<ModifierNameListener>(m_ctlr->modifierName());
-	object().name().addListener(*m_modNameLsnr);
-	m_modNameLsnr->onSet(object().name().get());
+		m_ctlr->flags().set(DEFAULT_FLAGS);
+		m_ctlr->frequency().set(DEFAULT_FREQUENCY);
+		m_ctlr->phase().set(DEFAULT_PHASE);
+		m_ctlr->startTime().set(DEFAULT_STARTTIME);
+		m_ctlr->stopTime().set(DEFAULT_STOPTIME);
+	}
+
+	m_device.addController(m_ctlr);
+	object().colour().addListener(*this);//add colour requirement dynamically
+	onSet(object().colour().get());
+	m_device.addRequirement(Requirement::LIFETIME);
+	m_device.addRequirement(Requirement::MOVEMENT);
 
 	if (!iplr) {
 		iplr = file.create<nif::NiFloatInterpolator>();
+		if (!iplr)
+			throw std::runtime_error("Failed to create NiFloatInterpolator");
 	}
 
-	if (!vis_iplr) {
-		vis_iplr = file.create<nif::NiBoolInterpolator>();
-		vis_iplr->value().set(true);
+	if (!m_visIplr) {
+		m_visIplr = file.create<nif::NiBoolInterpolator>();
+		if (!m_visIplr)
+			throw std::runtime_error("Failed to create NiBoolInterpolator");
+		m_visIplr->value().set(true);
 	}
-	m_visIplr = std::move(vis_iplr);
 	if (m_ctlr->visIplr().isAssigned(nullptr))
 		m_ctlr->visIplr().assign(m_visIplr.get());
 
@@ -294,37 +303,34 @@ node::Emitter::Emitter(nif::File& file,
 	setColour(COL_TITLE_ACTIVE, TitleCol_ModifierActive);
 	setClosable(true);
 
-	addTargetField(std::make_shared<Emitter::Device>(*this));
+	newChild<gui::Separator>();
+
+	m_birthRateField = newField<BirthRateField>(BIRTH_RATE, *this, std::move(iplr));
+	m_lifeSpanField = newField<LifeSpanField>(LIFE_SPAN, *this);
 
 	newChild<gui::Separator>();
 
-	newField<BirthRateField>(BIRTH_RATE, *this, std::move(iplr));
-	newField<LifeSpanField>(LIFE_SPAN, *this);
-
-	newChild<gui::Separator>();
-
-	newField<SizeField>(SIZE, *this);
-	newField<ColourField>(COLOUR, *this);
+	m_sizeField = newField<SizeField>(SIZE, *this);
+	m_colField = newField<ColourField>(COLOUR, *this);
 
 	newChild<gui::Separator>();
 
 	newChild<gui::Text>("Velocity");
-	newField<SpeedField>(SPEED, *this);
-	newField<AzimuthField>(AZIMUTH, *this);
-	newField<ElevationField>(ELEVATION, *this);
+	m_speedField = newField<SpeedField>(SPEED, *this);
+	m_azimField = newField<AzimuthField>(AZIMUTH, *this);
+	m_elevField = newField<ElevationField>(ELEVATION, *this);
 }
 
 node::Emitter::~Emitter()
 {
-	object().name().removeListener(*m_modNameLsnr);
 	if (controller().visIplr().isAssigned(m_visIplr.get()))
 		controller().visIplr().assign(nullptr);
 }
 
 nif::NiPSysEmitter& node::Emitter::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiPSysEmitter*>(getObjects()[0].get());
+	assert(m_obj);
+	return *static_cast<nif::NiPSysEmitter*>(m_obj.get());
 }
 
 nif::NiPSysEmitterCtlr& node::Emitter::controller()
@@ -333,128 +339,34 @@ nif::NiPSysEmitterCtlr& node::Emitter::controller()
 	return *m_ctlr;
 }
 
-/*nif::NiFloatInterpolator& node::Emitter::brIplr()
+
+void node::Emitter::onSet(const nif::ColRGBA& col)
 {
-	assert(getObjects().size() > 1 && getObjects()[1]);
-	return *static_cast<nif::NiFloatInterpolator*>(getObjects()[1].get());
-}
-
-nif::NiBoolInterpolator& node::Emitter::visIplr()
-{
-	assert(getObjects().size() > 2 && getObjects()[2]);
-	return *static_cast<nif::NiBoolInterpolator*>(getObjects()[2].get());
-}*/
-
-
-node::Emitter::Device::Device(Emitter& node) :
-	Modifier::Device(node),
-	m_col(node.object().colour()),
-	m_life(node.object().lifeSpan(), node.object().lifeSpanVar(), Requirement::LIFETIME),
-	m_move(node.object().speed(), node.object().speedVar(), Requirement::MOVEMENT)
-{
-}
-
-void node::Emitter::Device::onConnect(IModifiable& ifc)
-{
-	m_col.activate(&ifc.requirements());
-	m_life.activate(&ifc.requirements());
-	m_move.activate(&ifc.requirements());
-
-	//pass on last
-	Modifier::Device::onConnect(ifc);
-}
-
-void node::Emitter::Device::onDisconnect(IModifiable& ifc)
-{
-	//pass on first
-	Modifier::Device::onDisconnect(ifc);
-
-	m_col.deactivate();
-	m_life.deactivate();
-	m_move.deactivate();
-}
-
-void node::Emitter::Device::ColourActivator::onSet(const nif::ColRGBA& f)
-{
-	if ((f != nif::COL_WHITE) != m_active) {
-		assert(m_target);
-		if (m_active)
-			m_target->remove(Requirement::COLOUR);
+	if (m_colActive != (col != nif::COL_WHITE)) {
+		if (m_colActive)
+			m_device.removeRequirement(Requirement::COLOUR);
 		else
-			m_target->add(Requirement::COLOUR);
-		m_active = !m_active;
+			m_device.addRequirement(Requirement::COLOUR);
+		m_colActive = !m_colActive;
 	}
-}
-
-void node::Emitter::Device::ColourActivator::activate(ISet<Requirement>* target)
-{
-	m_target = target;
-	m_prop.addListener(*this);
-	onSet(m_prop.get());
-}
-
-void node::Emitter::Device::ColourActivator::deactivate()
-{
-	//...but not here
-	if (m_active) {
-		assert(m_target);
-		m_target->remove(Requirement::COLOUR);
-		m_active = false;
-	}
-	m_prop.removeListener(*this);
-	m_target = nullptr;
-}
-
-void node::Emitter::Device::LifeMoveActivator::onSet(const float& f)
-{
-	if ((m_prop.get() != 0.0f || m_var.get() != 0.0f) != m_active) {
-		assert(m_target);
-		if (m_active)
-			m_target->remove(m_req);
-		else
-			m_target->add(m_req);
-		m_active = !m_active;
-	}
-}
-
-void node::Emitter::Device::LifeMoveActivator::activate(ISet<Requirement>* target)
-{
-	m_target = target;
-	m_prop.addListener(*this);
-	onSet(m_prop.get());
-	m_var.addListener(*this);
-	onSet(m_var.get());
-}
-
-void node::Emitter::Device::LifeMoveActivator::deactivate()
-{
-	//...but not here
-	if (m_active) {
-		assert(m_target);
-		m_target->remove(m_req);
-		m_active = false;
-	}
-	m_prop.removeListener(*this);
-	m_var.removeListener(*this);
-	m_target = nullptr;
 }
 
 
 node::VolumeEmitter::VolumeEmitter(nif::File& file,
-	std::shared_ptr<nif::NiPSysVolumeEmitter>&& obj,
-	std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
-	std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
+	ni_ptr<nif::NiPSysVolumeEmitter>&& obj,
+	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+	ni_ptr<nif::NiFloatInterpolator>&& iplr,
+	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
 	Emitter(file, std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	newChild<gui::Separator>();
-	newField<EmitterObjectField>(EMITTER_OBJECT, *this);
+	m_emitterObjField = newField<EmitterObjectField>(EMITTER_OBJECT, *this);
 }
 
 nif::NiPSysVolumeEmitter& node::VolumeEmitter::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiPSysVolumeEmitter*>(getObjects()[0].get());
+	assert(m_obj);
+	return *static_cast<nif::NiPSysVolumeEmitter*>(m_obj.get());
 }
 
 node::VolumeEmitter::EmitterObjectField::EmitterObjectField(const std::string& name, VolumeEmitter& node) :
@@ -481,18 +393,18 @@ node::BoxEmitter::BoxEmitter(nif::File& file) :
 }
 
 node::BoxEmitter::BoxEmitter(nif::File& file,
-	std::shared_ptr<nif::NiPSysBoxEmitter>&& obj,
-	std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
-	std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
+	ni_ptr<nif::NiPSysBoxEmitter>&& obj,
+	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+	ni_ptr<nif::NiFloatInterpolator>&& iplr,
+	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
 	VolumeEmitter(file, std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Box emitter");
 	setSize({ WIDTH, HEIGHT });
 
-	newField<EmitterMetricField>(BOX_WIDTH, *this, object().width());
-	newField<EmitterMetricField>(BOX_HEIGHT, *this, object().height());
-	newField<EmitterMetricField>(BOX_DEPTH, *this, object().depth());
+	m_widthField = newField<EmitterMetricField>(BOX_WIDTH, *this, object().width());
+	m_heightField = newField<EmitterMetricField>(BOX_HEIGHT, *this, object().height());
+	m_depthField = newField<EmitterMetricField>(BOX_DEPTH, *this, object().depth());
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
@@ -501,10 +413,15 @@ node::BoxEmitter::BoxEmitter(nif::File& file,
 	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
+node::BoxEmitter::~BoxEmitter()
+{
+	disconnect();
+}
+
 nif::NiPSysBoxEmitter& node::BoxEmitter::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiPSysBoxEmitter*>(getObjects()[0].get());
+	assert(m_obj);
+	return *static_cast<nif::NiPSysBoxEmitter*>(m_obj.get());
 }
 
 
@@ -516,17 +433,17 @@ node::CylinderEmitter::CylinderEmitter(nif::File& file) :
 }
 
 node::CylinderEmitter::CylinderEmitter(nif::File& file,
-	std::shared_ptr<nif::NiPSysCylinderEmitter>&& obj,
-	std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
-	std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
+	ni_ptr<nif::NiPSysCylinderEmitter>&& obj,
+	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+	ni_ptr<nif::NiFloatInterpolator>&& iplr,
+	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
 	VolumeEmitter(file, std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Cylinder emitter");
 	setSize({ WIDTH, HEIGHT });
 
-	newField<EmitterMetricField>(CYL_RADIUS, *this, object().radius());
-	newField<EmitterMetricField>(CYL_LENGTH, *this, object().height());
+	m_radiusField = newField<EmitterMetricField>(CYL_RADIUS, *this, object().radius());
+	m_lengthField = newField<EmitterMetricField>(CYL_LENGTH, *this, object().height());
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
@@ -534,10 +451,15 @@ node::CylinderEmitter::CylinderEmitter(nif::File& file,
 	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
+node::CylinderEmitter::~CylinderEmitter()
+{
+	disconnect();
+}
+
 nif::NiPSysCylinderEmitter& node::CylinderEmitter::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiPSysCylinderEmitter*>(getObjects()[0].get());
+	assert(m_obj);
+	return *static_cast<nif::NiPSysCylinderEmitter*>(m_obj.get());
 }
 
 
@@ -549,16 +471,16 @@ node::SphereEmitter::SphereEmitter(nif::File& file) :
 }
 
 node::SphereEmitter::SphereEmitter(nif::File& file,
-	std::shared_ptr<nif::NiPSysSphereEmitter>&& obj,
-	std::shared_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
-	std::shared_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
+	ni_ptr<nif::NiPSysSphereEmitter>&& obj,
+	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
+	ni_ptr<nif::NiFloatInterpolator>&& iplr,
+	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
 	VolumeEmitter(file, std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Sphere emitter");
 	setSize({ WIDTH, HEIGHT });
 
-	newField<EmitterMetricField>(SPH_RADIUS, *this, object().radius());
+	m_radiusField = newField<EmitterMetricField>(SPH_RADIUS, *this, object().radius());
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
@@ -566,9 +488,14 @@ node::SphereEmitter::SphereEmitter(nif::File& file,
 	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
+node::SphereEmitter::~SphereEmitter()
+{
+	disconnect();
+}
+
 nif::NiPSysSphereEmitter& node::SphereEmitter::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiPSysSphereEmitter*>(getObjects()[0].get());
+	assert(m_obj);
+	return *static_cast<nif::NiPSysSphereEmitter*>(m_obj.get());
 }
 

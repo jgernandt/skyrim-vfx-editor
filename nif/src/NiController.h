@@ -253,11 +253,21 @@ namespace nif
 		//disallow assigning to these?
 		//Assignable<NiTimeController>& nextCtlr();
 		//Assignable<NiObjectNET>& target();
+
 		Property<unsigned short>& flags() { return m_flags; }
+		const Property<unsigned short>& flags() const { return m_flags; }
+
 		Property<float>& frequency() { return m_frequency; }
+		const Property<float>& frequency() const { return m_frequency; }
+
 		Property<float>& phase() { return m_phase; }
+		const Property<float>& phase() const { return m_phase; }
+
 		Property<float>& startTime() { return m_startTime; }
+		const Property<float>& startTime() const { return m_startTime; }
+
 		Property<float>& stopTime() { return m_stopTime; }
+		const Property<float>& stopTime() const { return m_stopTime; }
 
 	private:
 		PropertyFcn<unsigned short, NiTimeController> m_flags;

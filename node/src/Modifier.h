@@ -44,115 +44,120 @@ namespace node
 		};
 
 	protected:
-		Modifier(std::shared_ptr<nif::NiPSysModifier>&& obj);
+		Modifier(ni_ptr<nif::NiPSysModifier>&& obj);
 
 	public:
 		virtual ~Modifier();
 		virtual nif::NiPSysModifier& object() override;
 
-		void addUnknownController(std::shared_ptr<nif::NiPSysModifierCtlr>&& ctlr);
-
-	protected:
-		void addTargetField(std::shared_ptr<Device>&& device);
+		void addUnknownController(ni_ptr<nif::NiPSysModifierCtlr>&& ctlr);
 
 	public:
 		constexpr static const char* TARGET = "Target";
 		constexpr static const char* NEXT_MODIFIER = "Next modifier";
 
 		//Updates modifier order to match position in the sequence
-		class OrderListener : public nif::SequenceListener<nif::NiPSysModifier>
+		class OrderUpdater : public nif::SequenceListener<nif::NiPSysModifier>
 		{
 		public:
-			OrderListener(IProperty<unsigned int>& order) :
-				m_order{ order } {}
+			OrderUpdater(ni_ptr<IProperty<unsigned int>>&& order);
 
 			virtual void onInsert(size_t pos) override;
 			virtual void onErase(size_t pos) override;
 
 		private:
-			IProperty<unsigned int>& m_order;
+			const ni_ptr<IProperty<unsigned int>> m_order;
 		};
 
 		//Updates modifier name to match its order
-		class NameListener : public nif::PropertyListener<unsigned int>
+		class NameUpdater : public nif::PropertyListener<unsigned int>
 		{
 		public:
-			NameListener(IProperty<std::string>& name) :
-				m_name{ name } {}
+			NameUpdater(ni_ptr<IProperty<std::string>>&& name);
 
 			virtual void onSet(const unsigned int& i) override;
 
 		private:
-			IProperty<std::string>& m_name;
+			const ni_ptr<IProperty<std::string>> m_name;
 		};
 
 		//Updates one string to match another string (useful for the modifier name on a NiPSysModifierCtlr)
-		class ModifierNameListener : public nif::PropertyListener<std::string>
+		class StringMatcher : public nif::PropertyListener<std::string>
 		{
 		public:
-			ModifierNameListener(IProperty<std::string>& name) :
-				m_name{ name } {}
-
-			virtual void onSet(const std::string& s) override { m_name.set(s); }
+			StringMatcher(ni_ptr<IProperty<std::string>>&& target);
+			virtual void onSet(const std::string& s) override { m_target->set(s); }
 
 		private:
-			IProperty<std::string>& m_name;
+			const ni_ptr<IProperty<std::string>> m_target;
 		};
 
 	protected:
-		//Derive from this to add functionality (controllers, requirements)
-		class Device : public SequentialDevice<IModifiable>
+		class Device final : public SequentialDevice<IModifiable>
 		{
 		public:
-			Device(Modifier& node) :
-				m_node{ node }, m_mod{ node.object() }, m_modLsnr{ m_mod.order() }, m_ordLsnr{ m_mod.name() } {}
-			virtual ~Device() = default;
+			Device(const ni_ptr<nif::NiPSysModifier>& obj);
 
 			virtual void onConnect(IModifiable& ifc) override;
 			virtual void onDisconnect(IModifiable& ifc) override;
 
-		protected:
-			//NodeBase will survive us. Modifier will not.
-			NodeBase& m_node;
-			nif::NiPSysModifier& m_mod;
-			OrderListener m_modLsnr;
-			NameListener m_ordLsnr;
-		};
+			//Add a controller to our connected interface (current or future).
+			//Also registers the controller to receive name changes.
+			void addController(const ni_ptr<nif::NiPSysModifierCtlr>& ctlr);
+			void removeController(nif::NiPSysModifierCtlr* ctlr);
 
-		template<Requirement Req>
-		class ReqDevice : public Device
-		{
-		public:
-			ReqDevice(Modifier& node) : Device(node) {}
-			virtual ~ReqDevice() = default;
+			//Add a requirement to our connected interface (current or future).
+			void addRequirement(Requirement req);
+			void removeRequirement(Requirement req);
 
-			virtual void onConnect(IModifiable& ifc) override;
-			virtual void onDisconnect(IModifiable& ifc) override;
+		private:
+			const ni_ptr<nif::NiPSysModifier> m_mod;
+
+			//Listens to our connected sequence and keeps our order correct
+			OrderUpdater m_orderUpdater;
+
+			//Controllers and requirements may change dynamically
+			using ControllerPair = std::pair<ni_ptr<nif::NiPSysModifierCtlr>, std::unique_ptr<StringMatcher>>;
+			std::vector<ControllerPair> m_ctlrs;
+			std::map<Requirement, int> m_reqs;
+
+			//Our connected interface
+			IModifiable* m_ifc{ nullptr };
 		};
 
 		class TargetField final : public Field
 		{
 		public:
-			TargetField(const std::string& name, Modifier& node, const std::shared_ptr<Device>& device);
+			TargetField(const std::string& name, Modifier& node, Device& rcvr);
 
 		private:
-			std::shared_ptr<Device> m_device;
+			Device& m_rcvr;
 			Sender<void> m_sndr;
 		};
 
 		class NextModField final : public Field
 		{
 		public:
-			NextModField(const std::string& name, Modifier& node, const std::shared_ptr<Device>& device);
+			NextModField(const std::string& name, Modifier& node, Device& sndr);
 
 		private:
-			std::shared_ptr<Device> m_device;
+			Device& m_sndr;
 			Receiver<void> m_rcvr;
 		};
 
+	protected:
+		const ni_ptr<nif::NiPSysModifier> m_obj;
+		Device m_device;
+
 	private:
-		//For our unknown controllers:
-		std::vector<std::unique_ptr<ModifierNameListener>> m_lsnrs;
+		//Name should always match our order, to ensure local uniqueness
+		NameUpdater m_nameUpdater;
+
+		//We will manage any unknown controller
+		std::vector<ni_ptr<nif::NiPSysModifierCtlr>> m_unknownCtlrs;
+
+		std::unique_ptr<Field> m_targetField;
+		std::unique_ptr<Field> m_nextField;
 	};
 
 	class IModifiable
@@ -172,24 +177,12 @@ namespace node
 		//*listen to the sequence to learn about order changes
 	};
 
-	template<Modifier::Requirement Req>
-	inline void node::Modifier::ReqDevice<Req>::onConnect(IModifiable& ifc)
-	{
-		ifc.requirements().add(Req);
-		Device::onConnect(ifc);
-	}
-	template<Modifier::Requirement Req>
-	inline void node::Modifier::ReqDevice<Req>::onDisconnect(IModifiable& ifc)
-	{
-		Device::onDisconnect(ifc);
-		ifc.requirements().remove(Req);
-	}
-
 
 	class DummyModifier final : public Modifier
 	{
 	public:
-		DummyModifier(std::shared_ptr<nif::NiPSysModifier>&& obj);
+		DummyModifier(ni_ptr<nif::NiPSysModifier>&& obj);
+		~DummyModifier();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 80.0f;

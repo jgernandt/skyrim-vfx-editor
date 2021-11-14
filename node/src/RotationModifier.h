@@ -25,7 +25,8 @@ namespace node
 	{
 	public:
 		RotationModifier(nif::File& file);
-		RotationModifier(std::shared_ptr<nif::NiPSysRotationModifier>&& obj);
+		RotationModifier(ni_ptr<nif::NiPSysRotationModifier>&& obj);
+		~RotationModifier();
 
 	public:
 		virtual nif::NiPSysRotationModifier& object() override;
@@ -39,5 +40,8 @@ namespace node
 	private:
 		class AngleField;
 		class SpeedField;
+
+		std::unique_ptr<Field> m_angleField;
+		std::unique_ptr<Field> m_speedField;
 	};
 }

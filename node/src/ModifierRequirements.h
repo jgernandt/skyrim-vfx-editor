@@ -50,44 +50,42 @@ namespace node
 	class ColourRequirement final : public ModifierRequirement
 	{
 	public:
-		ColourRequirement(IProperty<bool>& hasCols) : m_hasCols{ hasCols } {}
+		ColourRequirement(ni_ptr<IProperty<bool>>&& hasCols) : m_hasCols{ hasCols } {}
 
 	protected:
-		virtual void activate() override { m_hasCols.set(true); }
-		virtual void deactivate() override { m_hasCols.set(false); }
+		virtual void activate() override { m_hasCols->set(true); }
+		virtual void deactivate() override { m_hasCols->set(false); }
 
 	private:
-		IProperty<bool>& m_hasCols;
+		ni_ptr<IProperty<bool>> m_hasCols;
 	};
 
-	class RotationsRequirement final : public ModifierRequirement
+
+	class LifetimeRequirement final : public ModifierRequirement
 	{
 	public:
-		RotationsRequirement(IProperty<bool>& angles, IProperty<bool>& speeds) :
-			m_angles{ angles }, m_speeds{ speeds } {}
+		LifetimeRequirement(ni_ptr<nif::NiPSysAgeDeathModifier>&& mod, ReservableSequence<nif::NiPSysModifier>& mods);
+		~LifetimeRequirement();
 
 	protected:
-		virtual void activate() override
-		{
-			m_angles.set(true);
-			m_speeds.set(true);
-		}
-		virtual void deactivate() override
-		{
-			m_angles.set(false);
-			m_speeds.set(false);
-		}
+		virtual void activate() override;
+		virtual void deactivate() override;
+
+	public:
+		nif::NiPSysAgeDeathModifier& modifier() { return *m_mod; }
 
 	private:
-		IProperty<bool>& m_angles;
-		IProperty<bool>& m_speeds;
+		ni_ptr<nif::NiPSysAgeDeathModifier> m_mod;
+		ReservableSequence<nif::NiPSysModifier>& m_mods;
+		Modifier::OrderUpdater m_orderUpdater;
+		Modifier::NameUpdater m_nameUpdater;
 	};
 
 
 	class MovementRequirement final : public ModifierRequirement
 	{
 	public:
-		MovementRequirement(nif::NiPSysPositionModifier& mod, ReservableSequence<nif::NiPSysModifier>& mods);
+		MovementRequirement(ni_ptr<nif::NiPSysPositionModifier>&& mod, ReservableSequence<nif::NiPSysModifier>& mods);
 		~MovementRequirement();
 
 	protected:
@@ -95,21 +93,46 @@ namespace node
 		virtual void deactivate() override;
 
 	public:
-		nif::NiPSysPositionModifier& modifier() { return m_mod; }
+		nif::NiPSysPositionModifier& modifier() { return *m_mod; }
 
 	private:
-		nif::NiPSysPositionModifier& m_mod;
+		ni_ptr<nif::NiPSysPositionModifier> m_mod;
 		ReservableSequence<nif::NiPSysModifier>& m_mods;
-		Modifier::OrderListener m_modLsnr;
-		Modifier::NameListener m_ordLsnr;
+		Modifier::OrderUpdater m_orderUpdater;
+		Modifier::NameUpdater m_nameUpdater;
 	};
+
+
+	class RotationsRequirement final : public ModifierRequirement
+	{
+	public:
+		RotationsRequirement(ni_ptr<IProperty<bool>>&& angles, ni_ptr<IProperty<bool>>&& speeds) :
+			m_angles{ angles }, m_speeds{ speeds } {}
+
+	protected:
+		virtual void activate() override
+		{
+			m_angles->set(true);
+			m_speeds->set(true);
+		}
+		virtual void deactivate() override
+		{
+			m_angles->set(false);
+			m_speeds->set(false);
+		}
+
+	private:
+		ni_ptr<IProperty<bool>> m_angles;
+		ni_ptr<IProperty<bool>> m_speeds;
+	};
+
 
 	class UpdateRequirement final : public ModifierRequirement
 	{
 	public:
 		UpdateRequirement(
-			nif::NiPSysBoundUpdateModifier& bum,
-			nif::NiPSysUpdateCtlr& ctlr,
+			ni_ptr<nif::NiPSysBoundUpdateModifier>&& bum,
+			ni_ptr<nif::NiPSysUpdateCtlr>&& ctlr,
 			ReservableSequence<nif::NiPSysModifier>& mods,
 			ReservableSequence<nif::NiTimeController>& ctlrs);
 		~UpdateRequirement();
@@ -119,35 +142,15 @@ namespace node
 		virtual void deactivate() override;
 
 	public:
-		nif::NiPSysBoundUpdateModifier& modifier() { return m_mod; }
-		nif::NiPSysUpdateCtlr& controller() { return m_ctlr; }
+		nif::NiPSysBoundUpdateModifier& modifier() { return *m_mod; }
+		nif::NiPSysUpdateCtlr& controller() { return *m_ctlr; }
 
 	private:
-		nif::NiPSysBoundUpdateModifier& m_mod;
-		nif::NiPSysUpdateCtlr& m_ctlr;
+		ni_ptr<nif::NiPSysBoundUpdateModifier> m_mod;
+		ni_ptr<nif::NiPSysUpdateCtlr> m_ctlr;
 		ReservableSequence<nif::NiPSysModifier>& m_mods;
 		ReservableSequence<nif::NiTimeController>& m_ctlrs;
-		Modifier::OrderListener m_modLsnr;
-		Modifier::NameListener m_ordLsnr;
-	};
-
-	class LifetimeRequirement final : public ModifierRequirement
-	{
-	public:
-		LifetimeRequirement(nif::NiPSysAgeDeathModifier& mod, ReservableSequence<nif::NiPSysModifier>& mods);
-		~LifetimeRequirement();
-
-	protected:
-		virtual void activate() override;
-		virtual void deactivate() override;
-
-	public:
-		nif::NiPSysAgeDeathModifier& modifier() { return m_mod; }
-
-	private:
-		nif::NiPSysAgeDeathModifier& m_mod;
-		ReservableSequence<nif::NiPSysModifier>& m_mods;
-		Modifier::OrderListener m_modLsnr;
-		Modifier::NameListener m_ordLsnr;
+		Modifier::OrderUpdater m_orderUpdater;
+		Modifier::NameUpdater m_nameUpdater;
 	};
 }

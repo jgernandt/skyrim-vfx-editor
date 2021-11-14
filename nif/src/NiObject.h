@@ -22,6 +22,10 @@
 #include "nif_types.h"
 #include "Observable.h"
 
+#ifdef _DEBUG
+extern int g_currentNiObjects;
+#endif
+
 namespace nif
 {
 	class NiObject

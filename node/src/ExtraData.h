@@ -29,7 +29,7 @@ namespace node
 	class ExtraData : public NodeBase
 	{
 	protected:
-		ExtraData(std::shared_ptr<nif::NiExtraData>&& obj);
+		ExtraData(ni_ptr<nif::NiExtraData>&& obj);
 
 	public:
 		virtual ~ExtraData() = default;
@@ -55,12 +55,16 @@ namespace node
 		public:
 			NameField(const std::string& name, ExtraData& node);
 		};
+
+		const ni_ptr<nif::NiExtraData> m_obj;
+
+		std::unique_ptr<Field> m_targetField;
 	};
 
 	class StringDataShared : public ExtraData
 	{
 	protected:
-		StringDataShared(std::shared_ptr<nif::NiStringExtraData>&& obj);
+		StringDataShared(ni_ptr<nif::NiStringExtraData>&& obj);
 
 	public:
 		virtual ~StringDataShared() = default;
@@ -74,7 +78,8 @@ namespace node
 	{
 	public:
 		StringData(nif::File& file);
-		StringData(std::shared_ptr<nif::NiStringExtraData>&& obj);
+		StringData(ni_ptr<nif::NiStringExtraData>&& obj);
+		~StringData();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 140.0f;
@@ -84,7 +89,8 @@ namespace node
 	{
 	public:
 		WeaponTypeData(nif::File& file);
-		WeaponTypeData(std::shared_ptr<nif::NiStringExtraData>&& obj);
+		WeaponTypeData(ni_ptr<nif::NiStringExtraData>&& obj);
+		~WeaponTypeData();
 
 	public:
 		constexpr static const char* TYPE = "Type";
@@ -96,7 +102,8 @@ namespace node
 	class DummyExtraData final : public ExtraData
 	{
 	public:
-		DummyExtraData(std::shared_ptr<nif::NiExtraData>&& obj);
+		DummyExtraData(ni_ptr<nif::NiExtraData>&& obj);
+		~DummyExtraData();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 90.0f;

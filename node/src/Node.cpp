@@ -35,7 +35,7 @@ private:
 	Sender<ISet<nif::NiAVObject>> m_sdr;
 };
 
-node::NodeShared::NodeShared(std::shared_ptr<nif::NiNode>&& obj) : AVObject(std::move(obj))
+node::NodeShared::NodeShared(ni_ptr<nif::NiNode>&& obj) : AVObject(std::move(obj))
 {
 	setColour(COL_TITLE, TitleCol_Node);
 	setColour(COL_TITLE_ACTIVE, TitleCol_NodeActive);
@@ -43,36 +43,41 @@ node::NodeShared::NodeShared(std::shared_ptr<nif::NiNode>&& obj) : AVObject(std:
 
 nif::NiNode& node::NodeShared::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiNode*>(getObjects()[0].get());
+	assert(m_obj);
+	return *static_cast<nif::NiNode*>(m_obj.get());
 }
 
 node::Node::Node(nif::File& file) : Node(file.create<nif::NiNode>()) {}
 
-node::Node::Node(std::shared_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj))
+node::Node::Node(ni_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj))
 {
 	setClosable(true);
 	setTitle("Node");
 	setSize({ WIDTH, HEIGHT });
 
-	newField<NameField>(NAME, *this);
-	newField<ExtraDataField>(EXTRA_DATA, *this);
-	newField<ChildField>(CHILDREN, *this);
-	newField<ObjectField<nif::NiNode>>(OBJECT, *this, object());
+	m_name = newField<NameField>(NAME, *this);
+	m_extraData = newField<ExtraDataField>(EXTRA_DATA, *this);
+	m_children = newField<ChildField>(CHILDREN, *this);
+	m_references = newField<ObjectField<nif::NiNode>>(OBJECT, *this, object());
 
-	newField<ParentField>(PARENT, *this);
-	newField<TransformField>(TRANSFORM, *this);
+	m_parent = newField<ParentField>(PARENT, *this);
+	m_transform = newField<TransformField>(TRANSFORM, *this);
 
 	//until we have some other way to determine connector position for loading placement
-	getField(EXTRA_DATA)->connector->setTranslation({ WIDTH, 62.0f });
-	getField(CHILDREN)->connector->setTranslation({ WIDTH, 86.0f });
-	getField(OBJECT)->connector->setTranslation({ WIDTH, 110.0f });
-	getField(PARENT)->connector->setTranslation({ 0.0f, 134.0f });
+	m_extraData->connector->setTranslation({ WIDTH, 62.0f });
+	m_children->connector->setTranslation({ WIDTH, 86.0f });
+	m_references->connector->setTranslation({ WIDTH, 110.0f });
+	m_parent->connector->setTranslation({ 0.0f, 134.0f });
+}
+
+node::Node::~Node()
+{
+	disconnect();
 }
 
 node::Root::Root(nif::File& file) : Root(file.create<nif::BSFadeNode>()) {}
 
-node::Root::Root(std::shared_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj))
+node::Root::Root(ni_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj))
 {
 	setTitle("Root");
 	setSize({ WIDTH, HEIGHT });
@@ -87,12 +92,17 @@ node::Root::Root(std::shared_ptr<nif::NiNode>&& obj) : NodeShared(std::move(obj)
 	};
 
 	//newField<NameField>(NAME, *this);
-	newField<ExtraDataField>(EXTRA_DATA, *this);
-	newField<ChildField>(CHILDREN, *this);
-	newField<ObjectField<nif::NiNode>>(OBJECT, *this, object());
+	m_extraData = newField<ExtraDataField>(EXTRA_DATA, *this);
+	m_children = newField<ChildField>(CHILDREN, *this);
+	m_references = newField<ObjectField<nif::NiNode>>(OBJECT, *this, object());
 
 	//until we have some other way to determine connector position for loading placement
 	getField(EXTRA_DATA)->connector->setTranslation({ WIDTH, 38.0f });
 	getField(CHILDREN)->connector->setTranslation({ WIDTH, 62.0f });
 	getField(OBJECT)->connector->setTranslation({ WIDTH, 86.0f });
+}
+
+node::Root::~Root()
+{
+	disconnect();
 }

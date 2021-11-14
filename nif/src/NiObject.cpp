@@ -19,13 +19,25 @@
 #include "pch.h"
 #include "NiObject.h"
 
+#ifdef _DEBUG
+int g_currentNiObjects = 0;
+#endif
+
 nif::NiObject::NiObject(native_type* obj) : m_ptr{ obj }
 {
 	assert(m_ptr);
 	m_ptr->AddRef();
+
+#ifdef _DEBUG
+	g_currentNiObjects++;
+#endif
 }
 
 nif::NiObject::~NiObject()
 {
 	m_ptr->SubtractRef();
+
+#ifdef _DEBUG
+	g_currentNiObjects--;
+#endif
 }

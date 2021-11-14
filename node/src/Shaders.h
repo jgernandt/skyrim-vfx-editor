@@ -26,7 +26,8 @@ namespace node
 	{
 	public:
 		EffectShader(nif::File& file);
-		EffectShader(std::shared_ptr<nif::BSEffectShaderProperty>&& obj);
+		EffectShader(ni_ptr<nif::BSEffectShaderProperty>&& obj);
+		~EffectShader();
 
 	public:
 		virtual nif::BSEffectShaderProperty& object() override;
@@ -55,6 +56,12 @@ namespace node
 		class EmissiveMultipleField;
 		class PaletteTexField;
 
-		//GeometryField* m_geomField{ nullptr };
+		const ni_ptr<nif::BSEffectShaderProperty> m_obj;
+
+		std::unique_ptr<Field> m_targetField;
+		std::unique_ptr<Field> m_colField;
+		std::unique_ptr<Field> m_multField;
+		std::unique_ptr<Field> m_texField;
+		std::unique_ptr<Field> m_paletteField;
 	};
 }

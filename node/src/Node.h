@@ -25,7 +25,7 @@ namespace node
 	class NodeShared : public AVObject
 	{
 	protected:
-		NodeShared(std::shared_ptr<nif::NiNode>&& obj);
+		NodeShared(ni_ptr<nif::NiNode>&& obj);
 
 	public:
 		virtual ~NodeShared() = default;
@@ -36,13 +36,16 @@ namespace node
 
 	protected:
 		class ChildField;
+
+		std::unique_ptr<Field> m_children;
 	};
 
 	class Node final : public NodeShared
 	{
 	public:
 		Node(nif::File& file);
-		Node(std::shared_ptr<nif::NiNode>&& obj);
+		Node(ni_ptr<nif::NiNode>&& obj);
+		~Node();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 180.0f;
@@ -52,7 +55,8 @@ namespace node
 	{
 	public:
 		Root(nif::File& file);
-		Root(std::shared_ptr<nif::NiNode>&& obj);
+		Root(ni_ptr<nif::NiNode>&& obj);
+		~Root();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 116.0f;

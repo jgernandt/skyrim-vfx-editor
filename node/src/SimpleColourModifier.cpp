@@ -48,9 +48,9 @@ static_assert(ALPHA2BEG_MAX + DELTA <= 1.0f);
 class node::SimpleColourModifier::ColourField final : public Field
 {
 public:
-	ColourField(const std::string& name, SimpleColourModifier& node) : 
+	ColourField(const std::string& name, SimpleColourModifier& node, const ni_ptr<nif::BSPSysSimpleColorModifier>& obj) : 
 		Field(name),
-		m_obj{ node.object() },
+		m_obj{ obj },
 		m_end1Less(node.object().rgb1End()),
 		m_begin2Less(node.object().rgb2Begin()),
 		m_end2Less(node.object().rgb2End()),
@@ -60,12 +60,14 @@ public:
 		m_begin3Gr(node.object().rgb3Begin()),
 		m_a2EndGr(node.object().alpha2End())
 	{
+		assert(m_obj);
+
 		//Limit our props to [0, 1], increasing by at least DELTA
-		std::array<IProperty<float>*, 4> rgbs{ &m_obj.rgb1End(), &m_obj.rgb2Begin(), &m_obj.rgb2End(), &m_obj.rgb3Begin() };
+		std::array<IProperty<float>*, 4> rgbs{ &m_obj->rgb1End(), &m_obj->rgb2Begin(), &m_obj->rgb2End(), &m_obj->rgb3Begin() };
 		for (int i = 0; i < 4; i++)
 			rgbs[i]->set(std::min(std::max(rgbs[i]->get(), i > 0 ? rgbs[i - 1]->get() + DELTA : 0.0f), 1.0f - (3 - i) * DELTA));
 
-		std::array<IProperty<float>*, 2> alphas{ &m_obj.alpha2Begin(), &m_obj.alpha2End() };
+		std::array<IProperty<float>*, 2> alphas{ &m_obj->alpha2Begin(), &m_obj->alpha2End() };
 		alphas[0]->set(std::min(std::max(alphas[0]->get(), 0.0f), 1.0f - DELTA));
 		alphas[1]->set(std::min(std::max(alphas[1]->get(), alphas[0]->get() + DELTA), 1.0f));
 
@@ -86,34 +88,34 @@ public:
 		cols->newChild<ColourInput>(node.object().col2(), "");
 		cols->newChild<ColourInput>(node.object().col3(), "");
 
-		m_obj.rgb1End().addListener(m_begin2Gr);
+		m_obj->rgb1End().addListener(m_begin2Gr);
 
-		m_obj.rgb2Begin().addListener(m_end1Less);
-		m_obj.rgb2Begin().addListener(m_end2Gr);
+		m_obj->rgb2Begin().addListener(m_end1Less);
+		m_obj->rgb2Begin().addListener(m_end2Gr);
 
-		m_obj.rgb2End().addListener(m_begin2Less);
-		m_obj.rgb2End().addListener(m_begin3Gr);
+		m_obj->rgb2End().addListener(m_begin2Less);
+		m_obj->rgb2End().addListener(m_begin3Gr);
 
-		m_obj.rgb3Begin().addListener(m_end2Less);
+		m_obj->rgb3Begin().addListener(m_end2Less);
 
-		m_obj.alpha2End().addListener(m_a2BegLess);
-		m_obj.alpha2Begin().addListener(m_a2EndGr);
+		m_obj->alpha2End().addListener(m_a2BegLess);
+		m_obj->alpha2Begin().addListener(m_a2EndGr);
 	}
 
 	~ColourField()
 	{
-		m_obj.rgb1End().removeListener(m_begin2Gr);
+		m_obj->rgb1End().removeListener(m_begin2Gr);
 
-		m_obj.rgb2Begin().removeListener(m_end1Less);
-		m_obj.rgb2Begin().removeListener(m_end2Gr);
+		m_obj->rgb2Begin().removeListener(m_end1Less);
+		m_obj->rgb2Begin().removeListener(m_end2Gr);
 
-		m_obj.rgb2End().removeListener(m_begin2Less);
-		m_obj.rgb2End().removeListener(m_begin3Gr);
+		m_obj->rgb2End().removeListener(m_begin2Less);
+		m_obj->rgb2End().removeListener(m_begin3Gr);
 
-		m_obj.rgb3Begin().removeListener(m_end2Less);
+		m_obj->rgb3Begin().removeListener(m_end2Less);
 
-		m_obj.alpha2End().removeListener(m_a2BegLess);
-		m_obj.alpha2Begin().removeListener(m_a2EndGr);
+		m_obj->alpha2End().removeListener(m_a2BegLess);
+		m_obj->alpha2Begin().removeListener(m_a2EndGr);
 	}
 
 private:
@@ -409,7 +411,7 @@ private:
 		std::array<float, 2> m_tmps{ 0.0f };
 	};
 
-	nif::BSPSysSimpleColorModifier& m_obj;
+	ni_ptr<nif::BSPSysSimpleColorModifier> m_obj;
 
 	Limiter<std::less_equal<float>> m_end1Less;
 	Limiter<std::less_equal<float>> m_begin2Less;
@@ -438,24 +440,30 @@ node::SimpleColourModifier::SimpleColourModifier(nif::File& file) :
 	object().alpha2End().set(0.9f);
 }
 
-node::SimpleColourModifier::SimpleColourModifier(std::shared_ptr<nif::BSPSysSimpleColorModifier>&& obj) :
+node::SimpleColourModifier::SimpleColourModifier(ni_ptr<nif::BSPSysSimpleColorModifier>&& obj) :
 	Modifier(std::move(obj))
 {
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Colour modifier");
 
-	addTargetField(std::make_shared<ReqDevice<Requirement::COLOUR>>(*this));
+	m_device.addRequirement(Requirement::COLOUR);
+
 	newChild<gui::Separator>();
 	newChild<gui::VerticalSpacing>(2);
-	newField<ColourField>("Colour", *this);
+	m_colField = newField<ColourField>("Colour", *this, std::static_pointer_cast<nif::BSPSysSimpleColorModifier>(m_obj));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
 	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 }
 
+node::SimpleColourModifier::~SimpleColourModifier()
+{
+	disconnect();
+}
+
 nif::BSPSysSimpleColorModifier& node::SimpleColourModifier::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::BSPSysSimpleColorModifier*>(getObjects()[0].get());
+	assert(m_obj);
+	return *static_cast<nif::BSPSysSimpleColorModifier*>(m_obj.get());
 }

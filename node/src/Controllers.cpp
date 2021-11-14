@@ -65,26 +65,35 @@ private:
 };
 
 node::FloatController::FloatController(nif::File& file) : 
-	FloatController(file, file.create<nif::NiFloatInterpolator>(), file.create<nif::NiFloatData>())
+	FloatController(file, ni_ptr<nif::NiFloatInterpolator>(), ni_ptr<nif::NiFloatData>(), nullptr)
 {
-	flags().set(DEFAULT_FLAGS);
-	frequency().set(DEFAULT_FREQUENCY);
-	phase().set(DEFAULT_PHASE);
-	startTime().set(DEFAULT_STARTTIME);
-	stopTime().set(DEFAULT_STOPTIME);
-	m_data->keyType().set(nif::KeyType::LINEAR);
-	m_data->iplnData().keys().set({ { startTime().get(), 0.0f }, { stopTime().get(), 0.0f } });
 }
 
 node::FloatController::FloatController(nif::File& file,
-	std::shared_ptr<nif::NiFloatInterpolator>&& iplr,
-	std::shared_ptr<nif::NiFloatData>&& data) :
-	NodeBase(std::move(iplr)), 
+	ni_ptr<nif::NiFloatInterpolator>&& iplr,
+	ni_ptr<nif::NiFloatData>&& data,
+	const nif::NiTimeController* ctlr) :
+	m_frequency{ std::make_shared<LocalProperty<float>>() },
+	m_phase{ std::make_shared<LocalProperty<float>>() },
 	m_startTime{ std::make_shared<LocalProperty<float>>() },
 	m_stopTime{ std::make_shared<LocalProperty<float>>() },
+	m_iplr{ std::move(iplr) },
 	m_data{ std::move(data) }
 {
-	//Remember to have Constructor set our properties before connecting us!
+	if (ctlr) {
+		m_flags.set(ctlr->flags().get());
+		m_frequency->set(ctlr->frequency().get());
+		m_phase->set(ctlr->phase().get());
+		m_startTime->set(ctlr->startTime().get());
+		m_stopTime->set(ctlr->stopTime().get());
+	}
+	else {
+		m_flags.set(DEFAULT_FLAGS);
+		m_frequency->set(DEFAULT_FREQUENCY);
+		m_phase->set(DEFAULT_PHASE);
+		m_startTime->set(DEFAULT_STARTTIME);
+		m_stopTime->set(DEFAULT_STOPTIME);
+	}
 
 	setClosable(true);
 	setTitle("Float controller");
@@ -92,26 +101,35 @@ node::FloatController::FloatController(nif::File& file,
 	setColour(COL_TITLE, TitleCol_Anim);
 	setColour(COL_TITLE_ACTIVE, TitleCol_AnimActive);
 
+	if (!m_iplr) {
+		m_iplr = file.create<nif::NiFloatInterpolator>();
+		if (!m_iplr)
+			throw std::runtime_error("Failed to create NiFloatInterpolator");
+	}
+
 	if (!m_data) {
 		//We don't necessarily need a data block. Should we always have one regardless?
 		m_data = file.create<nif::NiFloatData>();
+		if (!m_data)
+			throw std::runtime_error("Failed to create NiFloatData");
 		m_data->keyType().set(nif::KeyType::LINEAR);
 		m_data->iplnData().keys().set({ { startTime().get(), 0.0f }, { stopTime().get(), 0.0f } });
+		m_iplr->data().assign(m_data.get());
 	}
 
-	newField<TargetField>(TARGET, *this);
+	m_target = newField<TargetField>(TARGET, *this);
 
 	using selector_type = gui::Selector<unsigned short, IProperty<unsigned short>>;
 	newChild<selector_type>(m_flags.cycleType(), std::string(),
 		selector_type::ItemList{ { 0, "Repeat" }, { 1, "Reverse" }, { 2, "Clamp" } });
 
-	auto fr = newChild<DragFloat>(m_frequency, "Frequency");
+	auto fr = newChild<DragFloat>(*m_frequency, "Frequency");
 	fr->setSensitivity(0.01f);
 	fr->setLowerLimit(0.0f);
 	fr->setAlwaysClamp(true);
 	fr->setNumberFormat("%.2f");
 
-	auto ph = newChild<DragFloat>(m_phase, "Phase");
+	auto ph = newChild<DragFloat>(*m_phase, "Phase");
 	ph->setSensitivity(0.01f);
 	ph->setNumberFormat("%.2f");
 
@@ -133,7 +151,8 @@ node::FloatController::~FloatController()
 
 nif::NiFloatInterpolator& node::FloatController::object()
 {
-	return static_cast<nif::NiFloatInterpolator&>(NodeBase::object());
+	assert(m_iplr);
+	return *m_iplr;
 }
 
 void node::FloatController::openKeyEditor()

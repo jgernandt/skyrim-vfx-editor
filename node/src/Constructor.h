@@ -65,7 +65,7 @@ namespace node
 
 		//To resolve manager controlled interpolators, I expect this will need access to some strings,
 		//or maybe just the target controller
-		void EP_process(nif::native::NiInterpolator* obj, const nif::native::NiTimeController& ctlr);
+		void EP_process(nif::native::NiInterpolator* obj, const nif::NiTimeController& ctlr);
 
 	private:
 		struct Connection

@@ -29,7 +29,7 @@ namespace node
 	class ObjectNET : public NodeBase
 	{
 	protected:
-		ObjectNET(std::shared_ptr<nif::NiObjectNET>&& obj);
+		ObjectNET(ni_ptr<nif::NiObjectNET>&& obj);
 
 	public:
 		virtual ~ObjectNET() = default;
@@ -71,12 +71,18 @@ namespace node
 			Sender<ISet<nif::NiExtraData>> m_sdr;
 		};
 
+	protected:
+		const ni_ptr<nif::NiObjectNET> m_obj;
+
+		std::unique_ptr<Field> m_name;
+		std::unique_ptr<Field> m_extraData;
+		std::unique_ptr<Field> m_references;
 	};
 
 	class AVObject : public ObjectNET
 	{
 	protected:
-		AVObject(std::shared_ptr<nif::NiAVObject>&& obj);
+		AVObject(ni_ptr<nif::NiAVObject>&& obj);
 
 	public:
 		virtual ~AVObject() = default;
@@ -103,12 +109,15 @@ namespace node
 			TransformField(const std::string& name, AVObject& node);
 		};
 
+		std::unique_ptr<Field> m_parent;
+		std::unique_ptr<Field> m_transform;
 	};
 
 	class DummyAVObject final : public AVObject
 	{
 	public:
-		DummyAVObject(std::shared_ptr<nif::NiAVObject>&& obj);
+		DummyAVObject(ni_ptr<nif::NiAVObject>&& obj);
+		~DummyAVObject();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 105.0f;

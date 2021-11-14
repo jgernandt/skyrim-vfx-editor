@@ -178,42 +178,48 @@ node::EffectShader::EffectShader(nif::File& file) :
 	object().emissiveMult().set(1.0f);
 }
 
-node::EffectShader::EffectShader(std::shared_ptr<nif::BSEffectShaderProperty>&& obj) :
-	NodeBase(std::move(obj))
+node::EffectShader::EffectShader(ni_ptr<nif::BSEffectShaderProperty>&& obj) :
+	m_obj{ std::move(obj) }
 {
+	assert(m_obj);
+
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_Shader);
 	setColour(COL_TITLE_ACTIVE, TitleCol_ShaderActive);
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Effect shader");
 
-	newField<GeometryField>(GEOMETRY, *this);
+	m_targetField = newField<GeometryField>(GEOMETRY, *this);
 	//flags can wait
 	//newField<ShaderFlagsField1>(SHADER_FLAGS_1, *this);
 	//newField<ShaderFlagsField2>(SHADER_FLAGS_2, *this);
 
 	newChild<gui::Separator>();
 
-	newField<EmissiveColourField>(EMISSIVE_COLOUR, *this);
-	newField<EmissiveMultipleField>(EMISSIVE_MULTIPLE, *this);
+	m_colField = newField<EmissiveColourField>(EMISSIVE_COLOUR, *this);
+	m_multField = newField<EmissiveMultipleField>(EMISSIVE_MULTIPLE, *this);
 
 	newChild<gui::Separator>();
 
-	newField<SourceTexField>(SOURCE_TEXTURE, *this);
+	m_texField = newField<SourceTexField>(SOURCE_TEXTURE, *this);
 	//newField<SubtexturesField>(SUBTEXTURES, *this);
 
 	newChild<gui::Separator>();
 
-	newField<PaletteTexField>(PALETTE_TEXTURE, *this);
+	m_paletteField = newField<PaletteTexField>(PALETTE_TEXTURE, *this);
 
 	//until we have some other way to determine connector position for loading placement
 	getField(GEOMETRY)->connector->setTranslation({ 0.0f, 38.0f });
 }
 
+node::EffectShader::~EffectShader()
+{
+	disconnect();
+}
+
 nif::BSEffectShaderProperty& node::EffectShader::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::BSEffectShaderProperty*>(getObjects()[0].get());
+	return *m_obj;
 }
 
 /*IProperty<nif::SubtextureCount>& node::EffectShader::subtexCount()

@@ -28,23 +28,19 @@ namespace node
 	public:
 		ParticleSystem(nif::File& file);
 		ParticleSystem(nif::File& file,
-			std::shared_ptr<nif::NiParticleSystem>&& obj,
-			std::shared_ptr<nif::NiPSysData>&& data,
-			std::shared_ptr<nif::NiAlphaProperty>&& alpha,
-			std::shared_ptr<nif::NiPSysUpdateCtlr>&& ctlr,
-			std::shared_ptr<nif::NiPSysAgeDeathModifier>&& adm,
-			std::shared_ptr<nif::NiPSysPositionModifier>&& pm,
-			std::shared_ptr<nif::NiPSysBoundUpdateModifier>&& bum);
+			ni_ptr<nif::NiParticleSystem>&& obj,
+			ni_ptr<nif::NiPSysData>&& data,
+			ni_ptr<nif::NiAlphaProperty>&& alpha,
+			ni_ptr<nif::NiPSysUpdateCtlr>&& ctlr,
+			ni_ptr<nif::NiPSysAgeDeathModifier>&& adm,
+			ni_ptr<nif::NiPSysPositionModifier>&& pm,
+			ni_ptr<nif::NiPSysBoundUpdateModifier>&& bum);
 
 		~ParticleSystem();
 
 		virtual nif::NiParticleSystem& object() override;
 		nif::NiPSysData& data();
 		nif::NiAlphaProperty& alphaProperty();
-		nif::NiPSysUpdateCtlr& updateCtlr();
-		nif::NiPSysAgeDeathModifier& ageDeathMod();
-		nif::NiPSysPositionModifier& positionMod();
-		nif::NiPSysBoundUpdateModifier& boundUpdateMod();
 
 		IProperty<nif::SubtextureCount>& subtexCount() { return m_subtexCount; }
 
@@ -64,7 +60,15 @@ namespace node
 		class ModifiersField;
 		class ModifiersManager;
 
+		ni_ptr<nif::NiPSysData> m_data;
+		ni_ptr<nif::NiAlphaProperty> m_alpha;
+
 		LocalProperty<nif::SubtextureCount> m_subtexCount;
 		std::unique_ptr<SetterListener<nif::SubtextureCount, std::vector<nif::SubtextureOffset>>> m_subtexLsnr;
+
+		std::unique_ptr<Field> m_shaderField;
+		std::unique_ptr<Field> m_worldSpaceField;
+		std::unique_ptr<Field> m_maxCountField;
+		std::unique_ptr<Field> m_modifiersField;
 	};
 }

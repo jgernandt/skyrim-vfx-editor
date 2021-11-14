@@ -20,6 +20,11 @@
 #include "framework.h"
 #include "VFXEditor.h"
 
+#ifdef _DEBUG
+extern int g_currentComponents;
+extern int g_currentNiObjects;
+#endif
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -28,6 +33,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
+#ifdef _DEBUG
+    int result;
+    {
+        app::VFXEditor application(hInstance, nCmdShow);
+        result = application.run();
+    }
+    assert(g_currentComponents == 0 && g_currentNiObjects == 0);
+    return result;
+#else
     app::VFXEditor application(hInstance, nCmdShow);
     return application.run();
+#endif
 }

@@ -376,6 +376,7 @@ namespace node
 		}
 
 		//Emitters should send a lifetime requirement if either LifeSpan or LifeSpanVar is non-zero
+		//Edit: Emitters should always send a lifetime requirement
 		TEST_METHOD(LifetimeRequirementTest)
 		{
 			class TestConnector : public Receiver<void>, public Sender<IModifiable>, public gui::SingleConnector
@@ -404,6 +405,9 @@ namespace node
 					c2->onRelease();
 				}
 
+			//Lifetime requirement should have been sent
+			Assert::IsTrue(target.requirements().count(Modifier::Requirement::LIFETIME) == 1);
+			/*
 			//No lifetime requirement should have been sent
 			Assert::IsTrue(target.requirements().count(Modifier::Requirement::LIFETIME) == 0);
 
@@ -462,6 +466,7 @@ namespace node
 			mod1->object().lifeSpan().set(0.0f);
 			Assert::IsTrue(target.requirements().count(Modifier::Requirement::LIFETIME) == 1);
 
+			*/
 			//Disconnecting should remove the requirement
 			if (c1)
 				c1->disconnect();
@@ -507,6 +512,9 @@ namespace node
 					c2->onRelease();
 				}
 
+			//Requirement should have been sent
+			Assert::IsTrue(target.requirements().count(Modifier::Requirement::MOVEMENT) == 1);
+			/*
 			//No requirement should have been sent
 			Assert::IsTrue(target.requirements().count(Modifier::Requirement::MOVEMENT) == 0);
 
@@ -564,7 +572,7 @@ namespace node
 			//Setting one to zero when the other is non-zero should not remove the requirement
 			mod1->object().speed().set(0.0f);
 			Assert::IsTrue(target.requirements().count(Modifier::Requirement::MOVEMENT) == 1);
-
+			*/
 			//Disconnecting should remove the requirement
 			if (c1)
 				c1->disconnect();

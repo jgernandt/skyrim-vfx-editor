@@ -25,7 +25,8 @@ namespace node
 	{
 	public:
 		SimpleColourModifier(nif::File& file);
-		SimpleColourModifier(std::shared_ptr<nif::BSPSysSimpleColorModifier>&& obj);
+		SimpleColourModifier(ni_ptr<nif::BSPSysSimpleColorModifier>&& obj);
+		~SimpleColourModifier();
 
 		virtual nif::BSPSysSimpleColorModifier& object() override;
 
@@ -35,6 +36,6 @@ namespace node
 
 	private:
 		class ColourField;
-
+		std::unique_ptr<Field> m_colField;
 	};
 }

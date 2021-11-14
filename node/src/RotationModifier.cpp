@@ -69,18 +69,18 @@ node::RotationModifier::RotationModifier(nif::File& file) :
 	object().active().set(true);
 }
 
-node::RotationModifier::RotationModifier(std::shared_ptr<nif::NiPSysRotationModifier>&& obj) :
+node::RotationModifier::RotationModifier(ni_ptr<nif::NiPSysRotationModifier>&& obj) :
 	Modifier(std::move(obj))
 {
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Rotation modifier");
 
-	addTargetField(std::make_shared<ReqDevice<Requirement::ROTATION>>(*this));
+	m_device.addRequirement(Requirement::ROTATION);
 
 	newChild<gui::Separator>();
 
-	newField<AngleField>(ANGLE, *this);
-	newField<SpeedField>(SPEED, *this);
+	m_angleField = newField<AngleField>(ANGLE, *this);
+	m_speedField = newField<SpeedField>(SPEED, *this);
 	newChild<Checkbox>(object().randomSign(), "Random direction");
 
 	//until we have some other way to determine connector position for loading placement
@@ -88,8 +88,13 @@ node::RotationModifier::RotationModifier(std::shared_ptr<nif::NiPSysRotationModi
 	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 }
 
+node::RotationModifier::~RotationModifier()
+{
+	disconnect();
+}
+
 nif::NiPSysRotationModifier& node::RotationModifier::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiPSysRotationModifier*>(getObjects()[0].get());
+	assert(m_obj);
+	return *static_cast<nif::NiPSysRotationModifier*>(m_obj.get());
 }

@@ -278,22 +278,26 @@ node::ScaleModifier::ScaleModifier(nif::File& file) :
 	object().scales().set({ 0.0f, 1.0f });
 }
 
-node::ScaleModifier::ScaleModifier(std::shared_ptr<nif::BSPSysScaleModifier>&& obj) :
+node::ScaleModifier::ScaleModifier(ni_ptr<nif::BSPSysScaleModifier>&& obj) :
 	Modifier(std::move(obj))
 {
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Scale modifier");
 
-	addTargetField(std::make_shared<Device>(*this));
-	newField<ScaleField>("Scale", *this);
+	m_scaleField = newField<ScaleField>("Scale", *this);
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
 	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 }
 
+node::ScaleModifier::~ScaleModifier()
+{
+	disconnect();
+}
+
 nif::BSPSysScaleModifier& node::ScaleModifier::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::BSPSysScaleModifier*>(getObjects()[0].get());
+	assert(m_obj);
+	return *static_cast<nif::BSPSysScaleModifier*>(m_obj.get());
 }

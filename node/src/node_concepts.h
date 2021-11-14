@@ -24,6 +24,11 @@ namespace node
 	//Alias the ptr type used by the data model
 	template<typename T>
 	using ni_ptr = std::shared_ptr<T>;
+	template<typename T, typename... Args>
+	inline ni_ptr<T> make_ni(Args&&... args)
+	{
+		return std::make_shared<T>(std::forward<Args>(args)...);
+	}
 
 	//A wrapper that allows reserving positions at the beginning and end of a sequence
 	template<typename T>

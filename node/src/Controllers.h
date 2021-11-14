@@ -52,16 +52,19 @@ namespace node
 	{
 	public:
 		FloatController(nif::File& file);
-		FloatController(nif::File& file, std::shared_ptr<nif::NiFloatInterpolator>&& iplr, std::shared_ptr<nif::NiFloatData>&& data);
+		FloatController(nif::File& file, 
+			ni_ptr<nif::NiFloatInterpolator>&& iplr, 
+			ni_ptr<nif::NiFloatData>&& data,
+			const nif::NiTimeController* ctlr);
 		~FloatController();
 
 		virtual nif::NiFloatInterpolator& object() override;
 
-		IObservable<IProperty<unsigned short>>& flags() { return m_flags; }
-		IObservable<IProperty<float>>& frequency() { return m_frequency; }
-		IObservable<IProperty<float>>& phase() { return m_phase; }
-		IObservable<IProperty<float>>& startTime() { return *m_startTime; }
-		IObservable<IProperty<float>>& stopTime() { return *m_stopTime; }
+		OProperty<unsigned short>& flags() { return m_flags; }
+		OProperty<float>& frequency() { return *m_frequency; }
+		OProperty<float>& phase() { return *m_phase; }
+		OProperty<float>& startTime() { return *m_startTime; }
+		OProperty<float>& stopTime() { return *m_stopTime; }
 
 	private:
 		void openKeyEditor();
@@ -95,17 +98,16 @@ namespace node
 			//BitsetProperty<bool, unsigned short, 6, 1> m_unknown;
 		};
 		FlagsProperty m_flags;
-		LocalProperty<float> m_frequency;
-		LocalProperty<float> m_phase;
+		std::shared_ptr<LocalProperty<float>> m_frequency;
+		std::shared_ptr<LocalProperty<float>> m_phase;
 		std::shared_ptr<LocalProperty<float>> m_startTime;
 		std::shared_ptr<LocalProperty<float>> m_stopTime;
 
-		//We are moving away from the previous design of letting NodeBase own all objects,
-		//which seems to be causing more problems than it solves.
-		//We'll need a major refactor of NodeBase (and all existing nodes) to complete it,
-		//but this is the first step.
-		std::shared_ptr<nif::NiFloatData> m_data;
+		ni_ptr<nif::NiFloatInterpolator> m_iplr;
+		ni_ptr<nif::NiFloatData> m_data;
 
 		class TargetField;
+
+		std::unique_ptr<Field> m_target;
 	};
 }

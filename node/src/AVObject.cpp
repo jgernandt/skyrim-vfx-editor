@@ -32,14 +32,14 @@ node::ObjectNET::ExtraDataField::ExtraDataField(const std::string& name, ObjectN
 	connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::MultiConnector>(m_sdr, m_rvr));
 }
 
-node::ObjectNET::ObjectNET(std::shared_ptr<nif::NiObjectNET>&& obj) : NodeBase(std::move(obj))
+node::ObjectNET::ObjectNET(ni_ptr<nif::NiObjectNET>&& obj) : m_obj{ std::move(obj) }
 {
 }
 
 nif::NiObjectNET& node::ObjectNET::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiObjectNET*>(getObjects()[0].get());
+	assert(m_obj);
+	return *m_obj;
 }
 
 
@@ -268,18 +268,18 @@ node::AVObject::TransformField::TransformField(const std::string& name, AVObject
 }
 
 
-node::AVObject::AVObject(std::shared_ptr<nif::NiAVObject>&& obj) :
+node::AVObject::AVObject(ni_ptr<nif::NiAVObject>&& obj) :
 	ObjectNET(std::move(obj))
 {
 }
 
 nif::NiAVObject& node::AVObject::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiAVObject*>(getObjects()[0].get());
+	assert(m_obj);
+	return *static_cast<nif::NiAVObject*>(m_obj.get());
 }
 
-node::DummyAVObject::DummyAVObject(std::shared_ptr<nif::NiAVObject>&& obj) :
+node::DummyAVObject::DummyAVObject(ni_ptr<nif::NiAVObject>&& obj) :
 	AVObject(std::move(obj))
 {
 	setColour(COL_TITLE, TitleCol_Geom);
@@ -289,7 +289,12 @@ node::DummyAVObject::DummyAVObject(std::shared_ptr<nif::NiAVObject>&& obj) :
 	setClosable(true);
 	setTitle("AVObject");
 
-	newField<NameField>(NAME, *this);
-	newField<ParentField>(PARENT, *this);
-	newField<TransformField>(TRANSFORM, *this);
+	m_name = newField<NameField>(NAME, *this);
+	m_parent = newField<ParentField>(PARENT, *this);
+	m_transform = newField<TransformField>(TRANSFORM, *this);
+}
+
+node::DummyAVObject::~DummyAVObject()
+{
+	disconnect();
 }

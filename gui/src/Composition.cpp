@@ -23,6 +23,10 @@
 
 #include "imgui_internal.h"
 
+#ifdef _DEBUG
+int g_currentComponents = 0;
+#endif
+
 gui::Component::~Component()
 {
 	assert(!m_parent);

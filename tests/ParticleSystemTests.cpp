@@ -317,11 +317,7 @@ namespace node
 			ReservableSequence<nif::NiPSysModifier> mods(obj->modifiers());
 			ReservableSequence<nif::NiTimeController> ctlrs(obj->controllers());
 
-			auto modObj = file.create<nif::NiPSysBoundUpdateModifier>();
-			Assert::IsNotNull(modObj.get());
-			auto ctlrObj = file.create<nif::NiPSysUpdateCtlr>();
-			Assert::IsNotNull(ctlrObj.get());
-			UpdateRequirement upd(*modObj, *ctlrObj, mods, ctlrs);
+			UpdateRequirement upd(file.create<nif::NiPSysBoundUpdateModifier>(), file.create<nif::NiPSysUpdateCtlr>(), mods, ctlrs);
 			upd.incr();
 
 			//Modifier should be assigned to the right target
@@ -347,9 +343,7 @@ namespace node
 			Assert::IsTrue(upd.modifier().name().get() == "Modifier:1");
 
 			//Add a movement requirement
-			auto posObj = file.create<nif::NiPSysPositionModifier>();
-			Assert::IsNotNull(posObj.get());
-			MovementRequirement mov(*posObj, mods);
+			MovementRequirement mov(file.create<nif::NiPSysPositionModifier>(), mods);
 			mov.incr();
 			Assert::IsTrue(mov.modifier().target().isAssigned(obj.get()));
 
@@ -371,9 +365,7 @@ namespace node
 			Assert::IsTrue(mov.modifier().name().get() == "Modifier:2");
 
 			//Add a lifetime requirement
-			auto ageObj = file.create<nif::NiPSysAgeDeathModifier>();
-			Assert::IsNotNull(ageObj.get());
-			LifetimeRequirement liv(*ageObj, mods);
+			LifetimeRequirement liv(file.create<nif::NiPSysAgeDeathModifier>(), mods);
 			liv.incr();
 			Assert::IsTrue(liv.modifier().target().isAssigned(obj.get()));
 
@@ -483,12 +475,12 @@ namespace node
 			Assert::IsTrue(areConnected(root_node->getField(Node::CHILDREN)->connector, psys_node->getField(ParticleSystem::PARENT)->connector));
 
 			//Are names and ordering as expected?
-			Assert::IsTrue(psys_node->ageDeathMod().name().get() == "Modifier:0");
-			Assert::IsTrue(psys_node->ageDeathMod().order().get() == 0);
-			Assert::IsTrue(psys_node->positionMod().name().get() == "Modifier:1");
-			Assert::IsTrue(psys_node->positionMod().order().get() == 1);
-			Assert::IsTrue(psys_node->boundUpdateMod().name().get() == "Modifier:2");
-			Assert::IsTrue(psys_node->boundUpdateMod().order().get() == 2);
+			Assert::IsTrue(mod0->name().get() == "Modifier:0");
+			Assert::IsTrue(mod0->order().get() == 0);
+			Assert::IsTrue(mod1->name().get() == "Modifier:1");
+			Assert::IsTrue(mod1->order().get() == 1);
+			Assert::IsTrue(mod2->name().get() == "Modifier:2");
+			Assert::IsTrue(mod2->order().get() == 2);
 
 			//Did we mess up the backend?
 			Assert::IsTrue(psys_node->object().getNative().GetData() == &data->getNative());
@@ -534,12 +526,22 @@ namespace node
 			Assert::IsTrue(areConnected(root_node->getField(Node::CHILDREN)->connector, psys_node->getField(ParticleSystem::PARENT)->connector));
 
 			//Are names and ordering as expected?
-			Assert::IsTrue(psys_node->ageDeathMod().name().get() == "Modifier:0");
-			Assert::IsTrue(psys_node->ageDeathMod().order().get() == 0);
-			Assert::IsTrue(psys_node->positionMod().name().get() == "Modifier:1");
-			Assert::IsTrue(psys_node->positionMod().order().get() == 1);
-			Assert::IsTrue(psys_node->boundUpdateMod().name().get() == "Modifier:2");
-			Assert::IsTrue(psys_node->boundUpdateMod().order().get() == 2);
+			auto&& mods = psys_node->object().getNative().GetModifiers();
+			Assert::IsTrue(mods.size() == 3);
+			Niflib::NiPSysModifier* mod0 = mods[0];
+			Assert::IsTrue(mod0->IsSameType(Niflib::NiPSysAgeDeathModifier::TYPE));
+			Assert::IsTrue(mod0->GetName() == "Modifier:0");
+			Assert::IsTrue(mod0->GetOrder() == 0);
+
+			Niflib::NiPSysModifier* mod1 = mods[1];
+			Assert::IsTrue(mod1->IsSameType(Niflib::NiPSysPositionModifier::TYPE));
+			Assert::IsTrue(mod1->GetName() == "Modifier:1");
+			Assert::IsTrue(mod1->GetOrder() == 1);
+
+			Niflib::NiPSysModifier* mod2 = mods[2];
+			Assert::IsTrue(mod2->IsSameType(Niflib::NiPSysBoundUpdateModifier::TYPE));
+			Assert::IsTrue(mod2->GetName() == "Modifier:2");
+			Assert::IsTrue(mod2->GetOrder() == 2);
 
 			//Have the missing components been added?
 			Assert::IsTrue(psys_node->object().getNative().GetData() != nullptr);
@@ -606,12 +608,12 @@ namespace node
 			Assert::IsTrue(areConnected(root_node->getField(Node::CHILDREN)->connector, psys_node->getField(ParticleSystem::PARENT)->connector));
 
 			//Are names and ordering as expected?
-			Assert::IsTrue(psys_node->ageDeathMod().name().get() == "Modifier:0");
-			Assert::IsTrue(psys_node->ageDeathMod().order().get() == 0);
-			Assert::IsTrue(psys_node->positionMod().name().get() == "Modifier:1");
-			Assert::IsTrue(psys_node->positionMod().order().get() == 1);
-			Assert::IsTrue(psys_node->boundUpdateMod().name().get() == "Modifier:2");
-			Assert::IsTrue(psys_node->boundUpdateMod().order().get() == 2);
+			Assert::IsTrue(mod1->name().get() == "Modifier:0");
+			Assert::IsTrue(mod1->order().get() == 0);
+			Assert::IsTrue(mod2->name().get() == "Modifier:1");
+			Assert::IsTrue(mod2->order().get() == 1);
+			Assert::IsTrue(mod3->name().get() == "Modifier:2");
+			Assert::IsTrue(mod3->order().get() == 2);
 
 			//Have the modifiers been reordered?
 			Assert::IsTrue(psys_node->object().getNative().GetModifiers().size() == 3);

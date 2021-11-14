@@ -102,24 +102,24 @@ public:
 	}
 };
 
-node::GravityModifier::GravityModifier(std::shared_ptr<nif::NiPSysGravityModifier>&& obj) :
+node::GravityModifier::GravityModifier(ni_ptr<nif::NiPSysGravityModifier>&& obj) :
 	Modifier(std::move(obj))
 {
-	addTargetField(std::make_shared<ReqDevice<Requirement::MOVEMENT>>(*this));
+	m_device.addRequirement(Requirement::MOVEMENT);
 
 	newChild<gui::Separator>();
 
-	newField<GravityObjectField>(GRAVITY_OBJECT, *this);
-	newField<StrengthField>(STRENGTH, *this);
-	newField<DecayField>(DECAY, *this);
-	newField<TurbulenceField>(TURBULENCE, *this);
-	newField<TurbulenceScaleField>(TURBULENCE_SCALE, *this);
+	m_objectField = newField<GravityObjectField>(GRAVITY_OBJECT, *this);
+	m_strengthField = newField<StrengthField>(STRENGTH, *this);
+	m_decayField = newField<DecayField>(DECAY, *this);
+	m_turbField = newField<TurbulenceField>(TURBULENCE, *this);
+	m_turbScaleField = newField<TurbulenceScaleField>(TURBULENCE_SCALE, *this);
 }
 
 nif::NiPSysGravityModifier& node::GravityModifier::object()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiPSysGravityModifier*>(getObjects()[0].get());
+	assert(m_obj);
+	return *static_cast<nif::NiPSysGravityModifier*>(m_obj.get());
 }
 
 class node::PlanarForceField::GravityAxisField final : public Field
@@ -144,20 +144,27 @@ node::PlanarForceField::PlanarForceField(nif::File& file) :
 	object().gravityAxis().set({ 0.0f, 0.0f, 1.0f });
 }
 
-node::PlanarForceField::PlanarForceField(std::shared_ptr<nif::NiPSysGravityModifier>&& obj) :
+node::PlanarForceField::PlanarForceField(ni_ptr<nif::NiPSysGravityModifier>&& obj) :
 	GravityModifier(std::move(obj))
 {
 	setTitle("Planar force field");
 	setSize({ WIDTH, HEIGHT });
 
 	newChild<gui::Separator>();
-	newField<GravityAxisField>(GRAVITY_AXIS, *this);
+	m_axisField = newField<GravityAxisField>(GRAVITY_AXIS, *this);
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
 	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 	getField(GRAVITY_OBJECT)->connector->setTranslation({ 0.0f, 90.0f });
 }
+
+node::PlanarForceField::~PlanarForceField()
+{
+	disconnect();
+}
+
+
 
 node::SphericalForceField::SphericalForceField(nif::File& file) :
 	SphericalForceField(file.create<nif::NiPSysGravityModifier>())
@@ -167,7 +174,7 @@ node::SphericalForceField::SphericalForceField(nif::File& file) :
 	object().gravityAxis().set({ 0.0f, 0.0f, 1.0f });
 }
 
-node::SphericalForceField::SphericalForceField(std::shared_ptr<nif::NiPSysGravityModifier>&& obj) :
+node::SphericalForceField::SphericalForceField(ni_ptr<nif::NiPSysGravityModifier>&& obj) :
 	GravityModifier(std::move(obj))
 {
 	setTitle("Spherical force field");
@@ -177,4 +184,9 @@ node::SphericalForceField::SphericalForceField(std::shared_ptr<nif::NiPSysGravit
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
 	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 	getField(GRAVITY_OBJECT)->connector->setTranslation({ 0.0f, 90.0f });
+}
+
+node::SphericalForceField::~SphericalForceField()
+{
+	disconnect();
 }

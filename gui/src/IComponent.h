@@ -26,6 +26,10 @@
 //We should adopt a global strategy for pixel rounding
 constexpr float (*TO_PIXEL)(float) noexcept = &std::floor;
 
+#ifdef _DEBUG
+extern int g_currentComponents;
+#endif
+
 namespace gui
 {
 	class Visitor;
@@ -33,7 +37,12 @@ namespace gui
 	class IComponent
 	{
 	public:
-		virtual ~IComponent() {}
+#ifdef _DEBUG
+		IComponent() { g_currentComponents++; }
+		virtual ~IComponent() { g_currentComponents--; }
+#else
+		virtual ~IComponent() = default;
+#endif
 
 		virtual IComponent* getParent() const = 0;
 		//Not for public use! Parenting should be done via add/removeChild.

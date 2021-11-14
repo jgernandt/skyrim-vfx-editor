@@ -25,7 +25,8 @@ namespace node
 	{
 	public:
 		ScaleModifier(nif::File& file);
-		ScaleModifier(std::shared_ptr<nif::BSPSysScaleModifier>&& obj);
+		ScaleModifier(ni_ptr<nif::BSPSysScaleModifier>&& obj);
+		~ScaleModifier();
 
 		virtual nif::BSPSysScaleModifier& object() override;
 
@@ -35,6 +36,6 @@ namespace node
 
 	private:
 		class ScaleField;
-
+		std::unique_ptr<Field> m_scaleField;
 	};
 }

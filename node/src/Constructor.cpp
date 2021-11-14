@@ -516,7 +516,7 @@ std::unique_ptr<node::Emitter> node::Constructor::process(nif::native::NiPSysEmi
 			}
 			else {
 				//This iplr should be processed as a separate node
-				EP_process(iplr, emitterCtlr->getNative());
+				EP_process(iplr, *emitterCtlr);
 
 				Connection c;
 				c.object1 = obj;
@@ -534,7 +534,7 @@ std::unique_ptr<node::Emitter> node::Constructor::process(nif::native::NiPSysEmi
 			}
 			else {
 				//This iplr should be processed as a separate node
-				EP_process(iplr, emitterCtlr->getNative());
+				EP_process(iplr, *emitterCtlr);
 			}
 		}
 	}
@@ -651,7 +651,7 @@ void node::Constructor::EP_process(nif::native::BSEffectShaderProperty* obj)
 	}
 }
 
-void node::Constructor::EP_process(nif::native::NiInterpolator* obj, const nif::native::NiTimeController& ctlr)
+void node::Constructor::EP_process(nif::native::NiInterpolator* obj, const nif::NiTimeController& ctlr)
 {
 	if (obj) {
 		if (auto it = m_objectMap.find(obj); it == m_objectMap.end()) {
@@ -665,12 +665,8 @@ void node::Constructor::EP_process(nif::native::NiInterpolator* obj, const nif::
 				std::shared_ptr<nif::NiFloatData> data;
 				if (Niflib::NiFloatData* d = fiplr->GetData())
 					data = m_file.get<nif::NiFloatData>(d);
-				auto ctlr_node = std::make_unique<FloatController>(m_file, m_file.get<nif::NiFloatInterpolator>(fiplr), std::move(data));
-				ctlr_node->flags().set(ctlr.GetFlags());
-				ctlr_node->frequency().set(ctlr.GetFrequency());
-				ctlr_node->phase().set(ctlr.GetPhase());
-				ctlr_node->startTime().set(ctlr.GetStartTime());
-				ctlr_node->stopTime().set(ctlr.GetStopTime());
+				auto ctlr_node = std::make_unique<FloatController>(
+					m_file, m_file.get<nif::NiFloatInterpolator>(fiplr), std::move(data), &ctlr);
 				node = std::move(ctlr_node);
 			}
 			else if (obj->GetType().IsSameType(Niflib::NiBlendFloatInterpolator::TYPE)) {
@@ -681,12 +677,11 @@ void node::Constructor::EP_process(nif::native::NiInterpolator* obj, const nif::
 				m_objectMap.insert({ obj, m_nodes.size() });
 				m_nodes.push_back(std::move(node));
 			}
-
 		}
 		else {
 			//interpolator used by multiple controllers?
 			//I'm not sure if this is an error, but we're not supporting it right now. We should warn.
-			auto target = const_cast<nif::native::NiTimeController&>(ctlr).GetTarget();//this function should be const
+			auto target = ctlr.getNative().GetTarget();
 			if (target)
 				m_warnings.push_back(target->GetName() + " is sharing an interpolator with another object. This cannot be displayed properly.");
 		}
