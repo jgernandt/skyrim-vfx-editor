@@ -13,6 +13,7 @@ constexpr float SCALE_SENSITIVITY = 0.1f;
 class MoveOp final : public gui::ICommand
 {
 public:
+	MoveOp() {}
 	virtual void execute() override 
 	{
 	}
@@ -245,6 +246,8 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 				if (auto res = m_selection.insert(object); !res.second) {
 					//shift+clicked selected object
 					//remove from selection
+					if (m_activeItem == res.first)
+						m_activeItem = m_selection.end();
 					m_selection.erase(res.first);
 					object->setSelected(false);
 				}
@@ -252,6 +255,7 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 					//shift+clicked non-selected object
 					//add to selection
 					object->setSelected(true);
+					m_activeItem = res.first;
 				}
 			}
 			else {
@@ -261,7 +265,7 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 
 					//if we release before reaching the drag threshold, should clear
 					//other selected objects
-					m_clickedComp = it;
+					m_activeItem = it;
 				}
 				else {
 					//clicked non-selected object
@@ -269,7 +273,7 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 					for (auto&& o : m_selection)
 						o->setSelected(false);
 					m_selection.clear();
-					m_selection.insert(object);
+					m_activeItem = m_selection.insert(object).first;
 					object->setSelected(true);
 				}
 				//start dragging
@@ -308,17 +312,16 @@ bool node::FloatKeyEditor::onMouseUp(gui::Mouse::Button button)
 
 	if (button == gui::Mouse::Button::LEFT) {
 		if (result = m_currentOp == Op::DRAG) {
-			if (m_clickedComp != m_selection.end()) {
+			if (!m_dragThresholdPassed) {
 				//they released before reaching the drag threshold, should clear
 				//other selected objects
-				decltype(m_selection) newSelection;
-				newSelection.insert(m_selection.extract(m_clickedComp));
+				Selection newSelection;
+				m_activeItem = newSelection.insert(m_selection.extract(m_activeItem)).position;
 				for (auto&& obj : m_selection) {
 					assert(obj);
 					obj->setSelected(false);
 				}
 				m_selection = std::move(newSelection);
-				m_clickedComp = m_selection.end();
 			}
 
 			m_currentOp = Op::NONE;
@@ -371,13 +374,13 @@ void node::FloatKeyEditor::onMouseMove(const gui::Floats<2>& pos)
 
 void node::FloatKeyEditor::drag(const gui::Floats<2>& pos)
 {
+	assert(!m_selection.empty());//should be checked before starting a move op
+
 	if (!m_dragThresholdPassed &&
 		(std::abs(pos[0] - m_clickPoint[0]) >= DRAG_THRESHOLD ||
 		std::abs(pos[1] - m_clickPoint[1]) >= DRAG_THRESHOLD))
 	{
 		m_dragThresholdPassed = true;
-		//discard the clicked component
-		m_clickedComp = m_selection.end();
 
 		//save initial state
 		assert(m_initialState.empty());
@@ -390,6 +393,13 @@ void node::FloatKeyEditor::drag(const gui::Floats<2>& pos)
 
 	if (m_dragThresholdPassed) {
 		gui::Floats<2> delta = pos - m_clickPoint;
+
+		//Depending on what component is selected, a move operation can mean different things.
+		//Different properties, different interpretation of movement.
+		//We need to ask the active component
+
+		Selection::iterator comp = m_activeItem != m_selection.end() ? m_activeItem : m_selection.begin();
+		//Ask comp for a "move" command
 
 		for (auto&& item : m_initialState) {
 			if (IComponent* parent = item.first->getParent()) {

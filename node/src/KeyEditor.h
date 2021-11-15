@@ -3,6 +3,7 @@
 #include "Graph.h"
 #include "Popup.h"
 #include "NiController.h"
+#include "node_concepts.h"
 
 namespace node
 {
@@ -36,6 +37,31 @@ namespace node
 		void updateAxisUnits();
 
 	private:
+		using Selection = std::set<IComponent*>;
+
+		class Interpolant;
+		class KeyFrame;
+		class ForwardHandle
+		{
+			//Maybe instead of holding an interface ptr directly we should know
+			//what KeyFrame we are a part of and the name (or other id)
+			//of the property we represent.
+
+			KeyFrame* m_keyFrame;
+			const char* id = "ForwardTangent";
+		};
+		class BackwardHandle
+		{
+		};
+
+		class KeyFrame
+		{
+			Interpolant* m_curve;
+			int m_index;
+			ForwardHandle* m_fwd;
+			BackwardHandle* m_bwd;
+		};
+
 		class Interpolant : public gui::Composite
 		{
 		public:
@@ -49,7 +75,7 @@ namespace node
 		class ConstantInterpolant final : public Interpolant
 		{
 		public:
-			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(); }
+			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(0.0f, 0.0f); }
 		};
 		class LinearInterpolant final : 
 			public Interpolant, public nif::VectorPropertyListener<nif::Key<float>>
@@ -83,7 +109,7 @@ namespace node
 			QuadraticInterpolant(std::shared_ptr<OVector<nif::Key<float>>>&& keys,
 				std::shared_ptr<OVector<nif::Tangent<float>>>&& tans) {}
 
-			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(); }
+			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(0.0f, 0.0f); }
 
 			//update our interpolation of [i-1, i] and [i, i+1]
 			virtual void onSet(int i, const nif::Key<float>& key) override {}
@@ -106,11 +132,11 @@ namespace node
 			PAN,
 			ZOOM,
 		};
-		std::set<IComponent*> m_selection;
+		Selection m_selection;
 		gui::Floats<2> m_clickPoint;
 		gui::Floats<2> m_startS;
 		gui::Floats<2> m_startT;
-		std::set<IComponent*>::iterator m_clickedComp;
+		Selection::iterator m_activeItem;
 		Op m_currentOp{ Op::NONE };
 
 		std::vector<std::pair<IComponent*, gui::Floats<2>>> m_initialState;
