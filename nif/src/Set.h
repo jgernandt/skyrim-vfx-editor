@@ -86,13 +86,13 @@ namespace nif
 				}
 			}
 		}
-		void remove(const std::shared_ptr<T>& obj)
+		void remove(T* obj)
 		{
 			if (obj) {
 				if (int n = m_ctnr.erase(obj)) {
 					for (SetListener<T>* l : this->m_lsnrs) {
 						assert(l);
-						l->onRemove(obj.get());
+						l->onRemove(obj);
 					}
 				}
 			}

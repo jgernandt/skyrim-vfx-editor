@@ -92,6 +92,29 @@ namespace nif
 			return i;
 		}
 
+		void push_back(const T& val)
+		{
+
+		}
+
+		size_t size() const
+		{
+			return m_ctnr.size();
+		}
+
+		friend constexpr bool operator==(const Vector<T>& lhs, const Vector<T>& rhs)
+		{ 
+			return lhs.m_ctnr == rhs.m_ctnr; 
+		}
+		friend constexpr bool operator==(const Vector<T>& lhs, const std::vector<T>& rhs)
+		{
+			return lhs.m_ctnr == rhs;
+		}
+		friend constexpr bool operator==(const std::vector<T>& lhs, const Vector<T>& rhs)
+		{
+			return rhs == lhs;
+		}
+
 	private:
 		std::vector<T> m_ctnr;
 	};
