@@ -41,9 +41,7 @@ namespace nif
 			SKYRIM_SE,
 		};
 
-		using FactoryFcn = 
-			std::pair<std::shared_ptr<NiObject>, std::shared_ptr<Niflib::NiObject>>
-			(*)(File&, const Niflib::Ref<Niflib::NiObject>&);
+		using CreateFcn = std::shared_ptr<ObjectBlock>(*)(const Niflib::Ref<Niflib::NiObject>&);
 
 	public:
 		File(Version version = Version::UNKNOWN);
@@ -67,22 +65,23 @@ namespace nif
 
 		void write(const std::filesystem::path& path);
 
-		static FactoryFcn pushType(size_t type, FactoryFcn fcn) { return s_typeRegistry[type] = fcn; }
-
 	private:
 		template<typename T>
 		std::shared_ptr<T> make_ni(const Niflib::Ref<typename type_map<T>::type>& native);
 		template<typename T>
 		std::shared_ptr<T> make_ni() { return make_ni<T>(Niflib::Ref<typename type_map<T>::type>()); }
 
+	public:
+		static CreateFcn pushType(size_t type, CreateFcn fcn) { return s_typeRegistry[type] = fcn; }
+
 	private:
-		static std::map<size_t, FactoryFcn> s_typeRegistry;
+		static std::map<size_t, CreateFcn> s_typeRegistry;
 
 		Version m_version{ Version::UNKNOWN };
 		std::shared_ptr<NiNode> m_rootNode;
 
-		std::map<NiObject*, std::weak_ptr<Niflib::NiObject>> m_nativeIndex;
-		std::map<Niflib::NiObject*, std::weak_ptr<NiObject>> m_objectIndex;
+		std::map<Niflib::NiObject*, std::weak_ptr<ObjectBlock>> m_nativeIndex;
+		std::map<NiObject*, std::weak_ptr<ObjectBlock>> m_objectIndex;
 	};
 	/*
 	template<typename T>
@@ -136,7 +135,7 @@ namespace nif
 		//we care about.
 		//There are nicer ways to set that up, but they require more work.
 
-		FactoryFcn fcn = nullptr;
+		CreateFcn fcn = nullptr;
 
 		Niflib::Type* type = native ? native->GetType() : &type_map<T>::type::TYPE;
 		while (type) {
@@ -149,14 +148,16 @@ namespace nif
 		}
 		assert(fcn);
 
-		auto pair = fcn(*this, Niflib::StaticCast<Niflib::NiObject>(native));
+		auto block = fcn(Niflib::StaticCast<Niflib::NiObject>(native));
 		//factory should throw on failure. We won't catch it, we'll typically be part of a longer procedure.
-		assert(pair.first && pair.second);
+		assert(block);
 
-		m_nativeIndex.insert({ pair.first.get(), pair.second });
-		m_objectIndex.insert({ pair.second.get(), pair.first });
+		block->syncer->syncRead(*this, block->object, block->native);
+
+		m_objectIndex.insert({ block->object, block });
+		m_nativeIndex.insert({ block->native, block });
 
 		//Unless we messed something up, the created object should be of (at least) type T.
-		return std::static_pointer_cast<T>(pair.first);
+		return std::shared_ptr<T>(block, static_cast<T*>(block->object));
 	}
 }

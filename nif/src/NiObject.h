@@ -30,14 +30,6 @@ namespace nif
 {
 	class File;
 
-	//Use for the static mapping between Niflib types and our types
-	template<typename T>
-	struct type_map
-	{
-		//Specialise with the member type
-		//using type = NiObject;
-	};
-
 	struct NiObject
 	{
 		NiObject();
@@ -50,26 +42,71 @@ namespace nif
 		NiObject& operator=(NiObject&&) = delete;
 	};
 
-	//Convenience (?) function for redirecting pointers to a field
-	template<typename T, typename BlockType>
-	inline std::shared_ptr<T> make_field_ptr(const std::shared_ptr<BlockType>& obj, T& field)
+	//For the static mapping between Niflib types and our types
+	template<typename T>
+	struct type_map
 	{
-		if (obj && field) {
-			return std::shared_ptr<T>(obj, field);
-		}
-		else
-			return std::shared_ptr<T>();
-	}
+		//Specialise with the member type
+		//using type = NiObject;
+	};
 
-	//And sends something like this when it creates objects or writes output.
-	//Specialisations are supplied by each object type.
-	template<typename From, typename To>
-	class NiSyncer
+	template<> struct type_map<Niflib::NiObject> { using type = NiObject; };
+	template<> struct type_map<NiObject> { using type = Niflib::NiObject; };
+
+	//Transfers state between our model and Niflib after read and before write
+	class Syncer
 	{
 	public:
-		void operator()(From& from, To& to)
+		virtual ~Syncer() = default;
+		virtual void syncRead(const File&, NiObject*, Niflib::NiObject*) const = 0;
+		virtual void syncWrite(const File&, NiObject*, Niflib::NiObject*) const = 0;
+	};
+
+	//Specialise and inherit
+	template<typename T>
+	class NiSyncer : public Syncer
+	{
+	public:
+		virtual ~NiSyncer() = default;
+		virtual void syncRead(const File&, NiObject*, Niflib::NiObject*) const override {}
+		virtual void syncWrite(const File&, NiObject*, Niflib::NiObject*) const override {}
+	};
+
+	//like this
+	template<>
+	class NiSyncer<NiObject> : public Syncer
+	{
+	public:
+		virtual ~NiSyncer() = default;
+		virtual void syncRead(const File&, NiObject*, Niflib::NiObject*) const override {}
+		virtual void syncWrite(const File&, NiObject*, Niflib::NiObject*) const override {}
+	};
+
+	//Indexed by File, to keep track of created objects
+	struct ObjectBlock
+	{
+		Niflib::NiObject* native;
+		NiObject* object;
+		Syncer* syncer;
+	};
+
+	//Our implementation of ObjectBlock keeps everything in the same object.
+	//The pointers in ObjectBlock are aliases for the members of the derived type.
+	template<typename T>
+	struct NiObjectBlock : ObjectBlock
+	{
+		NiObjectBlock(const Niflib::Ref<typename type_map<T>::type>& ref) :
+			nativeRef{ ref }
 		{
-			//match data
+			this->native = nativeRef;
+			this->object = &objectImpl;
+			this->syncer = &syncerImpl;
 		}
+		NiObjectBlock(const NiObjectBlock&) = delete;
+		NiObjectBlock& operator=(const NiObjectBlock&) = delete;
+
+		Niflib::Ref<typename type_map<T>::type> nativeRef;
+		T objectImpl;
+		NiSyncer<T> syncerImpl;
 	};
 }

@@ -20,23 +20,12 @@
 #include "NiObject.h"
 #include "File.h"
 
-std::pair<std::shared_ptr<nif::NiObject>, std::shared_ptr<Niflib::NiObject>> 
-make_NiObject(nif::File&, const Niflib::Ref<Niflib::NiObject>& native)
+std::shared_ptr<nif::ObjectBlock> make_NiObject(const Niflib::Ref<Niflib::NiObject>& native)
 {
-	struct Creation
-	{
-		nif::NiObject object;
-		Niflib::Ref<Niflib::NiObject> native;
-	};
-
-	auto ptr = std::make_shared<Creation>();
-
-	return std::make_pair(
-		std::shared_ptr<nif::NiObject>(ptr, &ptr->object),
-		std::shared_ptr<Niflib::NiObject>(ptr, ptr->native));
+	return std::make_shared<nif::NiObjectBlock<nif::NiObject>>(native);
 }
 
-static nif::File::FactoryFcn factory = nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiObject::TYPE), &make_NiObject);
+static nif::File::CreateFcn g_NiObjectFactory = nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiObject::TYPE), &make_NiObject);
 
 #ifdef _DEBUG
 int g_currentNiObjects = 0;

@@ -87,8 +87,11 @@ void nif::File::makeRoot(const Niflib::Ref<Niflib::NiNode>& node)
 void nif::File::write(const std::filesystem::path& path)
 {
 	if (m_rootNode && !path.empty()) {
-		if (auto it = m_nativeIndex.find(m_rootNode.get()); it != m_nativeIndex.end()) {
-			if (auto root = it->second.lock()) {
+		if (auto it = m_objectIndex.find(m_rootNode.get()); it != m_objectIndex.end()) {
+			if (auto rootBlock = it->second.lock()) {
+				assert(rootBlock->syncer);
+				rootBlock->syncer->syncWrite(*this, rootBlock->object, rootBlock->native);
+
 				Niflib::NifInfo fileInfo;
 				switch (m_version) {
 				case Version::SKYRIM:
@@ -102,12 +105,11 @@ void nif::File::write(const std::filesystem::path& path)
 					fileInfo.userVersion2 = 100;
 					break;
 				}
-
 				fileInfo.exportInfo1 = "SVFX Editor";
 				fileInfo.exportInfo2 = "Niflib";
 
 				ofstream out(path, ofstream::binary);
-				Niflib::WriteNifTree(out, root.get(), fileInfo);
+				Niflib::WriteNifTree(out, rootBlock->native, fileInfo);
 			}
 		}
 	}
