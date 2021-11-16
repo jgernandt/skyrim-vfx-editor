@@ -30,39 +30,27 @@ namespace nif
 {
 	class File;
 
-	class NiObject
+	//Use for the static mapping between Niflib types and our types
+	template<typename T>
+	struct type_map
 	{
-	public:
-		using native_type = native::NiObject;
+		//Specialise with the member type
+		//using type = NiObject;
+	};
 
-		NiObject(native_type* obj);
-
+	struct NiObject
+	{
+		NiObject();
 		NiObject(const NiObject&) = delete;
 		NiObject(NiObject&&) = delete;
 
-		virtual ~NiObject();
+		~NiObject();
 
 		NiObject& operator=(const NiObject&) = delete;
 		NiObject& operator=(NiObject&&) = delete;
-
-		//Pushes our data to the backend
-		virtual void sync(const File&) {}
-
-		//I don't like exposing this. Do we really need it?
-		native_type* nativePtr() const { return m_ptr; }
-
-		friend bool operator==(const NiObject& lhs, const NiObject& rhs) { return lhs.m_ptr == rhs.m_ptr; }
-		friend bool operator!=(const NiObject& lhs, const NiObject& rhs) { return !(lhs == rhs); }
-		friend bool operator<(const NiObject& lhs, const NiObject& rhs) { return lhs.m_ptr < rhs.m_ptr; }
-		friend bool operator>(const NiObject& lhs, const NiObject& rhs) { return rhs < lhs; }
-		friend bool operator<=(const NiObject& lhs, const NiObject& rhs) { return !(rhs < lhs); }
-		friend bool operator>=(const NiObject& lhs, const NiObject& rhs) { return !(lhs < rhs); }
-
-	protected:
-		native::NiObject* const m_ptr;
 	};
 
-	//Convenience (and safety?) function for redirecting pointers to a field
+	//Convenience (?) function for redirecting pointers to a field
 	template<typename T, typename BlockType>
 	inline std::shared_ptr<T> make_field_ptr(const std::shared_ptr<BlockType>& obj, T& field)
 	{
@@ -72,4 +60,16 @@ namespace nif
 		else
 			return std::shared_ptr<T>();
 	}
+
+	//And sends something like this when it creates objects or writes output.
+	//Specialisations are supplied by each object type.
+	template<typename From, typename To>
+	class NiSyncer
+	{
+	public:
+		void operator()(From& from, To& to)
+		{
+			//match data
+		}
+	};
 }

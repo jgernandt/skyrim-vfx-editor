@@ -18,9 +18,11 @@
 
 #pragma once
 #include <filesystem>
+#include <map>
+#include <set>
 #include <vector>
-#include "nif_types.h"
-#include "NiObject.h"
+
+#include "ni_objects.h"
 
 namespace nif
 {
@@ -39,7 +41,9 @@ namespace nif
 			SKYRIM_SE,
 		};
 
-		using index_type = std::map<native::NiObject*, std::weak_ptr<nif::NiObject>>;
+		using FactoryFcn = 
+			std::pair<std::shared_ptr<NiObject>, std::shared_ptr<Niflib::NiObject>>
+			(*)(File&, const Niflib::Ref<Niflib::NiObject>&);
 
 	public:
 		File(Version version = Version::UNKNOWN);
@@ -50,67 +54,109 @@ namespace nif
 
 		~File();
 
-		template<typename T, typename... Args>
-		[[nodiscard]] std::shared_ptr<T> create(Args&&... args) 
-		{ 
-			static_assert(std::is_base_of<NiObject, T>::value);
+		//template<typename T>
+		//[[nodiscard]] std::shared_ptr<T> create();
 
-			std::shared_ptr<T> result;
-			//Catch allocation errors, not ctor exceptions (that's the caller's problem).
-			// Actually, add this later. We're not checking for failure in our current code.
-			//try {
-				result = std::make_shared<T>(std::forward<Args>(args)...);
-				addToIndex(std::static_pointer_cast<NiObject>(result)->m_ptr, result);
-			//}
-			//catch (const std::bad_alloc&) {
-			//	result.reset();
-			//}
+		//template<typename T, typename NativeType>
+		//[[nodiscard]] std::shared_ptr<T> get(const Niflib::Ref<NativeType>& objRef);
 
-			return result;
-		}
-
-		template<typename T, typename NativeType>
-		[[nodiscard]] std::shared_ptr<T> get(const Niflib::Ref<NativeType>& objRef)
-		{
-			static_assert(std::is_base_of<NiObject, T>::value);
-			static_assert(std::is_base_of<typename T::native_type, NativeType>::value);
-
-			NativeType* obj = static_cast<NativeType*>(objRef);
-
-			std::shared_ptr<T> result;
-			if (auto it = m_index.find(obj); it != m_index.end()) {
-				//downcast safe if T::native_type is correct
-				result = std::static_pointer_cast<T>(it->second.lock());
-				if (!result) {
-					//recreate
-					//try {
-						result = std::make_shared<T>(obj);
-						it->second = std::weak_ptr<NiObject>(result);
-					//}
-					//catch (const std::bad_alloc&) {
-					//	result.reset();
-					//}
-				}
-			}
-			//else ignore. Do not create.
-
-			return result;
-		}
+		Version getVersion() const { return m_version; }
 
 		std::shared_ptr<NiNode> getRoot() const { return m_rootNode; }
-		Version getVersion() const { return m_version; }
-		bool isCompatible(Version version) const;
+		void makeRoot(const Niflib::Ref<Niflib::NiNode>& node);
 
 		void write(const std::filesystem::path& path);
 
-	private:
-		index_type::const_iterator addToIndex(native::NiObject* obj, const std::shared_ptr<NiObject>& ptr);
+		static FactoryFcn pushType(size_t type, FactoryFcn fcn) { return s_typeRegistry[type] = fcn; }
 
 	private:
+		template<typename T>
+		std::shared_ptr<T> make_ni(const Niflib::Ref<typename type_map<T>::type>& native);
+		template<typename T>
+		std::shared_ptr<T> make_ni() { return make_ni<T>(Niflib::Ref<typename type_map<T>::type>()); }
+
+	private:
+		static std::map<size_t, FactoryFcn> s_typeRegistry;
+
 		Version m_version{ Version::UNKNOWN };
 		std::shared_ptr<NiNode> m_rootNode;
 
-		index_type m_index;
+		std::map<NiObject*, std::weak_ptr<Niflib::NiObject>> m_nativeIndex;
+		std::map<Niflib::NiObject*, std::weak_ptr<NiObject>> m_objectIndex;
 	};
+	/*
+	template<typename T>
+	inline [[nodiscard]] std::shared_ptr<T> File::create()
+	{
+		static_assert(std::is_base_of<NiObject, T>::value);
 
+		//Catch allocation errors, not ctor exceptions (that's the caller's problem).
+		// Actually, add this later. We're not checking for failure in our current code.
+		//try {
+		return std::static_pointer_cast<T>(T::type_id);
+		//}
+		//catch (const std::bad_alloc&) {
+		//	return std::shared_ptr<T>();
+		//}
+	}
+
+	template<typename T, typename NativeType>
+	inline [[nodiscard]] std::shared_ptr<T> File::get(const Niflib::Ref<NativeType>& objRef)
+	{
+		static_assert(std::is_base_of<NiObject, T>::value);
+		static_assert(std::is_base_of<typename T::native_type, NativeType>::value);
+
+		NativeType* obj = static_cast<NativeType*>(objRef);
+
+		std::shared_ptr<T> result;
+		if (auto it = m_index.find(obj); it != m_index.end()) {
+			//downcast safe if T::native_type is correct
+			result = std::static_pointer_cast<T>(it->second.lock());
+			if (!result) {
+				//try {
+				result = std::static_pointer_cast<T>(make_ni(obj));
+				it->second = std::weak_ptr<NiObject>(result);
+				//}
+				//catch (const std::bad_alloc&) {
+				//	result.reset();
+				//}
+			}
+		}
+		//else ignore. Do not create.
+
+		return result;
+	}
+	*/
+	template<typename T>
+	inline std::shared_ptr<T> File::make_ni(const Niflib::Ref<typename type_map<T>::type>& native)
+	{
+		//Our type registry contains all the types that we care about.
+		//If we step up through the inheritance chain of Niflib's type object,
+		//the first one we find in our registry is the most derived type that 
+		//we care about.
+		//There are nicer ways to set that up, but they require more work.
+
+		FactoryFcn fcn = nullptr;
+
+		Niflib::Type* type = native ? native->GetType() : &type_map<T>::type::TYPE;
+		while (type) {
+			if (auto it = s_typeRegistry.find(std::hash<Niflib::Type*>{}(type)); it != s_typeRegistry.end()) {
+				fcn = it->second;
+				break;
+			}
+			else
+				type = type->base_type;
+		}
+		assert(fcn);
+
+		auto pair = fcn(*this, Niflib::StaticCast<Niflib::NiObject>(native));
+		//factory should throw on failure. We won't catch it, we'll typically be part of a longer procedure.
+		assert(pair.first && pair.second);
+
+		m_nativeIndex.insert({ pair.first.get(), pair.second });
+		m_objectIndex.insert({ pair.second.get(), pair.first });
+
+		//Unless we messed something up, the created object should be of (at least) type T.
+		return std::static_pointer_cast<T>(pair.first);
+	}
 }

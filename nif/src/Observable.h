@@ -56,6 +56,6 @@ namespace nif
 		//[[nodiscard]] std::unique_ptr<Unsubscriber> addListener(IListener<T>&) {}
 
 	protected:
-		std::vector<IListener<T>> m_lsnrs;
+		std::vector<IListener<T>*> m_lsnrs;
 	};
 }

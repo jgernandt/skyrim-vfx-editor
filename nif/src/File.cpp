@@ -28,9 +28,9 @@ namespace Niflib
 
 nif::File::File(Version version) : m_version{ version }
 {
-	m_rootNode = create<BSFadeNode>();
+	m_rootNode = make_ni<BSFadeNode>();
 	if (m_rootNode)
-		m_rootNode->name().set("NewFile.nif");
+		m_rootNode->name.set("NewFile.nif");
 }
 
 nif::File::File(const std::filesystem::path& path)
@@ -41,11 +41,6 @@ nif::File::File(const std::filesystem::path& path)
 		auto objects = Niflib::ReadNifList(in, &fileInfo);
 		in.close();
 
-		Niflib::NiObjectRef root = Niflib::FindRoot(objects);
-
-		for (auto&& obj : objects)
-			addToIndex(obj, {});
-
 		if (fileInfo.version == 0x14020007 && fileInfo.userVersion == 12) {
 			if (fileInfo.userVersion2 == 83)
 				m_version = Version::SKYRIM;
@@ -53,20 +48,24 @@ nif::File::File(const std::filesystem::path& path)
 				m_version = Version::SKYRIM_SE;
 		}
 
-		if (Niflib::NiNode* node = Niflib::DynamicCast<Niflib::NiNode>(root))
-			m_rootNode = get<NiNode>(node);
+		makeRoot(Niflib::DynamicCast<Niflib::NiNode>(Niflib::FindRoot(objects)));
 	}
 }
 
 nif::File::~File()
 {
-	//for (auto&& item : m_index) {
-	//	if (item.first)
-	//		item.first->SubtractRef();
-	//}
 }
 
-nif::File::index_type::const_iterator nif::File::addToIndex(
+void nif::File::makeRoot(const Niflib::Ref<Niflib::NiNode>& node)
+{
+	if (node) {
+		//Should traverse any connected objects and add to our index.
+		//We're doing this in a separate function for testing purposes mainly.
+		m_rootNode = make_ni<NiNode>(node);
+	}
+}
+
+/*nif::File::index_type::const_iterator nif::File::addToIndex(
 	native::NiObject* obj, const std::shared_ptr<NiObject>& ptr)
 {
 	if (obj) {
@@ -83,42 +82,33 @@ nif::File::index_type::const_iterator nif::File::addToIndex(
 	}
 	else
 		return m_index.end();
-}
-
-bool nif::File::isCompatible(Version version) const
-{
-	switch (version) {
-	case Version::SKYRIM:
-		return m_version == Version::SKYRIM;
-	case Version::SKYRIM_SE:
-		return m_version == Version::SKYRIM_SE || m_version == Version::SKYRIM;
-	default:
-		return false;
-	}
-}
+}*/
 
 void nif::File::write(const std::filesystem::path& path)
 {
-	auto root = &m_rootNode->getNative();
-	if (!path.empty() && root) {
-		Niflib::NifInfo fileInfo;
-		switch (m_version) {
-		case Version::SKYRIM:
-			fileInfo.version = 0x14020007;
-			fileInfo.userVersion = 12;
-			fileInfo.userVersion2 = 83;
-			break;
-		case Version::SKYRIM_SE:
-			fileInfo.version = 0x14020007;
-			fileInfo.userVersion = 12;
-			fileInfo.userVersion2 = 100;
-			break;
+	if (m_rootNode && !path.empty()) {
+		if (auto it = m_nativeIndex.find(m_rootNode.get()); it != m_nativeIndex.end()) {
+			if (auto root = it->second.lock()) {
+				Niflib::NifInfo fileInfo;
+				switch (m_version) {
+				case Version::SKYRIM:
+					fileInfo.version = 0x14020007;
+					fileInfo.userVersion = 12;
+					fileInfo.userVersion2 = 83;
+					break;
+				case Version::SKYRIM_SE:
+					fileInfo.version = 0x14020007;
+					fileInfo.userVersion = 12;
+					fileInfo.userVersion2 = 100;
+					break;
+				}
+
+				fileInfo.exportInfo1 = "SVFX Editor";
+				fileInfo.exportInfo2 = "Niflib";
+
+				ofstream out(path, ofstream::binary);
+				Niflib::WriteNifTree(out, root.get(), fileInfo);
+			}
 		}
-
-		fileInfo.exportInfo1 = "SVFX Editor";
-		fileInfo.exportInfo2 = "Niflib";
-
-		ofstream out(path, ofstream::binary);
-		Niflib::WriteNifTree(out, root, fileInfo);
 	}
 }

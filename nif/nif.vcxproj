@@ -21,7 +21,8 @@
   <ItemGroup>
     <ClInclude Include="src\Assignable.h" />
     <ClInclude Include="src\DataField.h" />
-    <ClInclude Include="src\VectorProperty.h" />
+    <ClInclude Include="src\ni_objects.h" />
+    <ClInclude Include="src\Vector.h" />
     <ClInclude Include="src\nif_backend.h" />
     <ClInclude Include="src\BSEffectShaderProperty.h" />
     <ClInclude Include="src\NiController.h" />

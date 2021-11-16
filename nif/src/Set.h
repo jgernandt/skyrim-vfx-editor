@@ -43,15 +43,15 @@ namespace nif
 	private:
 		struct SetCompare
 		{
-			bool operator()(const std::shared_ptr<T>& lhs, const std::shared_ptr<T>& rhs)
+			bool operator()(const std::shared_ptr<T>& lhs, const std::shared_ptr<T>& rhs) const
 			{
 				return lhs < rhs;
 			}
-			bool operator()(const std::shared_ptr<T>& lhs, T* rhs)
+			bool operator()(const std::shared_ptr<T>& lhs, T* rhs) const
 			{
 				return lhs.get() < rhs;
 			}
-			bool operator()(T* lhs, const std::shared_ptr<T>& rhs)
+			bool operator()(T* lhs, const std::shared_ptr<T>& rhs) const
 			{
 				return lhs < rhs.get();
 			}

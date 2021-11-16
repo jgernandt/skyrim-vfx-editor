@@ -65,7 +65,7 @@ namespace nif
 			assert(i >= 0);
 
 			if (obj) {
-				i = std::min(i, m_ctnr.size());
+				i = std::min((size_t)i, m_ctnr.size());
 				if (auto it = std::find(m_ctnr.begin(), m_ctnr.end(), obj); it == m_ctnr.end()) {
 					m_ctnr.insert(m_ctnr.begin() + i, obj);
 					for (SequenceListener<T>* l : this->m_lsnrs) {

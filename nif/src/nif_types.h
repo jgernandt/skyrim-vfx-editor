@@ -85,6 +85,7 @@ namespace Niflib
 	class NiStringExtraData;
 
 	template<typename T> class Ref;
+	class Type;
 }
 
 namespace nif

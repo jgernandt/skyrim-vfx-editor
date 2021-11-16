@@ -16,42 +16,6 @@
 //You should have received a copy of the GNU General Public License
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
-#include "pch.h"
+#pragma once
 #include "NiObject.h"
-#include "File.h"
-
-std::pair<std::shared_ptr<nif::NiObject>, std::shared_ptr<Niflib::NiObject>> 
-make_NiObject(nif::File&, const Niflib::Ref<Niflib::NiObject>& native)
-{
-	struct Creation
-	{
-		nif::NiObject object;
-		Niflib::Ref<Niflib::NiObject> native;
-	};
-
-	auto ptr = std::make_shared<Creation>();
-
-	return std::make_pair(
-		std::shared_ptr<nif::NiObject>(ptr, &ptr->object),
-		std::shared_ptr<Niflib::NiObject>(ptr, ptr->native));
-}
-
-static nif::File::FactoryFcn factory = nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiObject::TYPE), &make_NiObject);
-
-#ifdef _DEBUG
-int g_currentNiObjects = 0;
-#endif
-
-nif::NiObject::NiObject()
-{
-#ifdef _DEBUG
-	g_currentNiObjects++;
-#endif
-}
-
-nif::NiObject::~NiObject()
-{
-#ifdef _DEBUG
-	g_currentNiObjects--;
-#endif
-}
+#include "NiObjectNET.h"
