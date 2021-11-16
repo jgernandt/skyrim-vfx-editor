@@ -18,74 +18,94 @@
 
 #pragma once
 #include <cassert>
+#include <set>
 #include "Observable.h"
-#include "DataField.h"
-
-template<typename T>
-class ISet
-{
-public:
-	virtual ~ISet() = default;
-
-	virtual void add(const T&) = 0;
-	virtual void remove(const T&) = 0;
-	virtual bool has(const T&) const = 0;
-	virtual size_t size() const = 0;
-};
-
-template<typename T>
-using OSet = IObservable<ISet<T>>;
-
-template<typename T>
-class IListener<ISet<T>>
-{
-public:
-	virtual ~IListener() = default;
-
-	virtual void onAdd(const T&) {}
-	virtual void onRemove(const T&) {}
-};
 
 namespace nif
 {
-	template<typename T>
-	using Set = NiObject::DataField<ISet<T>>;
+	template<typename T> class Set;
 
 	template<typename T>
-	using SetListener = IListener<ISet<T>>;
-
-	template<typename T, typename BlockType>
-	class SetBase : public Set<T>
+	class IListener<Set<T>>
 	{
 	public:
-		SetBase(BlockType& block) : Set<T>(block) {}
-		virtual ~SetBase() = default;
+		virtual ~IListener() = default;
 
-	protected:
-		typename BlockType::native_type* nativePtr() const
-		{
-			assert(this->m_block);
-			return &static_cast<BlockType*>(this->m_block)->getNative();
-		}
-		typename BlockType& block() const
-		{
-			assert(this->m_block);
-			return *static_cast<BlockType*>(this->m_block);
-		}
+		virtual void onAdd(T*) {}
+		virtual void onRemove(T*) {}
+	};
 
-		void notifyAdd(const T& t) const
+	template<typename T> using SetListener = IListener<Set<T>>;
+
+	template<typename T>
+	class Set final : public Observable<Set<T>>
+	{
+	private:
+		struct SetCompare
 		{
-			for (SetListener<T>* l : this->m_lsnrs) {
-				assert(l);
-				l->onAdd(t);
+			bool operator()(const std::shared_ptr<T>& lhs, const std::shared_ptr<T>& rhs)
+			{
+				return lhs < rhs;
+			}
+			bool operator()(const std::shared_ptr<T>& lhs, T* rhs)
+			{
+				return lhs.get() < rhs;
+			}
+			bool operator()(T* lhs, const std::shared_ptr<T>& rhs)
+			{
+				return lhs < rhs.get();
+			}
+		};
+
+	public:
+		Set() = default;
+		~Set()
+		{
+			for (auto&& obj : m_ctnr) {
+				for (SetListener<T>* l : this->m_lsnrs) {
+					assert(l);
+					l->onRemove(obj.get());
+				}
 			}
 		}
-		void notifyRemove(const T& t) const
+
+		//We use these to iterate through our container during pre-write sync.
+		//They should be changed to dereference to get/set, not the raw element.
+		using iterator = typename std::set<std::shared_ptr<T>, SetCompare>::iterator;
+		iterator begin() { return m_ctnr.begin(); }
+		iterator end() { return m_ctnr.end(); }
+
+		void add(const std::shared_ptr<T>& obj)
 		{
-			for (SetListener<T>* l : this->m_lsnrs) {
-				assert(l);
-				l->onRemove(t);
+			if (obj) {
+				if (auto res = m_ctnr.insert(obj); res.second) {
+					for (SetListener<T>* l : this->m_lsnrs) {
+						assert(l);
+						l->onAdd(obj.get());
+					}
+				}
 			}
 		}
+		void remove(const std::shared_ptr<T>& obj)
+		{
+			if (obj) {
+				if (int n = m_ctnr.erase(obj)) {
+					for (SetListener<T>* l : this->m_lsnrs) {
+						assert(l);
+						l->onRemove(obj.get());
+					}
+				}
+			}
+		}
+		bool has(T* obj) const
+		{
+			return obj ? m_ctnr.find(obj) != m_ctnr.end() : false;
+		}
+		virtual size_t size() const { return m_ctnr.size(); }
+
+	private:
+
+		std::set<std::shared_ptr<T>, SetCompare> m_ctnr;
 	};
 }
+

@@ -59,13 +59,8 @@ namespace nif
 			//Catch allocation errors, not ctor exceptions (that's the caller's problem).
 			// Actually, add this later. We're not checking for failure in our current code.
 			//try {
-				//make_shared cannot access protected ctors. What we need is allocate_shared with a custom allocator.
-				result = std::shared_ptr<T>(new T(std::forward<Args>(args)...));
-				//result = std::make_shared<T>(std::forward<Args>(args)...);
-				std::static_pointer_cast<NiObject>(result)->m_file = this;
-				//std::static_pointer_cast<NiObject>(result)->m_it =
-					addToIndex(std::static_pointer_cast<NiObject>(result)->m_ptr, result);
-				//std::static_pointer_cast<NiObject>(result)->m_index = &m_index;
+				result = std::make_shared<T>(std::forward<Args>(args)...);
+				addToIndex(std::static_pointer_cast<NiObject>(result)->m_ptr, result);
 			//}
 			//catch (const std::bad_alloc&) {
 			//	result.reset();
@@ -75,10 +70,12 @@ namespace nif
 		}
 
 		template<typename T, typename NativeType>
-		[[nodiscard]] std::shared_ptr<T> get(NativeType* obj)
+		[[nodiscard]] std::shared_ptr<T> get(const Niflib::Ref<NativeType>& objRef)
 		{
 			static_assert(std::is_base_of<NiObject, T>::value);
 			static_assert(std::is_base_of<typename T::native_type, NativeType>::value);
+
+			NativeType* obj = static_cast<NativeType*>(objRef);
 
 			std::shared_ptr<T> result;
 			if (auto it = m_index.find(obj); it != m_index.end()) {
@@ -87,12 +84,7 @@ namespace nif
 				if (!result) {
 					//recreate
 					//try {
-						//make_shared cannot access protected ctors. What we need is allocate_shared with a custom allocator.
-						result = std::shared_ptr<T>(new T(obj));
-						//result = std::make_shared<T>(obj);
-						std::static_pointer_cast<NiObject>(result)->m_file = this;
-						//std::static_pointer_cast<NiObject>(result)->m_it = it;
-						//std::static_pointer_cast<NiObject>(result)->m_index = &m_index;
+						result = std::make_shared<T>(obj);
 						it->second = std::weak_ptr<NiObject>(result);
 					//}
 					//catch (const std::bad_alloc&) {
@@ -118,7 +110,6 @@ namespace nif
 		Version m_version{ Version::UNKNOWN };
 		std::shared_ptr<NiNode> m_rootNode;
 
-		//TODO: garbage collection (if first.GetNumRefs() == 1 && second.expired())
 		index_type m_index;
 	};
 

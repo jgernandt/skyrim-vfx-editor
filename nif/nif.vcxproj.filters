@@ -81,9 +81,6 @@
     <ClInclude Include="src\DataField.h">
       <Filter>Header Files\Data model</Filter>
     </ClInclude>
-    <ClInclude Include="src\data_model.h">
-      <Filter>Header Files\Data model</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\nif_conversions.cpp">

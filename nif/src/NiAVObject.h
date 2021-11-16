@@ -21,6 +21,13 @@
 
 namespace nif
 {
+	struct Transform
+	{
+		Property<translation_t> translation;
+		Property<rotation_t> rotation;
+		Property<scale_t> scale;
+	};
+
 	class NiAVObject : public NiObjectNET
 	{
 	public:

@@ -26,19 +26,12 @@ namespace nif
 	public:
 		using native_type = native::NiExtraData;
 
-	protected:
-		friend class File;
 		NiExtraData(native_type* obj);
-
-	public:
 		virtual ~NiExtraData() = default;
 
-		native_type& getNative() const;
+		native_type* nativePtr() const;
 
-		Property<std::string>& name() { return m_name; }
-
-	private:
-		PropertyFcn<std::string, NiExtraData> m_name;
+		Property<std::string> name;
 	};
 
 	class NiStringExtraData : public NiExtraData
@@ -46,19 +39,12 @@ namespace nif
 	public:
 		using native_type = native::NiStringExtraData;
 
-	protected:
-		friend class File;
 		NiStringExtraData();
 		NiStringExtraData(native_type* obj);
-
-	public:
 		virtual ~NiStringExtraData() = default;
 
-		native_type& getNative() const;
+		native_type* nativePtr() const;
 
-		Property<std::string>& value() { return m_value; }
-
-	private:
-		PropertyFcn<std::string, NiExtraData> m_value;
+		Property<std::string> value;
 	};
 }

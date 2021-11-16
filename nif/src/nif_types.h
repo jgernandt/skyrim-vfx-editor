@@ -131,43 +131,6 @@ namespace nif
 		CONSTANT		= 5,
 	};
 
-	template<typename T>
-	struct Key
-	{
-		float key;
-		T value;
-	};
-
-	template<typename T>
-	struct Tangent
-	{
-		T forward;
-		T backward;
-	};
-
-	struct TBC
-	{
-		float tension;
-		float bias;
-		float continuity;
-	};
-
-	template<typename T> constexpr bool operator==(const Key<T>& lhs, const Key<T>& rhs)
-	{
-		return lhs.key == rhs.key && lhs.value == rhs.value;
-	}
-	template<typename T> constexpr bool operator!=(const Key<T>& lhs, const Key<T>& rhs) { return !(lhs == rhs); }
-	template<typename T> constexpr bool operator==(const Tangent<T>& lhs, const Tangent<T>& rhs)
-	{
-		return lhs.forward == rhs.forward && lhs.backward == rhs.backward;
-	}
-	template<typename T> constexpr bool operator!=(const Tangent<T>& lhs, const Tangent<T>& rhs) { return !(lhs == rhs); }
-	constexpr bool operator==(const TBC& lhs, const TBC& rhs)
-	{
-		return lhs.tension == rhs.tension && lhs.bias == rhs.bias && lhs.continuity == rhs.continuity;
-	}
-	constexpr bool operator!=(const TBC& lhs, const TBC& rhs) { return !(lhs == rhs); }
-
 	namespace native
 	{
 		using ColRGBA = Niflib::Color4;

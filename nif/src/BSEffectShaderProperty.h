@@ -21,6 +21,17 @@
 
 namespace nif
 {
+	//Really just a Set, but intended for int or enum types
+	template<typename T>
+	class FlagSet
+	{
+	public:
+		virtual ~FlagSet() = default;
+
+		virtual void set(T, bool) = 0;
+		virtual bool isSet(T) const = 0;
+	};
+
 	enum class ShaderFlag1 : unsigned int
 	{
 		PALETTE_COLOUR	= 0x00000010,
@@ -106,3 +117,14 @@ namespace nif
 		} m_shaderFlags2;
 	};
 }
+
+template<typename T>
+struct util::field_traits<nif::FlagSet<T>>
+{
+	using field_type = nif::FlagSet<T>;
+	using index_type = T;
+	using value_type = bool;
+
+	static bool get(const field_type& t, index_type i) { return t.isSet(i); }
+	static void set(field_type& t, index_type i, bool val) { t.set(i, val); }
+};

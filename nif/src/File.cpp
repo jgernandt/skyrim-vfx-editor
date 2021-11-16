@@ -60,10 +60,10 @@ nif::File::File(const std::filesystem::path& path)
 
 nif::File::~File()
 {
-	for (auto&& item : m_index) {
-		if (item.first)
-			item.first->SubtractRef();
-	}
+	//for (auto&& item : m_index) {
+	//	if (item.first)
+	//		item.first->SubtractRef();
+	//}
 }
 
 nif::File::index_type::const_iterator nif::File::addToIndex(
@@ -71,7 +71,8 @@ nif::File::index_type::const_iterator nif::File::addToIndex(
 {
 	if (obj) {
 		if (auto result = m_index.insert({ obj, ptr }); result.second) {
-			obj->AddRef();
+			//We don't hold refs to the native objects. Let NiObject do that.
+			//obj->AddRef();
 			return result.first;
 		}
 		//else ignore? fail? this is an error!

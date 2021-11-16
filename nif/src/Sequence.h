@@ -18,75 +18,103 @@
 
 #pragma once
 #include <cassert>
+#include <list>
 #include "Observable.h"
-#include "DataField.h"
-
-template<typename T>
-class ISequence
-{
-public:
-	virtual ~ISequence() = default;
-
-	//index -1 (cast to unsigned) indicates end here
-	virtual size_t insert(size_t, const T&) = 0;
-	virtual size_t erase(size_t) = 0;
-	virtual size_t find(const T&) const = 0;
-	virtual size_t size() const = 0;
-};
-
-template<typename T>
-using OSequence = IObservable<ISequence<T>>;
-
-template<typename T>
-class IListener<ISequence<T>>
-{
-public:
-	virtual ~IListener() = default;
-
-	virtual void onInsert(size_t) {}
-	virtual void onErase(size_t) {}
-};
 
 namespace nif
 {
+	template<typename T> class Sequence;
 	template<typename T>
-	using Sequence = NiObject::DataField<ISequence<T>>;
-
-	template<typename T>
-	using SequenceListener = IListener<ISequence<T>>;
-
-	template<typename T, typename BlockType>
-	class SequenceBase : public Sequence<T>
+	class IListener<Sequence<T>>
 	{
 	public:
-		SequenceBase(BlockType& block) : Sequence<T>(block) {}
-		virtual ~SequenceBase() = default;
+		virtual ~IListener() = default;
 
-	protected:
-		typename BlockType::native_type* nativePtr() const
-		{
-			assert(this->m_block);
-			return &static_cast<BlockType*>(this->m_block)->getNative();
-		}
-		typename BlockType& block() const
-		{
-			assert(this->m_block);
-			return *static_cast<BlockType*>(this->m_block);
-		}
+		virtual void onInsert(int) {}
+		virtual void onErase(int) {}
+	};
 
-		void notifyInsert(size_t pos) const
+	template<typename T> using SequenceListener = IListener<Sequence<T>>;
+
+	template<typename T>
+	class Sequence final : public Observable<Sequence<T>>
+	{
+	public:
+		Sequence() = default;
+		~Sequence()
 		{
-			for (SequenceListener<T>* l : this->m_lsnrs) {
-				assert(l);
-				l->onInsert(pos);
+			size_t i = m_ctnr.size();
+			while (i) {
+				i--;
+				for (SequenceListener<T>* l : this->m_lsnrs) {
+					assert(l);
+					l->onErase(i);
+				}
 			}
 		}
-		void notifyErase(size_t pos) const
+
+		//We use these to iterate through our container during pre-write sync.
+		//They should be changed to dereference to get/set, not the raw element.
+		using iterator = typename std::vector<std::shared_ptr<T>>::iterator;
+		iterator begin() { return m_ctnr.begin(); }
+		iterator end() { return m_ctnr.end(); }
+
+		//TODO: use iterators instead of ints
+		int insert(int i, const std::shared_ptr<T>& obj)
 		{
+			assert(i >= 0);
+
+			if (obj) {
+				i = std::min(i, m_ctnr.size());
+				if (auto it = std::find(m_ctnr.begin(), m_ctnr.end(), obj); it == m_ctnr.end()) {
+					m_ctnr.insert(m_ctnr.begin() + i, obj);
+					for (SequenceListener<T>* l : this->m_lsnrs) {
+						assert(l);
+						l->onInsert(i);
+					}
+					return i;
+				}
+				else
+					//If already in the sequence, do not move. Return current location. Do not call listeners.
+					return std::distance(m_ctnr.begin(), it);
+			}
+			else
+				return -1;
+		}
+		int erase(int i)
+		{
+			assert(i >= 0 && (size_t)i < m_ctnr.size());
+
+			m_ctnr.erase(m_ctnr.begin() + i);
+
 			for (SequenceListener<T>* l : this->m_lsnrs) {
 				assert(l);
-				l->onErase(pos);
+				l->onErase(i);
 			}
+
+			return i;
 		}
+		int find(T* obj) const
+		{
+			int result = -1;
+
+			if (obj) {
+				if (auto it = std::find(m_ctnr.begin(), m_ctnr.end(), obj); it != m_ctnr.end())
+					result = std::distance(m_ctnr.begin(), it);
+			}
+
+			return result;
+		}
+		int size() const
+		{
+			if (m_ctnr.size() > std::numeric_limits<int>::max())
+				throw std::range_error("Never going to happen");
+			return m_ctnr.size();
+		}
+
+	private:
+		//Advantage of list is that iterators aren't invalidated on insert/erase, but
+		//we're not really taking advantage of that. vector might be better for now.
+		std::vector<std::shared_ptr<T>> m_ctnr;
 	};
 }

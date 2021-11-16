@@ -20,25 +20,23 @@
 #include <cassert>
 #include <map>
 #include "nif_types.h"
-#include "Observable.h"
-
-#ifdef _DEBUG
-extern int g_currentNiObjects;
-#endif
+#include "Assignable.h"
+#include "Property.h"
+#include "Sequence.h"
+#include "Set.h"
+#include "Vector.h"
 
 namespace nif
 {
+	class File;
+
 	class NiObject
 	{
 	public:
 		using native_type = native::NiObject;
-		template<typename T> class DataField;
 
-	protected:
-		friend class File;
 		NiObject(native_type* obj);
 
-	public:
 		NiObject(const NiObject&) = delete;
 		NiObject(NiObject&&) = delete;
 
@@ -47,8 +45,11 @@ namespace nif
 		NiObject& operator=(const NiObject&) = delete;
 		NiObject& operator=(NiObject&&) = delete;
 
+		//Pushes our data to the backend
+		virtual void sync(const File&) {}
+
 		//I don't like exposing this. Do we really need it?
-		native_type& getNative() const { return *m_ptr; }
+		native_type* nativePtr() const { return m_ptr; }
 
 		friend bool operator==(const NiObject& lhs, const NiObject& rhs) { return lhs.m_ptr == rhs.m_ptr; }
 		friend bool operator!=(const NiObject& lhs, const NiObject& rhs) { return !(lhs == rhs); }
@@ -57,15 +58,13 @@ namespace nif
 		friend bool operator<=(const NiObject& lhs, const NiObject& rhs) { return !(rhs < lhs); }
 		friend bool operator>=(const NiObject& lhs, const NiObject& rhs) { return !(lhs < rhs); }
 
-
 	protected:
-		class File* m_file{ nullptr };//lets us search for other blocks if we want
-		native::NiObject* m_ptr;
+		native::NiObject* const m_ptr;
 	};
 
 	//Convenience (and safety?) function for redirecting pointers to a field
 	template<typename T, typename BlockType>
-	inline std::shared_ptr<T> make_field_ptr(const std::shared_ptr<BlockType>& obj, T* field)
+	inline std::shared_ptr<T> make_field_ptr(const std::shared_ptr<BlockType>& obj, T& field)
 	{
 		if (obj && field) {
 			return std::shared_ptr<T>(obj, field);
@@ -74,5 +73,3 @@ namespace nif
 			return std::shared_ptr<T>();
 	}
 }
-
-#include "data_model.h"

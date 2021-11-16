@@ -19,90 +19,43 @@
 #pragma once
 #include <vector>
 
-template<typename T>
-class IListener
+namespace nif
 {
-public:
-	virtual ~IListener() = default;
+	//Must be specialised
+	template<typename T> class IListener { IListener() = default; };
 
-	virtual void call(const T&) = 0;
-};
-
-/*class Unsubscriber
-{
-public:
-	virtual ~Unsubscriber() = default;
-	virtual void unsub() = 0;
-};*/
-
-template<typename T>
-class IObservable : public T
-{
-public:
-	virtual ~IObservable() = default;
-
-	virtual void addListener(IListener<T>&) = 0;
-	virtual void removeListener(IListener<T>&) = 0;
-
-	//Postpone this change. It may or may not be a good idea.
-	//[[nodiscard]] virtual std::unique_ptr<Unsubscriber> addListener(IListener<T>&) = 0;
-
-};
-
-template<typename T>
-class ObservableBase : public IObservable<T>
-{
-private:
-	/*class BaseUnsubscriber final : public Unsubscriber
+	/*class Unsubscriber
 	{
 	public:
-		BaseUnsubscriber(ObservableBase<T>& target, IListener<T>& lsnr) :
-			m_target{ target }, m_lsnr{ lsnr } {}
-		~BaseUnsubscriber() { unsub(); }
-
-		virtual void unsub() override { m_target.removeListener(m_lsnr); }
-
-	private:
-		ObservableBase<T>& m_target;
-		IListener<T>& m_lsnr;
+		void unsub() {}
 	};*/
-public:
-	virtual ~ObservableBase() = default;
 
-	virtual void addListener(IListener<T>& l) final override
+	template<typename T>
+	class Observable
 	{
-		if (auto it = std::find(m_listeners.begin(), m_listeners.end(), &l); it == m_listeners.end())
-			m_listeners.push_back(&l);
-	}
-	virtual void removeListener(IListener<T>& l) final override
-	{
-		if (auto it = std::find(m_listeners.begin(), m_listeners.end(), &l); it != m_listeners.end())
-			m_listeners.erase(it);
-	}
+	public:
+		Observable() = default;
+		Observable(const Observable&) = delete;
 
-protected:
-	const std::vector<IListener<T>*>& getListeners() const { return m_listeners; }
+		~Observable() = default;
 
-	/* 
-public:
-	[[nodiscard]] virtual std::unique_ptr<Unsubscriber> addListener(IListener<T>& l) final override
-	{
-		if (auto it = std::find(m_listeners.begin(), m_listeners.end(), &l); it == m_listeners.end()) {
-			m_listeners.push_back(&l);
-			return std::make_unique<BaseUnsubscriber>(*this, l);
+		Observable& operator=(const Observable&) = delete;
+
+		void addListener(IListener<T>& l)
+		{
+			if (auto it = std::find(m_lsnrs.begin(), m_lsnrs.end(), &l); it == m_lsnrs.end())
+				m_lsnrs.push_back(&l);
 		}
-		else
-			return std::unique_ptr<Unsubscriber>();
-	}
+		void removeListener(IListener<T>& l)
+		{
+			if (auto it = std::find(m_lsnrs.begin(), m_lsnrs.end(), &l); it != m_lsnrs.end())
+				m_lsnrs.erase(it);
+		}
 
-private:
-	void removeListener(IListener<T>& l)
-	{
-		if (auto it = std::find(m_listeners.begin(), m_listeners.end(), &l); it != m_listeners.end())
-			m_listeners.erase(it);
-	}*/
+		//Postpone this change. It may or may not be a good idea.
+		//[[nodiscard]] std::unique_ptr<Unsubscriber> addListener(IListener<T>&) {}
 
-private:
-	std::vector<IListener<T>*> m_listeners;
-};
-
+	protected:
+		std::vector<IListener<T>> m_lsnrs;
+	};
+}
