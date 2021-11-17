@@ -25,6 +25,15 @@ namespace nif
 {
 	template<typename T> class Set;
 
+	template<typename T> inline bool operator<(const std::shared_ptr<T>& lhs, T* rhs)
+	{
+		return lhs.get() < rhs;
+	}
+	template<typename T> inline bool operator<(T* lhs, const std::shared_ptr<T>& rhs)
+	{
+		return lhs < rhs.get();
+	}
+
 	template<typename T>
 	class IListener<Set<T>>
 	{
@@ -40,23 +49,7 @@ namespace nif
 	template<typename T>
 	class Set final : public Observable<Set<T>>
 	{
-	private:
-		struct SetCompare
-		{
-			bool operator()(const std::shared_ptr<T>& lhs, const std::shared_ptr<T>& rhs) const
-			{
-				return lhs < rhs;
-			}
-			bool operator()(const std::shared_ptr<T>& lhs, T* rhs) const
-			{
-				return lhs.get() < rhs;
-			}
-			bool operator()(T* lhs, const std::shared_ptr<T>& rhs) const
-			{
-				return lhs < rhs.get();
-			}
-		};
-
+		using ctnr_type = std::map<T*, std::shared_ptr<T>>;
 	public:
 		Set() = default;
 		~Set()
@@ -64,21 +57,42 @@ namespace nif
 			for (auto&& obj : m_ctnr) {
 				for (SetListener<T>* l : this->m_lsnrs) {
 					assert(l);
-					l->onRemove(obj.get());
+					l->onRemove(obj.first);
 				}
 			}
 		}
 
-		//We use these to iterate through our container during pre-write sync.
-		//They should be changed to dereference to raw pointer.
-		using iterator = typename std::set<std::shared_ptr<T>, SetCompare>::iterator;
+		class iterator
+		{
+		public:
+			iterator(typename ctnr_type::iterator const& it) : m_it{ it } {}
+
+			T* operator*() noexcept { return m_it->first; }
+			const T* operator*() const noexcept { return m_it->first; }
+			T* operator->() noexcept { return m_it->first; }
+			const T* operator->() const noexcept { return m_it->first; }
+
+			iterator& operator++() noexcept { ++m_it; return *this; }
+			iterator operator++(int) noexcept 
+			{ 
+				iterator tmp;
+				operator++();
+				return tmp;
+			}
+
+			friend bool operator==(const iterator& lhs, const iterator& rhs) noexcept { return lhs.m_it == rhs.m_it; }
+			friend bool operator!=(const iterator& lhs, const iterator& rhs) noexcept { return !(lhs == rhs); }
+
+		private:
+			typename ctnr_type::iterator m_it;
+		};
 		iterator begin() { return m_ctnr.begin(); }
 		iterator end() { return m_ctnr.end(); }
 
 		void add(const std::shared_ptr<T>& obj)
 		{
 			if (obj) {
-				if (auto res = m_ctnr.insert(obj); res.second) {
+				if (auto res = m_ctnr.insert({ obj.get(), obj }); res.second) {
 					for (SetListener<T>* l : this->m_lsnrs) {
 						assert(l);
 						l->onAdd(obj.get());
@@ -109,8 +123,7 @@ namespace nif
 		}
 
 	private:
-
-		std::set<std::shared_ptr<T>, SetCompare> m_ctnr;
+		ctnr_type m_ctnr;
 	};
 }
 

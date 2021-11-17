@@ -39,17 +39,37 @@ namespace nif
 	template<typename T>
 	class Vector final : public Observable<Vector<T>>
 	{
-	public:
-		using iterator = typename std::vector<T>::iterator;
-		using const_iterator = typename std::vector<T>::const_iterator;
+		using ctnr_type = std::vector<T>;
 
 	public:
 		Vector() = default;
 		~Vector() = default;
 
 		//We use these to iterate through our container during pre-write sync.
-		//They should be changed to dereference to get/set, not the raw element.
-		using iterator = typename std::vector<T>::iterator;
+		class iterator
+		{
+		public:
+			iterator(typename ctnr_type::iterator const& it) : m_it{ it } {}
+
+			T* operator*() noexcept { return m_it->get(); }
+			const T* operator*() const noexcept { return m_it->get(); }
+			T* operator->() noexcept { return m_it->get(); }
+			const T* operator->() const noexcept { return m_it->get(); }
+
+			iterator& operator++() noexcept { ++m_it; return *this; }
+			iterator operator++(int) noexcept
+			{
+				iterator tmp;
+				operator++();
+				return tmp;
+			}
+
+			friend bool operator==(const iterator& lhs, const iterator& rhs) noexcept { return lhs.m_it == rhs.m_it; }
+			friend bool operator!=(const iterator& lhs, const iterator& rhs) noexcept { return !(lhs == rhs); }
+
+		private:
+			typename ctnr_type::iterator m_it;
+		};
 		iterator begin() { return m_ctnr.begin(); }
 		iterator end() { return m_ctnr.end(); }
 
@@ -121,6 +141,6 @@ namespace nif
 		}
 
 	private:
-		std::vector<T> m_ctnr;
+		ctnr_type m_ctnr;
 	};
 }

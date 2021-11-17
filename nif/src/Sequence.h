@@ -23,6 +23,9 @@
 
 namespace nif
 {
+	template<typename T> inline bool operator==(const std::shared_ptr<T>& lhs, T* rhs) { return lhs.get() == rhs; }
+	template<typename T> inline bool operator==(T* rhs, const std::shared_ptr<T>& lhs) { return rhs == lhs; }
+
 	template<typename T> class Sequence;
 	template<typename T>
 	class IListener<Sequence<T>>
@@ -39,6 +42,7 @@ namespace nif
 	template<typename T>
 	class Sequence final : public Observable<Sequence<T>>
 	{
+		using ctnr_type = std::vector<std::shared_ptr<T>>;
 	public:
 		Sequence() = default;
 		~Sequence()
@@ -54,8 +58,30 @@ namespace nif
 		}
 
 		//We use these to iterate through our container during pre-write sync.
-		//They should be changed to dereference to raw pointer.
-		using iterator = typename std::vector<std::shared_ptr<T>>::iterator;
+		class iterator
+		{
+		public:
+			iterator(typename ctnr_type::iterator const& it) : m_it{ it } {}
+
+			T* operator*() noexcept { return m_it->get(); }
+			const T* operator*() const noexcept { return m_it->get(); }
+			T* operator->() noexcept { return m_it->get(); }
+			const T* operator->() const noexcept { return m_it->get(); }
+
+			iterator& operator++() noexcept { ++m_it; return *this; }
+			iterator operator++(int) noexcept
+			{
+				iterator tmp;
+				operator++();
+				return tmp;
+			}
+
+			friend bool operator==(const iterator& lhs, const iterator& rhs) noexcept { return lhs.m_it == rhs.m_it; }
+			friend bool operator!=(const iterator& lhs, const iterator& rhs) noexcept { return !(lhs == rhs); }
+
+		private:
+			typename ctnr_type::iterator m_it;
+		};
 		iterator begin() { return m_ctnr.begin(); }
 		iterator end() { return m_ctnr.end(); }
 
@@ -107,7 +133,7 @@ namespace nif
 		}
 		int size() const
 		{
-			if (m_ctnr.size() > std::numeric_limits<int>::max())
+			if (m_ctnr.size() > (size_t)std::numeric_limits<int>::max())
 				throw std::range_error("Never going to happen");
 			return m_ctnr.size();
 		}
@@ -118,6 +144,6 @@ namespace nif
 	private:
 		//Advantage of list is that iterators aren't invalidated on insert/erase, but
 		//we're not really taking advantage of that. vector might be better for now.
-		std::vector<std::shared_ptr<T>> m_ctnr;
+		ctnr_type m_ctnr;
 	};
 }
