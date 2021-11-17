@@ -102,6 +102,11 @@ namespace nif
 			return m_ctnr.size();
 		}
 
+		void clear()
+		{
+
+		}
+
 		friend constexpr bool operator==(const Vector<T>& lhs, const Vector<T>& rhs)
 		{ 
 			return lhs.m_ctnr == rhs.m_ctnr; 

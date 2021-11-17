@@ -111,6 +111,9 @@ namespace nif
 				throw std::range_error("Never going to happen");
 			return m_ctnr.size();
 		}
+		void clear()
+		{
+		}
 
 	private:
 		//Advantage of list is that iterators aren't invalidated on insert/erase, but

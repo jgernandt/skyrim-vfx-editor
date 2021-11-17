@@ -156,44 +156,49 @@ namespace nif_tests
 			{
 				virtual void onInsert(int pos) override
 				{
-					m_inserted = pos;
+					m_inserted.push_back(pos);
 				}
 				virtual void onErase(int pos) override
 				{
-					m_erased = pos;
+					m_erased.push_back(pos);
 				}
 
 				bool wasInserted()
 				{
-					bool result = m_inserted != -1;
-					m_inserted = -1;
+					bool result = !m_inserted.empty();
+					m_inserted.clear();
 					return result;
 				}
-
 				bool wasInserted(int pos)
 				{
-					bool result = m_inserted == pos;
-					m_inserted = -1;
-					return result;
+					if (!m_inserted.empty()) {
+						bool result = m_inserted.front() == pos;
+						m_inserted.pop_front();
+						return result;
+					}
+					else
+						return false;
 				}
-
 				bool wasErased()
 				{
-					bool result = m_erased != -1;
-					m_erased = -1;
+					bool result = !m_erased.empty();
+					m_erased.clear();
 					return result;
 				}
-
 				bool wasErased(int pos)
 				{
-					bool result = m_erased == pos;
-					m_erased = -1;
-					return result;
+					if (!m_erased.empty()) {
+						bool result = m_erased.front() == pos;
+						m_erased.pop_front();
+						return result;
+					}
+					else
+						return false;
 				}
 
 			private:
-				int m_inserted{ -1 };
-				int m_erased{ -1 };
+				std::deque<int> m_inserted;
+				std::deque<int> m_erased;
 			};
 
 			Listener lsnr;
@@ -212,6 +217,7 @@ namespace nif_tests
 				Assert::IsTrue(seq.find(o1.get()) == 0);
 				Assert::IsTrue(seq.size() == 1);
 				Assert::IsTrue(lsnr.wasInserted(0));
+				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 
 				auto o2 = std::make_shared<NiObject>();
@@ -223,6 +229,7 @@ namespace nif_tests
 				Assert::IsTrue(seq.find(o2.get()) == 1);
 				Assert::IsTrue(seq.size() == 2);
 				Assert::IsTrue(lsnr.wasInserted(1));
+				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 
 				auto o3 = std::make_shared<NiObject>();
@@ -234,7 +241,8 @@ namespace nif_tests
 				Assert::IsTrue(seq.find(o2.get()) == 2);
 				Assert::IsTrue(seq.find(o3.get()) == 1);
 				Assert::IsTrue(seq.size() == 3);
-				Assert::IsTrue(lsnr.wasInserted(1) == 1);
+				Assert::IsTrue(lsnr.wasInserted(1));
+				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 
 				//Erase at beginning
@@ -245,6 +253,7 @@ namespace nif_tests
 				Assert::IsTrue(seq.size() == 2);
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsTrue(lsnr.wasErased(0));
+				Assert::IsFalse(lsnr.wasErased());
 
 				//Insert past the end
 				Assert::IsTrue(seq.insert(10, o1) == 2);
@@ -253,6 +262,7 @@ namespace nif_tests
 				Assert::IsTrue(seq.find(o3.get()) == 0);
 				Assert::IsTrue(seq.size() == 3);
 				Assert::IsTrue(lsnr.wasInserted(2));
+				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 
 				//Reinsert in new position leaves sequence unchanged
@@ -264,23 +274,44 @@ namespace nif_tests
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 
+				//clear
+				seq.clear();
+				Assert::IsTrue(seq.find(o1.get()) == -1);
+				Assert::IsTrue(seq.find(o2.get()) == -1);
+				Assert::IsTrue(seq.find(o3.get()) == -1);
+				Assert::IsTrue(seq.size() == 0);
+				Assert::IsFalse(lsnr.wasInserted());
+				//calls should be sent back to front
+				Assert::IsTrue(lsnr.wasErased(2));
+				Assert::IsTrue(lsnr.wasErased(1));
+				Assert::IsTrue(lsnr.wasErased(0));
+				Assert::IsFalse(lsnr.wasErased());
+
 				//Test ownership
+				seq.insert(-1, o3);
+				seq.insert(-1, o2);
+				seq.insert(-1, o1);
 				o1.reset();
 				Assert::IsFalse(weak1.expired());
 				Assert::IsTrue(seq.erase(2) == -1);//erase o1
 				Assert::IsTrue(weak1.expired());
 				Assert::IsTrue(seq.size() == 2);
 				Assert::IsTrue(lsnr.wasErased(2));
+				Assert::IsFalse(lsnr.wasErased());
 
 				//Remove listener
 				seq.removeListener(lsnr);
 				Assert::IsTrue(seq.erase(1) == -1);
 				Assert::IsFalse(lsnr.wasErased());
 
+				seq.insert(-1, o2);
 				seq.addListener(lsnr);
 			}
-			//signal erase on destruction (we could make this test more precise)
-			Assert::IsTrue(lsnr.wasErased());
+			//signal erase on destruction
+			Assert::IsFalse(lsnr.wasInserted());
+			Assert::IsTrue(lsnr.wasErased(1));
+			Assert::IsTrue(lsnr.wasErased(0));
+			Assert::IsFalse(lsnr.wasErased());
 		}
 
 		TEST_METHOD(SetTest)
@@ -289,49 +320,52 @@ namespace nif_tests
 			{
 				virtual void onAdd(NiObject* obj) override
 				{
-					Assert::IsNotNull(obj);
-					m_added = obj;
+					m_added.insert(obj);
 				}
 				virtual void onRemove(NiObject* obj)
 				{
-					Assert::IsNotNull(obj);
-					m_removed = obj;
+					m_removed.insert(obj);
 				}
 
 				bool wasAdded()
 				{
-					bool result = m_added != nullptr;
-					m_added = nullptr;
+					bool result = !m_added.empty();
+					m_added.clear();
 					return result;
 				}
-
 				bool wasAdded(NiObject* obj)
 				{
-					bool result = m_added == obj;
-					m_added = nullptr;
-					return result;
+					if (auto it = m_added.find(obj); it != m_added.end()) {
+						m_added.erase(it);
+						return true;
+					}
+					else
+						return false;
 				}
-
 				bool wasRemoved()
 				{
-					bool result = m_removed != nullptr;
-					m_removed = nullptr;
+					bool result = !m_removed.empty();
+					m_removed.clear();
 					return result;
 				}
-
 				bool wasRemoved(NiObject* obj)
 				{
-					bool result = m_removed == obj;
-					m_removed = nullptr;
-					return result;
+					if (auto it = m_removed.find(obj); it != m_removed.end()) {
+						m_removed.erase(it);
+						return true;
+					}
+					else
+						return false;
 				}
 
 			private:
-				NiObject* m_added{ nullptr };
-				NiObject* m_removed{ nullptr };
+				std::set<NiObject*> m_added;
+				std::set<NiObject*> m_removed;
 			};
 
 			Listener lsnr;
+			auto o1 = std::make_shared<NiObject>();
+			auto o2 = std::make_shared<NiObject>();
 			{
 				Set<NiObject> set;
 				set.addListener(lsnr);
@@ -345,7 +379,6 @@ namespace nif_tests
 				Assert::IsFalse(lsnr.wasRemoved());
 
 				//Add object
-				auto o1 = std::make_shared<NiObject>();
 				std::weak_ptr<NiObject> weak1 = o1;
 				Assert::IsFalse(set.has(o1.get()));
 
@@ -353,10 +386,10 @@ namespace nif_tests
 				Assert::IsTrue(set.has(o1.get()));
 				Assert::IsTrue(set.size() == 1);
 				Assert::IsTrue(lsnr.wasAdded(o1.get()));
+				Assert::IsFalse(lsnr.wasAdded());
 				Assert::IsFalse(lsnr.wasRemoved());
 
 				//Add second object
-				auto o2 = std::make_shared<NiObject>();
 				Assert::IsFalse(set.has(o2.get()));
 
 				set.add(o2);
@@ -364,6 +397,7 @@ namespace nif_tests
 				Assert::IsTrue(set.has(o2.get()));
 				Assert::IsTrue(set.size() == 2);
 				Assert::IsTrue(lsnr.wasAdded(o2.get()));
+				Assert::IsFalse(lsnr.wasAdded());
 				Assert::IsFalse(lsnr.wasRemoved());
 
 				//Re-adding should do nothing
@@ -381,6 +415,7 @@ namespace nif_tests
 				Assert::IsTrue(set.size() == 1);
 				Assert::IsFalse(lsnr.wasAdded());
 				Assert::IsTrue(lsnr.wasRemoved(o2.get()));
+				Assert::IsFalse(lsnr.wasRemoved());
 
 				//Re-removing should do nothing
 				set.remove(o2.get());
@@ -389,6 +424,17 @@ namespace nif_tests
 				Assert::IsTrue(set.size() == 1);
 				Assert::IsFalse(lsnr.wasAdded());
 				Assert::IsFalse(lsnr.wasRemoved());
+
+				//clear
+				set.add(o1);
+				set.clear();
+				Assert::IsFalse(lsnr.wasAdded());
+				Assert::IsTrue(lsnr.wasRemoved(o1.get()));
+				Assert::IsTrue(lsnr.wasRemoved(o2.get()));
+				Assert::IsFalse(lsnr.wasRemoved());
+
+				set.add(o1);
+				set.add(o2);
 
 				//Test ownership
 				o1.reset();
@@ -400,17 +446,26 @@ namespace nif_tests
 				Assert::IsTrue(set.size() == 0);
 				Assert::IsFalse(lsnr.wasAdded());
 				Assert::IsTrue(lsnr.wasRemoved(raw1));
+				Assert::IsFalse(lsnr.wasRemoved());
 
 				//Remove listener
 				set.removeListener(lsnr);
 				set.add(o2);
 				Assert::IsTrue(set.has(o2.get()));
-				Assert::IsFalse(lsnr.wasAdded(o2.get()));
+				Assert::IsFalse(lsnr.wasAdded());
 
+				o1 = std::make_shared<NiObject>();
+				set.add(o1);
 				set.addListener(lsnr);
+				Assert::IsFalse(lsnr.wasAdded());
+				Assert::IsFalse(lsnr.wasRemoved());
 			}
-			//signal remove on destruction (we could make this test more precise)
-			Assert::IsTrue(lsnr.wasRemoved());
+
+			//signal remove on destruction
+			Assert::IsFalse(lsnr.wasAdded());
+			Assert::IsTrue(lsnr.wasRemoved(o1.get()));
+			Assert::IsTrue(lsnr.wasRemoved(o2.get()));
+			Assert::IsFalse(lsnr.wasRemoved());
 		}
 
 		TEST_METHOD(VectorTest)
@@ -419,44 +474,49 @@ namespace nif_tests
 			{
 				virtual void onInsert(int pos) override
 				{
-					m_inserted = pos;
+					m_inserted.push_back(pos);
 				}
 				virtual void onErase(int pos) override
 				{
-					m_erased = pos;
+					m_erased.push_back(pos);
 				}
 
 				bool wasInserted()
 				{
-					bool result = m_inserted != -1;
-					m_inserted = -1;
+					bool result = !m_inserted.empty();
+					m_inserted.clear();
 					return result;
 				}
-
 				bool wasInserted(int pos)
 				{
-					bool result = m_inserted == pos;
-					m_inserted = -1;
-					return result;
+					if (!m_inserted.empty()) {
+						bool result = m_inserted.front() == pos;
+						m_inserted.pop_front();
+						return result;
+					}
+					else
+						return false;
 				}
-
 				bool wasErased()
 				{
-					bool result = m_erased != -1;
-					m_erased = -1;
+					bool result = !m_erased.empty();
+					m_erased.clear();
 					return result;
 				}
-
 				bool wasErased(int pos)
 				{
-					bool result = m_erased == pos;
-					m_erased = -1;
-					return result;
+					if (!m_erased.empty()) {
+						bool result = m_erased.front() == pos;
+						m_erased.pop_front();
+						return result;
+					}
+					else
+						return false;
 				}
 
 			private:
-				int m_inserted{ -1 };
-				int m_erased{ -1 };
+				std::deque<int> m_inserted;
+				std::deque<int> m_erased;
 			};
 
 			Listener lsnr;
@@ -478,6 +538,7 @@ namespace nif_tests
 				Assert::IsTrue(vec == expected);
 				Assert::IsTrue(vec.size() == 1);
 				Assert::IsTrue(lsnr.wasInserted(0));
+				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 				val = D(rng);
 				expected.push_back(val);
@@ -485,6 +546,7 @@ namespace nif_tests
 				Assert::IsTrue(vec == expected);
 				Assert::IsTrue(vec.size() == 2);
 				Assert::IsTrue(lsnr.wasInserted(1));
+				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 
 				//insert
@@ -494,6 +556,7 @@ namespace nif_tests
 				Assert::IsTrue(vec == expected);
 				Assert::IsTrue(vec.size() == 3);
 				Assert::IsTrue(lsnr.wasInserted(0));
+				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 
 				val = D(rng);
@@ -502,7 +565,24 @@ namespace nif_tests
 				Assert::IsTrue(vec == expected);
 				Assert::IsTrue(vec.size() == 4);
 				Assert::IsTrue(lsnr.wasInserted(1));
+				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
+
+				//clear
+				vec.clear();
+				Assert::IsTrue(vec.size() == 0);
+				Assert::IsFalse(lsnr.wasInserted());
+				//calls should have come back to front
+				Assert::IsTrue(lsnr.wasErased(3));
+				Assert::IsTrue(lsnr.wasErased(2));
+				Assert::IsTrue(lsnr.wasErased(1));
+				Assert::IsTrue(lsnr.wasErased(0));
+				Assert::IsFalse(lsnr.wasErased());
+
+				for (float f : expected)
+					vec.push_back(f);
+				Assert::IsTrue(vec == expected);
+				Assert::IsTrue(lsnr.wasInserted());
 
 				//erase
 				expected.erase(expected.end());
@@ -510,7 +590,8 @@ namespace nif_tests
 				Assert::IsTrue(vec == expected);
 				Assert::IsTrue(vec.size() == 3);
 				Assert::IsFalse(lsnr.wasInserted());
-				Assert::IsTrue(lsnr.wasErased(4));
+				Assert::IsTrue(lsnr.wasErased(3));
+				Assert::IsFalse(lsnr.wasErased());
 
 				expected.erase(expected.begin());
 				vec.erase(0);
@@ -518,6 +599,7 @@ namespace nif_tests
 				Assert::IsTrue(vec.size() == 2);
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsTrue(lsnr.wasErased(0));
+				Assert::IsFalse(lsnr.wasErased());
 
 				//Remove listener
 				vec.removeListener(lsnr);
@@ -528,10 +610,21 @@ namespace nif_tests
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 
+				vec.clear();
+				for (float f : expected)
+					vec.push_back(f);
+
 				vec.addListener(lsnr);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsFalse(lsnr.wasErased());
 			}
 			//signal erase on destruction
+			Assert::IsFalse(lsnr.wasInserted());
+			Assert::IsTrue(lsnr.wasErased(3));
+			Assert::IsTrue(lsnr.wasErased(2));
+			Assert::IsTrue(lsnr.wasErased(1));
 			Assert::IsTrue(lsnr.wasErased(0));
+			Assert::IsFalse(lsnr.wasErased());
 		}
 	};
 }

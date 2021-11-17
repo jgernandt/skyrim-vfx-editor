@@ -103,6 +103,11 @@ namespace nif
 		}
 		virtual size_t size() const { return m_ctnr.size(); }
 
+		void clear()
+		{
+			
+		}
+
 	private:
 
 		std::set<std::shared_ptr<T>, SetCompare> m_ctnr;
