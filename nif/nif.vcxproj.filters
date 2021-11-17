@@ -78,14 +78,14 @@
     <ClInclude Include="src\Vector.h">
       <Filter>Header Files\Data model</Filter>
     </ClInclude>
-    <ClInclude Include="src\DataField.h">
-      <Filter>Header Files\Data model</Filter>
-    </ClInclude>
     <ClInclude Include="src\ni_objects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\nif.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FlagSet.h">
+      <Filter>Header Files\Data model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -54,7 +54,7 @@ namespace nif
 		}
 
 		//We use these to iterate through our container during pre-write sync.
-		//They should be changed to dereference to get/set, not the raw element.
+		//They should be changed to dereference to raw pointer.
 		using iterator = typename std::vector<std::shared_ptr<T>>::iterator;
 		iterator begin() { return m_ctnr.begin(); }
 		iterator end() { return m_ctnr.end(); }

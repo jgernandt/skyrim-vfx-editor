@@ -94,6 +94,140 @@ namespace nif_tests
 			Assert::IsTrue(lsnr.wasAssigned(nullptr));
 		}
 
+		TEST_METHOD(FlagSetTest)
+		{
+			struct Listener : FlagSetListener<unsigned int>
+			{
+				virtual void onSet(unsigned int flags) override
+				{
+					m_signalled = true;
+					m_set = flags;
+				}
+				virtual void onClear(unsigned int flags) override 
+				{
+					m_signalled = true;
+					m_cleared = flags;
+				}
+
+				bool wasSet()
+				{
+					bool result = m_signalled;
+					m_signalled = false;
+					m_set = 0;
+					return result;
+				}
+				bool wasSet(unsigned int flags)
+				{
+					bool result = m_signalled && m_set == flags;
+					m_signalled = false;
+					m_set = 0;
+					return result;
+				}
+				bool wasCleared()
+				{
+					bool result = m_signalled;
+					m_signalled = false;
+					m_cleared = 0;
+					return result;
+				}
+				bool wasCleared(unsigned int flags)
+				{
+					bool result = m_signalled && m_cleared == flags;
+					m_signalled = false;
+					m_cleared = 0;
+					return result;
+				}
+
+			private:
+				unsigned int m_set{ 0 };
+				unsigned int m_cleared{ 0 };
+				bool m_signalled{ false };
+			};
+
+			constexpr unsigned int F1 = 0x0001;
+			constexpr unsigned int F2 = 0x8000;
+
+			Listener lsnr;
+			{
+				FlagSet<unsigned int> flags;
+				Assert::IsFalse(flags.isSet(F1));
+				Assert::IsFalse(flags.isSet(F2));
+
+				flags.addListener(lsnr);
+				Assert::IsFalse(lsnr.wasSet());
+				Assert::IsFalse(lsnr.wasCleared());
+
+				//set one
+				flags.set(F1);
+				Assert::IsTrue(flags.isSet(F1));
+				Assert::IsFalse(flags.isSet(F2));
+				Assert::IsFalse(flags.isSet(F1 | F2));
+				Assert::IsTrue(lsnr.wasSet(F1));
+				Assert::IsFalse(lsnr.wasCleared());
+
+				//reset should not call
+				flags.set(F1);
+				Assert::IsTrue(flags.isSet(F1));
+				Assert::IsFalse(flags.isSet(F2));
+				Assert::IsFalse(flags.isSet(F1 | F2));
+				Assert::IsFalse(lsnr.wasSet());
+				Assert::IsFalse(lsnr.wasCleared());
+
+				//clear
+				flags.clear(F1);
+				Assert::IsFalse(flags.isSet(F1));
+				Assert::IsFalse(flags.isSet(F2));
+				Assert::IsFalse(flags.isSet(F1 | F2));
+				Assert::IsFalse(lsnr.wasSet());
+				Assert::IsTrue(lsnr.wasCleared(F1));
+
+				//clearing unset should not call
+				flags.clear(F1);
+				Assert::IsFalse(flags.isSet(F1));
+				Assert::IsFalse(flags.isSet(F2));
+				Assert::IsFalse(flags.isSet(F1 | F2));
+				Assert::IsFalse(lsnr.wasSet());
+				Assert::IsFalse(lsnr.wasCleared());
+
+				//set two
+				flags.set(F1 | F2);
+				Assert::IsTrue(flags.isSet(F1));
+				Assert::IsTrue(flags.isSet(F2));
+				Assert::IsTrue(flags.isSet(F1 | F2));
+				Assert::IsTrue(lsnr.wasSet(F1 | F2));//or should this call twice?
+				Assert::IsFalse(lsnr.wasCleared());
+
+				//clear one
+				flags.clear(F1);
+				Assert::IsFalse(flags.isSet(F1));
+				Assert::IsTrue(flags.isSet(F2));
+				Assert::IsFalse(flags.isSet(F1 | F2));
+				Assert::IsFalse(lsnr.wasSet());
+				Assert::IsTrue(lsnr.wasCleared(F1));
+
+				//Clear two
+				flags.set(F1);
+				Assert::IsTrue(lsnr.wasSet());
+				flags.clear(F1 | F2);
+				Assert::IsFalse(flags.isSet(F1));
+				Assert::IsFalse(flags.isSet(F2));
+				Assert::IsFalse(flags.isSet(F1 | F2));
+				Assert::IsFalse(lsnr.wasSet());
+				Assert::IsTrue(lsnr.wasCleared(F1 | F2));//or should this call twice?
+
+				//remove lsnr
+				flags.removeListener(lsnr);
+				flags.set(F1 | F2);
+				Assert::IsFalse(lsnr.wasSet());
+				Assert::IsFalse(lsnr.wasCleared());
+
+				flags.addListener(lsnr);
+			}
+			//Clear on destruction
+			Assert::IsFalse(lsnr.wasSet());
+			Assert::IsTrue(lsnr.wasCleared(F1 | F2));//or should this call twice?
+		}
+
 		TEST_METHOD(PropertyTest)
 		{
 			struct Listener : PropertyListener<float>
