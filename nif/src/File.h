@@ -55,8 +55,8 @@ namespace nif
 		//template<typename T>
 		//[[nodiscard]] std::shared_ptr<T> create();
 
-		//template<typename T, typename NativeType>
-		//[[nodiscard]] std::shared_ptr<T> get(const Niflib::Ref<NativeType>& objRef);
+		template<typename T, typename NativeType>
+		[[nodiscard]] std::shared_ptr<T> get(const Niflib::Ref<NativeType>& objRef);
 
 		Version getVersion() const { return m_version; }
 
@@ -67,9 +67,9 @@ namespace nif
 
 	private:
 		template<typename T>
-		std::shared_ptr<T> make_ni(const Niflib::Ref<typename type_map<T>::type>& native);
+		std::shared_ptr<ObjectBlock> make_ni(const Niflib::Ref<typename type_map<T>::type>& native);
 		template<typename T>
-		std::shared_ptr<T> make_ni() { return make_ni<T>(Niflib::Ref<typename type_map<T>::type>()); }
+		std::shared_ptr<ObjectBlock> make_ni() { return make_ni<T>(Niflib::Ref<typename type_map<T>::type>()); }
 
 	public:
 		static CreateFcn pushType(size_t type, CreateFcn fcn) { return s_typeRegistry[type] = fcn; }
@@ -98,66 +98,68 @@ namespace nif
 		//	return std::shared_ptr<T>();
 		//}
 	}
-
+	*/
 	template<typename T, typename NativeType>
 	inline [[nodiscard]] std::shared_ptr<T> File::get(const Niflib::Ref<NativeType>& objRef)
 	{
-		static_assert(std::is_base_of<NiObject, T>::value);
-		static_assert(std::is_base_of<typename T::native_type, NativeType>::value);
+		static_assert(std::is_base_of<typename type_map<T>::type, NativeType>::value);
 
-		NativeType* obj = static_cast<NativeType*>(objRef);
+		NativeType* native = static_cast<NativeType*>(objRef);
 
-		std::shared_ptr<T> result;
-		if (auto it = m_index.find(obj); it != m_index.end()) {
-			//downcast safe if T::native_type is correct
-			result = std::static_pointer_cast<T>(it->second.lock());
-			if (!result) {
-				//try {
-				result = std::static_pointer_cast<T>(make_ni(obj));
-				it->second = std::weak_ptr<NiObject>(result);
-				//}
-				//catch (const std::bad_alloc&) {
-				//	result.reset();
-				//}
+		std::shared_ptr<ObjectBlock> block;
+		if (auto it = m_nativeIndex.find(native); it != m_nativeIndex.end()) {
+			block = it->second.lock();
+			if (!block) {
+				//The object is indexed, but it has expired. We should recreate it.
+				block = make_ni<T>(objRef);
+				assert(block);//make_ni should throw on allocation or ctor failure
+				it->second = block;
+				m_objectIndex[block->object] = block;
 			}
 		}
-		//else ignore. Do not create.
+		else {
+			//create new
+			auto block = make_ni<T>(objRef);
+			assert(block);//make_ni should throw on allocation or ctor failure
+			m_nativeIndex[native] = block;
+			m_objectIndex[block->object] = block;
+		}
 
-		return result;
+		//downcast safe if type_map is correct
+		return std::shared_ptr<T>(block, static_cast<T*>(block->object));
 	}
-	*/
+	
 	template<typename T>
-	inline std::shared_ptr<T> File::make_ni(const Niflib::Ref<typename type_map<T>::type>& native)
+	inline std::shared_ptr<ObjectBlock> File::make_ni(const Niflib::Ref<typename type_map<T>::type>& native)
 	{
 		//Our type registry contains all the types that we care about.
 		//If we step up through the inheritance chain of Niflib's type object,
 		//the first one we find in our registry is the most derived type that 
 		//we care about.
-		//There are nicer ways to set that up, but they require more work.
+
+		//We must not go higher up than type_map<T>::type, since that should be
+		//the least derived type that maps to T.
 
 		CreateFcn fcn = nullptr;
 
 		Niflib::Type* type = native ? native->GetType() : &type_map<T>::type::TYPE;
-		while (type) {
+
+		do {
 			if (auto it = s_typeRegistry.find(std::hash<Niflib::Type*>{}(type)); it != s_typeRegistry.end()) {
 				fcn = it->second;
 				break;
 			}
 			else
 				type = type->base_type;
-		}
+		} while (type != &type_map<T>::type::TYPE);
+
 		assert(fcn);
 
-		auto block = fcn(Niflib::StaticCast<Niflib::NiObject>(native));
+		//The CreateFcn must guarantee that it creates an object of the type mapped to from
+		//type_map<Y>::type, where Y is the Niflib type associated with the Niflib::Type object
+		//that the CreateFcn is mapped to.
+
+		return fcn(Niflib::StaticCast<Niflib::NiObject>(native));
 		//factory should throw on failure. We won't catch it, we'll typically be part of a longer procedure.
-		assert(block);
-
-		block->syncer->syncRead(*this, block->object, block->native);
-
-		m_objectIndex.insert({ block->object, block });
-		m_nativeIndex.insert({ block->native, block });
-
-		//Unless we messed something up, the created object should be of (at least) type T.
-		return std::shared_ptr<T>(block, static_cast<T*>(block->object));
 	}
 }

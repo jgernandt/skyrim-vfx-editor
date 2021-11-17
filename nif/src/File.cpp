@@ -59,9 +59,25 @@ nif::File::~File()
 void nif::File::makeRoot(const Niflib::Ref<Niflib::NiNode>& node)
 {
 	if (node) {
-		//Should traverse any connected objects and add to our index.
-		//We're doing this in a separate function for testing purposes mainly.
-		m_rootNode = make_ni<NiNode>(node);
+		auto block = make_ni<NiNode>(node);
+
+		assert(block);//make_ni should throw on allocation or ctor failure
+
+		if (auto res = m_objectIndex.insert({ block->object, block }); !res.second) {
+			//unexpected: the object has already been created
+			throw std::runtime_error("Unexpected recreation of object");
+		}
+		if (auto res = m_nativeIndex.insert({ block->native, block }); !res.second) {
+			//same here
+			throw std::runtime_error("Unexpected recreation of object");
+		}
+
+		//will get any referenced blocks, adding them to our index
+		block->syncer->syncRead(*this, block->object, block->native);
+
+		//make_ni<T> must guarantee that the created object is actually of type T (or derived).
+		//(I don't like how these assumptions keep spilling out of the functions that make them)
+		m_rootNode = std::shared_ptr<NiNode>(block, static_cast<NiNode*>(block->object));
 	}
 }
 
