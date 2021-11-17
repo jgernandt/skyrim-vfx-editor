@@ -20,13 +20,6 @@
 #include "NiNode.h"
 #include "File.h"
 
-static nif::File::CreateFcn g_NiNodeFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiNode::TYPE), & nif::make_NiObject<nif::NiNode>);
-
-static nif::File::CreateFcn g_BSFadeNodeFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::BSFadeNode::TYPE), & nif::make_NiObject<nif::BSFadeNode>);
-
-
 void nif::NiSyncer<nif::NiNode>::syncReadImpl(File& file, NiNode* object, Niflib::NiNode* native) const
 {
 	//TODO

@@ -20,24 +20,6 @@
 #include "NiPSysEmitter.h"
 #include "File.h"
 
-static nif::File::CreateFcn g_NiPSysEmitterCtlrFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysEmitterCtlr::TYPE), & nif::make_NiObject<nif::NiPSysEmitterCtlr>);
-
-static nif::File::CreateFcn g_NiPSysEmitterFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysEmitter::TYPE), & nif::make_NiObject<nif::NiPSysEmitter>);
-
-static nif::File::CreateFcn g_NiPSysVolumeEmitterFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysVolumeEmitter::TYPE), & nif::make_NiObject<nif::NiPSysVolumeEmitter>);
-
-static nif::File::CreateFcn g_NiPSysBoxEmitterFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysBoxEmitter::TYPE), & nif::make_NiObject<nif::NiPSysBoxEmitter>);
-
-static nif::File::CreateFcn g_NiPSysCylinderEmitterFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysCylinderEmitter::TYPE), & nif::make_NiObject<nif::NiPSysCylinderEmitter>);
-
-static nif::File::CreateFcn g_NiPSysSphereEmitterFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysSphereEmitter::TYPE), & nif::make_NiObject<nif::NiPSysSphereEmitter>);
-
 
 void nif::NiSyncer<nif::NiPSysEmitterCtlr>::syncReadImpl(
 	File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native) const

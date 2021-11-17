@@ -21,12 +21,6 @@
 #include "NiPSysModifier.h"
 #include "File.h"
 
-static nif::File::CreateFcn g_NiPSysDataFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysData::TYPE), & nif::make_NiObject<nif::NiPSysData>);
-
-static nif::File::CreateFcn g_NiParticleSystemFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiParticleSystem::TYPE), & nif::make_NiObject<nif::NiParticleSystem>);
-
 
 void nif::NiSyncer<nif::NiPSysData>::syncReadImpl(
 	File& file, NiPSysData* object, Niflib::NiPSysData* native) const

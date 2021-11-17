@@ -20,12 +20,6 @@
 #include "BSEffectShaderProperty.h"
 #include "File.h"
 
-static nif::File::CreateFcn g_NiAlphaPropertyFactory = 
-	nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiAlphaProperty::TYPE), &nif::make_NiObject<nif::NiAlphaProperty>);
-
-static nif::File::CreateFcn g_BSEffectShaderPropertyFactory =
-	nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::BSEffectShaderProperty::TYPE), & nif::make_NiObject<nif::BSEffectShaderProperty>);
-
 void nif::NiSyncer<nif::NiAlphaProperty>::syncReadImpl(
 	File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const
 {

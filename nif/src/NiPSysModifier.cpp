@@ -20,36 +20,6 @@
 #include "NiPSysModifier.h"
 #include "File.h"
 
-static nif::File::CreateFcn g_NiPSysModifierCtlrFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysModifierCtlr::TYPE), & nif::make_NiObject<nif::NiPSysModifierCtlr>);
-
-static nif::File::CreateFcn g_NiPSysUpdateCtlrFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysUpdateCtlr::TYPE), & nif::make_NiObject<nif::NiPSysUpdateCtlr>);
-
-static nif::File::CreateFcn g_NiPSysModifierFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysModifier::TYPE), & nif::make_NiObject<nif::NiPSysModifier>);
-
-static nif::File::CreateFcn g_NiPSysBoundUpdateModifierFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysBoundUpdateModifier::TYPE), & nif::make_NiObject<nif::NiPSysBoundUpdateModifier>);
-
-static nif::File::CreateFcn g_NiPSysAgeDeathModifierFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysAgeDeathModifier::TYPE), & nif::make_NiObject<nif::NiPSysAgeDeathModifier>);
-
-static nif::File::CreateFcn g_NiPSysPositionModifierFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysPositionModifier::TYPE), & nif::make_NiObject<nif::NiPSysPositionModifier>);
-
-static nif::File::CreateFcn g_NiPSysGravityModifierFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysGravityModifier::TYPE), & nif::make_NiObject<nif::NiPSysGravityModifier>);
-
-static nif::File::CreateFcn g_NiPSysRotationModifierFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysRotationModifier::TYPE), & nif::make_NiObject<nif::NiPSysRotationModifier>);
-
-static nif::File::CreateFcn g_BSPSysScaleModifierFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::BSPSysScaleModifier::TYPE), & nif::make_NiObject<nif::BSPSysScaleModifier>);
-
-static nif::File::CreateFcn g_BSPSysSimpleColorModifierFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::BSPSysSimpleColorModifier::TYPE), & nif::make_NiObject<nif::BSPSysSimpleColorModifier>);
-
 
 void nif::NiSyncer<nif::NiPSysModifierCtlr>::syncReadImpl(
 	File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native) const

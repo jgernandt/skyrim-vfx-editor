@@ -32,7 +32,54 @@ namespace nif
 {
 	class File;
 
-	struct NiObject
+	struct NiObject;
+
+	class NiTraverser
+	{
+	public:
+		virtual ~NiTraverser() = default;
+		virtual void traverse(NiObject&) {}
+	};
+
+	template<typename T, typename Base>
+	struct NiTraversable : Base
+	{
+		using base_type = Base;
+
+		virtual void receive(NiTraverser& t) override
+		{
+			t.traverse(static_cast<T&>(*this));
+		}
+	};
+
+	template<typename T>
+	struct NiTraversable<T, void>
+	{
+		using base_type = void;
+
+		virtual void receive(NiTraverser& t)
+		{
+			t.traverse(static_cast<T&>(*this));
+		}
+	};
+
+	class NiReadSyncer : public NiTraverser
+	{
+	public:
+		NiReadSyncer(File& file) {}
+		virtual ~NiReadSyncer() = default;
+		virtual void traverse(NiObject&) {}
+	};
+
+	class NiWriteSyncer : public NiTraverser
+	{
+	public:
+		NiWriteSyncer(const File& file) {}
+		virtual ~NiWriteSyncer() = default;
+		virtual void traverse(NiObject&) {}
+	};
+
+	struct NiObject : NiTraversable<NiObject, void>
 	{
 		NiObject();
 		NiObject(const NiObject&) = delete;

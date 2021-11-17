@@ -20,13 +20,6 @@
 #include "NiExtraData.h"
 #include "File.h"
 
-static nif::File::CreateFcn g_NiExtraDataFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiExtraData::TYPE), & nif::make_NiObject<nif::NiExtraData>);
-
-static nif::File::CreateFcn g_NiStringExtraDataFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiStringExtraData::TYPE), & nif::make_NiObject<nif::NiStringExtraData>);
-
-
 void nif::NiSyncer<nif::NiExtraData>::syncReadImpl(
 	File& file, NiExtraData* object, Niflib::NiExtraData* native) const
 {

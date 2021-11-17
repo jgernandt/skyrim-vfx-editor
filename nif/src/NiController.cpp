@@ -20,27 +20,6 @@
 #include "NiController.h"
 #include "File.h"
 
-static nif::File::CreateFcn g_NiBoolDataFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiBoolData::TYPE), & nif::make_NiObject<nif::NiBoolData>);
-
-static nif::File::CreateFcn g_NiFloatDataFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiFloatData::TYPE), & nif::make_NiObject<nif::NiFloatData>);
-
-static nif::File::CreateFcn g_NiInterpolatorFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiInterpolator::TYPE), & nif::make_NiObject<nif::NiInterpolator>);
-
-static nif::File::CreateFcn g_NiBoolInterpolatorFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiBoolInterpolator::TYPE), & nif::make_NiObject<nif::NiBoolInterpolator>);
-
-static nif::File::CreateFcn g_NiFloatInterpolatorFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiFloatInterpolator::TYPE), & nif::make_NiObject<nif::NiFloatInterpolator>);
-
-static nif::File::CreateFcn g_NiTimeControllerFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiTimeController::TYPE), & nif::make_NiObject<nif::NiTimeController>);
-
-static nif::File::CreateFcn g_NiSingleInterpControllerFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiSingleInterpController::TYPE), & nif::make_NiObject<nif::NiSingleInterpController>);
-
 
 void nif::NiSyncer<nif::NiBoolData>::syncReadImpl(
 	File& file, NiBoolData* object, Niflib::NiBoolData* native) const

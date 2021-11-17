@@ -21,9 +21,6 @@
 #include "NiNode.h"
 #include "File.h"
 
-static nif::File::CreateFcn g_NiAVObjectFactory =
-nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiAVObject::TYPE), & nif::make_NiObject<nif::NiAVObject>);
-
 
 void nif::NiSyncer<nif::NiAVObject>::syncReadImpl(File& file, NiAVObject* object, Niflib::NiAVObject* native) const
 {

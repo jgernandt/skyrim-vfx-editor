@@ -22,9 +22,6 @@
 #include "NiExtraData.h"
 #include "File.h"
 
-static nif::File::CreateFcn g_NiObjectNETFactory = 
-	nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiObjectNET::TYPE), &nif::make_NiObject<nif::NiObjectNET>);
-
 void nif::NiSyncer<nif::NiObjectNET>::syncReadImpl(File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const
 {
 	assert(object && native);

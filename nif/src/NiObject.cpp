@@ -20,9 +20,6 @@
 #include "NiObject.h"
 #include "File.h"
 
-static nif::File::CreateFcn g_NiObjectFactory = 
-	nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiObject::TYPE), &nif::make_NiObject<nif::NiObjectNET>);
-
 #ifdef _DEBUG
 int g_currentNiObjects = 0;
 #endif

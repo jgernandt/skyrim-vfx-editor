@@ -24,7 +24,7 @@ namespace nif
 	struct NiExtraData;
 	struct NiTimeController;
 
-	struct NiObjectNET : NiObject
+	struct NiObjectNET : NiTraversable<NiObjectNET, NiObject>
 	{
 		Property<std::string> name;
 		Set<NiExtraData> extraData;
@@ -41,5 +41,4 @@ namespace nif
 		void syncReadImpl(File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const;
 		void syncWriteImpl(const File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const;
 	};
-
 }

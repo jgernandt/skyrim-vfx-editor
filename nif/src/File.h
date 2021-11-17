@@ -77,11 +77,11 @@ namespace nif
 		template<typename T>
 		std::shared_ptr<ObjectBlock> make_ni() { return make_ni<T>(Niflib::Ref<typename type_map<T>::type>()); }
 
-	public:
-		static CreateFcn pushType(size_t type, CreateFcn fcn);
+	private:
+		static void registerTypes();
 
 	private:
-		static std::map<size_t, CreateFcn>* s_typeRegistry;
+		static std::map<size_t, CreateFcn> s_typeRegistry;
 
 		Version m_version{ Version::UNKNOWN };
 		std::shared_ptr<NiNode> m_rootNode;
@@ -129,7 +129,7 @@ namespace nif
 		}
 		else {
 			//create new
-			auto block = make_ni<T>(nativeRef);
+			block = make_ni<T>(nativeRef);
 			assert(block);//make_ni should throw on allocation or ctor failure
 			m_nativeIndex[native] = block;
 			m_objectIndex[block->object] = block;
@@ -167,18 +167,25 @@ namespace nif
 
 		//We must not go higher up than type_map<T>::type, since that should be
 		//the least derived type that maps to T.
+		static bool registered = false;
+		if (!registered) {
+			registerTypes();
+			registered = true;
+		}
 
 		CreateFcn fcn = nullptr;
 
 		const Niflib::Type* type = native ? &native->GetType() : &type_map<T>::type::TYPE;
 
 		do {
-			if (auto it = s_typeRegistry->find(std::hash<const Niflib::Type*>{}(type)); it != s_typeRegistry->end()) {
+			if (auto it = s_typeRegistry.find(std::hash<const Niflib::Type*>{}(type)); it != s_typeRegistry.end()) {
 				fcn = it->second;
 				break;
 			}
-			else
+			else {
+				assert(type != &type_map<T>::type::TYPE);//or we failed to register this type
 				type = type->base_type;
+			}
 		} while (type != &type_map<T>::type::TYPE);
 
 		assert(fcn);
@@ -191,3 +198,5 @@ namespace nif
 		//factory should throw on failure. We won't catch it, we'll typically be part of a longer procedure.
 	}
 }
+
+extern nif::File::CreateFcn const g_NiExtraDataFactory;
