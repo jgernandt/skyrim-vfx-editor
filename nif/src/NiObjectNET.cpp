@@ -31,6 +31,8 @@ static nif::File::CreateFcn g_NiObjectNETFactory = nif::File::pushType(std::hash
 
 void nif::NiSyncer<nif::NiObjectNET>::syncRead(File& file, NiObject* object, Niflib::NiObject* native) const
 {
+	NiSyncer<NiObject>::syncRead(file, object, native);
+
 	assert(object && native);
 	auto obj = static_cast<NiObjectNET*>(object);
 	auto nat = static_cast<Niflib::NiObjectNET*>(native);
@@ -48,6 +50,8 @@ void nif::NiSyncer<nif::NiObjectNET>::syncRead(File& file, NiObject* object, Nif
 
 void nif::NiSyncer<nif::NiObjectNET>::syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const
 {
+	NiSyncer<NiObject>::syncWrite(file, object, native);
+
 	assert(object && native);
 	auto obj = static_cast<NiObjectNET*>(object);
 	auto nat = static_cast<Niflib::NiObjectNET*>(native);
@@ -56,11 +60,11 @@ void nif::NiSyncer<nif::NiObjectNET>::syncWrite(File& file, NiObject* object, Ni
 
 	nat->ClearExtraData();
 	for (auto&& data : obj->extraData)
-		nat->AddExtraData(&data->native(), Niflib::VER_20_2_0_7);
+		nat->AddExtraData(file.get<Niflib::NiExtraData>(data.get()), Niflib::VER_20_2_0_7);
 
 	nat->ClearControllers();
 	for (auto&& ctlr : obj->controllers)
-		nat->AddController(&ctlr->native());
+		nat->AddController(file.get<Niflib::NiTimeController>(ctlr.get()));
 }
 
 /*
