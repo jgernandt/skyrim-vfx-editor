@@ -57,7 +57,7 @@ namespace nif
 		[[nodiscard]] std::shared_ptr<T> get(const Niflib::Ref<NativeType>& nativeRef);
 
 		template<typename NativeType, typename T>
-		[[nodiscard]] Niflib::Ref<NativeType> get(T* object);
+		[[nodiscard]] Niflib::Ref<NativeType> get(T* object) const;
 
 		Version getVersion() const { return m_version; }
 
@@ -65,6 +65,11 @@ namespace nif
 		void makeRoot(const Niflib::Ref<Niflib::NiNode>& node);
 
 		void write(const std::filesystem::path& path);
+
+		//fetch data from backend objects
+		bool syncRead();
+		//send our data to backend objects
+		bool syncWrite() const;
 
 	private:
 		template<typename T>
@@ -80,6 +85,7 @@ namespace nif
 
 		Version m_version{ Version::UNKNOWN };
 		std::shared_ptr<NiNode> m_rootNode;
+		std::shared_ptr<ObjectBlock> m_rootBlock;
 
 		std::map<Niflib::NiObject*, std::weak_ptr<ObjectBlock>> m_nativeIndex;
 		std::map<NiObject*, std::weak_ptr<ObjectBlock>> m_objectIndex;
@@ -134,7 +140,7 @@ namespace nif
 	}
 
 	template<typename NativeType, typename T>
-	inline [[nodiscard]] Niflib::Ref<NativeType> nif::File::get(T* object)
+	inline [[nodiscard]] Niflib::Ref<NativeType> nif::File::get(T* object) const
 	{
 		static_assert(std::is_base_of<NativeType, typename type_map<T>::type>::value);
 
