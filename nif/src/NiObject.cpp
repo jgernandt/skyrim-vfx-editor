@@ -20,7 +20,7 @@
 #include "NiObject.h"
 #include "File.h"
 
-std::shared_ptr<nif::ObjectBlock> make_NiObject(const Niflib::Ref<Niflib::NiObject>& native)
+static std::shared_ptr<nif::ObjectBlock> make_NiObject(const Niflib::Ref<Niflib::NiObject>& native)
 {
 	return std::make_shared<nif::NiObjectBlock<nif::NiObject>>(native);
 }

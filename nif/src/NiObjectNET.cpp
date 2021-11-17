@@ -19,19 +19,51 @@
 #include "pch.h"
 #include "NiObjectNET.h"
 #include "NiController.h"
+#include "NiExtraData.h"
+#include "File.h"
 
-nif::NiObjectNET::NiObjectNET(native_type* obj) :
-	NiObject(obj), 
-	m_name(*this, &getNative(), &native::NiObjectNET::GetName, &native::NiObjectNET::SetName),
-	m_extraData(*this), m_controllers(*this)
+static std::shared_ptr<nif::ObjectBlock> make_NiObjectNET(const Niflib::Ref<Niflib::NiObject>& native)
 {
+	return std::make_shared<nif::NiObjectBlock<nif::NiObjectNET>>(native);
 }
 
-nif::native::NiObjectNET& nif::NiObjectNET::getNative() const
+static nif::File::CreateFcn g_NiObjectNETFactory = nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiObjectNET::TYPE), &make_NiObjectNET);
+
+void nif::NiSyncer<nif::NiObjectNET>::syncRead(File& file, NiObject* object, Niflib::NiObject* native) const
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiObjectNET::TYPE));
-	return static_cast<native::NiObjectNET&>(*m_ptr);
+	assert(object && native);
+	auto obj = static_cast<NiObjectNET*>(object);
+	auto nat = static_cast<Niflib::NiObjectNET*>(native);
+
+	obj->name.set(nat->GetName());
+
+	obj->extraData.clear();
+	for (auto&& data : nat->GetExtraData())
+		obj->extraData.add(file.get<NiExtraData>(data));
+
+	obj->controllers.clear();
+	for (auto&& ctlr : nat->GetControllers())
+		obj->controllers.insert(-1, file.get<NiTimeController>(ctlr));
 }
+
+void nif::NiSyncer<nif::NiObjectNET>::syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const
+{
+	assert(object && native);
+	auto obj = static_cast<NiObjectNET*>(object);
+	auto nat = static_cast<Niflib::NiObjectNET*>(native);
+
+	nat->SetName(obj->name.get());
+
+	nat->ClearExtraData();
+	for (auto&& data : obj->extraData)
+		nat->AddExtraData(&data->native(), Niflib::VER_20_2_0_7);
+
+	nat->ClearControllers();
+	for (auto&& ctlr : obj->controllers)
+		nat->AddController(&ctlr->native());
+}
+
+/*
 
 void nif::NiObjectNET::ExtraData::add(const NiExtraData& obj)
 {
@@ -151,3 +183,4 @@ size_t nif::NiObjectNET::Controllers::size() const
 {
 	return nativePtr()->GetControllers().size();
 }
+*/

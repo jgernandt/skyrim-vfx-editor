@@ -17,53 +17,30 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "NiExtraData.h"
+#include "NiObject.h"
 
 namespace nif
 {
-	class NiTimeController;
-	class NiObjectNET : public NiObject
+	struct NiExtraData;
+	struct NiTimeController;
+
+	struct NiObjectNET : NiObject
+	{
+		Property<std::string> name;
+		Set<NiExtraData> extraData;
+		Sequence<NiTimeController> controllers;
+	};
+
+	template<> struct type_map<Niflib::NiObjectNET> { using type = NiObjectNET; };
+	template<> struct type_map<NiObjectNET> { using type = Niflib::NiObjectNET; };
+
+	template<>
+	class NiSyncer<NiObjectNET> : public NiSyncer<NiObject>
 	{
 	public:
-		using native_type = native::NiObjectNET;
-
-	protected:
-		friend class File;
-		NiObjectNET(native_type* obj);
-
-	public:
-		virtual ~NiObjectNET() = default;
-
-		native_type& getNative() const;
-
-		Property<std::string>& name() { return m_name; }
-		Set<NiExtraData>& extraData() { return m_extraData; }
-		Sequence<NiTimeController>& controllers() { return m_controllers; }
-
-	private:
-		PropertyFcn<std::string, NiObjectNET> m_name;
-
-		struct ExtraData final : SetBase<NiExtraData, NiObjectNET>
-		{
-			ExtraData(NiObjectNET& block) : SetBase<NiExtraData, NiObjectNET>{ block } {}
-
-			virtual void add(const NiExtraData& obj) override;
-			virtual void remove(const NiExtraData& obj) override;
-			virtual bool has(const NiExtraData& obj) const override;
-			virtual size_t size() const override;
-
-		} m_extraData;
-
-		struct Controllers final : SequenceBase<NiTimeController, NiObjectNET>
-		{
-			Controllers(NiObjectNET& block) : SequenceBase<NiTimeController, NiObjectNET>{ block } {}
-
-			virtual size_t insert(size_t pos, const NiTimeController& obj) override;
-			virtual size_t erase(size_t pos) override;
-			virtual size_t find(const NiTimeController& obj) const override;
-			virtual size_t size() const override;
-
-		} m_controllers;
-
+		virtual ~NiSyncer() = default;
+		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
 	};
+
 }

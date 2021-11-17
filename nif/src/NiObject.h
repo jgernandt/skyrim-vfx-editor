@@ -58,8 +58,8 @@ namespace nif
 	{
 	public:
 		virtual ~Syncer() = default;
-		virtual void syncRead(const File&, NiObject*, Niflib::NiObject*) const = 0;
-		virtual void syncWrite(const File&, NiObject*, Niflib::NiObject*) const = 0;
+		virtual void syncRead(File&, NiObject*, Niflib::NiObject*) const = 0;
+		virtual void syncWrite(File&, NiObject*, Niflib::NiObject*) const = 0;
 	};
 
 	//Specialise and inherit
@@ -68,21 +68,22 @@ namespace nif
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(const File&, NiObject*, Niflib::NiObject*) const override {}
-		virtual void syncWrite(const File&, NiObject*, Niflib::NiObject*) const override {}
+		virtual void syncRead(File&, NiObject*, Niflib::NiObject*) const override {}
+		virtual void syncWrite(File&, NiObject*, Niflib::NiObject*) const override {}
 	};
 
-	//like this
+	//like this (although this one is redundant)
 	template<>
 	class NiSyncer<NiObject> : public Syncer
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(const File&, NiObject*, Niflib::NiObject*) const override {}
-		virtual void syncWrite(const File&, NiObject*, Niflib::NiObject*) const override {}
+		virtual void syncRead(File&, NiObject*, Niflib::NiObject*) const override {}
+		virtual void syncWrite(File&, NiObject*, Niflib::NiObject*) const override {}
 	};
 
-	//Indexed by File, to keep track of created objects
+	//Indexed by File, to keep track of created objects.
+	//This object owns the resources that it points to and will clean them up on destruction.
 	struct ObjectBlock
 	{
 		Niflib::NiObject* native;
@@ -95,9 +96,11 @@ namespace nif
 	template<typename T>
 	struct NiObjectBlock : ObjectBlock
 	{
-		NiObjectBlock(const Niflib::Ref<typename type_map<T>::type>& ref) :
+		NiObjectBlock(const Niflib::Ref<Niflib::NiObject>& ref) :
 			nativeRef{ ref }
 		{
+			if (!nativeRef)
+				nativeRef = new typename type_map<T>::type();
 			this->native = nativeRef;
 			this->object = &objectImpl;
 			this->syncer = &syncerImpl;
@@ -105,7 +108,7 @@ namespace nif
 		NiObjectBlock(const NiObjectBlock&) = delete;
 		NiObjectBlock& operator=(const NiObjectBlock&) = delete;
 
-		Niflib::Ref<typename type_map<T>::type> nativeRef;
+		Niflib::Ref<Niflib::NiObject> nativeRef;
 		T objectImpl;
 		NiSyncer<T> syncerImpl;
 	};
