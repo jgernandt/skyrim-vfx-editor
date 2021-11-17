@@ -42,12 +42,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiBoolData> { using type = NiBoolData; };
 	template<> struct type_map<NiBoolData> { using type = Niflib::NiBoolData; };
 
-	template<> class NiSyncer<NiBoolData> : public NiSyncer<NiObject>
+	template<> class NiSyncer<NiBoolData> : public SyncerInherit<NiBoolData, NiObject>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiBoolData* object, Niflib::NiBoolData* native) const;
+		void syncWriteImpl(File& file, NiBoolData* object, Niflib::NiBoolData* native) const;
 	};
 
 	struct NiFloatData : NiObject
@@ -58,12 +58,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiFloatData> { using type = NiFloatData; };
 	template<> struct type_map<NiFloatData> { using type = Niflib::NiFloatData; };
 
-	template<> class NiSyncer<NiFloatData> : public NiSyncer<NiObject>
+	template<> class NiSyncer<NiFloatData> : public SyncerInherit<NiFloatData, NiObject>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiFloatData* object, Niflib::NiFloatData* native) const;
+		void syncWriteImpl(File& file, NiFloatData* object, Niflib::NiFloatData* native) const;
 	};
 
 	//Interpolators
@@ -80,12 +80,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiBoolInterpolator> { using type = NiBoolInterpolator; };
 	template<> struct type_map<NiBoolInterpolator> { using type = Niflib::NiBoolInterpolator; };
 
-	template<> class NiSyncer<NiBoolInterpolator> : public NiSyncer<NiInterpolator>
+	template<> class NiSyncer<NiBoolInterpolator> : public SyncerInherit<NiBoolInterpolator, NiInterpolator>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native) const;
+		void syncWriteImpl(File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native) const;
 	};
 
 	struct NiFloatInterpolator : NiInterpolator
@@ -96,12 +96,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiFloatInterpolator> { using type = NiFloatInterpolator; };
 	template<> struct type_map<NiFloatInterpolator> { using type = Niflib::NiFloatInterpolator; };
 
-	template<> class NiSyncer<NiFloatInterpolator> : public NiSyncer<NiInterpolator>
+	template<> class NiSyncer<NiFloatInterpolator> : public SyncerInherit<NiFloatInterpolator, NiInterpolator>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native) const;
+		void syncWriteImpl(File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native) const;
 	};
 
 	struct NiBlendInterpolator : NiInterpolator {};
@@ -135,12 +135,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiTimeController> { using type = NiTimeController; };
 	template<> struct type_map<NiTimeController> { using type = Niflib::NiTimeController; };
 
-	template<> class NiSyncer<NiTimeController> : public NiSyncer<NiObject>
+	template<> class NiSyncer<NiTimeController> : public SyncerInherit<NiTimeController, NiObject>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiTimeController* object, Niflib::NiTimeController* native) const;
+		void syncWriteImpl(File& file, NiTimeController* object, Niflib::NiTimeController* native) const;
 	};
 
 	struct NiSingleInterpController : NiTimeController
@@ -150,11 +150,11 @@ namespace nif
 	template<> struct type_map<Niflib::NiSingleInterpController> { using type = NiSingleInterpController; };
 	template<> struct type_map<NiSingleInterpController> { using type = Niflib::NiSingleInterpController; };
 
-	template<> class NiSyncer<NiSingleInterpController> : public NiSyncer<NiTimeController>
+	template<> class NiSyncer<NiSingleInterpController> : public SyncerInherit<NiSingleInterpController, NiTimeController>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native) const;
+		void syncWriteImpl(File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native) const;
 	};
 }

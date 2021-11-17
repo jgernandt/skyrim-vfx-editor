@@ -73,10 +73,10 @@ namespace nif
 		std::shared_ptr<ObjectBlock> make_ni() { return make_ni<T>(Niflib::Ref<typename type_map<T>::type>()); }
 
 	public:
-		static CreateFcn pushType(size_t type, CreateFcn fcn) { return s_typeRegistry[type] = fcn; }
+		static CreateFcn pushType(size_t type, CreateFcn fcn);
 
 	private:
-		static std::map<size_t, CreateFcn> s_typeRegistry;
+		static std::map<size_t, CreateFcn>* s_typeRegistry;
 
 		Version m_version{ Version::UNKNOWN };
 		std::shared_ptr<NiNode> m_rootNode;
@@ -167,7 +167,7 @@ namespace nif
 		const Niflib::Type* type = native ? &native->GetType() : &type_map<T>::type::TYPE;
 
 		do {
-			if (auto it = s_typeRegistry.find(std::hash<const Niflib::Type*>{}(type)); it != s_typeRegistry.end()) {
+			if (auto it = s_typeRegistry->find(std::hash<const Niflib::Type*>{}(type)); it != s_typeRegistry->end()) {
 				fcn = it->second;
 				break;
 			}

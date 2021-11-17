@@ -59,8 +59,8 @@ namespace nif
 	{
 	public:
 		virtual ~Syncer() = default;
-		virtual void syncRead(File&, NiObject*, Niflib::NiObject*) const = 0;
-		virtual void syncWrite(File&, NiObject*, Niflib::NiObject*) const = 0;
+		virtual void syncRead(File&, NiObject*, Niflib::NiObject*) const {}
+		virtual void syncWrite(File&, NiObject*, Niflib::NiObject*) const {}
 	};
 
 	//Specialise and inherit
@@ -73,14 +73,30 @@ namespace nif
 		virtual void syncWrite(File&, NiObject*, Niflib::NiObject*) const override {}
 	};
 
-	//like this (although this one is redundant)
-	template<>
-	class NiSyncer<NiObject> : public Syncer
+	template<> class NiSyncer<NiObject> : public Syncer { public: virtual ~NiSyncer() = default; };
+
+	//Use as base for derived syncer classes to automate passing to the base, and to reuse some wordy casts
+	template<typename Derived, typename Base>
+	class SyncerInherit : public NiSyncer<Base>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		virtual void syncRead(File&, NiObject*, Niflib::NiObject*) const override {}
-		virtual void syncWrite(File&, NiObject*, Niflib::NiObject*) const override {}
+		virtual ~SyncerInherit() = default;
+		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override
+		{
+			NiSyncer<Base>::syncRead(file, object, native);
+			static_cast<const NiSyncer<Derived>&>(*this).syncReadImpl(
+				file, 
+				static_cast<Derived*>(object), 
+				static_cast<typename type_map<Derived>::type*>(native));
+		}
+		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override 
+		{
+			NiSyncer<Base>::syncWrite(file, object, native);
+			static_cast<const NiSyncer<Derived>&>(*this).syncWriteImpl(
+				file,
+				static_cast<Derived*>(object),
+				static_cast<typename type_map<Derived>::type*>(native));
+		}
 	};
 
 	//Indexed by File, to keep track of created objects.
@@ -113,4 +129,10 @@ namespace nif
 		T objectImpl;
 		NiSyncer<T> syncerImpl;
 	};
+
+	template<typename T>
+	std::shared_ptr<ObjectBlock> make_NiObject(const Niflib::Ref<Niflib::NiObject>& native)
+	{
+		return std::make_shared<NiObjectBlock<T>>(native);
+	}
 }

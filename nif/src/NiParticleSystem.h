@@ -35,13 +35,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysData> { using type = NiPSysData; };
 	template<> struct type_map<NiPSysData> { using type = Niflib::NiPSysData; };
 
-	template<>
-	class NiSyncer<NiPSysData> : public NiSyncer<NiObject>
+	template<> class NiSyncer<NiPSysData> : public SyncerInherit<NiPSysData, NiObject>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiPSysData* object, Niflib::NiPSysData* native) const;
+		void syncWriteImpl(File& file, NiPSysData* object, Niflib::NiPSysData* native) const;
 	};
 
 	struct NiParticleSystem : NiAVObject
@@ -55,12 +54,11 @@ namespace nif
 	template<> struct type_map<Niflib::NiParticleSystem> { using type = NiParticleSystem; };
 	template<> struct type_map<NiParticleSystem> { using type = Niflib::NiParticleSystem; };
 
-	template<>
-	class NiSyncer<NiParticleSystem> : public NiSyncer<NiAVObject>
+	template<> class NiSyncer<NiParticleSystem> : public SyncerInherit<NiParticleSystem, NiAVObject>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native) const;
+		void syncWriteImpl(File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native) const;
 	};
 }

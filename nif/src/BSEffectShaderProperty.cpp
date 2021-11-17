@@ -18,63 +18,47 @@
 
 #include "pch.h"
 #include "BSEffectShaderProperty.h"
+#include "File.h"
 
-nif::NiAlphaProperty::NiAlphaProperty() : NiAlphaProperty(new Niflib::NiAlphaProperty) {}
-nif::NiAlphaProperty::NiAlphaProperty(native_type* obj) :
-	NiObjectNET(obj),
-	m_flags(*this, &getNative(), &native::NiAlphaProperty::GetFlags, &native::NiAlphaProperty::SetFlags)
-{}
+static nif::File::CreateFcn g_NiAlphaPropertyFactory = 
+	nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiAlphaProperty::TYPE), &nif::make_NiObject<nif::NiAlphaProperty>);
 
-nif::native::NiAlphaProperty& nif::NiAlphaProperty::getNative() const
+static nif::File::CreateFcn g_BSEffectShaderPropertyFactory =
+	nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::BSEffectShaderProperty::TYPE), & nif::make_NiObject<nif::BSEffectShaderProperty>);
+
+void nif::NiSyncer<nif::NiAlphaProperty>::syncReadImpl(
+	File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiAlphaProperty::TYPE));
-	return static_cast<native::NiAlphaProperty&>(*m_ptr);
+	assert(object && native);
+	object->mode.set(static_cast<AlphaMode>(native->GetFlags() & 0x201));
+	object->srcFcn.set(static_cast<BlendFunction>(native->GetSourceBlendFunc()));
+	object->dstFcn.set(static_cast<BlendFunction>(native->GetDestBlendFunc()));
+	object->testFcn.set(static_cast<TestFunction>(native->GetTestFunc()));
+	object->threshold.set(native->GetTestThreshold());
+	object->sorting.set(!native->GetTriangleSortMode());
 }
 
-nif::BSEffectShaderProperty::BSEffectShaderProperty() : BSEffectShaderProperty(new Niflib::BSEffectShaderProperty) {}
-
-nif::BSEffectShaderProperty::BSEffectShaderProperty(native_type* obj) :
-	NiObjectNET(obj), 
-	m_emissiveCol(*this, &getNative(), &native::BSEffectShaderProperty::GetEmissiveColor, &native::BSEffectShaderProperty::SetEmissiveColor),
-	m_emissiveMult(*this, &getNative(), &native::BSEffectShaderProperty::GetEmissiveMultiple, &native::BSEffectShaderProperty::SetEmissiveMultiple),
-	m_sourceTex(*this, &getNative(), &native::BSEffectShaderProperty::GetSourceTexture, &native::BSEffectShaderProperty::SetSourceTexture),
-	m_greyscaleTex(*this, &getNative(), &native::BSEffectShaderProperty::GetGreyscaleTexture, &native::BSEffectShaderProperty::SetGreyscaleTexture),
-	m_shaderFlags1(*this), 
-	m_shaderFlags2(*this)
-{}
-
-nif::native::BSEffectShaderProperty& nif::BSEffectShaderProperty::getNative() const
+void nif::NiSyncer<nif::NiAlphaProperty>::syncWriteImpl(
+	File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::BSEffectShaderProperty::TYPE));
-	return static_cast<native::BSEffectShaderProperty&>(*m_ptr);
+	assert(object && native);
+	native->SetFlags(static_cast<unsigned short>(object->mode.get()));
+	native->SetSourceBlendFunc(static_cast<Niflib::NiAlphaProperty::BlendFunc>(object->srcFcn.get()));
+	native->SetDestBlendFunc(static_cast<Niflib::NiAlphaProperty::BlendFunc>(object->dstFcn.get()));
+	native->SetTestFunc(static_cast<Niflib::NiAlphaProperty::TestFunc>(object->testFcn.get()));
+	native->SetTestThreshold(object->threshold.get());
+	native->SetTriangleSortMode(!object->sorting.get());
 }
 
-/*nif::ColRGBA nif::BSEffectShaderProperty::EmissiveColProp::get() const
+
+void nif::NiSyncer<nif::BSEffectShaderProperty>::syncReadImpl(
+	File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native) const
 {
-	return nif_type_conversion<nif::ColRGBA>::from(m_super.getNative().GetEmissiveColor());
+	//TODO
 }
 
-void nif::BSEffectShaderProperty::EmissiveColProp::set(const ColRGBA& col)
+void nif::NiSyncer<nif::BSEffectShaderProperty>::syncWriteImpl(
+	File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native) const
 {
-	m_super.getNative().SetEmissiveColor(nif_type_conversion<Niflib::Color4>::from(col));
-}*/
-
-void nif::BSEffectShaderProperty::ShaderFlag1Set::set(ShaderFlag1 flag, bool on)
-{
-	m_super.getNative().SetShaderFlag1(static_cast<Niflib::SkyrimShaderPropertyFlags1>(flag), on);
-}
-
-bool nif::BSEffectShaderProperty::ShaderFlag1Set::isSet(ShaderFlag1 flag) const
-{
-	return m_super.getNative().GetShaderFlag1(static_cast<Niflib::SkyrimShaderPropertyFlags1>(flag));
-}
-
-void nif::BSEffectShaderProperty::ShaderFlag2Set::set(ShaderFlag2 flag, bool on)
-{
-	m_super.getNative().SetShaderFlag2(static_cast<Niflib::SkyrimShaderPropertyFlags2>(flag), on);
-}
-
-bool nif::BSEffectShaderProperty::ShaderFlag2Set::isSet(ShaderFlag2 flag) const
-{
-	return m_super.getNative().GetShaderFlag2(static_cast<Niflib::SkyrimShaderPropertyFlags2>(flag));
+	//TODO
 }

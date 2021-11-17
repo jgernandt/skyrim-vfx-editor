@@ -19,8 +19,38 @@
 #include "pch.h"
 #include "NiParticleSystem.h"
 #include "NiPSysModifier.h"
+#include "File.h"
 
-nif::NiPSysData::NiPSysData() : NiPSysData(new Niflib::NiPSysData) {}
+static nif::File::CreateFcn g_NiPSysDataFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysData::TYPE), & nif::make_NiObject<nif::NiPSysData>);
+
+static nif::File::CreateFcn g_NiParticleSystemFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiParticleSystem::TYPE), & nif::make_NiObject<nif::NiParticleSystem>);
+
+
+void nif::NiSyncer<nif::NiPSysData>::syncReadImpl(
+	File& file, NiPSysData* object, Niflib::NiPSysData* native) const
+{
+	//TODO
+}
+void nif::NiSyncer<nif::NiPSysData>::syncWriteImpl(
+	File& file, NiPSysData* object, Niflib::NiPSysData* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiParticleSystem>::syncReadImpl(
+	File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native) const
+{
+	//TODO
+}
+void nif::NiSyncer<nif::NiParticleSystem>::syncWriteImpl(
+	File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native) const
+{
+	//TODO
+}
+
+/*nif::NiPSysData::NiPSysData() : NiPSysData(new Niflib::NiPSysData) {}
 nif::NiPSysData::NiPSysData(native_type* obj) :
 	NiObject(obj), 
 	m_maxCount(*this, &getNative(), &native::NiPSysData::GetBSMaxVertices, &native::NiPSysData::SetBSMaxVertices),
@@ -104,16 +134,16 @@ size_t nif::NiParticleSystem::Modifiers::insert(size_t pos, const NiPSysModifier
 
 size_t nif::NiParticleSystem::Modifiers::erase(size_t pos)
 {
-	/*size_t pos = std::numeric_limits<size_t>::max();
+	//size_t pos = std::numeric_limits<size_t>::max();
 
-	auto&& mods = m_super.getNative().GetModifiers();
-	for (size_t i = 0; i < mods.size(); i++)
-		if (mods[i] == &mod.getNative()) {
-			mods.erase(mods.begin() + i);
-			pos = i;
-		}
+	//auto&& mods = m_super.getNative().GetModifiers();
+	//for (size_t i = 0; i < mods.size(); i++)
+	//	if (mods[i] == &mod.getNative()) {
+	//		mods.erase(mods.begin() + i);
+	//		pos = i;
+	//	}
 
-	return pos;*/
+	//return pos;
 
 	auto&& mods = nativePtr()->GetModifiers();
 	assert(pos < mods.size());
@@ -186,4 +216,4 @@ void nif::NiPSysData::SubtexOffsets::set(const std::vector<SubtextureOffset>& of
 		target[i] = nif_type_conversion<Niflib::Vector4>::from(offsets[i]);
 
 	notify(offsets);
-}
+}*/

@@ -21,6 +21,17 @@
 
 #include "NiNode.h"
 
+std::map<size_t, nif::File::CreateFcn>* nif::File::s_typeRegistry;
+nif::File::CreateFcn nif::File::pushType(size_t type, CreateFcn fcn)
+{
+	static bool firstRun = true;
+	if (firstRun) {
+		s_typeRegistry = new std::map<size_t, nif::File::CreateFcn>;
+		firstRun = false;
+	}
+	return (*s_typeRegistry)[type] = fcn;
+}
+
 namespace Niflib
 {
 	NiObjectRef FindRoot(std::vector<NiObjectRef> const& objects);
@@ -124,7 +135,7 @@ void nif::File::write(const std::filesystem::path& path)
 				fileInfo.exportInfo1 = "SVFX Editor";
 				fileInfo.exportInfo2 = "Niflib";
 
-				ofstream out(path, ofstream::binary);
+				std::ofstream out(path, std::ofstream::binary);
 				Niflib::WriteNifTree(out, rootBlock->native, fileInfo);
 			}
 		}

@@ -36,12 +36,11 @@ namespace nif
 	template<> struct type_map<Niflib::NiAVObject> { using type = NiAVObject; };
 	template<> struct type_map<NiAVObject> { using type = Niflib::NiAVObject; };
 
-	template<>
-	class NiSyncer<NiAVObject> : public NiSyncer<NiObjectNET>
+	template<> class NiSyncer<NiAVObject> : public SyncerInherit<NiAVObject, NiObjectNET>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiAVObject* object, Niflib::NiAVObject* native) const;
+		void syncWriteImpl(File& file, NiAVObject* object, Niflib::NiAVObject* native) const;
 	};
 }

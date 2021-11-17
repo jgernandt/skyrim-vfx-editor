@@ -18,34 +18,33 @@
 
 #include "pch.h"
 #include "NiExtraData.h"
+#include "File.h"
 
-nif::NiExtraData::NiExtraData(native_type* obj) :
-	NiObject(obj), 
-	m_name(*this, &getNative(), &native::NiExtraData::GetName, &native::NiExtraData::SetName)
+static nif::File::CreateFcn g_NiExtraDataFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiExtraData::TYPE), & nif::make_NiObject<nif::NiExtraData>);
+
+static nif::File::CreateFcn g_NiStringExtraDataFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiStringExtraData::TYPE), & nif::make_NiObject<nif::NiStringExtraData>);
+
+
+void nif::NiSyncer<nif::NiExtraData>::syncReadImpl(
+	File& file, NiExtraData* object, Niflib::NiExtraData* native) const
 {
+	//TODO
+}
+void nif::NiSyncer<nif::NiExtraData>::syncWriteImpl(
+	File& file, NiExtraData* object, Niflib::NiExtraData* native) const
+{
+	//TODO
 }
 
-nif::native::NiExtraData& nif::NiExtraData::getNative() const
+void nif::NiSyncer<nif::NiStringExtraData>::syncReadImpl(
+	File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native) const
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiExtraData::TYPE));
-	return static_cast<native::NiExtraData&>(*m_ptr);
+	//TODO
 }
-
-
-nif::NiStringExtraData::NiStringExtraData() : 
-	NiStringExtraData(new Niflib::NiStringExtraData)
+void nif::NiSyncer<nif::NiStringExtraData>::syncWriteImpl(
+	File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native) const
 {
-	assert(m_ptr && m_ptr->GetType().IsSameType(Niflib::NiStringExtraData::TYPE));
-}
-
-nif::NiStringExtraData::NiStringExtraData(native_type* obj) :
-	NiExtraData(obj), 
-	m_value(*this, &getNative(), &native::NiStringExtraData::GetData, &native::NiStringExtraData::SetData)
-{
-}
-
-nif::native::NiStringExtraData& nif::NiStringExtraData::getNative() const
-{
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiStringExtraData::TYPE));
-	return static_cast<native::NiStringExtraData&>(*m_ptr);
+	//TODO
 }

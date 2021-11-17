@@ -29,23 +29,16 @@ namespace nif
 	template<> struct type_map<Niflib::NiNode> { using type = NiNode; };
 	template<> struct type_map<NiNode> { using type = Niflib::NiNode; };
 
-	template<>
-	class NiSyncer<NiNode> : public NiSyncer<NiAVObject>
+	template<> class NiSyncer<NiNode> : public SyncerInherit<NiNode, NiAVObject>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiNode* object, Niflib::NiNode* native) const;
+		void syncWriteImpl(File& file, NiNode* object, Niflib::NiNode* native) const;
 	};
 
 	struct BSFadeNode : NiNode {};
 	template<> struct type_map<Niflib::BSFadeNode> { using type = BSFadeNode; };
 	template<> struct type_map<BSFadeNode> { using type = Niflib::BSFadeNode; };
-
-	template<>
-	class NiSyncer<BSFadeNode> : public NiSyncer<NiNode>
-	{
-	public:
-		virtual ~NiSyncer() = default;
-	};
+	template<> class NiSyncer<BSFadeNode> : public NiSyncer<NiNode> { public: virtual ~NiSyncer() = default; };
 }

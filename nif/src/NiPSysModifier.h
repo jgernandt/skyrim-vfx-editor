@@ -31,12 +31,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysModifierCtlr> { using type = NiPSysModifierCtlr; };
 	template<> struct type_map<NiPSysModifierCtlr> { using type = Niflib::NiPSysModifierCtlr; };
 
-	template<> class NiSyncer<NiPSysModifierCtlr> : public NiSyncer<NiSingleInterpController>
+	template<> class NiSyncer<NiPSysModifierCtlr> : public SyncerInherit<NiPSysModifierCtlr, NiSingleInterpController>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native) const;
+		void syncWriteImpl(File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native) const;
 	};
 
 	struct NiPSysUpdateCtlr : NiTimeController {};
@@ -54,12 +54,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysModifier> { using type = NiPSysModifier; };
 	template<> struct type_map<NiPSysModifier> { using type = Niflib::NiPSysModifier; };
 
-	template<> class NiSyncer<NiPSysModifier> : public NiSyncer<NiObject>
+	template<> class NiSyncer<NiPSysModifier> : public SyncerInherit<NiPSysModifier, NiObject>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native) const;
+		void syncWriteImpl(File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native) const;
 	};
 
 	struct NiPSysBoundUpdateModifier : NiPSysModifier {};
@@ -91,12 +91,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysGravityModifier> { using type = NiPSysGravityModifier; };
 	template<> struct type_map<NiPSysGravityModifier> { using type = Niflib::NiPSysGravityModifier; };
 
-	template<> class NiSyncer<NiPSysGravityModifier> : public NiSyncer<NiPSysModifier>
+	template<> class NiSyncer<NiPSysGravityModifier> : public SyncerInherit<NiPSysGravityModifier, NiPSysModifier>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native) const;
+		void syncWriteImpl(File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native) const;
 	};
 
 	struct NiPSysRotationModifier : NiPSysModifier
@@ -110,12 +110,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysRotationModifier> { using type = NiPSysRotationModifier; };
 	template<> struct type_map<NiPSysRotationModifier> { using type = Niflib::NiPSysRotationModifier; };
 
-	template<> class NiSyncer<NiPSysRotationModifier> : public NiSyncer<NiPSysModifier>
+	template<> class NiSyncer<NiPSysRotationModifier> : public SyncerInherit<NiPSysRotationModifier, NiPSysModifier>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native) const;
+		void syncWriteImpl(File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native) const;
 	};
 
 	struct BSPSysScaleModifier : NiPSysModifier
@@ -125,12 +125,12 @@ namespace nif
 	template<> struct type_map<Niflib::BSPSysScaleModifier> { using type = BSPSysScaleModifier; };
 	template<> struct type_map<BSPSysScaleModifier> { using type = Niflib::BSPSysScaleModifier; };
 
-	template<> class NiSyncer<BSPSysScaleModifier> : public NiSyncer<NiPSysModifier>
+	template<> class NiSyncer<BSPSysScaleModifier> : public SyncerInherit<BSPSysScaleModifier, NiPSysModifier>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native) const;
+		void syncWriteImpl(File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native) const;
 	};
 
 	struct BSPSysSimpleColorModifier : NiPSysModifier
@@ -167,11 +167,11 @@ namespace nif
 	template<> struct type_map<Niflib::BSPSysSimpleColorModifier> { using type = BSPSysSimpleColorModifier; };
 	template<> struct type_map<BSPSysSimpleColorModifier> { using type = Niflib::BSPSysSimpleColorModifier; };
 
-	template<> class NiSyncer<BSPSysSimpleColorModifier> : public NiSyncer<NiPSysModifier>
+	template<> class NiSyncer<BSPSysSimpleColorModifier> : public SyncerInherit<BSPSysSimpleColorModifier, NiPSysModifier>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native) const;
+		void syncWriteImpl(File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native) const;
 	};
 }

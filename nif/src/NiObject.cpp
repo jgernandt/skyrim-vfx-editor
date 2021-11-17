@@ -20,12 +20,8 @@
 #include "NiObject.h"
 #include "File.h"
 
-static std::shared_ptr<nif::ObjectBlock> make_NiObject(const Niflib::Ref<Niflib::NiObject>& native)
-{
-	return std::make_shared<nif::NiObjectBlock<nif::NiObject>>(native);
-}
-
-static nif::File::CreateFcn g_NiObjectFactory = nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiObject::TYPE), &make_NiObject);
+static nif::File::CreateFcn g_NiObjectFactory = 
+	nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiObject::TYPE), &nif::make_NiObject<nif::NiObjectNET>);
 
 #ifdef _DEBUG
 int g_currentNiObjects = 0;

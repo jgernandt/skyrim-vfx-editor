@@ -34,12 +34,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiObjectNET> { using type = NiObjectNET; };
 	template<> struct type_map<NiObjectNET> { using type = Niflib::NiObjectNET; };
 
-	template<> class NiSyncer<NiObjectNET> : public NiSyncer<NiObject>
+	template<> class NiSyncer<NiObjectNET> : public SyncerInherit<NiObjectNET, NiObject>
 	{
 	public:
 		virtual ~NiSyncer() = default;
-		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		void syncReadImpl(File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const;
+		void syncWriteImpl(File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const;
 	};
 
 }

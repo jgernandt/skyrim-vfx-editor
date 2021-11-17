@@ -18,68 +18,24 @@
 
 #include "pch.h"
 #include "NiNode.h"
+#include "File.h"
 
-nif::NiNode::NiNode() : NiNode(new Niflib::NiNode)
+static nif::File::CreateFcn g_NiNodeFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiNode::TYPE), & nif::make_NiObject<nif::NiNode>);
+
+static nif::File::CreateFcn g_BSFadeNodeFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::BSFadeNode::TYPE), & nif::make_NiObject<nif::BSFadeNode>);
+
+
+void nif::NiSyncer<nif::NiNode>::syncReadImpl(File& file, NiNode* object, Niflib::NiNode* native) const
 {
-	assert(getNative().GetType().IsSameType(Niflib::NiNode::TYPE));
-
-	static int count = 0;
-	getNative().SetName("Node" + std::to_string(++count));
-	getNative().SetFlags(14U);
+	//TODO
+	//This belongs higher up!
+	//static int count = 0;
+	//name.set("Node" + std::to_string(++count));
+	//native().SetFlags(14);
 }
-
-nif::NiNode::NiNode(native_type* obj) : NiAVObject(obj), m_children(*this) {}
-
-nif::native::NiNode& nif::NiNode::getNative() const
+void nif::NiSyncer<nif::NiNode>::syncWriteImpl(File& file, NiNode* object, Niflib::NiNode* native) const
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiNode::TYPE));
-	return static_cast<native::NiNode&>(*m_ptr);
-}
-
-nif::BSFadeNode::BSFadeNode() : BSFadeNode(new Niflib::BSFadeNode)
-{
-	assert(getNative().GetType().IsSameType(Niflib::BSFadeNode::TYPE));
-
-	static int count = 0;
-	getNative().SetName("FadeNode" + std::to_string(++count));
-	getNative().SetFlags(14U);
-}
-
-nif::BSFadeNode::BSFadeNode(native_type* obj) : NiNode(obj) {}
-
-nif::native::BSFadeNode& nif::BSFadeNode::getNative() const
-{
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::BSFadeNode::TYPE));
-	return static_cast<native::BSFadeNode&>(*m_ptr);
-}
-
-void nif::NiNode::NodeChildren::add(const NiAVObject& obj)
-{
-	if (!has(obj)) {
-		assert(!obj.getNative().GetParent());//Should be cleared before calling us
-		nativePtr()->AddChild(&obj.getNative());
-		notifyAdd(obj);
-	}
-}
-
-void nif::NiNode::NodeChildren::remove(const NiAVObject& obj)
-{
-	if (has(obj)) {
-		nativePtr()->RemoveChild(&obj.getNative());
-		notifyRemove(obj);
-	}
-}
-
-bool nif::NiNode::NodeChildren::has(const NiAVObject& obj) const
-{
-	for (auto&& child : nativePtr()->GetChildren())
-		if (child == &obj.getNative())
-			return true;
-
-	return false;
-}
-
-size_t nif::NiNode::NodeChildren::size() const
-{
-	return nativePtr()->GetChildren().size();
+	//TODO
 }

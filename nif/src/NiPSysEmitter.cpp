@@ -18,8 +18,94 @@
 
 #include "pch.h"
 #include "NiPSysEmitter.h"
+#include "File.h"
 
-nif::NiPSysEmitterCtlr::NiPSysEmitterCtlr() : NiPSysEmitterCtlr(new Niflib::NiPSysEmitterCtlr) {}
+static nif::File::CreateFcn g_NiPSysEmitterCtlrFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysEmitterCtlr::TYPE), & nif::make_NiObject<nif::NiPSysEmitterCtlr>);
+
+static nif::File::CreateFcn g_NiPSysEmitterFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysEmitter::TYPE), & nif::make_NiObject<nif::NiPSysEmitter>);
+
+static nif::File::CreateFcn g_NiPSysVolumeEmitterFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysVolumeEmitter::TYPE), & nif::make_NiObject<nif::NiPSysVolumeEmitter>);
+
+static nif::File::CreateFcn g_NiPSysBoxEmitterFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysBoxEmitter::TYPE), & nif::make_NiObject<nif::NiPSysBoxEmitter>);
+
+static nif::File::CreateFcn g_NiPSysCylinderEmitterFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysCylinderEmitter::TYPE), & nif::make_NiObject<nif::NiPSysCylinderEmitter>);
+
+static nif::File::CreateFcn g_NiPSysSphereEmitterFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiPSysSphereEmitter::TYPE), & nif::make_NiObject<nif::NiPSysSphereEmitter>);
+
+
+void nif::NiSyncer<nif::NiPSysEmitterCtlr>::syncReadImpl(
+	File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native) const
+{
+	//TODO
+}
+void nif::NiSyncer<nif::NiPSysEmitterCtlr>::syncWriteImpl(
+	File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiPSysEmitter>::syncReadImpl(
+	File& file, NiPSysEmitter* object, Niflib::NiPSysEmitter* native) const
+{
+	//TODO
+}
+void nif::NiSyncer<nif::NiPSysEmitter>::syncWriteImpl(
+	File& file, NiPSysEmitter* object, Niflib::NiPSysEmitter* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiPSysVolumeEmitter>::syncReadImpl(
+	File& file, NiPSysVolumeEmitter* object, Niflib::NiPSysVolumeEmitter* native) const
+{
+	//TODO
+}
+void nif::NiSyncer<nif::NiPSysVolumeEmitter>::syncWriteImpl(
+	File& file, NiPSysVolumeEmitter* object, Niflib::NiPSysVolumeEmitter* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiPSysBoxEmitter>::syncReadImpl(
+	File& file, NiPSysBoxEmitter* object, Niflib::NiPSysBoxEmitter* native) const
+{
+	//TODO
+}
+void nif::NiSyncer<nif::NiPSysBoxEmitter>::syncWriteImpl(
+	File& file, NiPSysBoxEmitter* object, Niflib::NiPSysBoxEmitter* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiPSysCylinderEmitter>::syncReadImpl(
+	File& file, NiPSysCylinderEmitter* object, Niflib::NiPSysCylinderEmitter* native) const
+{
+	//TODO
+}
+void nif::NiSyncer<nif::NiPSysCylinderEmitter>::syncWriteImpl(
+	File& file, NiPSysCylinderEmitter* object, Niflib::NiPSysCylinderEmitter* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiPSysSphereEmitter>::syncReadImpl(
+	File& file, NiPSysSphereEmitter* object, Niflib::NiPSysSphereEmitter* native) const
+{
+	//TODO
+}
+void nif::NiSyncer<nif::NiPSysSphereEmitter>::syncWriteImpl(
+	File& file, NiPSysSphereEmitter* object, Niflib::NiPSysSphereEmitter* native) const
+{
+	//TODO
+}
+
+/*nif::NiPSysEmitterCtlr::NiPSysEmitterCtlr() : NiPSysEmitterCtlr(new Niflib::NiPSysEmitterCtlr) {}
 nif::NiPSysEmitterCtlr::NiPSysEmitterCtlr(native_type* obj) :
 	NiPSysModifierCtlr(obj), 
 	m_visIplr(*this, &getNative(), &native::NiPSysEmitterCtlr::GetVisibilityInterpolator, &native::NiPSysEmitterCtlr::SetVisibilityInterpolator)
@@ -164,4 +250,4 @@ nif::native::NiPSysSphereEmitter& nif::NiPSysSphereEmitter::getNative() const
 {
 	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiPSysSphereEmitter::TYPE));
 	return static_cast<native::NiPSysSphereEmitter&>(*m_ptr);
-}
+}*/

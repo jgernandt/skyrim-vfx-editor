@@ -20,7 +20,101 @@
 #include "NiController.h"
 #include "File.h"
 
-nif::NiInterpolator::NiInterpolator(native_type* obj) : NiObject(obj) {}
+static nif::File::CreateFcn g_NiBoolDataFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiBoolData::TYPE), & nif::make_NiObject<nif::NiBoolData>);
+
+static nif::File::CreateFcn g_NiFloatDataFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiFloatData::TYPE), & nif::make_NiObject<nif::NiFloatData>);
+
+static nif::File::CreateFcn g_NiInterpolatorFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiInterpolator::TYPE), & nif::make_NiObject<nif::NiInterpolator>);
+
+static nif::File::CreateFcn g_NiBoolInterpolatorFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiBoolInterpolator::TYPE), & nif::make_NiObject<nif::NiBoolInterpolator>);
+
+static nif::File::CreateFcn g_NiFloatInterpolatorFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiFloatInterpolator::TYPE), & nif::make_NiObject<nif::NiFloatInterpolator>);
+
+static nif::File::CreateFcn g_NiTimeControllerFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiTimeController::TYPE), & nif::make_NiObject<nif::NiTimeController>);
+
+static nif::File::CreateFcn g_NiSingleInterpControllerFactory =
+nif::File::pushType(std::hash<const Niflib::Type*>{}(&Niflib::NiSingleInterpController::TYPE), & nif::make_NiObject<nif::NiSingleInterpController>);
+
+
+void nif::NiSyncer<nif::NiBoolData>::syncReadImpl(
+	File& file, NiBoolData* object, Niflib::NiBoolData* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiBoolData>::syncWriteImpl(
+	File& file, NiBoolData* object, Niflib::NiBoolData* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiFloatData>::syncReadImpl(
+	File& file, NiFloatData* object, Niflib::NiFloatData* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiFloatData>::syncWriteImpl(
+	File& file, NiFloatData* object, Niflib::NiFloatData* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiBoolInterpolator>::syncReadImpl(
+	File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiBoolInterpolator>::syncWriteImpl(
+	File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiFloatInterpolator>::syncReadImpl(
+	File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiFloatInterpolator>::syncWriteImpl(
+	File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiTimeController>::syncReadImpl(
+	File& file, NiTimeController* object, Niflib::NiTimeController* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiTimeController>::syncWriteImpl(
+	File& file, NiTimeController* object, Niflib::NiTimeController* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiSingleInterpController>::syncReadImpl(
+	File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native) const
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::NiSingleInterpController>::syncWriteImpl(
+	File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native) const
+{
+	//TODO
+}
+
+/*nif::NiInterpolator::NiInterpolator(native_type* obj) : NiObject(obj) {}
 
 nif::native::NiInterpolator& nif::NiInterpolator::getNative() const
 {
@@ -430,4 +524,4 @@ nif::native::NiSingleInterpController& nif::NiSingleInterpController::getNative(
 {
 	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiSingleInterpController::TYPE));
 	return static_cast<native::NiSingleInterpController&>(*m_ptr);
-}
+}*/
