@@ -43,33 +43,9 @@ namespace nif
 
 	public:
 		Vector() = default;
-		~Vector() = default;
+		~Vector() { clear(); }
 
-		//We use these to iterate through our container during pre-write sync.
-		class iterator
-		{
-		public:
-			iterator(typename ctnr_type::iterator const& it) : m_it{ it } {}
-
-			T* operator*() noexcept { return m_it->get(); }
-			const T* operator*() const noexcept { return m_it->get(); }
-			T* operator->() noexcept { return m_it->get(); }
-			const T* operator->() const noexcept { return m_it->get(); }
-
-			iterator& operator++() noexcept { ++m_it; return *this; }
-			iterator operator++(int) noexcept
-			{
-				iterator tmp;
-				operator++();
-				return tmp;
-			}
-
-			friend bool operator==(const iterator& lhs, const iterator& rhs) noexcept { return lhs.m_it == rhs.m_it; }
-			friend bool operator!=(const iterator& lhs, const iterator& rhs) noexcept { return !(lhs == rhs); }
-
-		private:
-			typename ctnr_type::iterator m_it;
-		};
+		using iterator = typename ctnr_type::iterator;
 		iterator begin() { return m_ctnr.begin(); }
 		iterator end() { return m_ctnr.end(); }
 
@@ -80,10 +56,8 @@ namespace nif
 		//TODO: use iterators instead of ints
 		int insert(int i, const T& val)
 		{
-			assert(i >= 0);
-
-			typename std::vector<T>::iterator it;
-			if ((size_t)i < m_ctnr.size())
+			typename ctnr_type::iterator it;
+			if (static_cast<size_t>(i) < m_ctnr.size())
 				it = m_ctnr.begin() + i;
 			else {
 				it = m_ctnr.end();
@@ -114,7 +88,7 @@ namespace nif
 
 		void push_back(const T& val)
 		{
-
+			insert(m_ctnr.size(), val);
 		}
 
 		size_t size() const
@@ -124,7 +98,8 @@ namespace nif
 
 		void clear()
 		{
-
+			while (!m_ctnr.empty())
+				erase(m_ctnr.size() - 1);
 		}
 
 		friend constexpr bool operator==(const Vector<T>& lhs, const Vector<T>& rhs)

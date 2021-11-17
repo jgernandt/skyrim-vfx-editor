@@ -18,7 +18,7 @@
 
 #pragma once
 #include <cassert>
-#include <list>
+#include <vector>
 #include "Observable.h"
 
 namespace nif
@@ -45,17 +45,7 @@ namespace nif
 		using ctnr_type = std::vector<std::shared_ptr<T>>;
 	public:
 		Sequence() = default;
-		~Sequence()
-		{
-			size_t i = m_ctnr.size();
-			while (i) {
-				i--;
-				for (SequenceListener<T>* l : this->m_lsnrs) {
-					assert(l);
-					l->onErase(i);
-				}
-			}
-		}
+		~Sequence() { clear(); }
 
 		//We use these to iterate through our container during pre-write sync.
 		class iterator
@@ -88,7 +78,9 @@ namespace nif
 		//TODO: use iterators instead of ints
 		int insert(int i, const std::shared_ptr<T>& obj)
 		{
-			assert(i >= 0);
+			//We do not require positive i. Casting to size_t and capping at ctnr.size() will put negative i at the end.
+			// (now, if ctnr.size() > int max we have a problem)
+			//assert(i >= 0);
 
 			if (obj) {
 				i = std::min((size_t)i, m_ctnr.size());
@@ -139,6 +131,8 @@ namespace nif
 		}
 		void clear()
 		{
+			while (!m_ctnr.empty())
+				erase(m_ctnr.size() - 1);
 		}
 
 	private:

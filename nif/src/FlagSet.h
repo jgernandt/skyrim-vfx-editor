@@ -41,15 +41,36 @@ namespace nif
 		static_assert(std::is_integral<T>::value || std::is_enum<T>::value);
 	public:
 		FlagSet(T val = T()) : m_flags{ val } {}
-		~FlagSet() = default;
+		~FlagSet()
+		{
+			if (m_flags != T(0)) {
+				for (FlagSetListener<T>* l : this->m_lsnrs) {
+					assert(l);
+					l->onClear(m_flags);
+				}
+			}
+		}
 
 		void set(T flags) 
 		{
-			m_flags |= flags;
+			if (T to_set = (flags & ~(m_flags & flags)); to_set != T(0)) {
+				//one or more flags will be set, but not necessarily every flag that was passed
+				m_flags |= flags;
+				for (FlagSetListener<T>* l : this->m_lsnrs) {
+					assert(l);
+					l->onSet(to_set);
+				}
+			}
 		}
 		void clear(T flags)
 		{
-			m_flags &= ~flags;
+			if (T to_clear = (m_flags & flags); to_clear != T(0)) {
+				m_flags &= ~flags;
+				for (FlagSetListener<T>* l : this->m_lsnrs) {
+					assert(l);
+					l->onClear(to_clear);
+				}
+			}
 		}
 		bool isSet(T flags) const 
 		{ 

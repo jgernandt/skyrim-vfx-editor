@@ -52,15 +52,7 @@ namespace nif
 		using ctnr_type = std::map<T*, std::shared_ptr<T>>;
 	public:
 		Set() = default;
-		~Set()
-		{
-			for (auto&& obj : m_ctnr) {
-				for (SetListener<T>* l : this->m_lsnrs) {
-					assert(l);
-					l->onRemove(obj.first);
-				}
-			}
-		}
+		~Set() { clear(); }
 
 		class iterator
 		{
@@ -119,7 +111,15 @@ namespace nif
 
 		void clear()
 		{
-			
+			//No reason to go for speed here. Better to go for consistency
+			//and let the call the listeners after each element has been removed.
+			std::vector<T*> vec;
+			vec.reserve(m_ctnr.size());
+			for (auto&& obj : m_ctnr)
+				vec.push_back(obj.first);
+
+			for (T* obj : vec)
+				remove(obj);
 		}
 
 	private:

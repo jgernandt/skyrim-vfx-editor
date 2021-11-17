@@ -42,7 +42,15 @@ namespace nif
 	{
 	public:
 		Assignable(const std::shared_ptr<T>& t = std::shared_ptr<T>()) : m_assigned{ t } {}
-		~Assignable() = default;
+		~Assignable()
+		{
+			if (m_assigned) {
+				for (AssignableListener<T>* l : this->m_lsnrs) {
+					assert(l);
+					l->onAssign(nullptr);
+				}
+			}
+		}
 
 		void assign(const std::shared_ptr<T>& t)
 		{
