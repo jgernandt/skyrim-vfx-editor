@@ -35,7 +35,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native) const;
-		void syncWriteImpl(File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native) const;
+		void syncWriteImpl(const File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native) const;
 	};
 
 	struct NiPSysEmitter : NiPSysModifier
@@ -65,7 +65,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiPSysEmitter* object, Niflib::NiPSysEmitter* native) const;
-		void syncWriteImpl(File& file, NiPSysEmitter* object, Niflib::NiPSysEmitter* native) const;
+		void syncWriteImpl(const File& file, NiPSysEmitter* object, Niflib::NiPSysEmitter* native) const;
 	};
 
 	struct NiPSysVolumeEmitter : NiPSysEmitter
@@ -80,7 +80,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiPSysVolumeEmitter* object, Niflib::NiPSysVolumeEmitter* native) const;
-		void syncWriteImpl(File& file, NiPSysVolumeEmitter* object, Niflib::NiPSysVolumeEmitter* native) const;
+		void syncWriteImpl(const File& file, NiPSysVolumeEmitter* object, Niflib::NiPSysVolumeEmitter* native) const;
 	};
 
 	struct NiPSysBoxEmitter : NiPSysVolumeEmitter
@@ -97,7 +97,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiPSysBoxEmitter* object, Niflib::NiPSysBoxEmitter* native) const;
-		void syncWriteImpl(File& file, NiPSysBoxEmitter* object, Niflib::NiPSysBoxEmitter* native) const;
+		void syncWriteImpl(const File& file, NiPSysBoxEmitter* object, Niflib::NiPSysBoxEmitter* native) const;
 	};
 	
 	struct NiPSysCylinderEmitter : NiPSysVolumeEmitter
@@ -113,7 +113,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiPSysCylinderEmitter* object, Niflib::NiPSysCylinderEmitter* native) const;
-		void syncWriteImpl(File& file, NiPSysCylinderEmitter* object, Niflib::NiPSysCylinderEmitter* native) const;
+		void syncWriteImpl(const File& file, NiPSysCylinderEmitter* object, Niflib::NiPSysCylinderEmitter* native) const;
 	};
 
 	struct NiPSysSphereEmitter : NiPSysVolumeEmitter
@@ -128,6 +128,6 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiPSysSphereEmitter* object, Niflib::NiPSysSphereEmitter* native) const;
-		void syncWriteImpl(File& file, NiPSysSphereEmitter* object, Niflib::NiPSysSphereEmitter* native) const;
+		void syncWriteImpl(const File& file, NiPSysSphereEmitter* object, Niflib::NiPSysSphereEmitter* native) const;
 	};
 }

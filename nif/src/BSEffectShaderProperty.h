@@ -93,7 +93,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const;
-		void syncWriteImpl(File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const;
+		void syncWriteImpl(const File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const;
 	};
 
 	struct BSEffectShaderProperty : NiProperty
@@ -113,6 +113,6 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native) const;
-		void syncWriteImpl(File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native) const;
+		void syncWriteImpl(const File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native) const;
 	};
 }

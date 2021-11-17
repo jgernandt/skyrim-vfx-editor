@@ -36,7 +36,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native) const;
-		void syncWriteImpl(File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native) const;
+		void syncWriteImpl(const File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native) const;
 	};
 
 	struct NiPSysUpdateCtlr : NiTimeController {};
@@ -59,7 +59,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native) const;
-		void syncWriteImpl(File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native) const;
+		void syncWriteImpl(const File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native) const;
 	};
 
 	struct NiPSysBoundUpdateModifier : NiPSysModifier {};
@@ -96,7 +96,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native) const;
-		void syncWriteImpl(File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native) const;
+		void syncWriteImpl(const File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native) const;
 	};
 
 	struct NiPSysRotationModifier : NiPSysModifier
@@ -115,7 +115,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native) const;
-		void syncWriteImpl(File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native) const;
+		void syncWriteImpl(const File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native) const;
 	};
 
 	struct BSPSysScaleModifier : NiPSysModifier
@@ -130,7 +130,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native) const;
-		void syncWriteImpl(File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native) const;
+		void syncWriteImpl(const File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native) const;
 	};
 
 	struct BSPSysSimpleColorModifier : NiPSysModifier
@@ -172,6 +172,6 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native) const;
-		void syncWriteImpl(File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native) const;
+		void syncWriteImpl(const File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native) const;
 	};
 }

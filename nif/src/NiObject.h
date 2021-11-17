@@ -61,7 +61,7 @@ namespace nif
 	public:
 		virtual ~Syncer() = default;
 		virtual void syncRead(File&, NiObject*, Niflib::NiObject*) const {}
-		virtual void syncWrite(File&, NiObject*, Niflib::NiObject*) const {}
+		virtual void syncWrite(const File&, NiObject*, Niflib::NiObject*) const {}
 	};
 
 	//Specialise and inherit
@@ -71,7 +71,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		virtual void syncRead(File&, NiObject*, Niflib::NiObject*) const override {}
-		virtual void syncWrite(File&, NiObject*, Niflib::NiObject*) const override {}
+		virtual void syncWrite(const File&, NiObject*, Niflib::NiObject*) const override {}
 	};
 
 	template<> class NiSyncer<NiObject> : public Syncer { public: virtual ~NiSyncer() = default; };
@@ -90,7 +90,7 @@ namespace nif
 				static_cast<Derived*>(object), 
 				static_cast<typename type_map<Derived>::type*>(native));
 		}
-		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override 
+		virtual void syncWrite(const File& file, NiObject* object, Niflib::NiObject* native) const override
 		{
 			NiSyncer<Base>::syncWrite(file, object, native);
 			static_cast<const NiSyncer<Derived>&>(*this).syncWriteImpl(

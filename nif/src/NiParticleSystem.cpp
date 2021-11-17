@@ -34,7 +34,7 @@ void nif::NiSyncer<nif::NiPSysData>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiPSysData>::syncWriteImpl(
-	File& file, NiPSysData* object, Niflib::NiPSysData* native) const
+	const File& file, NiPSysData* object, Niflib::NiPSysData* native) const
 {
 	//TODO
 }
@@ -45,7 +45,7 @@ void nif::NiSyncer<nif::NiParticleSystem>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiParticleSystem>::syncWriteImpl(
-	File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native) const
+	const File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native) const
 {
 	//TODO
 }

@@ -47,7 +47,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiBoolData* object, Niflib::NiBoolData* native) const;
-		void syncWriteImpl(File& file, NiBoolData* object, Niflib::NiBoolData* native) const;
+		void syncWriteImpl(const File& file, NiBoolData* object, Niflib::NiBoolData* native) const;
 	};
 
 	struct NiFloatData : NiObject
@@ -63,7 +63,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiFloatData* object, Niflib::NiFloatData* native) const;
-		void syncWriteImpl(File& file, NiFloatData* object, Niflib::NiFloatData* native) const;
+		void syncWriteImpl(const File& file, NiFloatData* object, Niflib::NiFloatData* native) const;
 	};
 
 	//Interpolators
@@ -85,7 +85,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native) const;
-		void syncWriteImpl(File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native) const;
+		void syncWriteImpl(const File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native) const;
 	};
 
 	struct NiFloatInterpolator : NiInterpolator
@@ -101,7 +101,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native) const;
-		void syncWriteImpl(File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native) const;
+		void syncWriteImpl(const File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native) const;
 	};
 
 	struct NiBlendInterpolator : NiInterpolator {};
@@ -140,7 +140,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiTimeController* object, Niflib::NiTimeController* native) const;
-		void syncWriteImpl(File& file, NiTimeController* object, Niflib::NiTimeController* native) const;
+		void syncWriteImpl(const File& file, NiTimeController* object, Niflib::NiTimeController* native) const;
 	};
 
 	struct NiSingleInterpController : NiTimeController
@@ -155,6 +155,6 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native) const;
-		void syncWriteImpl(File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native) const;
+		void syncWriteImpl(const File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native) const;
 	};
 }

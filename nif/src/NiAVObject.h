@@ -41,6 +41,6 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiAVObject* object, Niflib::NiAVObject* native) const;
-		void syncWriteImpl(File& file, NiAVObject* object, Niflib::NiAVObject* native) const;
+		void syncWriteImpl(const File& file, NiAVObject* object, Niflib::NiAVObject* native) const;
 	};
 }

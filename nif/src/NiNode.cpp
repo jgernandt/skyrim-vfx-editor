@@ -35,7 +35,7 @@ void nif::NiSyncer<nif::NiNode>::syncReadImpl(File& file, NiNode* object, Niflib
 	//name.set("Node" + std::to_string(++count));
 	//native().SetFlags(14);
 }
-void nif::NiSyncer<nif::NiNode>::syncWriteImpl(File& file, NiNode* object, Niflib::NiNode* native) const
+void nif::NiSyncer<nif::NiNode>::syncWriteImpl(const File& file, NiNode* object, Niflib::NiNode* native) const
 {
 	//TODO
 }

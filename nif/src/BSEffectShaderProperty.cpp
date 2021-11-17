@@ -39,7 +39,7 @@ void nif::NiSyncer<nif::NiAlphaProperty>::syncReadImpl(
 }
 
 void nif::NiSyncer<nif::NiAlphaProperty>::syncWriteImpl(
-	File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const
+	const File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const
 {
 	assert(object && native);
 	native->SetFlags(static_cast<unsigned short>(object->mode.get()));
@@ -58,7 +58,7 @@ void nif::NiSyncer<nif::BSEffectShaderProperty>::syncReadImpl(
 }
 
 void nif::NiSyncer<nif::BSEffectShaderProperty>::syncWriteImpl(
-	File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native) const
+	const File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native) const
 {
 	//TODO
 }

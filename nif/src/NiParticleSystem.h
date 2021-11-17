@@ -40,7 +40,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiPSysData* object, Niflib::NiPSysData* native) const;
-		void syncWriteImpl(File& file, NiPSysData* object, Niflib::NiPSysData* native) const;
+		void syncWriteImpl(const File& file, NiPSysData* object, Niflib::NiPSysData* native) const;
 	};
 
 	struct NiParticleSystem : NiAVObject
@@ -59,6 +59,6 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native) const;
-		void syncWriteImpl(File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native) const;
+		void syncWriteImpl(const File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native) const;
 	};
 }

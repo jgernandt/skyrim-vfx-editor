@@ -57,7 +57,7 @@ void nif::NiSyncer<nif::NiPSysModifierCtlr>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiPSysModifierCtlr>::syncWriteImpl(
-	File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native) const
+	const File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native) const
 {
 	//TODO
 }
@@ -68,7 +68,7 @@ void nif::NiSyncer<nif::NiPSysModifier>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiPSysModifier>::syncWriteImpl(
-	File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native) const
+	const File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native) const
 {
 	//TODO
 }
@@ -79,7 +79,7 @@ void nif::NiSyncer<nif::NiPSysGravityModifier>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiPSysGravityModifier>::syncWriteImpl(
-	File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native) const
+	const File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native) const
 {
 	//TODO
 }
@@ -90,7 +90,7 @@ void nif::NiSyncer<nif::NiPSysRotationModifier>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiPSysRotationModifier>::syncWriteImpl(
-	File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native) const
+	const File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native) const
 {
 	//TODO
 }
@@ -101,7 +101,7 @@ void nif::NiSyncer<nif::BSPSysScaleModifier>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::BSPSysScaleModifier>::syncWriteImpl(
-	File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native) const
+	const File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native) const
 {
 	//TODO
 }
@@ -112,7 +112,7 @@ void nif::NiSyncer<nif::BSPSysSimpleColorModifier>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::BSPSysSimpleColorModifier>::syncWriteImpl(
-	File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native) const
+	const File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native) const
 {
 	//TODO
 }

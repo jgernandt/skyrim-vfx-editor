@@ -33,7 +33,7 @@ void nif::NiSyncer<nif::NiExtraData>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiExtraData>::syncWriteImpl(
-	File& file, NiExtraData* object, Niflib::NiExtraData* native) const
+	const File& file, NiExtraData* object, Niflib::NiExtraData* native) const
 {
 	//TODO
 }
@@ -44,7 +44,7 @@ void nif::NiSyncer<nif::NiStringExtraData>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiStringExtraData>::syncWriteImpl(
-	File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native) const
+	const File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native) const
 {
 	//TODO
 }

@@ -40,7 +40,7 @@ void nif::NiSyncer<nif::NiObjectNET>::syncReadImpl(File& file, NiObjectNET* obje
 		object->controllers.insert(-1, file.get<NiTimeController>(ctlr));
 }
 
-void nif::NiSyncer<nif::NiObjectNET>::syncWriteImpl(File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const
+void nif::NiSyncer<nif::NiObjectNET>::syncWriteImpl(const File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const
 {
 	assert(object && native);
 

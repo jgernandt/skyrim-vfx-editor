@@ -39,7 +39,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const;
-		void syncWriteImpl(File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const;
+		void syncWriteImpl(const File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const;
 	};
 
 }

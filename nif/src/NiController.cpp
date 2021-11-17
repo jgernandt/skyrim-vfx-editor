@@ -49,7 +49,7 @@ void nif::NiSyncer<nif::NiBoolData>::syncReadImpl(
 }
 
 void nif::NiSyncer<nif::NiBoolData>::syncWriteImpl(
-	File& file, NiBoolData* object, Niflib::NiBoolData* native) const
+	const File& file, NiBoolData* object, Niflib::NiBoolData* native) const
 {
 	//TODO
 }
@@ -61,7 +61,7 @@ void nif::NiSyncer<nif::NiFloatData>::syncReadImpl(
 }
 
 void nif::NiSyncer<nif::NiFloatData>::syncWriteImpl(
-	File& file, NiFloatData* object, Niflib::NiFloatData* native) const
+	const File& file, NiFloatData* object, Niflib::NiFloatData* native) const
 {
 	//TODO
 }
@@ -73,7 +73,7 @@ void nif::NiSyncer<nif::NiBoolInterpolator>::syncReadImpl(
 }
 
 void nif::NiSyncer<nif::NiBoolInterpolator>::syncWriteImpl(
-	File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native) const
+	const File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native) const
 {
 	//TODO
 }
@@ -85,7 +85,7 @@ void nif::NiSyncer<nif::NiFloatInterpolator>::syncReadImpl(
 }
 
 void nif::NiSyncer<nif::NiFloatInterpolator>::syncWriteImpl(
-	File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native) const
+	const File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native) const
 {
 	//TODO
 }
@@ -97,7 +97,7 @@ void nif::NiSyncer<nif::NiTimeController>::syncReadImpl(
 }
 
 void nif::NiSyncer<nif::NiTimeController>::syncWriteImpl(
-	File& file, NiTimeController* object, Niflib::NiTimeController* native) const
+	const File& file, NiTimeController* object, Niflib::NiTimeController* native) const
 {
 	//TODO
 }
@@ -109,7 +109,7 @@ void nif::NiSyncer<nif::NiSingleInterpController>::syncReadImpl(
 }
 
 void nif::NiSyncer<nif::NiSingleInterpController>::syncWriteImpl(
-	File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native) const
+	const File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native) const
 {
 	//TODO
 }

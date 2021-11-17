@@ -34,7 +34,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiNode* object, Niflib::NiNode* native) const;
-		void syncWriteImpl(File& file, NiNode* object, Niflib::NiNode* native) const;
+		void syncWriteImpl(const File& file, NiNode* object, Niflib::NiNode* native) const;
 	};
 
 	struct BSFadeNode : NiNode {};

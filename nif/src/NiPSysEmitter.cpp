@@ -45,7 +45,7 @@ void nif::NiSyncer<nif::NiPSysEmitterCtlr>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiPSysEmitterCtlr>::syncWriteImpl(
-	File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native) const
+	const File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native) const
 {
 	//TODO
 }
@@ -56,7 +56,7 @@ void nif::NiSyncer<nif::NiPSysEmitter>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiPSysEmitter>::syncWriteImpl(
-	File& file, NiPSysEmitter* object, Niflib::NiPSysEmitter* native) const
+	const File& file, NiPSysEmitter* object, Niflib::NiPSysEmitter* native) const
 {
 	//TODO
 }
@@ -67,7 +67,7 @@ void nif::NiSyncer<nif::NiPSysVolumeEmitter>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiPSysVolumeEmitter>::syncWriteImpl(
-	File& file, NiPSysVolumeEmitter* object, Niflib::NiPSysVolumeEmitter* native) const
+	const File& file, NiPSysVolumeEmitter* object, Niflib::NiPSysVolumeEmitter* native) const
 {
 	//TODO
 }
@@ -78,7 +78,7 @@ void nif::NiSyncer<nif::NiPSysBoxEmitter>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiPSysBoxEmitter>::syncWriteImpl(
-	File& file, NiPSysBoxEmitter* object, Niflib::NiPSysBoxEmitter* native) const
+	const File& file, NiPSysBoxEmitter* object, Niflib::NiPSysBoxEmitter* native) const
 {
 	//TODO
 }
@@ -89,7 +89,7 @@ void nif::NiSyncer<nif::NiPSysCylinderEmitter>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiPSysCylinderEmitter>::syncWriteImpl(
-	File& file, NiPSysCylinderEmitter* object, Niflib::NiPSysCylinderEmitter* native) const
+	const File& file, NiPSysCylinderEmitter* object, Niflib::NiPSysCylinderEmitter* native) const
 {
 	//TODO
 }
@@ -100,7 +100,7 @@ void nif::NiSyncer<nif::NiPSysSphereEmitter>::syncReadImpl(
 	//TODO
 }
 void nif::NiSyncer<nif::NiPSysSphereEmitter>::syncWriteImpl(
-	File& file, NiPSysSphereEmitter* object, Niflib::NiPSysSphereEmitter* native) const
+	const File& file, NiPSysSphereEmitter* object, Niflib::NiPSysSphereEmitter* native) const
 {
 	//TODO
 }

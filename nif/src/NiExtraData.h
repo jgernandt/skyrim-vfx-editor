@@ -33,7 +33,7 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiExtraData* object, Niflib::NiExtraData* native) const;
-		void syncWriteImpl(File& file, NiExtraData* object, Niflib::NiExtraData* native) const;
+		void syncWriteImpl(const File& file, NiExtraData* object, Niflib::NiExtraData* native) const;
 	};
 
 	struct NiStringExtraData : NiExtraData
@@ -48,6 +48,6 @@ namespace nif
 	public:
 		virtual ~NiSyncer() = default;
 		void syncReadImpl(File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native) const;
-		void syncWriteImpl(File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native) const;
+		void syncWriteImpl(const File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native) const;
 	};
 }
