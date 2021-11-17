@@ -87,6 +87,9 @@
     <ClInclude Include="src\FlagSet.h">
       <Filter>Header Files\Data model</Filter>
     </ClInclude>
+    <ClInclude Include="src\List.h">
+      <Filter>Header Files\Data model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\nif_conversions.cpp">

@@ -37,7 +37,7 @@ namespace nif
 	struct NiBoolData : NiObject
 	{
 		Property<KeyType> keyType;
-		Vector<Key<bool>> keys;
+		List<Key<bool>> keys;
 	};
 	template<> struct type_map<Niflib::NiBoolData> { using type = NiBoolData; };
 	template<> struct type_map<NiBoolData> { using type = Niflib::NiBoolData; };
@@ -53,7 +53,7 @@ namespace nif
 	struct NiFloatData : NiObject
 	{
 		Property<KeyType> keyType;
-		Vector<Key<float>> keys;
+		List<Key<float>> keys;
 	};
 	template<> struct type_map<Niflib::NiFloatData> { using type = NiFloatData; };
 	template<> struct type_map<NiFloatData> { using type = Niflib::NiFloatData; };

@@ -227,6 +227,175 @@ namespace nif_tests
 			Assert::IsTrue(lsnr.wasCleared(F1 | F2));//or should this call twice?
 		}
 
+		TEST_METHOD(ListTest)
+		{
+			struct Listener : ListListener<Key<float>>
+			{
+				virtual void onInsert(int pos) override
+				{
+					m_inserted.push_back(pos);
+				}
+				virtual void onErase(int pos) override
+				{
+					m_erased.push_back(pos);
+				}
+
+				bool wasInserted()
+				{
+					bool result = !m_inserted.empty();
+					m_inserted.clear();
+					return result;
+				}
+				bool wasInserted(int pos)
+				{
+					if (!m_inserted.empty()) {
+						bool result = m_inserted.front() == pos;
+						m_inserted.pop_front();
+						return result;
+					}
+					else
+						return false;
+				}
+				bool wasErased()
+				{
+					bool result = !m_erased.empty();
+					m_erased.clear();
+					return result;
+				}
+				bool wasErased(int pos)
+				{
+					if (!m_erased.empty()) {
+						bool result = m_erased.front() == pos;
+						m_erased.pop_front();
+						return result;
+					}
+					else
+						return false;
+				}
+
+			private:
+				std::deque<int> m_inserted;
+				std::deque<int> m_erased;
+			};
+
+			Listener lsnr;
+			{
+				List<Key<float>> list;
+				list.addListener(lsnr);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsFalse(lsnr.wasErased());
+
+				std::mt19937 rng;
+				std::uniform_real_distribution<float> D;
+
+				//push_back
+				list.push_back();
+				Assert::IsTrue(list.size() == 1);
+				Assert::IsTrue(lsnr.wasInserted(0));
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsFalse(lsnr.wasErased());
+				Key<float>* key0 = &list.back();
+				Assert::IsNotNull(key0);
+
+				list.push_back();
+				Assert::IsTrue(list.size() == 2);
+				Assert::IsTrue(lsnr.wasInserted(1));
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsFalse(lsnr.wasErased());
+				Key<float>* key1 = &list.back();
+				Assert::IsNotNull(key1);
+
+				//access
+				Assert::IsTrue(key0 == &list.front() && key0 == &list.at(0));
+				Assert::IsTrue(key1 != key0 && key1 == &list.at(1));
+
+				//push_front
+				list.push_front();
+				Assert::IsTrue(list.size() == 3);
+				Assert::IsTrue(lsnr.wasInserted(0));
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsFalse(lsnr.wasErased());
+				Key<float>* key_ = &list.front();
+				Assert::IsTrue(key_ == &list.front() && key_ == &list.at(0));
+				Assert::IsTrue(key0 == &list.at(1));
+				Assert::IsTrue(key1 == &list.back() && key1 == &list.at(2));
+
+				//pop_front
+				list.pop_front();
+				Assert::IsTrue(list.size() == 2);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsTrue(lsnr.wasErased(0));
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == &list.front());
+				Assert::IsTrue(key1 == &list.back());
+
+				//pop_back
+				list.pop_back();
+				Assert::IsTrue(list.size() == 1);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsTrue(lsnr.wasErased(1));
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == &list.front());
+
+				//insert
+				list.insert(1);
+				Assert::IsTrue(list.size() == 2);
+				Assert::IsTrue(lsnr.wasInserted(1));
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsFalse(lsnr.wasErased());
+				key1 = &list.back();
+				Assert::IsTrue(key0 == &list.front());
+
+				list.insert(0);
+				Assert::IsTrue(list.size() == 3);
+				Assert::IsTrue(lsnr.wasInserted(0));
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == &list.at(1));
+				Assert::IsTrue(key1 == &list.at(2));
+
+				//erase
+				list.erase(0);
+				Assert::IsTrue(list.size() == 2);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsTrue(lsnr.wasErased(0));
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == &list.at(0));
+				Assert::IsTrue(key1 == &list.at(1));
+
+				list.erase(1);
+				Assert::IsTrue(list.size() == 1);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsTrue(lsnr.wasErased(1));
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == &list.at(0));
+
+				//clear
+				list.insert(1);
+				Assert::IsTrue(lsnr.wasInserted());
+				list.clear();
+				Assert::IsTrue(list.size() == 0);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsTrue(lsnr.wasErased(1));
+				Assert::IsTrue(lsnr.wasErased(0));
+				Assert::IsFalse(lsnr.wasErased());
+
+				//Remove listener
+				list.removeListener(lsnr);
+				list.push_back();
+				list.push_back();
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsFalse(lsnr.wasErased());
+
+				list.addListener(lsnr);
+			}
+			//signal erase on destruction
+			Assert::IsFalse(lsnr.wasInserted());
+			Assert::IsTrue(lsnr.wasErased(1));
+			Assert::IsTrue(lsnr.wasErased(0));
+			Assert::IsFalse(lsnr.wasErased());
+		}
+
 		TEST_METHOD(PropertyTest)
 		{
 			struct Listener : PropertyListener<float>
@@ -346,7 +515,7 @@ namespace nif_tests
 				Assert::IsTrue(seq.find(o1.get()) == -1);
 
 				//Insert in empty
-				Assert::IsTrue(seq.insert(-1, o1) == 0);
+				Assert::IsTrue(seq.insert(seq.size(), o1) == 0);
 				Assert::IsTrue(seq.find(o1.get()) == 0);
 				Assert::IsTrue(seq.size() == 1);
 				Assert::IsTrue(lsnr.wasInserted(0));
@@ -356,8 +525,8 @@ namespace nif_tests
 				auto o2 = std::make_shared<NiObject>();
 				Assert::IsTrue(seq.find(o2.get()) == -1);
 
-				//Insert at -1 (end)
-				Assert::IsTrue(seq.insert(-1, o2) == 1);
+				//Insert at end
+				Assert::IsTrue(seq.insert(seq.size(), o2) == 1);
 				Assert::IsTrue(seq.find(o1.get()) == 0);
 				Assert::IsTrue(seq.find(o2.get()) == 1);
 				Assert::IsTrue(seq.size() == 2);
@@ -388,8 +557,8 @@ namespace nif_tests
 				Assert::IsTrue(lsnr.wasErased(0));
 				Assert::IsFalse(lsnr.wasErased());
 
-				//Insert past the end
-				Assert::IsTrue(seq.insert(10, o1) == 2);
+				//Insert (past the end - forbid this!) AT the end (again)
+				Assert::IsTrue(seq.insert(seq.size(), o1) == 2);
 				Assert::IsTrue(seq.find(o1.get()) == 2);
 				Assert::IsTrue(seq.find(o2.get()) == 1);
 				Assert::IsTrue(seq.find(o3.get()) == 0);
@@ -421,9 +590,9 @@ namespace nif_tests
 				Assert::IsFalse(lsnr.wasErased());
 
 				//Test ownership
-				seq.insert(-1, o3);
-				seq.insert(-1, o2);
-				seq.insert(-1, o1);
+				seq.insert(seq.size(), o3);
+				seq.insert(seq.size(), o2);
+				seq.insert(seq.size(), o1);
 				Assert::IsTrue(lsnr.wasInserted());
 				o1.reset();
 				Assert::IsFalse(weak1.expired());
@@ -438,7 +607,7 @@ namespace nif_tests
 				Assert::IsTrue(seq.erase(1) == 1);
 				Assert::IsFalse(lsnr.wasErased());
 
-				seq.insert(-1, o2);
+				seq.insert(seq.size(), o2);
 				seq.addListener(lsnr);
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());

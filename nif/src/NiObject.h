@@ -22,6 +22,7 @@
 #include "nif_types.h"
 #include "Assignable.h"
 #include "FlagSet.h"
+#include "List.h"
 #include "Property.h"
 #include "Sequence.h"
 #include "Set.h"

@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="src\Assignable.h" />
     <ClInclude Include="src\FlagSet.h" />
+    <ClInclude Include="src\List.h" />
     <ClInclude Include="src\nif.h" />
     <ClInclude Include="src\ni_objects.h" />
     <ClInclude Include="src\Vector.h" />

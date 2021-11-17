@@ -21,6 +21,10 @@
 
 #include <cassert>
 #include <fstream>
+#include <list>
+#include <map>
+#include <set>
+#include <vector>
 
 #include "nif_backend.h"
 
