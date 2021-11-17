@@ -56,8 +56,10 @@ namespace nif
 		//TODO: use iterators instead of ints
 		int insert(int i, const T& val)
 		{
+			assert(i >= 0);
+
 			typename ctnr_type::iterator it;
-			if (static_cast<size_t>(i) < m_ctnr.size())
+			if ((size_t)i < m_ctnr.size())
 				it = m_ctnr.begin() + i;
 			else {
 				it = m_ctnr.end();

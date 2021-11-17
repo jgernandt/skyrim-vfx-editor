@@ -78,9 +78,7 @@ namespace nif
 		//TODO: use iterators instead of ints
 		int insert(int i, const std::shared_ptr<T>& obj)
 		{
-			//We do not require positive i. Casting to size_t and capping at ctnr.size() will put negative i at the end.
-			// (now, if ctnr.size() > int max we have a problem)
-			//assert(i >= 0);
+			assert(i >= 0);
 
 			if (obj) {
 				i = std::min((size_t)i, m_ctnr.size());
