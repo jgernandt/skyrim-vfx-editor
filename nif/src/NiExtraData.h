@@ -21,30 +21,33 @@
 
 namespace nif
 {
-	class NiExtraData : public NiObject
+	struct NiExtraData : NiObject
 	{
-	public:
-		using native_type = native::NiExtraData;
-
-		NiExtraData(native_type* obj);
-		virtual ~NiExtraData() = default;
-
-		native_type* nativePtr() const;
-
 		Property<std::string> name;
 	};
+	template<> struct type_map<Niflib::NiExtraData> { using type = NiExtraData; };
+	template<> struct type_map<NiExtraData> { using type = Niflib::NiExtraData; };
 
-	class NiStringExtraData : public NiExtraData
+	template<> class NiSyncer<NiExtraData> : public NiSyncer<NiObject>
 	{
 	public:
-		using native_type = native::NiStringExtraData;
+		virtual ~NiSyncer() = default;
+		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
+	};
 
-		NiStringExtraData();
-		NiStringExtraData(native_type* obj);
-		virtual ~NiStringExtraData() = default;
-
-		native_type* nativePtr() const;
-
+	struct NiStringExtraData : NiExtraData
+	{
 		Property<std::string> value;
+	};
+	template<> struct type_map<Niflib::NiStringExtraData> { using type = NiStringExtraData; };
+	template<> struct type_map<NiStringExtraData> { using type = Niflib::NiStringExtraData; };
+
+	template<> class NiSyncer<NiStringExtraData> : public NiSyncer<NiExtraData>
+	{
+	public:
+		virtual ~NiSyncer() = default;
+		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
 	};
 }

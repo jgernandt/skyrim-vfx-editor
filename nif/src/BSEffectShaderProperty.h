@@ -21,110 +21,40 @@
 
 namespace nif
 {
-	//Really just a Set, but intended for int or enum types
-	template<typename T>
-	class FlagSet
-	{
-	public:
-		virtual ~FlagSet() = default;
-
-		virtual void set(T, bool) = 0;
-		virtual bool isSet(T) const = 0;
-	};
-
-	enum class ShaderFlag1 : unsigned int
+	enum class ShaderFlag1 : std::uint_fast32_t
 	{
 		PALETTE_COLOUR	= 0x00000010,
 		PALETTE_ALPHA	= 0x00000020,
 		ZBUFFER_TEST	= 0x80000000,
 	};
 
-	enum class ShaderFlag2 : unsigned int
+	enum class ShaderFlag2 : std::uint_fast32_t
 	{
 		DOUBLE_SIDED	= 0x00000010,
 		VERTEX_COLOUR	= 0x00000020,
 	};
 
-	class NiAlphaProperty : public NiObjectNET
+	struct NiProperty : NiObjectNET {};
+	template<> struct type_map<Niflib::NiProperty> { using type = NiProperty; };
+	template<> struct type_map<NiProperty> { using type = Niflib::NiProperty; };
+
+	struct NiAlphaProperty : NiProperty
 	{
-	public:
-		using native_type = native::NiAlphaProperty;
-
-	protected:
-		friend class File;
-		NiAlphaProperty();
-		NiAlphaProperty(native_type* obj);
-
-	public:
-		virtual ~NiAlphaProperty() = default;
-
-		native_type& getNative() const;
-
-		Property<unsigned short>& flags() { return m_flags; }
-
-	private:
-		PropertyFcn<unsigned short, NiAlphaProperty> m_flags;//should be a FlagSet<unsigned short>, but I can't be bothered right now
+		Property<std::uint_fast16_t> flags;
+		Property<std::uint_fast8_t> threshold;
 	};
+	template<> struct type_map<Niflib::NiAlphaProperty> { using type = NiAlphaProperty; };
+	template<> struct type_map<NiAlphaProperty> { using type = Niflib::NiAlphaProperty; };
 
-	class BSEffectShaderProperty : public NiObjectNET
+	struct BSEffectShaderProperty : NiProperty
 	{
-	public:
-		using native_type = native::BSEffectShaderProperty;
-
-	protected:
-		friend class File;
-		BSEffectShaderProperty();
-		BSEffectShaderProperty(native_type* obj);
-
-	public:
-		virtual ~BSEffectShaderProperty() = default;
-
-		native_type& getNative() const;
-
-		Property<ColRGBA>& emissiveCol() { return m_emissiveCol; }
-		Property<float>& emissiveMult() { return m_emissiveMult; }
-		Property<std::string>& sourceTex() { return m_sourceTex; }
-		Property<std::string>& greyscaleTex() { return m_greyscaleTex; }
-		FlagSet<ShaderFlag1>& shaderFlags1() { return m_shaderFlags1; }
-		FlagSet<ShaderFlag2>& shaderFlags2() { return m_shaderFlags2; }
-
-	private:
-		PropertyFcn<ColRGBA, BSEffectShaderProperty, native::ColRGBA> m_emissiveCol;
-		PropertyFcn<float, BSEffectShaderProperty> m_emissiveMult;
-		PropertyFcn<std::string, BSEffectShaderProperty> m_sourceTex;
-		PropertyFcn<std::string, BSEffectShaderProperty> m_greyscaleTex;
-
-		struct ShaderFlag1Set : FlagSet<ShaderFlag1>
-		{
-			ShaderFlag1Set(BSEffectShaderProperty& super) : m_super{ super } {}
-
-			virtual void set(ShaderFlag1 flag, bool on) override;
-			virtual bool isSet(ShaderFlag1 flag) const override;
-
-			BSEffectShaderProperty& m_super;
-
-		} m_shaderFlags1;
-
-		struct ShaderFlag2Set : FlagSet<ShaderFlag2>
-		{
-			ShaderFlag2Set(BSEffectShaderProperty& super) : m_super{ super } {}
-
-			virtual void set(ShaderFlag2 flag, bool on) override;
-			virtual bool isSet(ShaderFlag2 flag) const override;
-
-			BSEffectShaderProperty& m_super;
-
-		} m_shaderFlags2;
+		Property<ColRGBA> emissiveCol;
+		Property<float> emissiveMult;
+		Property<std::string> sourceTex;
+		Property<std::string> greyscaleTex;
+		FlagSet<ShaderFlag1> shaderFlags1;
+		FlagSet<ShaderFlag2> shaderFlags2;
 	};
+	template<> struct type_map<Niflib::BSEffectShaderProperty> { using type = BSEffectShaderProperty; };
+	template<> struct type_map<BSEffectShaderProperty> { using type = Niflib::BSEffectShaderProperty; };
 }
-
-template<typename T>
-struct util::field_traits<nif::FlagSet<T>>
-{
-	using field_type = nif::FlagSet<T>;
-	using index_type = T;
-	using value_type = bool;
-
-	static bool get(const field_type& t, index_type i) { return t.isSet(i); }
-	static void set(field_type& t, index_type i, bool val) { t.set(i, val); }
-};

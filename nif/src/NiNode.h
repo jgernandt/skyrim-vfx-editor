@@ -22,49 +22,30 @@
 
 namespace nif
 {
-	class NiNode : public NiAVObject
+	struct NiNode : NiAVObject
+	{
+		Set<NiAVObject> children;
+	};
+	template<> struct type_map<Niflib::NiNode> { using type = NiNode; };
+	template<> struct type_map<NiNode> { using type = Niflib::NiNode; };
+
+	template<>
+	class NiSyncer<NiNode> : public NiSyncer<NiAVObject>
 	{
 	public:
-		using native_type = native::NiNode;
-
-	protected:
-		friend class File;
-		NiNode();
-		NiNode(native_type* obj);
-
-	public:
-		virtual ~NiNode() = default;
-
-		native_type& getNative() const;
-
-		Set<NiAVObject>& children() { return m_children; }
-
-	private:
-		struct NodeChildren : SetBase<NiAVObject, NiNode>
-		{
-			NodeChildren(NiNode& block) : SetBase<NiAVObject, NiNode>(block) {}
-
-			virtual void add(const NiAVObject& obj) override;
-			virtual void remove(const NiAVObject& obj) override;
-			virtual bool has(const NiAVObject& obj) const override;
-			virtual size_t size() const override;
-
-		} m_children;
+		virtual ~NiSyncer() = default;
+		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
 	};
 
-	class BSFadeNode : public NiNode
+	struct BSFadeNode : NiNode {};
+	template<> struct type_map<Niflib::BSFadeNode> { using type = BSFadeNode; };
+	template<> struct type_map<BSFadeNode> { using type = Niflib::BSFadeNode; };
+
+	template<>
+	class NiSyncer<BSFadeNode> : public NiSyncer<NiNode>
 	{
 	public:
-		using native_type = native::BSFadeNode;
-
-	protected:
-		friend class File;
-		BSFadeNode();
-		BSFadeNode(native_type* obj);
-
-	public:
-		virtual ~BSFadeNode() = default;
-
-		native_type& getNative() const;
+		virtual ~NiSyncer() = default;
 	};
 }

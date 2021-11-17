@@ -28,41 +28,20 @@ namespace nif
 		Property<scale_t> scale;
 	};
 
-	class NiAVObject : public NiObjectNET
+	struct NiAVObject : NiObjectNET
+	{
+		FlagSet<std::uint_fast32_t> flags;
+		Transform transform;
+	};
+	template<> struct type_map<Niflib::NiAVObject> { using type = NiAVObject; };
+	template<> struct type_map<NiAVObject> { using type = Niflib::NiAVObject; };
+
+	template<>
+	class NiSyncer<NiAVObject> : public NiSyncer<NiObjectNET>
 	{
 	public:
-		using native_type = native::NiAVObject;
-
-	protected:
-		friend class File;
-		NiAVObject(native_type* obj);
-
-	public:
-		virtual ~NiAVObject() = default;
-
-		native_type& getNative() const;
-
-		Transformable& transform();
-
-	private:
-		class AVObjectTransform final : public Transformable
-		{
-		public:
-			AVObjectTransform(NiAVObject& super);
-
-			virtual Property<translation_t>& translation() override;
-			virtual Property<rotation_t>& rotation() override;
-			virtual Property<scale_t>& scale() override;
-
-		private:
-			PropertyFcn<translation_t, NiAVObject, native::translation_t> m_T;
-			PropertyFcn<rotation_t, NiAVObject, native::rotation_t> m_R;
-			PropertyFcn<scale_t, NiAVObject> m_S;
-
-			NiAVObject& m_super;
-
-		};
-
-		AVObjectTransform m_transform;
+		virtual ~NiSyncer() = default;
+		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
 	};
 }

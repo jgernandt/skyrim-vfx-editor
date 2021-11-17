@@ -34,8 +34,7 @@ namespace nif
 	template<> struct type_map<Niflib::NiObjectNET> { using type = NiObjectNET; };
 	template<> struct type_map<NiObjectNET> { using type = Niflib::NiObjectNET; };
 
-	template<>
-	class NiSyncer<NiObjectNET> : public NiSyncer<NiObject>
+	template<> class NiSyncer<NiObjectNET> : public NiSyncer<NiObject>
 	{
 	public:
 		virtual ~NiSyncer() = default;

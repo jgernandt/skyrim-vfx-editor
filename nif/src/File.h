@@ -26,8 +26,6 @@
 
 namespace nif
 {
-	class NiNode;
-
 	class File
 	{
 	public:

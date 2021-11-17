@@ -17,5 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "NiObject.h"
-#include "NiObjectNET.h"
+#include "BSEffectShaderProperty.h"
+#include "NiNode.h"
+#include "NiParticleSystem.h"
+#include "NiPSysEmitter.h"

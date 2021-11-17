@@ -28,7 +28,7 @@ namespace Niflib
 
 nif::File::File(Version version) : m_version{ version }
 {
-	m_rootNode = make_ni<BSFadeNode>();
+	makeRoot(new Niflib::BSFadeNode());
 	if (m_rootNode)
 		m_rootNode->name.set("NewFile.nif");
 }

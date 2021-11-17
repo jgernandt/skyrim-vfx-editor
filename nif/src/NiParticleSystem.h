@@ -22,115 +22,45 @@
 
 namespace nif
 {
-	class NiPSysModifier;
+	struct NiPSysModifier;
 
-	class NiPSysData : public NiObject
+	struct NiPSysData : NiObject
+	{
+		Property<unsigned short> maxCount;
+		Property<std::vector<SubtextureOffset>> subtexOffsets;
+		Property<bool> hasColour;
+		Property<bool> hasRotationAngles;
+		Property<bool> hasRotationSpeeds;
+	};
+	template<> struct type_map<Niflib::NiPSysData> { using type = NiPSysData; };
+	template<> struct type_map<NiPSysData> { using type = Niflib::NiPSysData; };
+
+	template<>
+	class NiSyncer<NiPSysData> : public NiSyncer<NiObject>
 	{
 	public:
-		using native_type = native::NiPSysData;
-
-	protected:
-		friend class File;
-		NiPSysData();
-		NiPSysData(native_type* obj);
-
-	public:
-		virtual ~NiPSysData() = default;
-
-		native_type& getNative() const;
-
-		Property<unsigned short>& maxCount() { return m_maxCount; }
-		Property<std::vector<SubtextureOffset>>& subtexOffsets() { return m_subtexOffsets; }
-		Property<bool>& hasColour() { return m_hasColour; }
-		Property<bool>& hasRotationAngles() { return m_hasRotationAngles; }
-		Property<bool>& hasRotationSpeeds() { return m_hasRotationSpeeds; }
-
-	private:
-		PropertyFcn<unsigned short, NiPSysData> m_maxCount;
-
-		struct SubtexOffsets : PropertyBase<std::vector<SubtextureOffset>, NiPSysData>
-		{
-			SubtexOffsets(NiPSysData& block) : 
-				PropertyBase<std::vector<SubtextureOffset>, NiPSysData>(block) {}
-
-			virtual std::vector<SubtextureOffset> get() const override;
-			virtual void set(const std::vector<SubtextureOffset>& offsets) override;
-
-		} m_subtexOffsets;
-
-		PropertyFcn<bool, NiPSysData> m_hasColour;
-		PropertyFcn<bool, NiPSysData> m_hasRotationAngles;
-		PropertyFcn<bool, NiPSysData> m_hasRotationSpeeds;
+		virtual ~NiSyncer() = default;
+		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
 	};
 
-	class NiParticleSystem : public NiAVObject
+	struct NiParticleSystem : NiAVObject
+	{
+		Assignable	<NiPSysData>				data;
+		Sequence	<NiPSysModifier>			modifiers;
+		Assignable	<BSEffectShaderProperty>	shaderProperty;
+		Assignable	<NiAlphaProperty>			alphaProperty;
+		Property	<bool>						worldSpace;
+	};
+	template<> struct type_map<Niflib::NiParticleSystem> { using type = NiParticleSystem; };
+	template<> struct type_map<NiParticleSystem> { using type = Niflib::NiParticleSystem; };
+
+	template<>
+	class NiSyncer<NiParticleSystem> : public NiSyncer<NiAVObject>
 	{
 	public:
-		using native_type = native::NiParticleSystem;
-
-	protected:
-		friend class File;
-		NiParticleSystem();
-		NiParticleSystem(native_type* obj);
-
-	public:
-		virtual ~NiParticleSystem() = default;
-
-		native_type& getNative() const;
-
-		Assignable	<NiPSysData>&				data()				{ return m_data; }
-		Sequence	<NiPSysModifier>&			modifiers()			{ return m_modifiers; }
-		Assignable	<BSEffectShaderProperty>&	shaderProperty()	{ return m_shader; }
-		Assignable	<NiAlphaProperty>&			alphaProperty()		{ return m_alpha; }
-		Property	<bool>&						worldSpace()		{ return m_worldSpace; }
-
-	private:
-		struct Data final : AssignableBase<NiPSysData, NiParticleSystem>
-		{
-			Data(NiParticleSystem& super) : 
-				AssignableBase<NiPSysData, NiParticleSystem>{ super } {}
-
-			virtual void assign(NiPSysData* data) override;
-			virtual bool isAssigned(NiPSysData* data) const override;
-
-		};
-
-		struct Modifiers final : SequenceBase<NiPSysModifier, NiParticleSystem>
-		{
-			Modifiers(NiParticleSystem& block) : 
-				SequenceBase<NiPSysModifier, NiParticleSystem>(block) {}
-
-			virtual size_t insert(size_t pos, const NiPSysModifier& mod) override;
-			virtual size_t erase(size_t pos) override;
-			virtual size_t find(const NiPSysModifier& mod) const override;
-			virtual size_t size() const override;
-
-		};
-
-		struct ShaderProperty final : AssignableBase<BSEffectShaderProperty, NiParticleSystem>
-		{
-			ShaderProperty(NiParticleSystem& block) :
-				AssignableBase<BSEffectShaderProperty, NiParticleSystem>(block) {}
-
-			virtual void assign(BSEffectShaderProperty* shader) override;
-			virtual bool isAssigned(BSEffectShaderProperty* shader) const override;
-
-		};
-
-		struct AlphaProperty final : AssignableBase<NiAlphaProperty, NiParticleSystem>
-		{
-			AlphaProperty(NiParticleSystem& block) :
-				AssignableBase<NiAlphaProperty, NiParticleSystem>(block) {}
-
-			virtual void assign(NiAlphaProperty* alpha) override;
-			virtual bool isAssigned(NiAlphaProperty* alpha) const override;
-
-		};
-
-		Data m_data;
-		Modifiers m_modifiers;
-		ShaderProperty m_shader;
-		AlphaProperty m_alpha;
-		PropertyFcn<bool, NiParticleSystem> m_worldSpace;
+		virtual ~NiSyncer() = default;
+		virtual void syncRead(File& file, NiObject* object, Niflib::NiObject* native) const override;
+		virtual void syncWrite(File& file, NiObject* object, Niflib::NiObject* native) const override;
 	};
 }
