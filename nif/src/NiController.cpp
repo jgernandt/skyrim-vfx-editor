@@ -20,6 +20,16 @@
 #include "NiController.h"
 #include "File.h"
 
+const size_t nif::NiBoolData::TYPE = std::hash<std::string>{}("NiBoolData");
+const size_t nif::NiFloatData::TYPE = std::hash<std::string>{}("NiFloatData");
+const size_t nif::NiInterpolator::TYPE = std::hash<std::string>{}("NiInterpolator");
+const size_t nif::NiBoolInterpolator::TYPE = std::hash<std::string>{}("NiBoolInterpolator");
+const size_t nif::NiFloatInterpolator::TYPE = std::hash<std::string>{}("NiFloatInterpolator");
+const size_t nif::NiBlendInterpolator::TYPE = std::hash<std::string>{}("NiBlendInterpolator");
+const size_t nif::NiBlendBoolInterpolator::TYPE = std::hash<std::string>{}("NiBlendBoolInterpolator");
+const size_t nif::NiBlendFloatInterpolator::TYPE = std::hash<std::string>{}("NiBlendFloatInterpolator");
+const size_t nif::NiTimeController::TYPE = std::hash<std::string>{}("NiTimeController");
+const size_t nif::NiSingleInterpController::TYPE = std::hash<std::string>{}("NiSingleInterpController");
 
 void nif::NiSyncer<nif::NiBoolData>::syncRead(
 	File& file, NiBoolData* object, Niflib::NiBoolData* native)

@@ -20,6 +20,10 @@
 #include "BSEffectShaderProperty.h"
 #include "File.h"
 
+const size_t nif::NiProperty::TYPE = std::hash<std::string>{}("NiProperty");
+const size_t nif::NiAlphaProperty::TYPE = std::hash<std::string>{}("NiAlphaProperty");
+const size_t nif::BSEffectShaderProperty::TYPE = std::hash<std::string>{}("BSEffectShaderProperty");
+
 void nif::NiSyncer<nif::NiAlphaProperty>::syncRead(
 	File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native)
 {

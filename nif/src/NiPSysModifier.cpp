@@ -20,6 +20,17 @@
 #include "NiPSysModifier.h"
 #include "File.h"
 
+const size_t nif::NiPSysModifierCtlr::TYPE = std::hash<std::string>{}("NiPSysModifierCtlr");
+const size_t nif::NiPSysUpdateCtlr::TYPE = std::hash<std::string>{}("NiPSysUpdateCtlr");
+const size_t nif::NiPSysModifier::TYPE = std::hash<std::string>{}("NiPSysModifier");
+const size_t nif::NiPSysBoundUpdateModifier::TYPE = std::hash<std::string>{}("NiPSysBoundUpdateModifier");
+const size_t nif::NiPSysAgeDeathModifier::TYPE = std::hash<std::string>{}("NiPSysAgeDeathModifier");
+const size_t nif::NiPSysPositionModifier::TYPE = std::hash<std::string>{}("NiPSysPositionModifier");
+const size_t nif::NiPSysGravityModifier::TYPE = std::hash<std::string>{}("NiPSysGravityModifier");
+const size_t nif::NiPSysRotationModifier::TYPE = std::hash<std::string>{}("NiPSysRotationModifier");
+const size_t nif::BSPSysScaleModifier::TYPE = std::hash<std::string>{}("BSPSysScaleModifier");
+const size_t nif::BSPSysSimpleColorModifier::TYPE = std::hash<std::string>{}("BSPSysSimpleColorModifier");
+
 
 void nif::NiSyncer<nif::NiPSysModifierCtlr>::syncRead(
 	File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native)

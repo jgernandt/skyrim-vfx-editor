@@ -32,6 +32,9 @@ namespace nif
 		Property<bool> hasColour;
 		Property<bool> hasRotationAngles;
 		Property<bool> hasRotationSpeeds;
+
+		static const size_t TYPE;
+		virtual size_t type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysData> { using type = NiPSysData; };
 	template<> struct type_map<NiPSysData> { using type = Niflib::NiPSysData; };
@@ -43,6 +46,7 @@ namespace nif
 		void syncWrite(const File& file, NiPSysData* object, Niflib::NiPSysData* native);
 	};
 
+
 	struct NiParticleSystem : NiTraversable<NiParticleSystem, NiAVObject>
 	{
 		Assignable	<NiPSysData>				data;
@@ -50,6 +54,9 @@ namespace nif
 		Assignable	<BSEffectShaderProperty>	shaderProperty;
 		Assignable	<NiAlphaProperty>			alphaProperty;
 		Property	<bool>						worldSpace;
+
+		static const size_t TYPE;
+		virtual size_t type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiParticleSystem> { using type = NiParticleSystem; };
 	template<> struct type_map<NiParticleSystem> { using type = Niflib::NiParticleSystem; };

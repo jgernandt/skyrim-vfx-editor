@@ -36,9 +36,14 @@ void nif::File::registerTypes()
 
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiBoolData::TYPE)] = &make_NiObject<nif::NiBoolData>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiFloatData::TYPE)] = &make_NiObject<nif::NiFloatData>;
+
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiInterpolator::TYPE)] = &make_NiObject<nif::NiInterpolator>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiBoolInterpolator::TYPE)] = &make_NiObject<nif::NiBoolInterpolator>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiFloatInterpolator::TYPE)] = &make_NiObject<nif::NiFloatInterpolator>;
+
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiBlendInterpolator::TYPE)] = &make_NiObject<nif::NiBlendInterpolator>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiBlendBoolInterpolator::TYPE)] = &make_NiObject<nif::NiBlendBoolInterpolator>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiBlendFloatInterpolator::TYPE)] = &make_NiObject<nif::NiBlendFloatInterpolator>;
 
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiTimeController::TYPE)] = &make_NiObject<nif::NiTimeController>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiSingleInterpController::TYPE)] = &make_NiObject<nif::NiSingleInterpController>;
@@ -65,6 +70,7 @@ void nif::File::registerTypes()
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysCylinderEmitter::TYPE)] = &make_NiObject<nif::NiPSysCylinderEmitter>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysSphereEmitter::TYPE)] = &make_NiObject<nif::NiPSysSphereEmitter>;
 
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiProperty::TYPE)] = &make_NiObject<nif::NiProperty>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiAlphaProperty::TYPE)] = &make_NiObject<nif::NiAlphaProperty>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::BSEffectShaderProperty::TYPE)] = &make_NiObject<nif::BSEffectShaderProperty>;
 }

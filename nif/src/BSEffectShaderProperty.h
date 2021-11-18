@@ -70,7 +70,11 @@ namespace nif
 		NEVER,
 	};
 
-	struct NiProperty : NiTraversable<NiProperty, NiObjectNET> {};
+	struct NiProperty : NiTraversable<NiProperty, NiObjectNET> 
+	{
+		static const size_t TYPE;
+		virtual size_t type() const override { return TYPE; }
+	};
 	template<> struct type_map<Niflib::NiProperty> { using type = NiProperty; };
 	template<> struct type_map<NiProperty> { using type = Niflib::NiProperty; };
 	template<> class NiSyncer<NiProperty> : public NiSyncer<NiObjectNET> {};
@@ -84,6 +88,8 @@ namespace nif
 		Property<std::uint_fast8_t> threshold;
 		Property<bool> sorting;
 
+		static const size_t TYPE;
+		virtual size_t type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiAlphaProperty> { using type = NiAlphaProperty; };
 	template<> struct type_map<NiAlphaProperty> { using type = Niflib::NiAlphaProperty; };
@@ -103,6 +109,9 @@ namespace nif
 		Property<std::string> greyscaleTex;
 		FlagSet<ShaderFlag1> shaderFlags1;
 		FlagSet<ShaderFlag2> shaderFlags2;
+
+		static const size_t TYPE;
+		virtual size_t type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::BSEffectShaderProperty> { using type = BSEffectShaderProperty; };
 	template<> struct type_map<BSEffectShaderProperty> { using type = Niflib::BSEffectShaderProperty; };

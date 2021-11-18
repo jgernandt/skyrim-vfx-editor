@@ -73,6 +73,9 @@ namespace nif
 
 		using base_type = void;
 		virtual void receive(NiTraverser& t);
+
+		static const size_t TYPE;
+		virtual size_t type() const { return TYPE; }
 	};
 
 	template<> struct type_map<Niflib::NiObject> { using type = NiObject; };
@@ -83,6 +86,9 @@ namespace nif
 		Property<std::string> name;
 		Set<NiExtraData> extraData;
 		Sequence<NiTimeController> controllers;
+
+		static const size_t TYPE;
+		virtual size_t type() const override { return TYPE; }
 	};
 
 	template<> struct type_map<Niflib::NiObjectNET> { using type = NiObjectNET; };
@@ -108,6 +114,9 @@ namespace nif
 		//I can't be bothered to fix that right now. Will later.
 		FlagSet<std::uint_fast32_t> flags;
 		Transform transform;
+
+		static const size_t TYPE;
+		virtual size_t type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiAVObject> { using type = NiAVObject; };
 	template<> struct type_map<NiAVObject> { using type = Niflib::NiAVObject; };

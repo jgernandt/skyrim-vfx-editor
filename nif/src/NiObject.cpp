@@ -21,6 +21,10 @@
 #include "File.h"
 #include "Traverser.h"
 
+const size_t nif::NiObject::TYPE = std::hash<std::string>{}("NiObject");
+const size_t nif::NiObjectNET::TYPE = std::hash<std::string>{}("NiObjectNET");
+const size_t nif::NiAVObject::TYPE = std::hash<std::string>{}("NiAVObject");
+
 #ifdef _DEBUG
 int g_currentNiObjects = 0;
 #endif

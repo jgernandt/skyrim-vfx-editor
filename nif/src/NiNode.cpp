@@ -20,6 +20,9 @@
 #include "NiNode.h"
 #include "File.h"
 
+const size_t nif::NiNode::TYPE = std::hash<std::string>{}("NiNode");
+const size_t nif::BSFadeNode::TYPE = std::hash<std::string>{}("BSFadeNode");
+
 void nif::NiSyncer<nif::NiNode>::syncRead(File& file, NiNode* object, Niflib::NiNode* native)
 {
 	assert(object && native);

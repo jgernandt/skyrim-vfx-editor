@@ -21,6 +21,8 @@
 #include "NiPSysModifier.h"
 #include "File.h"
 
+const size_t nif::NiPSysData::TYPE = std::hash<std::string>{}("NiPSysData");
+const size_t nif::NiParticleSystem::TYPE = std::hash<std::string>{}("NiParticleSystem");
 
 void nif::NiSyncer<nif::NiPSysData>::syncRead(
 	File& file, NiPSysData* object, Niflib::NiPSysData* native)

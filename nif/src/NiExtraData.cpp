@@ -20,6 +20,9 @@
 #include "NiExtraData.h"
 #include "File.h"
 
+const size_t nif::NiExtraData::TYPE = std::hash<std::string>{}("NiExtraData");
+const size_t nif::NiStringExtraData::TYPE = std::hash<std::string>{}("NiStringExtraData");
+
 void nif::NiSyncer<nif::NiExtraData>::syncRead(
 	File& file, NiExtraData* object, Niflib::NiExtraData* native)
 {
