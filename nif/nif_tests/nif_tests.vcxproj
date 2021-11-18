@@ -162,17 +162,22 @@
   <ItemGroup>
     <ClCompile Include="CreationTests.cpp" />
     <ClCompile Include="DataFieldTests.cpp" />
+    <ClCompile Include="ObjectIndexTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SyncNiObjectNET.cpp" />
+    <ClCompile Include="SyncTestAVObject.cpp" />
+    <ClCompile Include="SyncTestNiNode.cpp" />
     <ClCompile Include="SyncTests.cpp" />
     <ClCompile Include="TraversalTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="SyncTestTraverser.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\math\math.vcxproj">
