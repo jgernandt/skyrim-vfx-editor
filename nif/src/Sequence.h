@@ -75,6 +75,33 @@ namespace nif
 		iterator begin() { return m_ctnr.begin(); }
 		iterator end() { return m_ctnr.end(); }
 
+		class reverse_iterator
+		{
+		public:
+			reverse_iterator(typename ctnr_type::reverse_iterator const& it) : m_it{ it } {}
+
+			T* operator*() noexcept { return m_it->get(); }
+			const T* operator*() const noexcept { return m_it->get(); }
+			T* operator->() noexcept { return m_it->get(); }
+			const T* operator->() const noexcept { return m_it->get(); }
+
+			reverse_iterator& operator++() noexcept { ++m_it; return *this; }
+			reverse_iterator operator++(int) noexcept
+			{
+				reverse_iterator tmp;
+				operator++();
+				return tmp;
+			}
+
+			friend bool operator==(const reverse_iterator& lhs, const reverse_iterator& rhs) noexcept { return lhs.m_it == rhs.m_it; }
+			friend bool operator!=(const reverse_iterator& lhs, const reverse_iterator& rhs) noexcept { return !(lhs == rhs); }
+
+		private:
+			typename ctnr_type::reverse_iterator m_it;
+		};
+		reverse_iterator rbegin() { return m_ctnr.rbegin(); }
+		reverse_iterator rend() { return m_ctnr.rend(); }
+
 		//TODO: use iterators instead of ints
 		int insert(int i, const std::shared_ptr<T>& obj)
 		{
