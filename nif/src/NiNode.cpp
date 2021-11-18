@@ -23,20 +23,21 @@
 const size_t nif::NiNode::TYPE = std::hash<std::string>{}("NiNode");
 const size_t nif::BSFadeNode::TYPE = std::hash<std::string>{}("BSFadeNode");
 
-void nif::NiSyncer<nif::NiNode>::syncRead(File& file, NiNode* object, Niflib::NiNode* native)
+void nif::ReadSyncer<nif::NiNode>::operator()(NiNode& object, Niflib::NiNode* native, File& file)
 {
-	assert(object && native);
+	assert(native);
 
-	object->children.clear();
+	object.children.clear();
 	auto&& children = native->GetChildren();
 	for (auto&& child : children)
-		object->children.add(file.get<NiAVObject>(child));
+		object.children.add(file.get<NiAVObject>(child));
 }
-void nif::NiSyncer<nif::NiNode>::syncWrite(const File& file, NiNode* object, Niflib::NiNode* native)
+
+void nif::WriteSyncer<nif::NiNode>::operator()(NiNode& object, Niflib::NiNode* native, const File& file)
 {
-	assert(object && native);
+	assert(native);
 
 	native->ClearChildren();
-	for (auto&& child : object->children)
+	for (auto&& child : object.children)
 		native->AddChild(file.get<Niflib::NiAVObject>(child));
 }

@@ -28,12 +28,11 @@
 #include "Set.h"
 #include "Vector.h"
 
+#include "Traversal.h"
+
 namespace nif
 {
 	class File;
-	class NiTraverser;
-	struct NiExtraData;
-	struct NiTimeController;
 
 	//For the static mapping between Niflib types and our types
 	template<typename T>
@@ -43,24 +42,27 @@ namespace nif
 		//using type = NiObject;
 	};
 
-	//Transfers state between our model and Niflib (specialise and implement).
-	//(we don't really need this to be a template, but doesn't hurt us either)
+	//Forwards a horizontal traverser to subnodes
 	template<typename T>
-	class NiSyncer
+	struct Forwarder : VerticalTraverser<T, Forwarder>
 	{
-	public:
-		void syncRead(File& file, T* object, typename type_map<T>::type* native) {}
-		void syncWrite(const File& file, T* object, typename type_map<T>::type* native) {}
+		void operator() (T& object, NiTraverser& traverser) {}
 	};
 
-	template<typename T, typename Base>
-	struct NiTraversable : Base
+	//Transfers state between our model and Niflib (specialise and implement).
+	template<typename T>
+	struct ReadSyncer : VerticalTraverser<T, ReadSyncer>
 	{
-		using base_type = Base;
-		virtual void receive(NiTraverser& t) override;
+		void operator() (T& object, typename type_map<T>::type* native, File& file) {}
+	};
+	template<typename T>
+	struct WriteSyncer : VerticalTraverser<T, WriteSyncer>
+	{
+		void operator() (T& object, typename type_map<T>::type* native, const File& file) {}
 	};
 
-	struct NiObject
+
+	struct NiObject : NiTraversable<NiObject, void>
 	{
 		NiObject();
 		NiObject(const NiObject&) = delete;
@@ -71,15 +73,29 @@ namespace nif
 		NiObject& operator=(const NiObject&) = delete;
 		NiObject& operator=(NiObject&&) = delete;
 
-		using base_type = void;
-		virtual void receive(NiTraverser& t);
-
 		static const size_t TYPE;
 		virtual size_t type() const { return TYPE; }
 	};
 
 	template<> struct type_map<Niflib::NiObject> { using type = NiObject; };
 	template<> struct type_map<NiObject> { using type = Niflib::NiObject; };
+
+	//We specialise this instead of requiring specialisations for each TraverserType<void>
+	template<template<typename> typename TraverserType>
+	struct VerticalTraverser<NiObject, TraverserType>
+	{
+		template<typename... Args>
+		void down(NiObject& object, Args&&... args)
+		{
+			static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
+		}
+		template<typename... Args>
+		void up(NiObject& object, Args&&... args)
+		{
+			static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
+		}
+	};
+
 
 	struct NiObjectNET : NiTraversable<NiObjectNET, NiObject>
 	{
@@ -94,12 +110,15 @@ namespace nif
 	template<> struct type_map<Niflib::NiObjectNET> { using type = NiObjectNET; };
 	template<> struct type_map<NiObjectNET> { using type = Niflib::NiObjectNET; };
 
-	template<> class NiSyncer<NiObjectNET>
+	template<> struct ReadSyncer<NiObjectNET> : VerticalTraverser<NiObjectNET, ReadSyncer>
 	{
-	public:
-		void syncRead(File& file, NiObjectNET* object, Niflib::NiObjectNET* native);
-		void syncWrite(const File& file, NiObjectNET* object, Niflib::NiObjectNET* native);
+		void operator() (NiObjectNET& object, Niflib::NiObjectNET* native, File& file);
 	};
+	template<> struct WriteSyncer<NiObjectNET> : VerticalTraverser<NiObjectNET, WriteSyncer>
+	{
+		void operator() (NiObjectNET& object, Niflib::NiObjectNET* native, const File& file);
+	};
+
 
 	struct Transform
 	{
@@ -121,10 +140,12 @@ namespace nif
 	template<> struct type_map<Niflib::NiAVObject> { using type = NiAVObject; };
 	template<> struct type_map<NiAVObject> { using type = Niflib::NiAVObject; };
 
-	template<> class NiSyncer<NiAVObject>
+	template<> struct ReadSyncer<NiAVObject> : VerticalTraverser<NiAVObject, ReadSyncer>
 	{
-	public:
-		void syncRead(File& file, NiAVObject* object, Niflib::NiAVObject* native);
-		void syncWrite(const File& file, NiAVObject* object, Niflib::NiAVObject* native);
+		void operator() (NiAVObject& object, Niflib::NiAVObject* native, File& file);
+	};
+	template<> struct WriteSyncer<NiAVObject> : VerticalTraverser<NiAVObject, WriteSyncer>
+	{
+		void operator() (NiAVObject& object, Niflib::NiAVObject* native, const File& file);
 	};
 }

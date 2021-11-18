@@ -67,6 +67,17 @@ namespace nif
 		CONSTANT		= 5,
 	};
 
+	//Forward declare all object types
+	struct NiObject;
+	struct NiObjectNET;
+	struct NiAVObject;
+	struct NiNode;
+	struct BSFadeNode;
+
+	struct NiExtraData;
+	struct NiTimeController;
+	//etc.
+
 	template<typename T>
 	struct NifConverter
 	{

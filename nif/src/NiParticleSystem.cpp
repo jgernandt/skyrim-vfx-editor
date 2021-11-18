@@ -24,27 +24,6 @@
 const size_t nif::NiPSysData::TYPE = std::hash<std::string>{}("NiPSysData");
 const size_t nif::NiParticleSystem::TYPE = std::hash<std::string>{}("NiParticleSystem");
 
-void nif::NiSyncer<nif::NiPSysData>::syncRead(
-	File& file, NiPSysData* object, Niflib::NiPSysData* native)
-{
-	//TODO
-}
-void nif::NiSyncer<nif::NiPSysData>::syncWrite(
-	const File& file, NiPSysData* object, Niflib::NiPSysData* native)
-{
-	//TODO
-}
-
-void nif::NiSyncer<nif::NiParticleSystem>::syncRead(
-	File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native)
-{
-	//TODO
-}
-void nif::NiSyncer<nif::NiParticleSystem>::syncWrite(
-	const File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native)
-{
-	//TODO
-}
 
 /*nif::NiPSysData::NiPSysData() : NiPSysData(new Niflib::NiPSysData) {}
 nif::NiPSysData::NiPSysData(native_type* obj) :

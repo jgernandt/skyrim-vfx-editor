@@ -22,48 +22,48 @@
 
 void nif::NiReadSyncer::traverse(NiObjectNET& obj)
 {
+	ReadSyncer<NiObjectNET>{}.down(obj, m_file.get<Niflib::NiObjectNET>(&obj), m_file);
 	NiTraverser::traverse(obj);
-	NiSyncer<NiObjectNET>{}.syncRead(m_file, &obj, m_file.get<Niflib::NiObjectNET>(&obj));
 }
 
 void nif::NiReadSyncer::traverse(NiAVObject& obj)
 {
+	ReadSyncer<NiAVObject>{}.down(obj, m_file.get<Niflib::NiAVObject>(&obj), m_file);
 	NiTraverser::traverse(obj);
-	NiSyncer<NiAVObject>{}.syncRead(m_file, &obj, m_file.get<Niflib::NiAVObject>(&obj));
 }
 
 void nif::NiReadSyncer::traverse(NiNode& obj)
 {
+	ReadSyncer<NiNode>{}.down(obj, m_file.get<Niflib::NiNode>(&obj), m_file);
 	NiTraverser::traverse(obj);
-	NiSyncer<NiNode>{}.syncRead(m_file, &obj, m_file.get<Niflib::NiNode>(&obj));
 }
 
 void nif::NiReadSyncer::traverse(BSFadeNode& obj)
 {
+	ReadSyncer<BSFadeNode>{}.down(obj, m_file.get<Niflib::BSFadeNode>(&obj), m_file);
 	NiTraverser::traverse(obj);
-	NiSyncer<BSFadeNode>{}.syncRead(m_file, &obj, m_file.get<Niflib::BSFadeNode>(&obj));
 }
 
 void nif::NiWriteSyncer::traverse(NiObjectNET& obj)
 {
+	WriteSyncer<NiObjectNET>{}.down(obj, m_file.get<Niflib::NiObjectNET>(&obj), m_file);
 	NiTraverser::traverse(obj);
-	NiSyncer<NiObjectNET>{}.syncWrite(m_file, &obj, m_file.get<Niflib::NiObjectNET>(&obj));
 }
 
 void nif::NiWriteSyncer::traverse(NiAVObject& obj)
 {
+	WriteSyncer<NiAVObject>{}.down(obj, m_file.get<Niflib::NiAVObject>(&obj), m_file);
 	NiTraverser::traverse(obj);
-	NiSyncer<NiAVObject>{}.syncWrite(m_file, &obj, m_file.get<Niflib::NiAVObject>(&obj));
 }
 
 void nif::NiWriteSyncer::traverse(NiNode& obj)
 {
+	WriteSyncer<NiNode>{}.down(obj, m_file.get<Niflib::NiNode>(&obj), m_file);
 	NiTraverser::traverse(obj);
-	NiSyncer<NiNode>{}.syncWrite(m_file, &obj, m_file.get<Niflib::NiNode>(&obj));
 }
 
 void nif::NiWriteSyncer::traverse(BSFadeNode& obj)
 {
+	WriteSyncer<BSFadeNode>{}.down(obj, m_file.get<Niflib::BSFadeNode>(&obj), m_file);
 	NiTraverser::traverse(obj);
-	NiSyncer<BSFadeNode>{}.syncWrite(m_file, &obj, m_file.get<Niflib::BSFadeNode>(&obj));
 }

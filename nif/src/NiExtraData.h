@@ -31,13 +31,6 @@ namespace nif
 	template<> struct type_map<Niflib::NiExtraData> { using type = NiExtraData; };
 	template<> struct type_map<NiExtraData> { using type = Niflib::NiExtraData; };
 
-	template<> class NiSyncer<NiExtraData> : public NiSyncer<NiObject>
-	{
-	public:
-		void syncRead(File& file, NiExtraData* object, Niflib::NiExtraData* native);
-		void syncWrite(const File& file, NiExtraData* object, Niflib::NiExtraData* native);
-	};
-
 	struct NiStringExtraData : NiTraversable<NiStringExtraData, NiExtraData>
 	{
 		Property<std::string> value;
@@ -48,10 +41,4 @@ namespace nif
 	template<> struct type_map<Niflib::NiStringExtraData> { using type = NiStringExtraData; };
 	template<> struct type_map<NiStringExtraData> { using type = Niflib::NiStringExtraData; };
 
-	template<> class NiSyncer<NiStringExtraData> : public NiSyncer<NiExtraData>
-	{
-	public:
-		void syncRead(File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native);
-		void syncWrite(const File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native);
-	};
 }

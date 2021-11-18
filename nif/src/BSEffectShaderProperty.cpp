@@ -24,43 +24,25 @@ const size_t nif::NiProperty::TYPE = std::hash<std::string>{}("NiProperty");
 const size_t nif::NiAlphaProperty::TYPE = std::hash<std::string>{}("NiAlphaProperty");
 const size_t nif::BSEffectShaderProperty::TYPE = std::hash<std::string>{}("BSEffectShaderProperty");
 
-void nif::NiSyncer<nif::NiAlphaProperty>::syncRead(
-	File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native)
+void nif::ReadSyncer<nif::NiAlphaProperty>::operator() (NiAlphaProperty& object, Niflib::NiAlphaProperty* native, File& file)
 {
-	NiSyncer<NiProperty>::syncRead(file, object, native);
-
-	assert(object && native);
-	object->mode.set(static_cast<AlphaMode>(native->GetFlags() & 0x201));
-	object->srcFcn.set(static_cast<BlendFunction>(native->GetSourceBlendFunc()));
-	object->dstFcn.set(static_cast<BlendFunction>(native->GetDestBlendFunc()));
-	object->testFcn.set(static_cast<TestFunction>(native->GetTestFunc()));
-	object->threshold.set(native->GetTestThreshold());
-	object->sorting.set(!native->GetTriangleSortMode());
+	assert(native);
+	object.mode.set(static_cast<AlphaMode>(native->GetFlags() & 0x201));
+	object.srcFcn.set(static_cast<BlendFunction>(native->GetSourceBlendFunc()));
+	object.dstFcn.set(static_cast<BlendFunction>(native->GetDestBlendFunc()));
+	object.testFcn.set(static_cast<TestFunction>(native->GetTestFunc()));
+	object.threshold.set(native->GetTestThreshold());
+	object.sorting.set(!native->GetTriangleSortMode());
 }
 
-void nif::NiSyncer<nif::NiAlphaProperty>::syncWrite(
-	const File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native)
+void nif::WriteSyncer<nif::NiAlphaProperty>::operator() (NiAlphaProperty& object, Niflib::NiAlphaProperty* native, const File& file)
 {
-	NiSyncer<NiProperty>::syncWrite(file, object, native);
-
-	assert(object && native);
-	native->SetFlags(static_cast<unsigned short>(object->mode.get()));
-	native->SetSourceBlendFunc(static_cast<Niflib::NiAlphaProperty::BlendFunc>(object->srcFcn.get()));
-	native->SetDestBlendFunc(static_cast<Niflib::NiAlphaProperty::BlendFunc>(object->dstFcn.get()));
-	native->SetTestFunc(static_cast<Niflib::NiAlphaProperty::TestFunc>(object->testFcn.get()));
-	native->SetTestThreshold(object->threshold.get());
-	native->SetTriangleSortMode(!object->sorting.get());
+	assert(native);
+	native->SetFlags(static_cast<unsigned short>(object.mode.get()));
+	native->SetSourceBlendFunc(static_cast<Niflib::NiAlphaProperty::BlendFunc>(object.srcFcn.get()));
+	native->SetDestBlendFunc(static_cast<Niflib::NiAlphaProperty::BlendFunc>(object.dstFcn.get()));
+	native->SetTestFunc(static_cast<Niflib::NiAlphaProperty::TestFunc>(object.testFcn.get()));
+	native->SetTestThreshold(object.threshold.get());
+	native->SetTriangleSortMode(!object.sorting.get());
 }
 
-
-void nif::NiSyncer<nif::BSEffectShaderProperty>::syncRead(
-	File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native)
-{
-	//TODO
-}
-
-void nif::NiSyncer<nif::BSEffectShaderProperty>::syncWrite(
-	const File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native)
-{
-	//TODO
-}

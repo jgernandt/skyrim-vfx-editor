@@ -45,13 +45,6 @@ namespace nif
 	template<> struct type_map<Niflib::NiBoolData> { using type = NiBoolData; };
 	template<> struct type_map<NiBoolData> { using type = Niflib::NiBoolData; };
 
-	template<> class NiSyncer<NiBoolData> : public NiSyncer<NiObject>
-	{
-	public:
-		void syncRead(File& file, NiBoolData* object, Niflib::NiBoolData* native);
-		void syncWrite(const File& file, NiBoolData* object, Niflib::NiBoolData* native);
-	};
-
 
 	struct NiFloatData : NiTraversable<NiFloatData, NiObject>
 	{
@@ -64,13 +57,6 @@ namespace nif
 	template<> struct type_map<Niflib::NiFloatData> { using type = NiFloatData; };
 	template<> struct type_map<NiFloatData> { using type = Niflib::NiFloatData; };
 
-	template<> class NiSyncer<NiFloatData> : public NiSyncer<NiObject>
-	{
-	public:
-		void syncRead(File& file, NiFloatData* object, Niflib::NiFloatData* native);
-		void syncWrite(const File& file, NiFloatData* object, Niflib::NiFloatData* native);
-	};
-
 
 	//Interpolators
 	struct NiInterpolator : NiTraversable<NiInterpolator, NiObject> 
@@ -80,7 +66,6 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiInterpolator> { using type = NiInterpolator; };
 	template<> struct type_map<NiInterpolator> { using type = Niflib::NiInterpolator; };
-	template<> class NiSyncer<NiInterpolator> : public NiSyncer<NiObject> {};
 
 
 	struct NiBoolInterpolator : NiTraversable<NiBoolInterpolator, NiInterpolator>
@@ -94,13 +79,6 @@ namespace nif
 	template<> struct type_map<Niflib::NiBoolInterpolator> { using type = NiBoolInterpolator; };
 	template<> struct type_map<NiBoolInterpolator> { using type = Niflib::NiBoolInterpolator; };
 
-	template<> class NiSyncer<NiBoolInterpolator> : public NiSyncer<NiInterpolator>
-	{
-	public:
-		void syncRead(File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native);
-		void syncWrite(const File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native);
-	};
-
 
 	struct NiFloatInterpolator : NiTraversable<NiFloatInterpolator, NiInterpolator>
 	{
@@ -113,13 +91,6 @@ namespace nif
 	template<> struct type_map<Niflib::NiFloatInterpolator> { using type = NiFloatInterpolator; };
 	template<> struct type_map<NiFloatInterpolator> { using type = Niflib::NiFloatInterpolator; };
 
-	template<> class NiSyncer<NiFloatInterpolator> : public NiSyncer<NiInterpolator>
-	{
-	public:
-		void syncRead(File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native);
-		void syncWrite(const File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native);
-	};
-
 
 	struct NiBlendInterpolator : NiTraversable<NiBlendInterpolator, NiInterpolator> 
 	{
@@ -128,7 +99,6 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiBlendInterpolator> { using type = NiBlendInterpolator; };
 	template<> struct type_map<NiBlendInterpolator> { using type = Niflib::NiBlendInterpolator; };
-	template<> class NiSyncer<NiBlendInterpolator> : public NiSyncer<NiInterpolator> {};
 
 
 	struct NiBlendBoolInterpolator : NiTraversable<NiBlendBoolInterpolator, NiBlendInterpolator> 
@@ -138,7 +108,6 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiBlendBoolInterpolator> { using type = NiBlendBoolInterpolator; };
 	template<> struct type_map<NiBlendBoolInterpolator> { using type = Niflib::NiBlendBoolInterpolator; };
-	template<> class NiSyncer<NiBlendBoolInterpolator> : public NiSyncer<NiBlendInterpolator> {};
 
 
 	struct NiBlendFloatInterpolator : NiTraversable<NiBlendFloatInterpolator, NiBlendInterpolator> 
@@ -148,7 +117,6 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiBlendFloatInterpolator> { using type = NiBlendFloatInterpolator; };
 	template<> struct type_map<NiBlendFloatInterpolator> { using type = Niflib::NiBlendFloatInterpolator; };
-	template<> class NiSyncer<NiBlendFloatInterpolator> : public NiSyncer<NiBlendInterpolator> {};
 	
 
 	//Controllers
@@ -170,13 +138,6 @@ namespace nif
 	template<> struct type_map<Niflib::NiTimeController> { using type = NiTimeController; };
 	template<> struct type_map<NiTimeController> { using type = Niflib::NiTimeController; };
 
-	template<> class NiSyncer<NiTimeController> : public NiSyncer<NiObject>
-	{
-	public:
-		void syncRead(File& file, NiTimeController* object, Niflib::NiTimeController* native);
-		void syncWrite(const File& file, NiTimeController* object, Niflib::NiTimeController* native);
-	};
-
 
 	struct NiSingleInterpController : NiTraversable<NiSingleInterpController, NiTimeController>
 	{
@@ -188,10 +149,4 @@ namespace nif
 	template<> struct type_map<Niflib::NiSingleInterpController> { using type = NiSingleInterpController; };
 	template<> struct type_map<NiSingleInterpController> { using type = Niflib::NiSingleInterpController; };
 
-	template<> class NiSyncer<NiSingleInterpController> : public NiSyncer<NiTimeController>
-	{
-	public:
-		void syncRead(File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native);
-		void syncWrite(const File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native);
-	};
 }

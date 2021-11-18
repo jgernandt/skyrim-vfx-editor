@@ -30,12 +30,13 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiNode> { using type = NiNode; };
 	template<> struct type_map<NiNode> { using type = Niflib::NiNode; };
-
-	template<> class NiSyncer<NiNode> : public NiSyncer<NiAVObject>
+	template<> struct ReadSyncer<NiNode> : VerticalTraverser<NiNode, ReadSyncer>
 	{
-	public:
-		void syncRead(File& file, NiNode* object, Niflib::NiNode* native);
-		void syncWrite(const File& file, NiNode* object, Niflib::NiNode* native);
+		void operator() (NiNode& object, Niflib::NiNode* native, File& file);
+	};
+	template<> struct WriteSyncer<NiNode> : VerticalTraverser<NiNode, WriteSyncer>
+	{
+		void operator() (NiNode& object, Niflib::NiNode* native, const File& file);
 	};
 
 
@@ -46,5 +47,4 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::BSFadeNode> { using type = BSFadeNode; };
 	template<> struct type_map<BSFadeNode> { using type = Niflib::BSFadeNode; };
-	template<> class NiSyncer<BSFadeNode> : public NiSyncer<NiNode> {};
 }

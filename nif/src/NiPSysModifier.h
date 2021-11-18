@@ -34,13 +34,6 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysModifierCtlr> { using type = NiPSysModifierCtlr; };
 	template<> struct type_map<NiPSysModifierCtlr> { using type = Niflib::NiPSysModifierCtlr; };
 
-	template<> class NiSyncer<NiPSysModifierCtlr> : public NiSyncer<NiSingleInterpController>
-	{
-	public:
-		void syncRead(File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native);
-		void syncWrite(const File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native);
-	};
-
 
 	struct NiPSysUpdateCtlr : NiTraversable<NiPSysUpdateCtlr, NiTimeController> 
 	{
@@ -49,7 +42,6 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiPSysUpdateCtlr> { using type = NiPSysUpdateCtlr; };
 	template<> struct type_map<NiPSysUpdateCtlr> { using type = Niflib::NiPSysUpdateCtlr; };
-	template<> class NiSyncer<NiPSysUpdateCtlr> : public NiSyncer<NiTimeController> {};
 
 
 	struct NiPSysModifier : NiTraversable<NiPSysModifier, NiObject>
@@ -65,13 +57,6 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysModifier> { using type = NiPSysModifier; };
 	template<> struct type_map<NiPSysModifier> { using type = Niflib::NiPSysModifier; };
 
-	template<> class NiSyncer<NiPSysModifier> : public NiSyncer<NiObject>
-	{
-	public:
-		void syncRead(File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native);
-		void syncWrite(const File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native);
-	};
-
 
 	struct NiPSysBoundUpdateModifier : NiTraversable<NiPSysBoundUpdateModifier, NiPSysModifier> 
 	{
@@ -80,7 +65,6 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiPSysBoundUpdateModifier> { using type = NiPSysBoundUpdateModifier; };
 	template<> struct type_map<NiPSysBoundUpdateModifier> { using type = Niflib::NiPSysBoundUpdateModifier; };
-	template<> class NiSyncer<NiPSysBoundUpdateModifier> : public NiSyncer<NiPSysModifier> {};
 
 
 	struct NiPSysAgeDeathModifier : NiTraversable<NiPSysAgeDeathModifier, NiPSysModifier> 
@@ -90,7 +74,6 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiPSysAgeDeathModifier> { using type = NiPSysAgeDeathModifier; };
 	template<> struct type_map<NiPSysAgeDeathModifier> { using type = Niflib::NiPSysAgeDeathModifier; };
-	template<> class NiSyncer<NiPSysAgeDeathModifier> : public NiSyncer<NiPSysModifier> {};
 
 
 	struct NiPSysPositionModifier : NiTraversable<NiPSysPositionModifier, NiPSysModifier> 
@@ -100,7 +83,6 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiPSysPositionModifier> { using type = NiPSysPositionModifier; };
 	template<> struct type_map<NiPSysPositionModifier> { using type = Niflib::NiPSysPositionModifier; };
-	template<> class NiSyncer<NiPSysPositionModifier> : public NiSyncer<NiPSysModifier> {};
 
 
 	struct NiPSysGravityModifier : NiTraversable<NiPSysGravityModifier, NiPSysModifier>
@@ -120,13 +102,6 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysGravityModifier> { using type = NiPSysGravityModifier; };
 	template<> struct type_map<NiPSysGravityModifier> { using type = Niflib::NiPSysGravityModifier; };
 
-	template<> class NiSyncer<NiPSysGravityModifier> : public NiSyncer<NiObject>
-	{
-	public:
-		void syncRead(File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native);
-		void syncWrite(const File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native);
-	};
-
 
 	struct NiPSysRotationModifier : NiTraversable<NiPSysRotationModifier, NiPSysModifier>
 	{
@@ -142,13 +117,6 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysRotationModifier> { using type = NiPSysRotationModifier; };
 	template<> struct type_map<NiPSysRotationModifier> { using type = Niflib::NiPSysRotationModifier; };
 
-	template<> class NiSyncer<NiPSysRotationModifier> : public NiSyncer<NiPSysModifier>
-	{
-	public:
-		void syncRead(File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native);
-		void syncWrite(const File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native);
-	};
-
 
 	struct BSPSysScaleModifier : NiTraversable<BSPSysScaleModifier, NiPSysModifier>
 	{
@@ -159,13 +127,6 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::BSPSysScaleModifier> { using type = BSPSysScaleModifier; };
 	template<> struct type_map<BSPSysScaleModifier> { using type = Niflib::BSPSysScaleModifier; };
-
-	template<> class NiSyncer<BSPSysScaleModifier> : public NiSyncer<NiPSysModifier>
-	{
-	public:
-		void syncRead(File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native);
-		void syncWrite(const File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native);
-	};
 
 
 	struct BSPSysSimpleColorModifier : NiTraversable<BSPSysSimpleColorModifier, NiPSysModifier>
@@ -205,10 +166,4 @@ namespace nif
 	template<> struct type_map<Niflib::BSPSysSimpleColorModifier> { using type = BSPSysSimpleColorModifier; };
 	template<> struct type_map<BSPSysSimpleColorModifier> { using type = Niflib::BSPSysSimpleColorModifier; };
 
-	template<> class NiSyncer<BSPSysSimpleColorModifier> : public NiSyncer<NiPSysModifier>
-	{
-	public:
-		void syncRead(File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native);
-		void syncWrite(const File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native);
-	};
 }

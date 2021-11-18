@@ -39,13 +39,6 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysData> { using type = NiPSysData; };
 	template<> struct type_map<NiPSysData> { using type = Niflib::NiPSysData; };
 
-	template<> class NiSyncer<NiPSysData> : public NiSyncer<NiObject>
-	{
-	public:
-		void syncRead(File& file, NiPSysData* object, Niflib::NiPSysData* native);
-		void syncWrite(const File& file, NiPSysData* object, Niflib::NiPSysData* native);
-	};
-
 
 	struct NiParticleSystem : NiTraversable<NiParticleSystem, NiAVObject>
 	{
@@ -61,10 +54,4 @@ namespace nif
 	template<> struct type_map<Niflib::NiParticleSystem> { using type = NiParticleSystem; };
 	template<> struct type_map<NiParticleSystem> { using type = Niflib::NiParticleSystem; };
 
-	template<> class NiSyncer<NiParticleSystem> : public NiSyncer<NiAVObject>
-	{
-	public:
-		void syncRead(File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native);
-		void syncWrite(const File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native);
-	};
 }

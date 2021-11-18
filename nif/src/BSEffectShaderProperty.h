@@ -77,7 +77,6 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiProperty> { using type = NiProperty; };
 	template<> struct type_map<NiProperty> { using type = Niflib::NiProperty; };
-	template<> class NiSyncer<NiProperty> : public NiSyncer<NiObjectNET> {};
 
 	struct NiAlphaProperty : NiTraversable<NiAlphaProperty, NiProperty>
 	{
@@ -93,13 +92,15 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiAlphaProperty> { using type = NiAlphaProperty; };
 	template<> struct type_map<NiAlphaProperty> { using type = Niflib::NiAlphaProperty; };
-
-	template<> class NiSyncer<NiAlphaProperty> : public NiSyncer<NiProperty>
+	template<> struct ReadSyncer<NiAlphaProperty> : VerticalTraverser<NiAlphaProperty, ReadSyncer>
 	{
-	public:
-		void syncRead(File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native);
-		void syncWrite(const File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native);
+		void operator() (NiAlphaProperty& object, Niflib::NiAlphaProperty* native, File& file);
 	};
+	template<> struct WriteSyncer<NiAlphaProperty> : VerticalTraverser<NiAlphaProperty, WriteSyncer>
+	{
+		void operator() (NiAlphaProperty& object, Niflib::NiAlphaProperty* native, const File& file);
+	};
+
 
 	struct BSEffectShaderProperty : NiTraversable<BSEffectShaderProperty, NiProperty>
 	{
@@ -116,10 +117,4 @@ namespace nif
 	template<> struct type_map<Niflib::BSEffectShaderProperty> { using type = BSEffectShaderProperty; };
 	template<> struct type_map<BSEffectShaderProperty> { using type = Niflib::BSEffectShaderProperty; };
 
-	template<> class NiSyncer<BSEffectShaderProperty> : public NiSyncer<NiProperty>
-	{
-	public:
-		void syncRead(File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native);
-		void syncWrite(const File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native);
-	};
 }

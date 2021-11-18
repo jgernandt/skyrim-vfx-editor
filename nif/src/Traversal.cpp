@@ -17,38 +17,29 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "Traverser.h"
+#include "ni_objects.h"
 
-//This means we will call the most derived override on every part of the object.
-//That may not always be what you want. Maybe you just want the most derived
-//override on the most derived part of the object, and then send it on
-//to children, extra data, controllers.
-//We'll probably want more fine control here, perhaps by separating the forwarding
-//behaviour from the calling of derived functions.
-
-void nif::NiTraverser::traverse(NiObject&)
+void nif::NiTraverser::traverse(NiObject& obj)
 {
+	Forwarder<NiObject>{}.down(obj, *this);
 }
 
 void nif::NiTraverser::traverse(NiObjectNET& obj)
 {
-	traverse(static_cast<NiObject&>(obj));
-	//extra data
-	//controllers
+	Forwarder<NiObjectNET>{}.down(obj, *this);
 }
 
 void nif::NiTraverser::traverse(NiAVObject& obj)
 {
-	traverse(static_cast<NiObjectNET&>(obj));
+	Forwarder<NiAVObject>{}.down(obj, *this);
 }
 
 void nif::NiTraverser::traverse(NiNode& obj)
 {
-	traverse(static_cast<NiAVObject&>(obj));
-	//children
+	Forwarder<NiNode>{}.down(obj, *this);
 }
 
 void nif::NiTraverser::traverse(BSFadeNode& obj)
 {
-	traverse(static_cast<NiNode&>(obj));
+	Forwarder<BSFadeNode>{}.down(obj, *this);
 }

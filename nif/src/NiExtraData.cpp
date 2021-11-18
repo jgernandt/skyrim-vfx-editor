@@ -23,24 +23,3 @@
 const size_t nif::NiExtraData::TYPE = std::hash<std::string>{}("NiExtraData");
 const size_t nif::NiStringExtraData::TYPE = std::hash<std::string>{}("NiStringExtraData");
 
-void nif::NiSyncer<nif::NiExtraData>::syncRead(
-	File& file, NiExtraData* object, Niflib::NiExtraData* native)
-{
-	//TODO
-}
-void nif::NiSyncer<nif::NiExtraData>::syncWrite(
-	const File& file, NiExtraData* object, Niflib::NiExtraData* native)
-{
-	//TODO
-}
-
-void nif::NiSyncer<nif::NiStringExtraData>::syncRead(
-	File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native)
-{
-	//TODO
-}
-void nif::NiSyncer<nif::NiStringExtraData>::syncWrite(
-	const File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native)
-{
-	//TODO
-}
