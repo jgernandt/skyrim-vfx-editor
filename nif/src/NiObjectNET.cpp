@@ -36,7 +36,7 @@ void nif::NiSyncer<nif::NiObjectNET>::syncRead(File& file, NiObjectNET* object, 
 
 	object->controllers.clear();
 	for (auto&& ctlr : native->GetControllers())
-		object->controllers.insert(-1, file.get<NiTimeController>(ctlr));
+		object->controllers.insert(object->controllers.size(), file.get<NiTimeController>(ctlr));
 }
 
 void nif::NiSyncer<nif::NiObjectNET>::syncWrite(const File& file, NiObjectNET* object, Niflib::NiObjectNET* native)
@@ -51,9 +51,10 @@ void nif::NiSyncer<nif::NiObjectNET>::syncWrite(const File& file, NiObjectNET* o
 	for (auto&& data : object->extraData)
 		native->AddExtraData(file.get<Niflib::NiExtraData>(data), Niflib::VER_20_2_0_7);
 
+	//Niflib adds to the front, so we reverse iterate here
 	native->ClearControllers();
-	for (auto&& ctlr : object->controllers)
-		native->AddController(file.get<Niflib::NiTimeController>(ctlr));
+	for (auto rit = object->controllers.rbegin(); rit != object->controllers.rend(); ++rit)
+		native->AddController(file.get<Niflib::NiTimeController>(*rit));
 }
 
 /*

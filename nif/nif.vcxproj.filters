@@ -93,6 +93,9 @@
     <ClInclude Include="src\Traverser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\SyncTraversers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\nif_conversions.cpp">
@@ -132,6 +135,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\NiObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Traverser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SyncTraversers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

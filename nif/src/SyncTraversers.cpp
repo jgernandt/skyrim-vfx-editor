@@ -17,26 +17,15 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "Traverser.h"
+#include "SyncTraversers.h"
+#include "File.h"
 
-void nif::NiTraverser::traverse(NiObject&)
+void nif::NiReadSyncer::traverse(NiObjectNET& obj)
 {
+	NiSyncer<NiObjectNET>{}.syncRead(m_file, &obj, m_file.get<Niflib::NiObjectNET>(&obj));
 }
 
-void nif::NiTraverser::traverse(NiObjectNET& obj)
+void nif::NiWriteSyncer::traverse(NiObjectNET& obj)
 {
-	traverse(static_cast<NiObject&>(obj));
-	//extra data
-	//controllers
-}
-
-void nif::NiTraverser::traverse(NiAVObject& obj)
-{
-	traverse(static_cast<NiObjectNET&>(obj));
-}
-
-void nif::NiTraverser::traverse(NiNode& obj)
-{
-	traverse(static_cast<NiAVObject&>(obj));
-	//children
+	NiSyncer<NiObjectNET>{}.syncWrite(m_file, &obj, m_file.get<Niflib::NiObjectNET>(&obj));
 }

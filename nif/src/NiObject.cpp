@@ -37,3 +37,9 @@ nif::NiObject::~NiObject()
 	g_currentNiObjects--;
 #endif
 }
+
+#include "Traverser.h"
+void nif::NiObject::receive(NiTraverser& t)
+{
+	t.traverse(*this);
+}

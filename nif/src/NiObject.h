@@ -39,14 +39,7 @@ namespace nif
 		virtual void receive(NiTraverser& t) override;
 	};
 
-	template<typename T>
-	struct NiTraversable<T, void>
-	{
-		using base_type = void;
-		virtual void receive(NiTraverser& t);
-	};
-
-	struct NiObject : NiTraversable<NiObject, void>
+	struct NiObject
 	{
 		NiObject();
 		NiObject(const NiObject&) = delete;
@@ -56,6 +49,9 @@ namespace nif
 
 		NiObject& operator=(const NiObject&) = delete;
 		NiObject& operator=(NiObject&&) = delete;
+
+		using base_type = void;
+		virtual void receive(NiTraverser& t);
 	};
 
 	//For the static mapping between Niflib types and our types

@@ -23,7 +23,6 @@
 #include <vector>
 
 #include "ni_objects.h"
-#include "Traverser.h"
 
 namespace nif
 {

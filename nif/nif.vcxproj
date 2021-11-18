@@ -24,6 +24,7 @@
     <ClInclude Include="src\List.h" />
     <ClInclude Include="src\nif.h" />
     <ClInclude Include="src\ni_objects.h" />
+    <ClInclude Include="src\SyncTraversers.h" />
     <ClInclude Include="src\Traverser.h" />
     <ClInclude Include="src\Vector.h" />
     <ClInclude Include="src\nif_backend.h" />
@@ -64,6 +65,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\SyncTraversers.cpp" />
+    <ClCompile Include="src\Traverser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="niflib\niflib.vcxproj">

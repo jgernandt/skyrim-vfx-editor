@@ -18,6 +18,7 @@
 
 #include "pch.h"
 #include "File.h"
+#include "SyncTraversers.h"
 
 
 std::map<size_t, nif::File::CreateFcn> nif::File::s_typeRegistry;
