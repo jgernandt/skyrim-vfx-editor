@@ -55,22 +55,49 @@ namespace nif
 
 		void set(T flags) 
 		{
-			if (T to_set = (flags & ~(m_flags & flags)); to_set != T(0)) {
-				//one or more flags will be set, but not necessarily every flag that was passed
-				m_flags |= flags;
-				for (FlagSetListener<T>* l : this->m_lsnrs) {
-					assert(l);
-					l->onSet(to_set);
+			if constexpr (std::is_enum<T>::value) {
+				//We need to do bitmanipulations on the underlying type
+				using E = typename std::underlying_type<T>::type;
+				if (E to_set = ((E)flags & ~((E)m_flags & (E)flags)); to_set != E(0)) {
+					//one or more flags will be set, but not necessarily every flag that was passed
+					m_flags = (T)((E)m_flags | (E)flags);
+					for (FlagSetListener<T>* l : this->m_lsnrs) {
+						assert(l);
+						l->onSet((T)to_set);
+					}
+				}
+			}
+			else {
+				if (T to_set = (flags & ~(m_flags & flags)); to_set != T(0)) {
+					//one or more flags will be set, but not necessarily every flag that was passed
+					m_flags |= flags;
+					for (FlagSetListener<T>* l : this->m_lsnrs) {
+						assert(l);
+						l->onSet(to_set);
+					}
 				}
 			}
 		}
 		void clear(T flags)
 		{
-			if (T to_clear = (m_flags & flags); to_clear != T(0)) {
-				m_flags &= ~flags;
-				for (FlagSetListener<T>* l : this->m_lsnrs) {
-					assert(l);
-					l->onClear(to_clear);
+			if constexpr (std::is_enum<T>::value) {
+				//We need to do bitmanipulations on the underlying type
+				using E = typename std::underlying_type<T>::type;
+				if (E to_clear = ((E)m_flags & (E)flags); to_clear != E(0)) {
+					m_flags = (T)(~(E)flags);
+					for (FlagSetListener<T>* l : this->m_lsnrs) {
+						assert(l);
+						l->onClear((T)to_clear);
+					}
+				}
+			}
+			else {
+				if (T to_clear = (m_flags & flags); to_clear != T(0)) {
+					m_flags &= ~flags;
+					for (FlagSetListener<T>* l : this->m_lsnrs) {
+						assert(l);
+						l->onClear(to_clear);
+					}
 				}
 			}
 		}
