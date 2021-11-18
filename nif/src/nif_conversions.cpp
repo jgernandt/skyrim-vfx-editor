@@ -52,6 +52,12 @@ math::Rotation nif::NifConverter<math::Rotation>::convert(const Niflib::Matrix33
 	return r.setQuaternion(util::type_conversion<math::Quaternion, NifConverter<math::Quaternion>>::from(f.AsQuaternion()));
 }
 
+math::Rotation nif::NifConverter<math::Rotation>::convert(const Niflib::Quaternion& q)
+{
+	math::Rotation r;
+	return r.setQuaternion(util::type_conversion<math::Quaternion, NifConverter<math::Quaternion>>::from(q));
+}
+
 math::Quaternion nif::NifConverter<math::Quaternion>::convert(const Niflib::Quaternion& q)
 {
 	return math::Quaternion(q.w, q.x, q.y, q.z);

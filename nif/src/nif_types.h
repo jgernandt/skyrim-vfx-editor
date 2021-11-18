@@ -95,6 +95,7 @@ namespace nif
 	struct NifConverter<math::Rotation>
 	{
 		static math::Rotation convert(const Niflib::Matrix33& f);
+		static math::Rotation convert(const Niflib::Quaternion& f);
 	};
 
 	template<>
