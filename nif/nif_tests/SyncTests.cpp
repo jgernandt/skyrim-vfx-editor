@@ -208,6 +208,52 @@ namespace nif_tests
 			}
 		};
 
+		template<>
+		struct NiSyncTest<NiNode> : NiSyncTest<NiAVObject>
+		{
+			Niflib::Ref<Niflib::NiAVObject> native_child0;
+			Niflib::Ref<Niflib::NiAVObject> native_child1;
+			Niflib::Ref<Niflib::NiAVObject> native_child2;
+			std::shared_ptr<NiAVObject> child0;
+			std::shared_ptr<NiAVObject> child1;
+			std::shared_ptr<NiAVObject> child2;
+
+			void preRead(File* file, NiNode* object, Niflib::NiNode* native)
+			{
+				NiSyncTest<NiAVObject>::preRead(file, object, native);
+
+				native_child0 = new Niflib::NiAVObject;
+				native_child1 = new Niflib::NiAVObject;
+				native_child2 = new Niflib::NiAVObject;
+				child0 = file->get<NiAVObject>(native_child0);
+				child1 = file->get<NiAVObject>(native_child1);
+				child2 = file->get<NiAVObject>(native_child2);
+
+				native->AddChild(native_child0);
+				native->AddChild(native_child1);
+			}
+			void postRead(File* file, NiNode* object, Niflib::NiNode* native)
+			{
+				NiSyncTest<NiAVObject>::postRead(file, object, native);
+
+				Assert::IsTrue(object->children.size() == 2);
+				Assert::IsTrue(object->children.has(child0.get()));
+				Assert::IsTrue(object->children.has(child1.get()));
+			}
+			void preWrite(File* file, NiNode* object, Niflib::NiNode* native)
+			{
+				NiSyncTest<NiAVObject>::preWrite(file, object, native);
+				object->children.add(child2);
+			}
+			void postWrite(File* file, NiNode* object, Niflib::NiNode* native)
+			{
+				NiSyncTest<NiAVObject>::postWrite(file, object, native);
+				Assert::IsTrue(native->GetChildren().size() == 3);
+			}
+		};
+
+		template<> struct NiSyncTest<BSFadeNode> : NiSyncTest<NiNode> {};
+
 		template<typename T>
 		struct SyncTest : NiSyncTest<T>
 		{
@@ -247,6 +293,26 @@ namespace nif_tests
 			auto object = file.get<NiAVObject>(native);
 
 			SyncTest<NiAVObject>(&file, object.get(), native).run();
+		}
+
+		TEST_METHOD(_NiNode)
+		{
+			File file(File::Version::SKYRIM_SE);
+
+			Niflib::Ref<Niflib::NiNode> native = new Niflib::NiNode;
+			auto object = file.get<NiNode>(native);
+
+			SyncTest<NiNode>(&file, object.get(), native).run();
+		}
+
+		TEST_METHOD(_BSFadeNode)
+		{
+			File file(File::Version::SKYRIM_SE);
+
+			Niflib::Ref<Niflib::BSFadeNode> native = new Niflib::BSFadeNode;
+			auto object = file.get<BSFadeNode>(native);
+
+			SyncTest<BSFadeNode>(&file, object.get(), native).run();
 		}
 	};
 }

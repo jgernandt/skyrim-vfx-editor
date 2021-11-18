@@ -22,13 +22,18 @@
 
 void nif::NiSyncer<nif::NiNode>::syncRead(File& file, NiNode* object, Niflib::NiNode* native)
 {
-	//TODO
-	//This belongs higher up!
-	//static int count = 0;
-	//name.set("Node" + std::to_string(++count));
-	//native().SetFlags(14);
+	assert(object && native);
+
+	object->children.clear();
+	auto&& children = native->GetChildren();
+	for (auto&& child : children)
+		object->children.add(file.get<NiAVObject>(child));
 }
 void nif::NiSyncer<nif::NiNode>::syncWrite(const File& file, NiNode* object, Niflib::NiNode* native)
 {
-	//TODO
+	assert(object && native);
+
+	native->ClearChildren();
+	for (auto&& child : object->children)
+		native->AddChild(file.get<Niflib::NiAVObject>(child));
 }

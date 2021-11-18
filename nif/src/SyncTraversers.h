@@ -12,6 +12,8 @@ namespace nif
 		virtual ~NiReadSyncer() = default;
 		virtual void traverse(NiObjectNET& obj) override;
 		virtual void traverse(NiAVObject& obj) override;
+		virtual void traverse(NiNode& obj) override;
+		virtual void traverse(BSFadeNode& obj) override;
 
 	private:
 		File& m_file;
@@ -24,6 +26,8 @@ namespace nif
 		virtual ~NiWriteSyncer() = default;
 		virtual void traverse(NiObjectNET& obj) override;
 		virtual void traverse(NiAVObject& obj) override;
+		virtual void traverse(NiNode& obj) override;
+		virtual void traverse(BSFadeNode& obj) override;
 
 	private:
 		const File& m_file;

@@ -11,6 +11,7 @@ namespace nif
 		virtual void traverse(NiObjectNET& obj);
 		virtual void traverse(NiAVObject& obj);
 		virtual void traverse(NiNode& obj);
+		virtual void traverse(BSFadeNode& obj);
 
 		//etc.
 	};

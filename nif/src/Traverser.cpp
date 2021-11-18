@@ -47,3 +47,8 @@ void nif::NiTraverser::traverse(NiNode& obj)
 	traverse(static_cast<NiAVObject&>(obj));
 	//children
 }
+
+void nif::NiTraverser::traverse(BSFadeNode& obj)
+{
+	traverse(static_cast<NiNode&>(obj));
+}
