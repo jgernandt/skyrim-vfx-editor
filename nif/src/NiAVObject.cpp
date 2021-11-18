@@ -24,12 +24,23 @@
 
 void nif::NiSyncer<nif::NiAVObject>::syncRead(File& file, NiAVObject* object, Niflib::NiAVObject* native)
 {
-	//TODO
+	assert(object && native);
+
+	object->flags.clear(-1);
+	object->flags.set(native->GetFlags());
+	object->transform.translation.set(nif_type_conversion<translation_t>::from(native->GetLocalTranslation()));
+	object->transform.rotation.set(nif_type_conversion<rotation_t>::from(native->GetLocalRotation()));
+	object->transform.scale.set(native->GetLocalScale());
 }
 
 void nif::NiSyncer<nif::NiAVObject>::syncWrite(const File& file, NiAVObject* object, Niflib::NiAVObject* native)
 {
-	//TODO
+	assert(object && native);
+
+	native->SetFlags(object->flags.get());
+	native->SetLocalTranslation(nif_type_conversion<Niflib::Vector3>::from(object->transform.translation.get()));
+	native->SetLocalRotation(nif_type_conversion<Niflib::Matrix33>::from(object->transform.rotation.get()));
+	native->SetLocalScale(object->transform.scale.get());
 }
 
 

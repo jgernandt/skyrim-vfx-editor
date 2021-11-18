@@ -67,7 +67,8 @@ namespace nif
 
 	class File;
 
-	//Transfers state between our model and Niflib (specialise and implement)
+	//Transfers state between our model and Niflib (specialise and implement).
+	//(we don't really need this to be a template, but doesn't hurt us either)
 	template<typename T>
 	class NiSyncer
 	{

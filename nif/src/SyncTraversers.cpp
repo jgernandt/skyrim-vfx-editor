@@ -22,10 +22,24 @@
 
 void nif::NiReadSyncer::traverse(NiObjectNET& obj)
 {
+	NiTraverser::traverse(obj);
 	NiSyncer<NiObjectNET>{}.syncRead(m_file, &obj, m_file.get<Niflib::NiObjectNET>(&obj));
+}
+
+void nif::NiReadSyncer::traverse(NiAVObject& obj)
+{
+	NiTraverser::traverse(obj);
+	NiSyncer<NiAVObject>{}.syncRead(m_file, &obj, m_file.get<Niflib::NiAVObject>(&obj));
 }
 
 void nif::NiWriteSyncer::traverse(NiObjectNET& obj)
 {
+	NiTraverser::traverse(obj);
 	NiSyncer<NiObjectNET>{}.syncWrite(m_file, &obj, m_file.get<Niflib::NiObjectNET>(&obj));
+}
+
+void nif::NiWriteSyncer::traverse(NiAVObject& obj)
+{
+	NiTraverser::traverse(obj);
+	NiSyncer<NiAVObject>{}.syncWrite(m_file, &obj, m_file.get<Niflib::NiAVObject>(&obj));
 }

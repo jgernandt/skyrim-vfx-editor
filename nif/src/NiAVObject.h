@@ -30,13 +30,15 @@ namespace nif
 
 	struct NiAVObject : NiTraversable<NiAVObject, NiObjectNET>
 	{
+		//flags is 32 bit, but it was 16 in Niflibs days. 
+		//I can't be bothered to fix that right now. Will later.
 		FlagSet<std::uint_fast32_t> flags;
 		Transform transform;
 	};
 	template<> struct type_map<Niflib::NiAVObject> { using type = NiAVObject; };
 	template<> struct type_map<NiAVObject> { using type = Niflib::NiAVObject; };
 
-	template<> class NiSyncer<NiAVObject> : public NiSyncer<NiObjectNET>
+	template<> class NiSyncer<NiAVObject>
 	{
 	public:
 		void syncRead(File& file, NiAVObject* object, Niflib::NiAVObject* native);

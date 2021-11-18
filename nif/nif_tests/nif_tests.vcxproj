@@ -173,6 +173,9 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\math\math.vcxproj">
+      <Project>{08b82db6-c8f2-41b2-a3c8-7208cd7e9a39}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\nif.vcxproj">
       <Project>{2664d759-b028-4412-b9a9-3fc86bf14458}</Project>
     </ProjectReference>

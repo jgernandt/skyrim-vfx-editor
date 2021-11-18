@@ -19,6 +19,13 @@
 #include "pch.h"
 #include "Traverser.h"
 
+//This means we will call the most derived override on every part of the object.
+//That may not always be what you want. Maybe you just want the most derived
+//override on the most derived part of the object, and then send it on
+//to children, extra data, controllers.
+//We'll probably want more fine control here, perhaps by separating the forwarding
+//behaviour from the calling of derived functions.
+
 void nif::NiTraverser::traverse(NiObject&)
 {
 }
