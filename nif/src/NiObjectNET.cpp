@@ -22,8 +22,10 @@
 #include "NiExtraData.h"
 #include "File.h"
 
-void nif::NiSyncer<nif::NiObjectNET>::syncReadImpl(File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const
+void nif::NiSyncer<nif::NiObjectNET>::syncRead(File& file, NiObjectNET* object, Niflib::NiObjectNET* native)
 {
+	NiSyncer<NiObject>::syncRead(file, object, native);
+
 	assert(object && native);
 
 	object->name.set(native->GetName());
@@ -37,8 +39,10 @@ void nif::NiSyncer<nif::NiObjectNET>::syncReadImpl(File& file, NiObjectNET* obje
 		object->controllers.insert(-1, file.get<NiTimeController>(ctlr));
 }
 
-void nif::NiSyncer<nif::NiObjectNET>::syncWriteImpl(const File& file, NiObjectNET* object, Niflib::NiObjectNET* native) const
+void nif::NiSyncer<nif::NiObjectNET>::syncWrite(const File& file, NiObjectNET* object, Niflib::NiObjectNET* native)
 {
+	NiSyncer<NiObject>::syncWrite(file, object, native);
+
 	assert(object && native);
 
 	native->SetName(object->name.get());

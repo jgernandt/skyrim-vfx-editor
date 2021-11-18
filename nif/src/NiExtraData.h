@@ -21,33 +21,31 @@
 
 namespace nif
 {
-	struct NiExtraData : NiObject
+	struct NiExtraData : NiTraversable<NiExtraData, NiObject>
 	{
 		Property<std::string> name;
 	};
 	template<> struct type_map<Niflib::NiExtraData> { using type = NiExtraData; };
 	template<> struct type_map<NiExtraData> { using type = Niflib::NiExtraData; };
 
-	template<> class NiSyncer<NiExtraData> : public SyncerInherit<NiExtraData, NiObject>
+	template<> class NiSyncer<NiExtraData> : public NiSyncer<NiObject>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiExtraData* object, Niflib::NiExtraData* native) const;
-		void syncWriteImpl(const File& file, NiExtraData* object, Niflib::NiExtraData* native) const;
+		void syncRead(File& file, NiExtraData* object, Niflib::NiExtraData* native);
+		void syncWrite(const File& file, NiExtraData* object, Niflib::NiExtraData* native);
 	};
 
-	struct NiStringExtraData : NiExtraData
+	struct NiStringExtraData : NiTraversable<NiStringExtraData, NiExtraData>
 	{
 		Property<std::string> value;
 	};
 	template<> struct type_map<Niflib::NiStringExtraData> { using type = NiStringExtraData; };
 	template<> struct type_map<NiStringExtraData> { using type = Niflib::NiStringExtraData; };
 
-	template<> class NiSyncer<NiStringExtraData> : public SyncerInherit<NiStringExtraData, NiExtraData>
+	template<> class NiSyncer<NiStringExtraData> : public NiSyncer<NiExtraData>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native) const;
-		void syncWriteImpl(const File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native) const;
+		void syncRead(File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native);
+		void syncWrite(const File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native);
 	};
 }

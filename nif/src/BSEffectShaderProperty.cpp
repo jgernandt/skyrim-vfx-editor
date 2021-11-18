@@ -20,9 +20,11 @@
 #include "BSEffectShaderProperty.h"
 #include "File.h"
 
-void nif::NiSyncer<nif::NiAlphaProperty>::syncReadImpl(
-	File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const
+void nif::NiSyncer<nif::NiAlphaProperty>::syncRead(
+	File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native)
 {
+	NiSyncer<NiProperty>::syncRead(file, object, native);
+
 	assert(object && native);
 	object->mode.set(static_cast<AlphaMode>(native->GetFlags() & 0x201));
 	object->srcFcn.set(static_cast<BlendFunction>(native->GetSourceBlendFunc()));
@@ -32,9 +34,11 @@ void nif::NiSyncer<nif::NiAlphaProperty>::syncReadImpl(
 	object->sorting.set(!native->GetTriangleSortMode());
 }
 
-void nif::NiSyncer<nif::NiAlphaProperty>::syncWriteImpl(
-	const File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const
+void nif::NiSyncer<nif::NiAlphaProperty>::syncWrite(
+	const File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native)
 {
+	NiSyncer<NiProperty>::syncWrite(file, object, native);
+
 	assert(object && native);
 	native->SetFlags(static_cast<unsigned short>(object->mode.get()));
 	native->SetSourceBlendFunc(static_cast<Niflib::NiAlphaProperty::BlendFunc>(object->srcFcn.get()));
@@ -45,14 +49,14 @@ void nif::NiSyncer<nif::NiAlphaProperty>::syncWriteImpl(
 }
 
 
-void nif::NiSyncer<nif::BSEffectShaderProperty>::syncReadImpl(
-	File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native) const
+void nif::NiSyncer<nif::BSEffectShaderProperty>::syncRead(
+	File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::BSEffectShaderProperty>::syncWriteImpl(
-	const File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native) const
+void nif::NiSyncer<nif::BSEffectShaderProperty>::syncWrite(
+	const File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native)
 {
 	//TODO
 }

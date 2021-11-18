@@ -22,12 +22,12 @@
 #include "File.h"
 
 
-void nif::NiSyncer<nif::NiAVObject>::syncReadImpl(File& file, NiAVObject* object, Niflib::NiAVObject* native) const
+void nif::NiSyncer<nif::NiAVObject>::syncRead(File& file, NiAVObject* object, Niflib::NiAVObject* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiAVObject>::syncWriteImpl(const File& file, NiAVObject* object, Niflib::NiAVObject* native) const
+void nif::NiSyncer<nif::NiAVObject>::syncWrite(const File& file, NiAVObject* object, Niflib::NiAVObject* native)
 {
 	//TODO
 }

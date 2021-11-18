@@ -21,74 +21,74 @@
 #include "File.h"
 
 
-void nif::NiSyncer<nif::NiBoolData>::syncReadImpl(
-	File& file, NiBoolData* object, Niflib::NiBoolData* native) const
+void nif::NiSyncer<nif::NiBoolData>::syncRead(
+	File& file, NiBoolData* object, Niflib::NiBoolData* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiBoolData>::syncWriteImpl(
-	const File& file, NiBoolData* object, Niflib::NiBoolData* native) const
+void nif::NiSyncer<nif::NiBoolData>::syncWrite(
+	const File& file, NiBoolData* object, Niflib::NiBoolData* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiFloatData>::syncReadImpl(
-	File& file, NiFloatData* object, Niflib::NiFloatData* native) const
+void nif::NiSyncer<nif::NiFloatData>::syncRead(
+	File& file, NiFloatData* object, Niflib::NiFloatData* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiFloatData>::syncWriteImpl(
-	const File& file, NiFloatData* object, Niflib::NiFloatData* native) const
+void nif::NiSyncer<nif::NiFloatData>::syncWrite(
+	const File& file, NiFloatData* object, Niflib::NiFloatData* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiBoolInterpolator>::syncReadImpl(
-	File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native) const
+void nif::NiSyncer<nif::NiBoolInterpolator>::syncRead(
+	File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiBoolInterpolator>::syncWriteImpl(
-	const File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native) const
+void nif::NiSyncer<nif::NiBoolInterpolator>::syncWrite(
+	const File& file, NiBoolInterpolator* object, Niflib::NiBoolInterpolator* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiFloatInterpolator>::syncReadImpl(
-	File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native) const
+void nif::NiSyncer<nif::NiFloatInterpolator>::syncRead(
+	File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiFloatInterpolator>::syncWriteImpl(
-	const File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native) const
+void nif::NiSyncer<nif::NiFloatInterpolator>::syncWrite(
+	const File& file, NiFloatInterpolator* object, Niflib::NiFloatInterpolator* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiTimeController>::syncReadImpl(
-	File& file, NiTimeController* object, Niflib::NiTimeController* native) const
+void nif::NiSyncer<nif::NiTimeController>::syncRead(
+	File& file, NiTimeController* object, Niflib::NiTimeController* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiTimeController>::syncWriteImpl(
-	const File& file, NiTimeController* object, Niflib::NiTimeController* native) const
+void nif::NiSyncer<nif::NiTimeController>::syncWrite(
+	const File& file, NiTimeController* object, Niflib::NiTimeController* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiSingleInterpController>::syncReadImpl(
-	File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native) const
+void nif::NiSyncer<nif::NiSingleInterpController>::syncRead(
+	File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiSingleInterpController>::syncWriteImpl(
-	const File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native) const
+void nif::NiSyncer<nif::NiSingleInterpController>::syncWrite(
+	const File& file, NiSingleInterpController* object, Niflib::NiSingleInterpController* native)
 {
 	//TODO
 }

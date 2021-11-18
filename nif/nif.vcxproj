@@ -24,6 +24,7 @@
     <ClInclude Include="src\List.h" />
     <ClInclude Include="src\nif.h" />
     <ClInclude Include="src\ni_objects.h" />
+    <ClInclude Include="src\Traverser.h" />
     <ClInclude Include="src\Vector.h" />
     <ClInclude Include="src\nif_backend.h" />
     <ClInclude Include="src\BSEffectShaderProperty.h" />

@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "ni_objects.h"
+#include "Traverser.h"
 
 namespace nif
 {
@@ -37,6 +38,14 @@ namespace nif
 			UNKNOWN,
 			SKYRIM,
 			SKYRIM_SE,
+		};
+
+	private:
+		//This object owns the resources that it points to and will clean them up on destruction.
+		struct ObjectBlock
+		{
+			Niflib::NiObject* native;
+			NiObject* object;
 		};
 
 		using CreateFcn = std::shared_ptr<ObjectBlock>(*)(const Niflib::Ref<Niflib::NiObject>&);
@@ -76,6 +85,9 @@ namespace nif
 		std::shared_ptr<ObjectBlock> make_ni(const Niflib::Ref<typename type_map<T>::type>& native);
 		template<typename T>
 		std::shared_ptr<ObjectBlock> make_ni() { return make_ni<T>(Niflib::Ref<typename type_map<T>::type>()); }
+
+		template<typename T>
+		static std::shared_ptr<ObjectBlock> make_NiObject(const Niflib::Ref<Niflib::NiObject>& native);
 
 	private:
 		static void registerTypes();
@@ -158,7 +170,7 @@ namespace nif
 	}
 	
 	template<typename T>
-	inline std::shared_ptr<ObjectBlock> File::make_ni(const Niflib::Ref<typename type_map<T>::type>& native)
+	inline std::shared_ptr<nif::File::ObjectBlock> File::make_ni(const Niflib::Ref<typename type_map<T>::type>& native)
 	{
 		//Our type registry contains all the types that we care about.
 		//If we step up through the inheritance chain of Niflib's type object,
@@ -197,6 +209,29 @@ namespace nif
 		return fcn(Niflib::StaticCast<Niflib::NiObject>(native));
 		//factory should throw on failure. We won't catch it, we'll typically be part of a longer procedure.
 	}
-}
 
-extern nif::File::CreateFcn const g_NiExtraDataFactory;
+	template<typename T>
+	inline std::shared_ptr<File::ObjectBlock> File::make_NiObject(const Niflib::Ref<Niflib::NiObject>& native)
+	{
+		//Our implementation of ObjectBlock keeps everything in the same object.
+		//The pointers in ObjectBlock are aliases for the members of the derived type.
+		struct NiObjectBlock : ObjectBlock
+		{
+			NiObjectBlock(const Niflib::Ref<Niflib::NiObject>& ref) :
+				nativeRef{ ref }
+			{
+				if (!nativeRef)
+					nativeRef = new typename type_map<T>::type();
+				this->native = nativeRef;
+				this->object = &objectImpl;
+			}
+			NiObjectBlock(const NiObjectBlock&) = delete;
+			NiObjectBlock& operator=(const NiObjectBlock&) = delete;
+
+			Niflib::Ref<Niflib::NiObject> nativeRef;
+			T objectImpl;
+		};
+
+		return std::make_shared<NiObjectBlock>(native);
+	}
+}

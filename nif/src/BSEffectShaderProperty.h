@@ -70,12 +70,12 @@ namespace nif
 		NEVER,
 	};
 
-	struct NiProperty : NiObjectNET {};
+	struct NiProperty : NiTraversable<NiProperty, NiObjectNET> {};
 	template<> struct type_map<Niflib::NiProperty> { using type = NiProperty; };
 	template<> struct type_map<NiProperty> { using type = Niflib::NiProperty; };
-	template<> class NiSyncer<NiProperty> : public NiSyncer<NiObjectNET> { public: virtual ~NiSyncer() = default; };
+	template<> class NiSyncer<NiProperty> : public NiSyncer<NiObjectNET> {};
 
-	struct NiAlphaProperty : NiProperty
+	struct NiAlphaProperty : NiTraversable<NiAlphaProperty, NiProperty>
 	{
 		Property<AlphaMode> mode;
 		Property<BlendFunction> srcFcn;
@@ -88,15 +88,14 @@ namespace nif
 	template<> struct type_map<Niflib::NiAlphaProperty> { using type = NiAlphaProperty; };
 	template<> struct type_map<NiAlphaProperty> { using type = Niflib::NiAlphaProperty; };
 
-	template<> class NiSyncer<NiAlphaProperty> : public SyncerInherit<NiAlphaProperty, NiProperty>
+	template<> class NiSyncer<NiAlphaProperty> : public NiSyncer<NiProperty>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const;
-		void syncWriteImpl(const File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native) const;
+		void syncRead(File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native);
+		void syncWrite(const File& file, NiAlphaProperty* object, Niflib::NiAlphaProperty* native);
 	};
 
-	struct BSEffectShaderProperty : NiProperty
+	struct BSEffectShaderProperty : NiTraversable<BSEffectShaderProperty, NiProperty>
 	{
 		Property<ColRGBA> emissiveCol;
 		Property<float> emissiveMult;
@@ -108,11 +107,10 @@ namespace nif
 	template<> struct type_map<Niflib::BSEffectShaderProperty> { using type = BSEffectShaderProperty; };
 	template<> struct type_map<BSEffectShaderProperty> { using type = Niflib::BSEffectShaderProperty; };
 
-	template<> class NiSyncer<BSEffectShaderProperty> : public SyncerInherit<BSEffectShaderProperty, NiProperty>
+	template<> class NiSyncer<BSEffectShaderProperty> : public NiSyncer<NiProperty>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native) const;
-		void syncWriteImpl(const File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native) const;
+		void syncRead(File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native);
+		void syncWrite(const File& file, BSEffectShaderProperty* object, Niflib::BSEffectShaderProperty* native);
 	};
 }

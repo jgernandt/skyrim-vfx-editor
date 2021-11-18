@@ -23,22 +23,21 @@ namespace nif
 {
 	struct NiNode;
 
-	struct NiPSysEmitterCtlr : NiPSysModifierCtlr
+	struct NiPSysEmitterCtlr : NiTraversable<NiPSysEmitterCtlr, NiPSysModifierCtlr>
 	{
 		Assignable<NiInterpolator> visIplr;
 	};
 	template<> struct type_map<Niflib::NiPSysEmitterCtlr> { using type = NiPSysEmitterCtlr; };
 	template<> struct type_map<NiPSysEmitterCtlr> { using type = Niflib::NiPSysEmitterCtlr; };
 
-	template<> class NiSyncer<NiPSysEmitterCtlr> : public SyncerInherit<NiPSysEmitterCtlr, NiPSysModifierCtlr>
+	template<> class NiSyncer<NiPSysEmitterCtlr> : public NiSyncer<NiPSysModifierCtlr>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native) const;
-		void syncWriteImpl(const File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native) const;
+		void syncRead(File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native);
+		void syncWrite(const File& file, NiPSysEmitterCtlr* object, Niflib::NiPSysEmitterCtlr* native);
 	};
 
-	struct NiPSysEmitter : NiPSysModifier
+	struct NiPSysEmitter : NiTraversable<NiPSysEmitter, NiPSysModifier>
 	{
 		Property<ColRGBA> colour;
 
@@ -60,30 +59,28 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysEmitter> { using type = NiPSysEmitter; };
 	template<> struct type_map<NiPSysEmitter> { using type = Niflib::NiPSysEmitter; };
 
-	template<> class NiSyncer<NiPSysEmitter> : public SyncerInherit<NiPSysEmitter, NiPSysModifier>
+	template<> class NiSyncer<NiPSysEmitter> : public NiSyncer<NiPSysModifier>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiPSysEmitter* object, Niflib::NiPSysEmitter* native) const;
-		void syncWriteImpl(const File& file, NiPSysEmitter* object, Niflib::NiPSysEmitter* native) const;
+		void syncRead(File& file, NiPSysEmitter* object, Niflib::NiPSysEmitter* native);
+		void syncWrite(const File& file, NiPSysEmitter* object, Niflib::NiPSysEmitter* native);
 	};
 
-	struct NiPSysVolumeEmitter : NiPSysEmitter
+	struct NiPSysVolumeEmitter : NiTraversable<NiPSysVolumeEmitter, NiPSysEmitter>
 	{
 		Assignable<NiNode> emitterObject;
 	};
 	template<> struct type_map<Niflib::NiPSysVolumeEmitter> { using type = NiPSysVolumeEmitter; };
 	template<> struct type_map<NiPSysVolumeEmitter> { using type = Niflib::NiPSysVolumeEmitter; };
 
-	template<> class NiSyncer<NiPSysVolumeEmitter> : public SyncerInherit<NiPSysVolumeEmitter, NiPSysEmitter>
+	template<> class NiSyncer<NiPSysVolumeEmitter> : public NiSyncer<NiPSysEmitter>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiPSysVolumeEmitter* object, Niflib::NiPSysVolumeEmitter* native) const;
-		void syncWriteImpl(const File& file, NiPSysVolumeEmitter* object, Niflib::NiPSysVolumeEmitter* native) const;
+		void syncRead(File& file, NiPSysVolumeEmitter* object, Niflib::NiPSysVolumeEmitter* native);
+		void syncWrite(const File& file, NiPSysVolumeEmitter* object, Niflib::NiPSysVolumeEmitter* native);
 	};
 
-	struct NiPSysBoxEmitter : NiPSysVolumeEmitter
+	struct NiPSysBoxEmitter : NiTraversable<NiPSysBoxEmitter, NiPSysVolumeEmitter>
 	{
 		Property<float> width;
 		Property<float> height;
@@ -92,15 +89,14 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysBoxEmitter> { using type = NiPSysBoxEmitter; };
 	template<> struct type_map<NiPSysBoxEmitter> { using type = Niflib::NiPSysBoxEmitter; };
 
-	template<> class NiSyncer<NiPSysBoxEmitter> : public SyncerInherit<NiPSysBoxEmitter, NiPSysVolumeEmitter>
+	template<> class NiSyncer<NiPSysBoxEmitter> : public NiSyncer<NiPSysVolumeEmitter>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiPSysBoxEmitter* object, Niflib::NiPSysBoxEmitter* native) const;
-		void syncWriteImpl(const File& file, NiPSysBoxEmitter* object, Niflib::NiPSysBoxEmitter* native) const;
+		void syncRead(File& file, NiPSysBoxEmitter* object, Niflib::NiPSysBoxEmitter* native);
+		void syncWrite(const File& file, NiPSysBoxEmitter* object, Niflib::NiPSysBoxEmitter* native);
 	};
 	
-	struct NiPSysCylinderEmitter : NiPSysVolumeEmitter
+	struct NiPSysCylinderEmitter : NiTraversable<NiPSysCylinderEmitter, NiPSysVolumeEmitter>
 	{
 		Property<float> radius;
 		Property<float> length;
@@ -108,26 +104,24 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysCylinderEmitter> { using type = NiPSysCylinderEmitter; };
 	template<> struct type_map<NiPSysCylinderEmitter> { using type = Niflib::NiPSysCylinderEmitter; };
 
-	template<> class NiSyncer<NiPSysCylinderEmitter> : public SyncerInherit<NiPSysCylinderEmitter, NiPSysVolumeEmitter>
+	template<> class NiSyncer<NiPSysCylinderEmitter> : public NiSyncer<NiPSysVolumeEmitter>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiPSysCylinderEmitter* object, Niflib::NiPSysCylinderEmitter* native) const;
-		void syncWriteImpl(const File& file, NiPSysCylinderEmitter* object, Niflib::NiPSysCylinderEmitter* native) const;
+		void syncRead(File& file, NiPSysCylinderEmitter* object, Niflib::NiPSysCylinderEmitter* native);
+		void syncWrite(const File& file, NiPSysCylinderEmitter* object, Niflib::NiPSysCylinderEmitter* native);
 	};
 
-	struct NiPSysSphereEmitter : NiPSysVolumeEmitter
+	struct NiPSysSphereEmitter : NiTraversable<NiPSysSphereEmitter, NiPSysVolumeEmitter>
 	{
 		Property<float> radius;
 	};
 	template<> struct type_map<Niflib::NiPSysSphereEmitter> { using type = NiPSysSphereEmitter; };
 	template<> struct type_map<NiPSysSphereEmitter> { using type = Niflib::NiPSysSphereEmitter; };
 
-	template<> class NiSyncer<NiPSysSphereEmitter> : public SyncerInherit<NiPSysSphereEmitter, NiPSysVolumeEmitter>
+	template<> class NiSyncer<NiPSysSphereEmitter> : public NiSyncer<NiPSysVolumeEmitter>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiPSysSphereEmitter* object, Niflib::NiPSysSphereEmitter* native) const;
-		void syncWriteImpl(const File& file, NiPSysSphereEmitter* object, Niflib::NiPSysSphereEmitter* native) const;
+		void syncRead(File& file, NiPSysSphereEmitter* object, Niflib::NiPSysSphereEmitter* native);
+		void syncWrite(const File& file, NiPSysSphereEmitter* object, Niflib::NiPSysSphereEmitter* native);
 	};
 }

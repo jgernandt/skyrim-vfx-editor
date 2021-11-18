@@ -24,7 +24,7 @@ namespace nif
 {
 	struct NiPSysModifier;
 
-	struct NiPSysData : NiObject
+	struct NiPSysData : NiTraversable<NiPSysData, NiObject>
 	{
 		Property<unsigned short> maxCount;
 		Property<std::vector<SubtextureOffset>> subtexOffsets;
@@ -35,15 +35,14 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysData> { using type = NiPSysData; };
 	template<> struct type_map<NiPSysData> { using type = Niflib::NiPSysData; };
 
-	template<> class NiSyncer<NiPSysData> : public SyncerInherit<NiPSysData, NiObject>
+	template<> class NiSyncer<NiPSysData> : public NiSyncer<NiObject>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiPSysData* object, Niflib::NiPSysData* native) const;
-		void syncWriteImpl(const File& file, NiPSysData* object, Niflib::NiPSysData* native) const;
+		void syncRead(File& file, NiPSysData* object, Niflib::NiPSysData* native);
+		void syncWrite(const File& file, NiPSysData* object, Niflib::NiPSysData* native);
 	};
 
-	struct NiParticleSystem : NiAVObject
+	struct NiParticleSystem : NiTraversable<NiParticleSystem, NiAVObject>
 	{
 		Assignable	<NiPSysData>				data;
 		Sequence	<NiPSysModifier>			modifiers;
@@ -54,11 +53,10 @@ namespace nif
 	template<> struct type_map<Niflib::NiParticleSystem> { using type = NiParticleSystem; };
 	template<> struct type_map<NiParticleSystem> { using type = Niflib::NiParticleSystem; };
 
-	template<> class NiSyncer<NiParticleSystem> : public SyncerInherit<NiParticleSystem, NiAVObject>
+	template<> class NiSyncer<NiParticleSystem> : public NiSyncer<NiAVObject>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native) const;
-		void syncWriteImpl(const File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native) const;
+		void syncRead(File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native);
+		void syncWrite(const File& file, NiParticleSystem* object, Niflib::NiParticleSystem* native);
 	};
 }

@@ -90,6 +90,9 @@
     <ClInclude Include="src\List.h">
       <Filter>Header Files\Data model</Filter>
     </ClInclude>
+    <ClInclude Include="src\Traverser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\nif_conversions.cpp">

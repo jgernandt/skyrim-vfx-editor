@@ -20,24 +20,24 @@
 #include "NiExtraData.h"
 #include "File.h"
 
-void nif::NiSyncer<nif::NiExtraData>::syncReadImpl(
-	File& file, NiExtraData* object, Niflib::NiExtraData* native) const
+void nif::NiSyncer<nif::NiExtraData>::syncRead(
+	File& file, NiExtraData* object, Niflib::NiExtraData* native)
 {
 	//TODO
 }
-void nif::NiSyncer<nif::NiExtraData>::syncWriteImpl(
-	const File& file, NiExtraData* object, Niflib::NiExtraData* native) const
+void nif::NiSyncer<nif::NiExtraData>::syncWrite(
+	const File& file, NiExtraData* object, Niflib::NiExtraData* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiStringExtraData>::syncReadImpl(
-	File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native) const
+void nif::NiSyncer<nif::NiStringExtraData>::syncRead(
+	File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native)
 {
 	//TODO
 }
-void nif::NiSyncer<nif::NiStringExtraData>::syncWriteImpl(
-	const File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native) const
+void nif::NiSyncer<nif::NiStringExtraData>::syncWrite(
+	const File& file, NiStringExtraData* object, Niflib::NiStringExtraData* native)
 {
 	//TODO
 }

@@ -21,68 +21,68 @@
 #include "File.h"
 
 
-void nif::NiSyncer<nif::NiPSysModifierCtlr>::syncReadImpl(
-	File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native) const
+void nif::NiSyncer<nif::NiPSysModifierCtlr>::syncRead(
+	File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native)
 {
 	//TODO
 }
-void nif::NiSyncer<nif::NiPSysModifierCtlr>::syncWriteImpl(
-	const File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native) const
-{
-	//TODO
-}
-
-void nif::NiSyncer<nif::NiPSysModifier>::syncReadImpl(
-	File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native) const
-{
-	//TODO
-}
-void nif::NiSyncer<nif::NiPSysModifier>::syncWriteImpl(
-	const File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native) const
+void nif::NiSyncer<nif::NiPSysModifierCtlr>::syncWrite(
+	const File& file, NiPSysModifierCtlr* object, Niflib::NiPSysModifierCtlr* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::NiPSysGravityModifier>::syncReadImpl(
-	File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native) const
+void nif::NiSyncer<nif::NiPSysModifier>::syncRead(
+	File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native)
 {
 	//TODO
 }
-void nif::NiSyncer<nif::NiPSysGravityModifier>::syncWriteImpl(
-	const File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native) const
-{
-	//TODO
-}
-
-void nif::NiSyncer<nif::NiPSysRotationModifier>::syncReadImpl(
-	File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native) const
-{
-	//TODO
-}
-void nif::NiSyncer<nif::NiPSysRotationModifier>::syncWriteImpl(
-	const File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native) const
+void nif::NiSyncer<nif::NiPSysModifier>::syncWrite(
+	const File& file, NiPSysModifier* object, Niflib::NiPSysModifier* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::BSPSysScaleModifier>::syncReadImpl(
-	File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native) const
+void nif::NiSyncer<nif::NiPSysGravityModifier>::syncRead(
+	File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native)
 {
 	//TODO
 }
-void nif::NiSyncer<nif::BSPSysScaleModifier>::syncWriteImpl(
-	const File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native) const
+void nif::NiSyncer<nif::NiPSysGravityModifier>::syncWrite(
+	const File& file, NiPSysGravityModifier* object, Niflib::NiPSysGravityModifier* native)
 {
 	//TODO
 }
 
-void nif::NiSyncer<nif::BSPSysSimpleColorModifier>::syncReadImpl(
-	File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native) const
+void nif::NiSyncer<nif::NiPSysRotationModifier>::syncRead(
+	File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native)
 {
 	//TODO
 }
-void nif::NiSyncer<nif::BSPSysSimpleColorModifier>::syncWriteImpl(
-	const File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native) const
+void nif::NiSyncer<nif::NiPSysRotationModifier>::syncWrite(
+	const File& file, NiPSysRotationModifier* object, Niflib::NiPSysRotationModifier* native)
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::BSPSysScaleModifier>::syncRead(
+	File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native)
+{
+	//TODO
+}
+void nif::NiSyncer<nif::BSPSysScaleModifier>::syncWrite(
+	const File& file, BSPSysScaleModifier* object, Niflib::BSPSysScaleModifier* native)
+{
+	//TODO
+}
+
+void nif::NiSyncer<nif::BSPSysSimpleColorModifier>::syncRead(
+	File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native)
+{
+	//TODO
+}
+void nif::NiSyncer<nif::BSPSysSimpleColorModifier>::syncWrite(
+	const File& file, BSPSysSimpleColorModifier* object, Niflib::BSPSysSimpleColorModifier* native)
 {
 	//TODO
 }

@@ -22,23 +22,22 @@
 
 namespace nif
 {
-	struct NiNode : NiAVObject
+	struct NiNode : NiTraversable<NiNode, NiAVObject>
 	{
 		Set<NiAVObject> children;
 	};
 	template<> struct type_map<Niflib::NiNode> { using type = NiNode; };
 	template<> struct type_map<NiNode> { using type = Niflib::NiNode; };
 
-	template<> class NiSyncer<NiNode> : public SyncerInherit<NiNode, NiAVObject>
+	template<> class NiSyncer<NiNode> : public NiSyncer<NiAVObject>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiNode* object, Niflib::NiNode* native) const;
-		void syncWriteImpl(const File& file, NiNode* object, Niflib::NiNode* native) const;
+		void syncRead(File& file, NiNode* object, Niflib::NiNode* native);
+		void syncWrite(const File& file, NiNode* object, Niflib::NiNode* native);
 	};
 
-	struct BSFadeNode : NiNode {};
+	struct BSFadeNode : NiTraversable<BSFadeNode, NiNode> {};
 	template<> struct type_map<Niflib::BSFadeNode> { using type = BSFadeNode; };
 	template<> struct type_map<BSFadeNode> { using type = Niflib::BSFadeNode; };
-	template<> class NiSyncer<BSFadeNode> : public NiSyncer<NiNode> { public: virtual ~NiSyncer() = default; };
+	template<> class NiSyncer<BSFadeNode> : public NiSyncer<NiNode> {};
 }

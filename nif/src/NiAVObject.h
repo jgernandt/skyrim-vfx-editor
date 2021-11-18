@@ -28,7 +28,7 @@ namespace nif
 		Property<scale_t> scale;
 	};
 
-	struct NiAVObject : NiObjectNET
+	struct NiAVObject : NiTraversable<NiAVObject, NiObjectNET>
 	{
 		FlagSet<std::uint_fast32_t> flags;
 		Transform transform;
@@ -36,11 +36,10 @@ namespace nif
 	template<> struct type_map<Niflib::NiAVObject> { using type = NiAVObject; };
 	template<> struct type_map<NiAVObject> { using type = Niflib::NiAVObject; };
 
-	template<> class NiSyncer<NiAVObject> : public SyncerInherit<NiAVObject, NiObjectNET>
+	template<> class NiSyncer<NiAVObject> : public NiSyncer<NiObjectNET>
 	{
 	public:
-		virtual ~NiSyncer() = default;
-		void syncReadImpl(File& file, NiAVObject* object, Niflib::NiAVObject* native) const;
-		void syncWriteImpl(const File& file, NiAVObject* object, Niflib::NiAVObject* native) const;
+		void syncRead(File& file, NiAVObject* object, Niflib::NiAVObject* native);
+		void syncWrite(const File& file, NiAVObject* object, Niflib::NiAVObject* native);
 	};
 }
