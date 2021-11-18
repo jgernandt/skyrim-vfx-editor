@@ -51,6 +51,8 @@ namespace nif
 			}
 		}
 
+		T get() const { return m_flags; }
+
 		void set(T flags) 
 		{
 			if (T to_set = (flags & ~(m_flags & flags)); to_set != T(0)) {
