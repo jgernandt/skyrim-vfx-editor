@@ -30,7 +30,28 @@
 
 namespace nif
 {
+	class File;
 	class NiTraverser;
+	struct NiExtraData;
+	struct NiTimeController;
+
+	//For the static mapping between Niflib types and our types
+	template<typename T>
+	struct type_map
+	{
+		//Specialise with the member type
+		//using type = NiObject;
+	};
+
+	//Transfers state between our model and Niflib (specialise and implement).
+	//(we don't really need this to be a template, but doesn't hurt us either)
+	template<typename T>
+	class NiSyncer
+	{
+	public:
+		void syncRead(File& file, T* object, typename type_map<T>::type* native) {}
+		void syncWrite(const File& file, T* object, typename type_map<T>::type* native) {}
+	};
 
 	template<typename T, typename Base>
 	struct NiTraversable : Base
@@ -54,26 +75,47 @@ namespace nif
 		virtual void receive(NiTraverser& t);
 	};
 
-	//For the static mapping between Niflib types and our types
-	template<typename T>
-	struct type_map
-	{
-		//Specialise with the member type
-		//using type = NiObject;
-	};
-
 	template<> struct type_map<Niflib::NiObject> { using type = NiObject; };
 	template<> struct type_map<NiObject> { using type = Niflib::NiObject; };
 
-	class File;
+	struct NiObjectNET : NiTraversable<NiObjectNET, NiObject>
+	{
+		Property<std::string> name;
+		Set<NiExtraData> extraData;
+		Sequence<NiTimeController> controllers;
+	};
 
-	//Transfers state between our model and Niflib (specialise and implement).
-	//(we don't really need this to be a template, but doesn't hurt us either)
-	template<typename T>
-	class NiSyncer
+	template<> struct type_map<Niflib::NiObjectNET> { using type = NiObjectNET; };
+	template<> struct type_map<NiObjectNET> { using type = Niflib::NiObjectNET; };
+
+	template<> class NiSyncer<NiObjectNET>
 	{
 	public:
-		void syncRead(File& file, T* object, typename type_map<T>::type* native) {}
-		void syncWrite(const File& file, T* object, typename type_map<T>::type* native) {}
+		void syncRead(File& file, NiObjectNET* object, Niflib::NiObjectNET* native);
+		void syncWrite(const File& file, NiObjectNET* object, Niflib::NiObjectNET* native);
+	};
+
+	struct Transform
+	{
+		Property<translation_t> translation;
+		Property<rotation_t> rotation;
+		Property<scale_t> scale;
+	};
+
+	struct NiAVObject : NiTraversable<NiAVObject, NiObjectNET>
+	{
+		//flags is 32 bit, but it was 16 in Niflibs days. 
+		//I can't be bothered to fix that right now. Will later.
+		FlagSet<std::uint_fast32_t> flags;
+		Transform transform;
+	};
+	template<> struct type_map<Niflib::NiAVObject> { using type = NiAVObject; };
+	template<> struct type_map<NiAVObject> { using type = Niflib::NiAVObject; };
+
+	template<> class NiSyncer<NiAVObject>
+	{
+	public:
+		void syncRead(File& file, NiAVObject* object, Niflib::NiAVObject* native);
+		void syncWrite(const File& file, NiAVObject* object, Niflib::NiAVObject* native);
 	};
 }

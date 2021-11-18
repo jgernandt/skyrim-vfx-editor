@@ -17,7 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "NiObjectNET.h"
+#include "NiObject.h"
 
 namespace nif
 {

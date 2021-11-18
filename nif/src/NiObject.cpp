@@ -19,6 +19,7 @@
 #include "pch.h"
 #include "NiObject.h"
 #include "File.h"
+#include "Traverser.h"
 
 #ifdef _DEBUG
 int g_currentNiObjects = 0;
@@ -38,8 +39,59 @@ nif::NiObject::~NiObject()
 #endif
 }
 
-#include "Traverser.h"
 void nif::NiObject::receive(NiTraverser& t)
 {
 	t.traverse(*this);
+}
+
+void nif::NiSyncer<nif::NiObjectNET>::syncRead(File& file, NiObjectNET* object, Niflib::NiObjectNET* native)
+{
+	assert(object && native);
+
+	object->name.set(native->GetName());
+
+	object->extraData.clear();
+	for (auto&& data : native->GetExtraData())
+		object->extraData.add(file.get<NiExtraData>(data));
+
+	object->controllers.clear();
+	for (auto&& ctlr : native->GetControllers())
+		object->controllers.insert(object->controllers.size(), file.get<NiTimeController>(ctlr));
+}
+
+void nif::NiSyncer<nif::NiObjectNET>::syncWrite(const File& file, NiObjectNET* object, Niflib::NiObjectNET* native)
+{
+	assert(object && native);
+
+	native->SetName(object->name.get());
+
+	native->ClearExtraData();
+	for (auto&& data : object->extraData)
+		native->AddExtraData(file.get<Niflib::NiExtraData>(data), Niflib::VER_20_2_0_7);
+
+	//Niflib adds to the front, so we reverse iterate here
+	native->ClearControllers();
+	for (auto rit = object->controllers.rbegin(); rit != object->controllers.rend(); ++rit)
+		native->AddController(file.get<Niflib::NiTimeController>(*rit));
+}
+
+void nif::NiSyncer<nif::NiAVObject>::syncRead(File& file, NiAVObject* object, Niflib::NiAVObject* native)
+{
+	assert(object && native);
+
+	object->flags.clear(-1);
+	object->flags.set(native->GetFlags());
+	object->transform.translation.set(nif_type_conversion<translation_t>::from(native->GetLocalTranslation()));
+	object->transform.rotation.set(nif_type_conversion<rotation_t>::from(native->GetLocalRotation()));
+	object->transform.scale.set(native->GetLocalScale());
+}
+
+void nif::NiSyncer<nif::NiAVObject>::syncWrite(const File& file, NiAVObject* object, Niflib::NiAVObject* native)
+{
+	assert(object && native);
+
+	native->SetFlags(object->flags.get());
+	native->SetLocalTranslation(nif_type_conversion<Niflib::Vector3>::from(object->transform.translation.get()));
+	native->SetLocalRotation(nif_type_conversion<Niflib::Matrix33>::from(object->transform.rotation.get()));
+	native->SetLocalScale(object->transform.scale.get());
 }

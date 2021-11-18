@@ -30,13 +30,11 @@
     <ClInclude Include="src\nif_backend.h" />
     <ClInclude Include="src\BSEffectShaderProperty.h" />
     <ClInclude Include="src\NiController.h" />
-    <ClInclude Include="src\NiAVObject.h" />
     <ClInclude Include="src\File.h" />
     <ClInclude Include="src\NiExtraData.h" />
     <ClInclude Include="src\nif_types.h" />
     <ClInclude Include="src\NiNode.h" />
     <ClInclude Include="src\NiObject.h" />
-    <ClInclude Include="src\NiObjectNET.h" />
     <ClInclude Include="src\NiParticleSystem.h" />
     <ClInclude Include="src\NiPSysEmitter.h" />
     <ClInclude Include="src\NiPSysModifier.h" />
@@ -49,13 +47,11 @@
   <ItemGroup>
     <ClCompile Include="src\BSEffectShaderProperty.cpp" />
     <ClCompile Include="src\File.cpp" />
-    <ClCompile Include="src\NiAVObject.cpp" />
     <ClCompile Include="src\NiController.cpp" />
     <ClCompile Include="src\NiExtraData.cpp" />
     <ClCompile Include="src\nif_conversions.cpp" />
     <ClCompile Include="src\NiNode.cpp" />
     <ClCompile Include="src\NiObject.cpp" />
-    <ClCompile Include="src\NiObjectNET.cpp" />
     <ClCompile Include="src\NiParticleSystem.cpp" />
     <ClCompile Include="src\NiPSysEmitter.cpp" />
     <ClCompile Include="src\NiPSysModifier.cpp" />

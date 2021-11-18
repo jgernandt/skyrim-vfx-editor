@@ -17,11 +17,12 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "BSEffectShaderProperty.h"
-#include "NiAVObject.h"
+#include "NiObject.h"
 
 namespace nif
 {
+	struct BSEffectShaderProperty;
+	struct NiAlphaProperty;
 	struct NiPSysModifier;
 
 	struct NiPSysData : NiTraversable<NiPSysData, NiObject>

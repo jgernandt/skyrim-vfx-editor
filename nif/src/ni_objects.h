@@ -18,6 +18,7 @@
 
 #pragma once
 #include "BSEffectShaderProperty.h"
+#include "NiExtraData.h"
 #include "NiNode.h"
 #include "NiParticleSystem.h"
 #include "NiPSysEmitter.h"

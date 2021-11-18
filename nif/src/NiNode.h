@@ -17,8 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "NiAVObject.h"
-#include "NiExtraData.h"
+#include "NiObject.h"
 
 namespace nif
 {
