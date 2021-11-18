@@ -123,57 +123,41 @@ void nif::File::makeRoot(const Niflib::Ref<Niflib::NiNode>& node)
 		//make_ni<T> must guarantee that the created object is actually of type T (or derived).
 		//(I don't like how these assumptions keep spilling out of the functions that make them)
 		m_rootNode = std::shared_ptr<NiNode>(block, static_cast<NiNode*>(block->object));
-		m_rootBlock = block;
 
 		//will get any referenced blocks, adding them to our index
-		syncRead();
+		NiReadSyncer syncer(*this);
+		m_rootNode->receive(syncer);
 	}
 }
 
 void nif::File::write(const std::filesystem::path& path)
 {
-	if (!path.empty() && syncWrite()) {
-		assert(m_rootBlock);//or syncWrite should have failed
-		
-		Niflib::NifInfo fileInfo;
-		switch (m_version) {
-		case Version::SKYRIM:
-			fileInfo.version = 0x14020007;
-			fileInfo.userVersion = 12;
-			fileInfo.userVersion2 = 83;
-			break;
-		case Version::SKYRIM_SE:
-			fileInfo.version = 0x14020007;
-			fileInfo.userVersion = 12;
-			fileInfo.userVersion2 = 100;
-			break;
+	if (m_rootNode && !path.empty()) {
+		if (auto it = m_objectIndex.find(m_rootNode.get()); it != m_objectIndex.end()) {
+			if (auto block = it->second.lock()) {
+
+				NiWriteSyncer syncer(*this);
+				m_rootNode->receive(syncer);
+
+				Niflib::NifInfo fileInfo;
+				switch (m_version) {
+				case Version::SKYRIM:
+					fileInfo.version = 0x14020007;
+					fileInfo.userVersion = 12;
+					fileInfo.userVersion2 = 83;
+					break;
+				case Version::SKYRIM_SE:
+					fileInfo.version = 0x14020007;
+					fileInfo.userVersion = 12;
+					fileInfo.userVersion2 = 100;
+					break;
+				}
+				fileInfo.exportInfo1 = "SVFX Editor";
+				fileInfo.exportInfo2 = "Niflib";
+
+				std::ofstream out(path, std::ofstream::binary);
+				Niflib::WriteNifTree(out, block->native, fileInfo);
+			}
 		}
-		fileInfo.exportInfo1 = "SVFX Editor";
-		fileInfo.exportInfo2 = "Niflib";
-
-		std::ofstream out(path, std::ofstream::binary);
-		Niflib::WriteNifTree(out, m_rootBlock->native, fileInfo);
 	}
-}
-
-bool nif::File::syncRead()
-{
-	if (m_rootBlock) {
-		//assert(m_rootBlock->syncer);
-		//m_rootBlock->syncer->syncRead(*this, m_rootBlock->object, m_rootBlock->native);
-		return true;
-	}
-	else
-		return false;
-}
-
-bool nif::File::syncWrite() const
-{
-	if (m_rootBlock) {
-		//assert(m_rootBlock->syncer);
-		//m_rootBlock->syncer->syncWrite(*this, m_rootBlock->object, m_rootBlock->native);
-		return true;
-	}
-	else
-		return false;
 }

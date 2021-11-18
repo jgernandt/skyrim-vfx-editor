@@ -74,11 +74,6 @@ namespace nif
 
 		void write(const std::filesystem::path& path);
 
-		//fetch data from backend objects
-		bool syncRead();
-		//send our data to backend objects
-		bool syncWrite() const;
-
 	private:
 		template<typename T>
 		std::shared_ptr<ObjectBlock> make_ni(const Niflib::Ref<typename type_map<T>::type>& native);
@@ -96,7 +91,6 @@ namespace nif
 
 		Version m_version{ Version::UNKNOWN };
 		std::shared_ptr<NiNode> m_rootNode;
-		std::shared_ptr<ObjectBlock> m_rootBlock;
 
 		std::map<Niflib::NiObject*, std::weak_ptr<ObjectBlock>> m_nativeIndex;
 		std::map<NiObject*, std::weak_ptr<ObjectBlock>> m_objectIndex;
