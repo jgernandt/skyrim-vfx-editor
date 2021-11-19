@@ -172,6 +172,7 @@
     <ClCompile Include="SyncNiObjectNET.cpp" />
     <ClCompile Include="SyncTestAVObject.cpp" />
     <ClCompile Include="SyncTestNiNode.cpp" />
+    <ClCompile Include="SyncTestNiProperties.cpp" />
     <ClCompile Include="SyncTests.cpp" />
     <ClCompile Include="TraversalTests.cpp" />
   </ItemGroup>
