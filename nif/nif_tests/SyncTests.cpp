@@ -8,7 +8,7 @@ namespace nif_tests
 	using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 	using namespace nif;
 
-
+	//Test that vertical sync of know types is correct
 	TEST_CLASS(SyncTests)
 	{
 	public:
@@ -28,55 +28,72 @@ namespace nif_tests
 
 		nif::File file{ nif::File::Version::SKYRIM_SE };
 
-		TEST_METHOD(_NiObjectNET)
+		TEST_METHOD(NiObjectNET)
 		{
 			Niflib::Ref<Niflib::NiObjectNET> native = new Niflib::NiObjectNET;
-			auto object = file.get<NiObjectNET>(native);
+			auto object = file.get<nif::NiObjectNET>(native);
 
-			SyncTest<NiObjectNET>{}.run(*object, native, file);
+			SyncTest<nif::NiObjectNET>{}.run(*object, native, file);
 		}
 
-		TEST_METHOD(_NiAVObject)
+		TEST_METHOD(NiAVObject)
 		{
 			Niflib::Ref<Niflib::NiAVObject> native = new Niflib::NiAVObject;
-			auto object = file.get<NiAVObject>(native);
+			auto object = file.get<nif::NiAVObject>(native);
 
-			SyncTest<NiAVObject>{}.run(*object, native, file);
+			SyncTest<nif::NiAVObject>{}.run(*object, native, file);
 		}
 
-		TEST_METHOD(_NiNode)
+		TEST_METHOD(NiNode)
 		{
 			Niflib::Ref<Niflib::NiNode> native = new Niflib::NiNode;
-			auto object = file.get<NiNode>(native);
+			auto object = file.get<nif::NiNode>(native);
 
-			SyncTest<NiNode>{}.run(*object, native, file);
+			SyncTest<nif::NiNode>{}.run(*object, native, file);
 		}
 
-		TEST_METHOD(_BSFadeNode)
+		TEST_METHOD(BSFadeNode)
 		{
 			Niflib::Ref<Niflib::BSFadeNode> native = new Niflib::BSFadeNode;
-			auto object = file.get<BSFadeNode>(native);
+			auto object = file.get<nif::BSFadeNode>(native);
 
-			SyncTest<BSFadeNode>{}.run(*object, native, file);
+			SyncTest<nif::BSFadeNode>{}.run(*object, native, file);
 		}
 
-		TEST_METHOD(_NiAlphaProperty)
+		TEST_METHOD(NiAlphaProperty)
 		{
 			Niflib::Ref<Niflib::NiAlphaProperty> native = new Niflib::NiAlphaProperty;
-			auto object = file.get<NiAlphaProperty>(native);
+			auto object = file.get<nif::NiAlphaProperty>(native);
 
-			SyncTest<NiAlphaProperty>{}.run(*object, native, file);
+			SyncTest<nif::NiAlphaProperty>{}.run(*object, native, file);
 		}
 
-		TEST_METHOD(_BSEffectShaderProperty)
+		TEST_METHOD(BSEffectShaderProperty)
 		{
 			Niflib::Ref<Niflib::BSEffectShaderProperty> native = new Niflib::BSEffectShaderProperty;
-			auto object = file.get<BSEffectShaderProperty>(native);
+			auto object = file.get<nif::BSEffectShaderProperty>(native);
 
-			SyncTest<BSEffectShaderProperty>{}.run(*object, native, file);
+			SyncTest<nif::BSEffectShaderProperty>{}.run(*object, native, file);
+		}
+
+		TEST_METHOD(NiBoolData)
+		{
+			Niflib::Ref<Niflib::NiBoolData> native = new Niflib::NiBoolData;
+			auto object = file.get<nif::NiBoolData>(native);
+
+			SyncTest<nif::NiBoolData>{}.run(*object, native, file);
+		}
+
+		TEST_METHOD(NiFloatData)
+		{
+			Niflib::Ref<Niflib::NiFloatData> native = new Niflib::NiFloatData;
+			auto object = file.get<nif::NiFloatData>(native);
+
+			SyncTest<nif::NiFloatData>{}.run(*object, native, file);
 		}
 	};
 
+	//Test that the syncer correctly identifies the final type of an object
 	TEST_CLASS(SyncTraverserTests)
 	{
 	public:
@@ -96,52 +113,68 @@ namespace nif_tests
 
 		nif::File file{ nif::File::Version::SKYRIM_SE };
 
-		TEST_METHOD(_NiObjectNET)
+		TEST_METHOD(NiObjectNET)
 		{
 			Niflib::Ref<Niflib::NiObjectNET> native = new Niflib::NiObjectNET;
-			auto object = file.get<NiObjectNET>(native);
+			auto object = file.get<nif::NiObjectNET>(native);
 
-			SyncTest<NiObjectNET>{}.run(*object, native, file);
+			SyncTest<nif::NiObjectNET>{}.run(*object, native, file);
 		}
 
-		TEST_METHOD(_NiAVObject)
+		TEST_METHOD(NiAVObject)
 		{
 			Niflib::Ref<Niflib::NiAVObject> native = new Niflib::NiAVObject;
-			auto object = file.get<NiAVObject>(native);
+			auto object = file.get<nif::NiAVObject>(native);
 
-			SyncTest<NiAVObject>{}.run(*object, native, file);
+			SyncTest<nif::NiAVObject>{}.run(*object, native, file);
 		}
 
-		TEST_METHOD(_NiNode)
+		TEST_METHOD(NiNode)
 		{
 			Niflib::Ref<Niflib::NiNode> native = new Niflib::NiNode;
-			auto object = file.get<NiNode>(native);
+			auto object = file.get<nif::NiNode>(native);
 
-			SyncTest<NiNode>{}.run(*object, native, file);
+			SyncTest<nif::NiNode>{}.run(*object, native, file);
 		}
 
-		TEST_METHOD(_BSFadeNode)
+		TEST_METHOD(BSFadeNode)
 		{
 			Niflib::Ref<Niflib::BSFadeNode> native = new Niflib::BSFadeNode;
-			auto object = file.get<BSFadeNode>(native);
+			auto object = file.get<nif::BSFadeNode>(native);
 
-			SyncTest<BSFadeNode>{}.run(*object, native, file);
+			SyncTest<nif::BSFadeNode>{}.run(*object, native, file);
 		}
 
-		TEST_METHOD(_NiAlphaProperty)
+		TEST_METHOD(NiAlphaProperty)
 		{
 			Niflib::Ref<Niflib::NiAlphaProperty> native = new Niflib::NiAlphaProperty;
-			auto object = file.get<NiAlphaProperty>(native);
+			auto object = file.get<nif::NiAlphaProperty>(native);
 
-			SyncTest<NiAlphaProperty>{}.run(*object, native, file);
+			SyncTest<nif::NiAlphaProperty>{}.run(*object, native, file);
 		}
 
-		TEST_METHOD(_BSEffectShaderProperty)
+		TEST_METHOD(BSEffectShaderProperty)
 		{
 			Niflib::Ref<Niflib::BSEffectShaderProperty> native = new Niflib::BSEffectShaderProperty;
-			auto object = file.get<BSEffectShaderProperty>(native);
+			auto object = file.get<nif::BSEffectShaderProperty>(native);
 
-			SyncTest<BSEffectShaderProperty>{}.run(*object, native, file);
+			SyncTest<nif::BSEffectShaderProperty>{}.run(*object, native, file);
+		}
+
+		TEST_METHOD(NiBoolData)
+		{
+			Niflib::Ref<Niflib::NiBoolData> native = new Niflib::NiBoolData;
+			auto object = file.get<nif::NiBoolData>(native);
+
+			SyncTest<nif::NiBoolData>{}.run(*object, native, file);
+		}
+
+		TEST_METHOD(NiFloatData)
+		{
+			Niflib::Ref<Niflib::NiFloatData> native = new Niflib::NiFloatData;
+			auto object = file.get<nif::NiFloatData>(native);
+
+			SyncTest<nif::NiFloatData>{}.run(*object, native, file);
 		}
 	};
 }

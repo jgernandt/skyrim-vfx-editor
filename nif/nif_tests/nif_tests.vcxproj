@@ -171,6 +171,7 @@
     </ClCompile>
     <ClCompile Include="SyncNiObjectNET.cpp" />
     <ClCompile Include="SyncTestAVObject.cpp" />
+    <ClCompile Include="SyncTestNiInterpolators.cpp" />
     <ClCompile Include="SyncTestNiNode.cpp" />
     <ClCompile Include="SyncTestNiProperties.cpp" />
     <ClCompile Include="SyncTests.cpp" />

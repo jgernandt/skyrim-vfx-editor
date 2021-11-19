@@ -185,4 +185,39 @@ namespace nif_tests
 
 		void test(BSEffectShaderProperty& object, Niflib::BSEffectShaderProperty* native);
 	};
+
+	template<>
+	struct SyncTestTraverser<NiBoolData> : VerticalTraverser<NiBoolData, SyncTestTraverser>
+	{
+		std::mt19937 rng;
+		std::uniform_int_distribution<KeyType> I;
+		std::uniform_real_distribution<float> F;
+		std::uniform_int_distribution<int> B{ 0, 1 };
+
+		PropertySyncTest<KeyType, Niflib::KeyType> keyType;
+		std::vector<Niflib::Key<unsigned char>> keys;
+
+		void operator() (NiBoolData& object, Niflib::NiBoolData* native, File& file);
+		void operator() (NiBoolData& object, Niflib::NiBoolData* native, File& file, int);
+		void operator() (NiBoolData& object, Niflib::NiBoolData* native, File& file, int, int);
+
+		void test(NiBoolData& object, Niflib::NiBoolData* native);
+	};
+
+	template<>
+	struct SyncTestTraverser<NiFloatData> : VerticalTraverser<NiFloatData, SyncTestTraverser>
+	{
+		std::mt19937 rng;
+		std::uniform_int_distribution<KeyType> I;
+		std::uniform_real_distribution<float> F;
+
+		PropertySyncTest<KeyType, Niflib::KeyType> keyType;
+		std::vector<Niflib::Key<float>> keys;
+
+		void operator() (NiFloatData& object, Niflib::NiFloatData* native, File& file);
+		void operator() (NiFloatData& object, Niflib::NiFloatData* native, File& file, int);
+		void operator() (NiFloatData& object, Niflib::NiFloatData* native, File& file, int, int);
+
+		void test(NiFloatData& object, Niflib::NiFloatData* native);
+	};
 }
