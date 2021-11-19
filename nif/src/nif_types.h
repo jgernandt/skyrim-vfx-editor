@@ -58,14 +58,12 @@ namespace nif
 	constexpr ForceType FORCE_SPHERICAL = 1;
 	constexpr ForceType FORCE_UNKNOWN = 2;
 
-	enum class KeyType : uint_fast32_t
-	{
-		LINEAR			= 1,
-		QUADRATIC		= 2,
-		TBC				= 3,
-		XYZ_ROTATION	= 4,
-		CONSTANT		= 5,
-	};
+	using KeyType = uint_fast32_t;
+	constexpr KeyType KEY_LINEAR		= 1;
+	constexpr KeyType KEY_QUADRATIC		= 2;
+	constexpr KeyType KEY_TBC			= 3;
+	constexpr KeyType KEY_XYZ_ROTATION	= 4;
+	constexpr KeyType KEY_CONSTANT		= 5;
 
 	using ShaderFlags = std::uint_fast32_t;
 	constexpr ShaderFlags SF1_PALETTE_COLOUR = 0x00000010;
@@ -179,12 +177,6 @@ namespace nif
 	};
 
 	template<>
-	struct NifConverter<KeyType>
-	{
-		static KeyType convert(Niflib::KeyType f);
-	};
-
-	template<>
 	struct NifConverter<std::array<int, 2>>
 	{
 		static std::array<int, 2> convert(const std::vector<nif::SubtextureOffset>& offsets);
@@ -207,10 +199,12 @@ namespace nif
 		static Niflib::SkyrimShaderPropertyFlags2 convert(ShaderFlags flags);
 	};
 	template<>
-	struct NifConverter<ShaderFlags>
+	struct NifConverter<std::uint_fast32_t>
 	{
-		static ShaderFlags convert(Niflib::SkyrimShaderPropertyFlags1 flags);
-		static ShaderFlags convert(Niflib::SkyrimShaderPropertyFlags2 flags);
+		static std::uint_fast32_t convert(Niflib::SkyrimShaderPropertyFlags1 flags);
+		static std::uint_fast32_t convert(Niflib::SkyrimShaderPropertyFlags2 flags);
+		static std::uint_fast32_t convert(Niflib::KeyType val);
+		static std::uint_fast32_t convert(Niflib::ForceType val);
 	};
 }
 

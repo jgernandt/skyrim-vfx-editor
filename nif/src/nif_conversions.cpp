@@ -112,10 +112,6 @@ Niflib::KeyType nif::NifConverter<Niflib::KeyType>::convert(KeyType f)
 {
 	return static_cast<Niflib::KeyType>(f);
 }
-nif::KeyType nif::NifConverter<nif::KeyType>::convert(Niflib::KeyType f)
-{
-	return static_cast<KeyType>(f);
-}
 
 
 std::array<int, 2> nif::NifConverter<std::array<int, 2>>::convert(const std::vector<nif::SubtextureOffset>& offsets)
@@ -201,12 +197,22 @@ Niflib::SkyrimShaderPropertyFlags2 nif::NifConverter<Niflib::SkyrimShaderPropert
 	return static_cast<Niflib::SkyrimShaderPropertyFlags2>(flags);
 }
 
-nif::ShaderFlags nif::NifConverter<nif::ShaderFlags>::convert(Niflib::SkyrimShaderPropertyFlags1 flags)
+std::uint_fast32_t nif::NifConverter<std::uint_fast32_t>::convert(Niflib::SkyrimShaderPropertyFlags1 flags)
 {
-	return static_cast<ShaderFlags>(flags);
+	return static_cast<std::uint_fast32_t>(flags);
 }
 
-nif::ShaderFlags nif::NifConverter<nif::ShaderFlags>::convert(Niflib::SkyrimShaderPropertyFlags2 flags)
+std::uint_fast32_t nif::NifConverter<std::uint_fast32_t>::convert(Niflib::SkyrimShaderPropertyFlags2 flags)
 {
-	return static_cast<ShaderFlags>(flags);
+	return static_cast<std::uint_fast32_t>(flags);
+}
+
+std::uint_fast32_t nif::NifConverter<std::uint_fast32_t>::convert(Niflib::KeyType val)
+{
+	return static_cast<std::uint_fast32_t>(val);
+}
+
+std::uint_fast32_t nif::NifConverter<std::uint_fast32_t>::convert(Niflib::ForceType val)
+{
+	return static_cast<std::uint_fast32_t>(val);
 }
