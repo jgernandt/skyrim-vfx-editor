@@ -18,7 +18,6 @@
 
 #include "pch.h"
 #include "File.h"
-#include "SyncTraversers.h"
 
 
 std::map<size_t, nif::File::CreateFcn> nif::File::s_typeRegistry;
@@ -82,9 +81,7 @@ namespace Niflib
 
 nif::File::File(Version version) : m_version{ version }
 {
-	makeRoot(new Niflib::BSFadeNode());
-	if (m_rootNode)
-		m_rootNode->name.set("NewFile.nif");
+	m_rootNode = create<BSFadeNode>();
 }
 
 nif::File::File(const std::filesystem::path& path)
@@ -102,23 +99,13 @@ nif::File::File(const std::filesystem::path& path)
 				m_version = Version::SKYRIM_SE;
 		}
 
-		makeRoot(Niflib::DynamicCast<Niflib::NiNode>(Niflib::FindRoot(objects)));
+		if (auto node = Niflib::DynamicCast<Niflib::NiNode>(Niflib::FindRoot(objects)))
+			m_rootNode = make_ni<NiNode>(node);
 	}
 }
 
 nif::File::~File()
 {
-}
-
-void nif::File::makeRoot(const Niflib::Ref<Niflib::NiNode>& node)
-{
-	if (node) {
-		m_rootNode = make_ni<NiNode>(node);
-
-		//will get any referenced blocks, adding them to our index
-		NiReadSyncer syncer(*this);
-		m_rootNode->receive(syncer);
-	}
 }
 
 void nif::File::write(const std::filesystem::path& path)
@@ -127,7 +114,7 @@ void nif::File::write(const std::filesystem::path& path)
 		if (auto it = m_objectIndex.find(m_rootNode.get()); it != m_objectIndex.end()) {
 			if (auto block = it->second.lock()) {
 
-				NiWriteSyncer syncer(*this);
+				ForwardingWriteSyncer syncer(*this);
 				m_rootNode->receive(syncer);
 
 				Niflib::NifInfo fileInfo;

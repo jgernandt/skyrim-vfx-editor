@@ -66,9 +66,6 @@
     <ClInclude Include="src\List.h">
       <Filter>Header Files\Data fields</Filter>
     </ClInclude>
-    <ClInclude Include="src\SyncTraversers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\NiProperties.h">
       <Filter>Header Files\Objects</Filter>
     </ClInclude>
@@ -105,9 +102,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\File.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SyncTraversers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\NiProperties.cpp">

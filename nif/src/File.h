@@ -26,6 +26,61 @@
 
 namespace nif
 {
+	class File;
+	class ForwardingReadSyncer;
+	class ForwardingWriteSyncer;
+	class NonForwardingReadSyncer;
+	class NonForwardingWriteSyncer;
+
+	template<typename T>
+	struct ForwardingReader
+	{
+		void operator() (T& obj, ForwardingReadSyncer& t);
+	};
+	template<typename T>
+	struct ForwardingWriter
+	{
+		void operator() (T& obj, ForwardingWriteSyncer& t);
+	};
+	template<typename T>
+	struct NonForwardingReader
+	{
+		void operator() (T& obj, NonForwardingReadSyncer& t);
+	};
+	template<typename T>
+	struct NonForwardingWriter
+	{
+		void operator() (T& obj, NonForwardingWriteSyncer& t);
+	};
+
+	class ForwardingReadSyncer final : public HorizontalTraverser<ForwardingReadSyncer, ForwardingReader>
+	{
+	public:
+		File& file;
+		ForwardingReadSyncer(File& file) : file{ file } {}
+	};
+
+	class ForwardingWriteSyncer final : public HorizontalTraverser<ForwardingWriteSyncer, ForwardingWriter>
+	{
+	public:
+		File& file;
+		ForwardingWriteSyncer(File& file) : file{ file } {}
+	};
+
+	class NonForwardingReadSyncer final : public HorizontalTraverser<NonForwardingReadSyncer, NonForwardingReader>
+	{
+	public:
+		File& file;
+		NonForwardingReadSyncer(File& file) : file{ file } {}
+	};
+
+	class NonForwardingWriteSyncer final : public HorizontalTraverser<NonForwardingWriteSyncer, NonForwardingWriter>
+	{
+	public:
+		File& file;
+		NonForwardingWriteSyncer(File& file) : file{ file } {}
+	};
+
 	class File
 	{
 	public:
@@ -75,7 +130,6 @@ namespace nif
 		Version getVersion() const { return m_version; }
 
 		std::shared_ptr<NiNode> getRoot() const { return m_rootNode; }
-		void makeRoot(const Niflib::Ref<Niflib::NiNode>& node);
 
 		void write(const std::filesystem::path& path);
 
@@ -119,6 +173,7 @@ namespace nif
 			return std::shared_ptr<T>(block, static_cast<T*>(block->object));
 		}
 		else
+			//needs sync. Who's responsibility is that?
 			return make_ni<T>(nativeRef);
 	}
 
@@ -191,6 +246,10 @@ namespace nif
 			assert(false);
 		}
 
+		//Make sure the output object is synced to the Niflib object
+		NonForwardingReadSyncer syncer(*this);
+		block->object->receive(syncer);
+
 		//downcast safe if type_map is correct
 		return std::shared_ptr<T>(block, static_cast<T*>(block->object));
 	}
@@ -218,5 +277,31 @@ namespace nif
 		};
 
 		return std::make_shared<NiObjectBlock>(native);
+	}
+
+	template<typename T>
+	inline void nif::ForwardingReader<T>::operator()(T& obj, ForwardingReadSyncer& t)
+	{
+		ReadSyncer<T>{}.down(obj, t.file.get<typename type_map<T>::type>(&obj), t.file);
+		Forwarder<T>{}.down(obj, t);
+	}
+
+	template<typename T>
+	inline void nif::ForwardingWriter<T>::operator()(T& obj, ForwardingWriteSyncer& t)
+	{
+		WriteSyncer<T>{}.down(obj, t.file.get<typename type_map<T>::type>(&obj), t.file);
+		Forwarder<T>{}.down(obj, t);
+	}
+
+	template<typename T>
+	inline void nif::NonForwardingReader<T>::operator()(T& obj, NonForwardingReadSyncer& t)
+	{
+		ReadSyncer<T>{}.down(obj, t.file.get<typename type_map<T>::type>(&obj), t.file);
+	}
+
+	template<typename T>
+	inline void nif::NonForwardingWriter<T>::operator()(T& obj, NonForwardingWriteSyncer& t)
+	{
+		WriteSyncer<T>{}.down(obj, t.file.get<typename type_map<T>::type>(&obj), t.file);
 	}
 }
