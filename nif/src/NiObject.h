@@ -61,6 +61,7 @@ namespace nif
 		void operator() (T& object, typename type_map<T>::type* native, const File& file) {}
 	};
 
+	using ni_type = size_t;
 
 	struct NiObject : NiTraversable<NiObject, void>
 	{
@@ -73,8 +74,8 @@ namespace nif
 		NiObject& operator=(const NiObject&) = delete;
 		NiObject& operator=(NiObject&&) = delete;
 
-		static const size_t TYPE;
-		virtual size_t type() const { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const { return TYPE; }
 	};
 
 	template<> struct type_map<Niflib::NiObject> { using type = NiObject; };
@@ -103,8 +104,8 @@ namespace nif
 		Set<NiExtraData> extraData;
 		Sequence<NiTimeController> controllers;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
 	template<> struct type_map<Niflib::NiObjectNET> { using type = NiObjectNET; };
@@ -134,8 +135,8 @@ namespace nif
 		FlagSet<std::uint_fast32_t> flags;
 		Transform transform;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiAVObject> { using type = NiAVObject; };
 	template<> struct type_map<NiAVObject> { using type = Niflib::NiAVObject; };

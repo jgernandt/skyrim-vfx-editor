@@ -27,8 +27,8 @@ namespace nif
 	{
 		Assignable<NiInterpolator> visIplr;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysEmitterCtlr> { using type = NiPSysEmitterCtlr; };
 	template<> struct type_map<NiPSysEmitterCtlr> { using type = Niflib::NiPSysEmitterCtlr; };
@@ -53,8 +53,8 @@ namespace nif
 		Property<float> elevation;
 		Property<float> elevationVar;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysEmitter> { using type = NiPSysEmitter; };
 	template<> struct type_map<NiPSysEmitter> { using type = Niflib::NiPSysEmitter; };
@@ -64,8 +64,8 @@ namespace nif
 	{
 		Assignable<NiNode> emitterObject;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysVolumeEmitter> { using type = NiPSysVolumeEmitter; };
 	template<> struct type_map<NiPSysVolumeEmitter> { using type = Niflib::NiPSysVolumeEmitter; };
@@ -77,8 +77,8 @@ namespace nif
 		Property<float> height;
 		Property<float> depth;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysBoxEmitter> { using type = NiPSysBoxEmitter; };
 	template<> struct type_map<NiPSysBoxEmitter> { using type = Niflib::NiPSysBoxEmitter; };
@@ -89,8 +89,8 @@ namespace nif
 		Property<float> radius;
 		Property<float> length;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysCylinderEmitter> { using type = NiPSysCylinderEmitter; };
 	template<> struct type_map<NiPSysCylinderEmitter> { using type = Niflib::NiPSysCylinderEmitter; };
@@ -100,8 +100,8 @@ namespace nif
 	{
 		Property<float> radius;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysSphereEmitter> { using type = NiPSysSphereEmitter; };
 	template<> struct type_map<NiPSysSphereEmitter> { using type = Niflib::NiPSysSphereEmitter; };

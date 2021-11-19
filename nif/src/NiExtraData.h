@@ -25,8 +25,8 @@ namespace nif
 	{
 		Property<std::string> name;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiExtraData> { using type = NiExtraData; };
 	template<> struct type_map<NiExtraData> { using type = Niflib::NiExtraData; };
@@ -44,8 +44,8 @@ namespace nif
 	{
 		Property<std::string> value;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiStringExtraData> { using type = NiStringExtraData; };
 	template<> struct type_map<NiStringExtraData> { using type = Niflib::NiStringExtraData; };

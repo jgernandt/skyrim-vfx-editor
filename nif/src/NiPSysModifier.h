@@ -28,8 +28,8 @@ namespace nif
 	{
 		Property<std::string> modifierName;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysModifierCtlr> { using type = NiPSysModifierCtlr; };
 	template<> struct type_map<NiPSysModifierCtlr> { using type = Niflib::NiPSysModifierCtlr; };
@@ -37,8 +37,8 @@ namespace nif
 
 	struct NiPSysUpdateCtlr : NiTraversable<NiPSysUpdateCtlr, NiTimeController> 
 	{
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysUpdateCtlr> { using type = NiPSysUpdateCtlr; };
 	template<> struct type_map<NiPSysUpdateCtlr> { using type = Niflib::NiPSysUpdateCtlr; };
@@ -51,8 +51,8 @@ namespace nif
 		Assignable<NiParticleSystem> target;
 		Property<bool> active;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysModifier> { using type = NiPSysModifier; };
 	template<> struct type_map<NiPSysModifier> { using type = Niflib::NiPSysModifier; };
@@ -60,8 +60,8 @@ namespace nif
 
 	struct NiPSysBoundUpdateModifier : NiTraversable<NiPSysBoundUpdateModifier, NiPSysModifier> 
 	{
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysBoundUpdateModifier> { using type = NiPSysBoundUpdateModifier; };
 	template<> struct type_map<NiPSysBoundUpdateModifier> { using type = Niflib::NiPSysBoundUpdateModifier; };
@@ -69,8 +69,8 @@ namespace nif
 
 	struct NiPSysAgeDeathModifier : NiTraversable<NiPSysAgeDeathModifier, NiPSysModifier> 
 	{
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysAgeDeathModifier> { using type = NiPSysAgeDeathModifier; };
 	template<> struct type_map<NiPSysAgeDeathModifier> { using type = Niflib::NiPSysAgeDeathModifier; };
@@ -78,8 +78,8 @@ namespace nif
 
 	struct NiPSysPositionModifier : NiTraversable<NiPSysPositionModifier, NiPSysModifier> 
 	{
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysPositionModifier> { using type = NiPSysPositionModifier; };
 	template<> struct type_map<NiPSysPositionModifier> { using type = Niflib::NiPSysPositionModifier; };
@@ -96,8 +96,8 @@ namespace nif
 		Property<float> turbulenceScale;
 		Property<bool> worldAligned;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysGravityModifier> { using type = NiPSysGravityModifier; };
 	template<> struct type_map<NiPSysGravityModifier> { using type = Niflib::NiPSysGravityModifier; };
@@ -111,8 +111,8 @@ namespace nif
 		Property<float> angleVar;
 		Property<bool> randomSign;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysRotationModifier> { using type = NiPSysRotationModifier; };
 	template<> struct type_map<NiPSysRotationModifier> { using type = Niflib::NiPSysRotationModifier; };
@@ -122,8 +122,8 @@ namespace nif
 	{
 		Property<std::vector<float>> scales;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::BSPSysScaleModifier> { using type = BSPSysScaleModifier; };
 	template<> struct type_map<BSPSysScaleModifier> { using type = Niflib::BSPSysScaleModifier; };
@@ -160,8 +160,8 @@ namespace nif
 		//Property<nif::ColRGBA> col2;
 		//Property<nif::ColRGBA> col3;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::BSPSysSimpleColorModifier> { using type = BSPSysSimpleColorModifier; };
 	template<> struct type_map<BSPSysSimpleColorModifier> { using type = Niflib::BSPSysSimpleColorModifier; };

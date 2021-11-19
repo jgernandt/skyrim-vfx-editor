@@ -33,8 +33,8 @@ namespace nif
 		Property<bool> hasRotationAngles;
 		Property<bool> hasRotationSpeeds;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiPSysData> { using type = NiPSysData; };
 	template<> struct type_map<NiPSysData> { using type = Niflib::NiPSysData; };
@@ -48,8 +48,8 @@ namespace nif
 		Assignable	<NiAlphaProperty>			alphaProperty;
 		Property	<bool>						worldSpace;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiParticleSystem> { using type = NiParticleSystem; };
 	template<> struct type_map<NiParticleSystem> { using type = Niflib::NiParticleSystem; };

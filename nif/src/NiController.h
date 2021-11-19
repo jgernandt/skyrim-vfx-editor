@@ -39,8 +39,8 @@ namespace nif
 		Property<KeyType> keyType;
 		List<Key<bool>> keys;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiBoolData> { using type = NiBoolData; };
 	template<> struct type_map<NiBoolData> { using type = Niflib::NiBoolData; };
@@ -59,8 +59,8 @@ namespace nif
 		Property<KeyType> keyType;
 		List<Key<float>> keys;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiFloatData> { using type = NiFloatData; };
 	template<> struct type_map<NiFloatData> { using type = Niflib::NiFloatData; };
@@ -77,8 +77,8 @@ namespace nif
 	//Interpolators
 	struct NiInterpolator : NiTraversable<NiInterpolator, NiObject> 
 	{
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiInterpolator> { using type = NiInterpolator; };
 	template<> struct type_map<NiInterpolator> { using type = Niflib::NiInterpolator; };
@@ -89,8 +89,8 @@ namespace nif
 		Property<bool> value;
 		Assignable<NiBoolData> data;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiBoolInterpolator> { using type = NiBoolInterpolator; };
 	template<> struct type_map<NiBoolInterpolator> { using type = Niflib::NiBoolInterpolator; };
@@ -101,8 +101,8 @@ namespace nif
 		Property<float> value;
 		Assignable<NiFloatData> data;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiFloatInterpolator> { using type = NiFloatInterpolator; };
 	template<> struct type_map<NiFloatInterpolator> { using type = Niflib::NiFloatInterpolator; };
@@ -110,8 +110,8 @@ namespace nif
 
 	struct NiBlendInterpolator : NiTraversable<NiBlendInterpolator, NiInterpolator> 
 	{
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiBlendInterpolator> { using type = NiBlendInterpolator; };
 	template<> struct type_map<NiBlendInterpolator> { using type = Niflib::NiBlendInterpolator; };
@@ -119,8 +119,8 @@ namespace nif
 
 	struct NiBlendBoolInterpolator : NiTraversable<NiBlendBoolInterpolator, NiBlendInterpolator> 
 	{
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiBlendBoolInterpolator> { using type = NiBlendBoolInterpolator; };
 	template<> struct type_map<NiBlendBoolInterpolator> { using type = Niflib::NiBlendBoolInterpolator; };
@@ -128,8 +128,8 @@ namespace nif
 
 	struct NiBlendFloatInterpolator : NiTraversable<NiBlendFloatInterpolator, NiBlendInterpolator> 
 	{
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiBlendFloatInterpolator> { using type = NiBlendFloatInterpolator; };
 	template<> struct type_map<NiBlendFloatInterpolator> { using type = Niflib::NiBlendFloatInterpolator; };
@@ -148,8 +148,8 @@ namespace nif
 		Property<float> startTime;
 		Property<float> stopTime;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiTimeController> { using type = NiTimeController; };
 	template<> struct type_map<NiTimeController> { using type = Niflib::NiTimeController; };
@@ -159,8 +159,8 @@ namespace nif
 	{
 		Assignable<NiInterpolator> interpolator;
 
-		static const size_t TYPE;
-		virtual size_t type() const override { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiSingleInterpController> { using type = NiSingleInterpController; };
 	template<> struct type_map<NiSingleInterpController> { using type = Niflib::NiSingleInterpController; };

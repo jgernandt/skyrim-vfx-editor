@@ -25,8 +25,8 @@ namespace nif
 	{
 		Set<NiAVObject> children;
 
-		static const size_t TYPE;
-		virtual size_t type() const { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const { return TYPE; }
 	};
 	template<> struct type_map<Niflib::NiNode> { using type = NiNode; };
 	template<> struct type_map<NiNode> { using type = Niflib::NiNode; };
@@ -42,8 +42,8 @@ namespace nif
 
 	struct BSFadeNode : NiTraversable<BSFadeNode, NiNode> 
 	{
-		static const size_t TYPE;
-		virtual size_t type() const { return TYPE; }
+		static const ni_type TYPE;
+		virtual ni_type type() const { return TYPE; }
 	};
 	template<> struct type_map<Niflib::BSFadeNode> { using type = BSFadeNode; };
 	template<> struct type_map<BSFadeNode> { using type = Niflib::BSFadeNode; };
