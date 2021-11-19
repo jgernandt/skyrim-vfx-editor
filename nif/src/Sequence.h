@@ -42,7 +42,10 @@ namespace nif
 	template<typename T>
 	class Sequence final : public Observable<Sequence<T>>
 	{
+		//Advantage of list is that iterators aren't invalidated on insert/erase, but
+		//we're not really taking advantage of that. vector might be better for now.
 		using ctnr_type = std::vector<std::shared_ptr<T>>;
+
 	public:
 		Sequence() = default;
 		~Sequence() { clear(); }
@@ -139,6 +142,12 @@ namespace nif
 		reverse_iterator rend() { return m_ctnr.rend(); }
 		const_reverse_iterator rend() const { return const_cast<Sequence<T>&>(*this).rend(); }
 
+		T* at(int i) const
+		{ 
+			assert(i >= 0 && (size_t)i < m_ctnr.size());
+			return m_ctnr[i].get(); 
+		}
+
 		//TODO: use iterators instead of ints
 		int insert(int i, const std::shared_ptr<T>& obj)
 		{
@@ -198,8 +207,6 @@ namespace nif
 		}
 
 	private:
-		//Advantage of list is that iterators aren't invalidated on insert/erase, but
-		//we're not really taking advantage of that. vector might be better for now.
 		ctnr_type m_ctnr;
 	};
 }
