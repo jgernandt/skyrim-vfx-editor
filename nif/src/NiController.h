@@ -46,11 +46,11 @@ namespace nif
 	template<> struct type_map<NiBoolData> { using type = Niflib::NiBoolData; };
 	template<> struct ReadSyncer<NiBoolData> : VerticalTraverser<NiBoolData, ReadSyncer>
 	{
-		void operator() (NiBoolData& object, Niflib::NiBoolData* native, File& file);
+		void operator() (NiBoolData& object, const Niflib::NiBoolData* native, File& file);
 	};
 	template<> struct WriteSyncer<NiBoolData> : VerticalTraverser<NiBoolData, WriteSyncer>
 	{
-		void operator() (NiBoolData& object, Niflib::NiBoolData* native, const File& file);
+		void operator() (const NiBoolData& object, Niflib::NiBoolData* native, const File& file);
 	};
 
 
@@ -66,11 +66,11 @@ namespace nif
 	template<> struct type_map<NiFloatData> { using type = Niflib::NiFloatData; };
 	template<> struct ReadSyncer<NiFloatData> : VerticalTraverser<NiFloatData, ReadSyncer>
 	{
-		void operator() (NiFloatData& object, Niflib::NiFloatData* native, File& file);
+		void operator() (NiFloatData& object, const Niflib::NiFloatData* native, File& file);
 	};
 	template<> struct WriteSyncer<NiFloatData> : VerticalTraverser<NiFloatData, WriteSyncer>
 	{
-		void operator() (NiFloatData& object, Niflib::NiFloatData* native, const File& file);
+		void operator() (const NiFloatData& object, Niflib::NiFloatData* native, const File& file);
 	};
 
 

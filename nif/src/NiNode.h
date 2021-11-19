@@ -32,11 +32,11 @@ namespace nif
 	template<> struct type_map<NiNode> { using type = Niflib::NiNode; };
 	template<> struct ReadSyncer<NiNode> : VerticalTraverser<NiNode, ReadSyncer>
 	{
-		void operator() (NiNode& object, Niflib::NiNode* native, File& file);
+		void operator() (NiNode& object, const Niflib::NiNode* native, File& file);
 	};
 	template<> struct WriteSyncer<NiNode> : VerticalTraverser<NiNode, WriteSyncer>
 	{
-		void operator() (NiNode& object, Niflib::NiNode* native, const File& file);
+		void operator() (const NiNode& object, Niflib::NiNode* native, const File& file);
 	};
 
 

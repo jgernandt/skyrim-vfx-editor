@@ -32,14 +32,14 @@ const size_t nif::NiTimeController::TYPE = std::hash<std::string>{}("NiTimeContr
 const size_t nif::NiSingleInterpController::TYPE = std::hash<std::string>{}("NiSingleInterpController");
 
 
-void nif::ReadSyncer<nif::NiBoolData>::operator()(NiBoolData& object, Niflib::NiBoolData* native, File& file)
+void nif::ReadSyncer<nif::NiBoolData>::operator()(NiBoolData& object, const Niflib::NiBoolData* native, File& file)
 {
 	assert(native);
 
 	object.keyType.set(nif_type_conversion<KeyType>::from(native->GetKeyType()));
 
 	object.keys.clear();
-	for (auto&& key : native->GetKeysRef()) {
+	for (auto&& key : native->GetKeys()) {
 		object.keys.push_back();
 		object.keys.back().time.set(key.time);
 		object.keys.back().value.set(static_cast<bool>(key.data));
@@ -51,7 +51,7 @@ void nif::ReadSyncer<nif::NiBoolData>::operator()(NiBoolData& object, Niflib::Ni
 	}
 }
 
-void nif::WriteSyncer<nif::NiBoolData>::operator()(NiBoolData& object, Niflib::NiBoolData* native, const File& file)
+void nif::WriteSyncer<nif::NiBoolData>::operator()(const NiBoolData& object, Niflib::NiBoolData* native, const File& file)
 {
 	assert(native);
 
@@ -66,14 +66,14 @@ void nif::WriteSyncer<nif::NiBoolData>::operator()(NiBoolData& object, Niflib::N
 }
 
 
-void nif::ReadSyncer<nif::NiFloatData>::operator()(NiFloatData& object, Niflib::NiFloatData* native, File& file)
+void nif::ReadSyncer<nif::NiFloatData>::operator()(NiFloatData& object, const Niflib::NiFloatData* native, File& file)
 {
 	assert(native);
 
 	object.keyType.set(nif_type_conversion<KeyType>::from(native->GetKeyType()));
 
 	object.keys.clear();
-	for (auto&& key : native->GetKeysRef()) {
+	for (auto&& key : native->GetKeys()) {
 		object.keys.push_back();
 		object.keys.back().time.set(key.time);
 		object.keys.back().value.set(key.data);
@@ -85,7 +85,7 @@ void nif::ReadSyncer<nif::NiFloatData>::operator()(NiFloatData& object, Niflib::
 	}
 }
 
-void nif::WriteSyncer<nif::NiFloatData>::operator()(NiFloatData& object, Niflib::NiFloatData* native, const File& file)
+void nif::WriteSyncer<nif::NiFloatData>::operator()(const NiFloatData& object, Niflib::NiFloatData* native, const File& file)
 {
 	assert(native);
 

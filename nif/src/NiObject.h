@@ -53,12 +53,12 @@ namespace nif
 	template<typename T>
 	struct ReadSyncer : VerticalTraverser<T, ReadSyncer>
 	{
-		void operator() (T& object, typename type_map<T>::type* native, File& file) {}
+		void operator() (T& object, const typename type_map<T>::type* native, File& file) {}
 	};
 	template<typename T>
 	struct WriteSyncer : VerticalTraverser<T, WriteSyncer>
 	{
-		void operator() (T& object, typename type_map<T>::type* native, const File& file) {}
+		void operator() (const T& object, typename type_map<T>::type* native, const File& file) {}
 	};
 
 	using ni_type = size_t;
@@ -113,11 +113,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiObjectNET> : VerticalTraverser<NiObjectNET, ReadSyncer>
 	{
-		void operator() (NiObjectNET& object, Niflib::NiObjectNET* native, File& file);
+		void operator() (NiObjectNET& object, const Niflib::NiObjectNET* native, File& file);
 	};
 	template<> struct WriteSyncer<NiObjectNET> : VerticalTraverser<NiObjectNET, WriteSyncer>
 	{
-		void operator() (NiObjectNET& object, Niflib::NiObjectNET* native, const File& file);
+		void operator() (const NiObjectNET& object, Niflib::NiObjectNET* native, const File& file);
 	};
 
 
@@ -143,10 +143,10 @@ namespace nif
 
 	template<> struct ReadSyncer<NiAVObject> : VerticalTraverser<NiAVObject, ReadSyncer>
 	{
-		void operator() (NiAVObject& object, Niflib::NiAVObject* native, File& file);
+		void operator() (NiAVObject& object, const Niflib::NiAVObject* native, File& file);
 	};
 	template<> struct WriteSyncer<NiAVObject> : VerticalTraverser<NiAVObject, WriteSyncer>
 	{
-		void operator() (NiAVObject& object, Niflib::NiAVObject* native, const File& file);
+		void operator() (const NiAVObject& object, Niflib::NiAVObject* native, const File& file);
 	};
 }

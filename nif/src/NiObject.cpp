@@ -42,11 +42,11 @@ nif::NiObject::~NiObject()
 #endif
 }
 
-void nif::ReadSyncer<nif::NiObjectNET>::operator()(NiObjectNET& object, Niflib::NiObjectNET* native, File& file)
+void nif::ReadSyncer<nif::NiObjectNET>::operator()(NiObjectNET& object, const Niflib::NiObjectNET* native, File& file)
 {
 	assert(native);
 
-	object.name.set(native->GetName());
+	object.name.set(const_cast<Niflib::NiObjectNET*>(native)->GetName());//this function should be const!
 
 	object.extraData.clear();
 	for (auto&& data : native->GetExtraData())
@@ -57,7 +57,7 @@ void nif::ReadSyncer<nif::NiObjectNET>::operator()(NiObjectNET& object, Niflib::
 		object.controllers.insert(object.controllers.size(), file.get<NiTimeController>(ctlr));
 }
 
-void nif::WriteSyncer<nif::NiObjectNET>::operator()(NiObjectNET& object, Niflib::NiObjectNET* native, const File& file)
+void nif::WriteSyncer<nif::NiObjectNET>::operator()(const NiObjectNET& object, Niflib::NiObjectNET* native, const File& file)
 {
 	assert(native);
 
@@ -73,7 +73,7 @@ void nif::WriteSyncer<nif::NiObjectNET>::operator()(NiObjectNET& object, Niflib:
 		native->AddController(file.get<Niflib::NiTimeController>(*rit));
 }
 
-void nif::ReadSyncer<nif::NiAVObject>::operator()(NiAVObject& object, Niflib::NiAVObject* native, File& file)
+void nif::ReadSyncer<nif::NiAVObject>::operator()(NiAVObject& object, const Niflib::NiAVObject* native, File& file)
 {
 	assert(native);
 
@@ -84,7 +84,7 @@ void nif::ReadSyncer<nif::NiAVObject>::operator()(NiAVObject& object, Niflib::Ni
 	object.transform.scale.set(native->GetLocalScale());
 }
 
-void nif::WriteSyncer<nif::NiAVObject>::operator()(NiAVObject& object, Niflib::NiAVObject* native, const File& file)
+void nif::WriteSyncer<nif::NiAVObject>::operator()(const NiAVObject& object, Niflib::NiAVObject* native, const File& file)
 {
 	assert(native);
 
