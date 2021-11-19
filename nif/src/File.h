@@ -58,12 +58,17 @@ namespace nif
 
 		~File();
 
-		//template<typename T>
-		//[[nodiscard]] std::shared_ptr<T> create();
+		//Create a new object of type T.
+		template<typename T>
+		[[nodiscard]] std::shared_ptr<T> create() { return make_ni<T>(nullptr); }
 
+		//Return the object that corresponds to Niflib object nativeRef.
+		//Creates a new object if none existed.
+		//(Should maybe be called getOrCreate, or similar)
 		template<typename T, typename NativeType>
 		[[nodiscard]] std::shared_ptr<T> get(const Niflib::Ref<NativeType>& nativeRef);
 
+		//Return the Niflib object that corresponds to object.
 		template<typename NativeType, typename T>
 		[[nodiscard]] Niflib::Ref<NativeType> get(T* object) const;
 
@@ -75,11 +80,11 @@ namespace nif
 		void write(const std::filesystem::path& path);
 
 	private:
+		//Create a new object and add to our index
 		template<typename T>
-		std::shared_ptr<ObjectBlock> make_ni(const Niflib::Ref<typename type_map<T>::type>& native);
-		template<typename T>
-		std::shared_ptr<ObjectBlock> make_ni() { return make_ni<T>(Niflib::Ref<typename type_map<T>::type>()); }
+		std::shared_ptr<T> make_ni(const Niflib::Ref<typename type_map<T>::type>& native);
 
+		//Our factory functions
 		template<typename T>
 		static std::shared_ptr<ObjectBlock> make_NiObject(const Niflib::Ref<Niflib::NiObject>& native);
 
@@ -95,53 +100,26 @@ namespace nif
 		std::map<Niflib::NiObject*, std::weak_ptr<ObjectBlock>> m_nativeIndex;
 		std::map<NiObject*, std::weak_ptr<ObjectBlock>> m_objectIndex;
 	};
-	/*
-	template<typename T>
-	inline [[nodiscard]] std::shared_ptr<T> File::create()
-	{
-		static_assert(std::is_base_of<NiObject, T>::value);
-
-		//Catch allocation errors, not ctor exceptions (that's the caller's problem).
-		// Actually, add this later. We're not checking for failure in our current code.
-		//try {
-		return std::static_pointer_cast<T>(T::type_id);
-		//}
-		//catch (const std::bad_alloc&) {
-		//	return std::shared_ptr<T>();
-		//}
-	}
-	*/
+	
 	template<typename T, typename NativeType>
 	inline [[nodiscard]] std::shared_ptr<T> File::get(const Niflib::Ref<NativeType>& nativeRef)
 	{
 		static_assert(std::is_base_of<typename type_map<T>::type, NativeType>::value);
 
-		NativeType* native = static_cast<NativeType*>(nativeRef);
-
-		std::shared_ptr<ObjectBlock> block;
-		if (auto it = m_nativeIndex.find(native); it != m_nativeIndex.end()) {
-			block = it->second.lock();
+		if (auto it = m_nativeIndex.find(static_cast<NativeType*>(nativeRef)); it != m_nativeIndex.end()) {
+			auto block = it->second.lock();
 			//if (!block) {
 				//The object is indexed, but it has expired.
 				//This is unexpected, but not really a problem. We can just recreate it.
 				//However, it is probably a bug. Let's treat it as such for now.
-				//block = make_ni<T>(nativeRef);
-				//assert(block);//make_ni should throw on allocation or ctor failure
-				//it->second = block;
-				//m_objectIndex[block->object] = block;
 			//}
 			assert(block);
-		}
-		else {
-			//create new
-			block = make_ni<T>(nativeRef);
-			assert(block);//make_ni should throw on allocation or ctor failure
-			m_nativeIndex[native] = block;
-			m_objectIndex[block->object] = block;
-		}
 
-		//downcast safe if type_map is correct
-		return std::shared_ptr<T>(block, static_cast<T*>(block->object));
+			//downcast safe if type_map is correct
+			return std::shared_ptr<T>(block, static_cast<T*>(block->object));
+		}
+		else
+			return make_ni<T>(nativeRef);
 	}
 
 	template<typename NativeType, typename T>
@@ -163,7 +141,7 @@ namespace nif
 	}
 	
 	template<typename T>
-	inline std::shared_ptr<nif::File::ObjectBlock> File::make_ni(const Niflib::Ref<typename type_map<T>::type>& native)
+	inline std::shared_ptr<T> File::make_ni(const Niflib::Ref<typename type_map<T>::type>& native)
 	{
 		//Our type registry contains all the types that we care about.
 		//If we step up through the inheritance chain of Niflib's type object,
@@ -199,8 +177,22 @@ namespace nif
 		//type_map<Y>::type, where Y is the Niflib type associated with the Niflib::Type object
 		//that the CreateFcn is mapped to.
 
-		return fcn(Niflib::StaticCast<Niflib::NiObject>(native));
+		auto block = fcn(Niflib::StaticCast<Niflib::NiObject>(native));
+
 		//factory should throw on failure. We won't catch it, we'll typically be part of a longer procedure.
+		assert(block);
+
+		if (auto res = m_objectIndex.insert({ block->object, block }); !res.second) {
+			//The object has already been indexed. This should be checked before calling us.
+			assert(false);
+		}
+		if (auto res = m_nativeIndex.insert({ block->native, block }); !res.second) {
+			//same here
+			assert(false);
+		}
+
+		//downcast safe if type_map is correct
+		return std::shared_ptr<T>(block, static_cast<T*>(block->object));
 	}
 
 	template<typename T>
