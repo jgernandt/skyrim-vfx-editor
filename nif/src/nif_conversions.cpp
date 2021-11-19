@@ -190,3 +190,23 @@ float& util::array_traits<Niflib::Vector3>::at(Niflib::Vector3& t, size_t i)
 {
 	return t[i];
 }
+
+Niflib::SkyrimShaderPropertyFlags1 nif::NifConverter<Niflib::SkyrimShaderPropertyFlags1>::convert(ShaderFlags flags)
+{
+	return static_cast<Niflib::SkyrimShaderPropertyFlags1>(flags);
+}
+
+Niflib::SkyrimShaderPropertyFlags2 nif::NifConverter<Niflib::SkyrimShaderPropertyFlags2>::convert(ShaderFlags flags)
+{
+	return static_cast<Niflib::SkyrimShaderPropertyFlags2>(flags);
+}
+
+nif::ShaderFlags nif::NifConverter<nif::ShaderFlags>::convert(Niflib::SkyrimShaderPropertyFlags1 flags)
+{
+	return static_cast<ShaderFlags>(flags);
+}
+
+nif::ShaderFlags nif::NifConverter<nif::ShaderFlags>::convert(Niflib::SkyrimShaderPropertyFlags2 flags)
+{
+	return static_cast<ShaderFlags>(flags);
+}

@@ -67,6 +67,14 @@ namespace nif
 		CONSTANT		= 5,
 	};
 
+	using ShaderFlags = std::uint_fast32_t;
+	constexpr ShaderFlags SF1_PALETTE_COLOUR = 0x00000010;
+	constexpr ShaderFlags SF1_PALETTE_ALPHA = 0x00000020;
+	constexpr ShaderFlags SF1_ZBUFFER_TEST = 0x80000000;
+
+	constexpr ShaderFlags SF2_DOUBLE_SIDED = 0x00000010;
+	constexpr ShaderFlags SF2_VERTEX_COLOUR = 0x00000020;
+
 	//Forward declare all object types
 	struct NiObject;
 	struct NiObjectNET;
@@ -84,9 +92,6 @@ namespace nif
 		template<typename From>
 		static T convert(From&& f) { return util::DefaultConverter<T>::convert(f); }
 	};
-
-	template<typename T>
-	using nif_type_conversion = util::type_conversion<T, NifConverter<T>>;
 
 	template<>
 	struct NifConverter<std::array<float, 3>>
@@ -186,8 +191,27 @@ namespace nif
 	{
 		static std::vector<nif::SubtextureOffset> convert(const std::array<int, 2>& count);
 	};
+
+	template<>
+	struct NifConverter<Niflib::SkyrimShaderPropertyFlags1>
+	{
+		static Niflib::SkyrimShaderPropertyFlags1 convert(ShaderFlags flags);
+	};
+	template<>
+	struct NifConverter<Niflib::SkyrimShaderPropertyFlags2>
+	{
+		static Niflib::SkyrimShaderPropertyFlags2 convert(ShaderFlags flags);
+	};
+	template<>
+	struct NifConverter<ShaderFlags>
+	{
+		static ShaderFlags convert(Niflib::SkyrimShaderPropertyFlags1 flags);
+		static ShaderFlags convert(Niflib::SkyrimShaderPropertyFlags2 flags);
+	};
 }
 
+template<typename T>
+using nif_type_conversion = util::type_conversion<T, nif::NifConverter<T>>;
 
 template<>
 struct util::array_traits<Niflib::Vector3>
