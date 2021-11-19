@@ -49,8 +49,11 @@ namespace nif
 		~List() { clear(); }
 
 		using iterator = typename ctnr_type::iterator;
+		using const_iterator = typename ctnr_type::const_iterator;
 		iterator begin() { return m_ctnr.begin(); }
+		const_iterator begin() const { return m_ctnr.begin(); }
 		iterator end() { return m_ctnr.end(); }
+		const_iterator end() const { return m_ctnr.end(); }
 
 		T& at(int i) 
 		{ 
