@@ -23,6 +23,8 @@
 #include "type_conversion.h"
 #include "Rotation.h"
 
+#include "nif_backend.h"
+
 namespace nif
 {
 	template<size_t N>
