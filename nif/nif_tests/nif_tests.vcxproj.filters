@@ -62,5 +62,8 @@
     <ClInclude Include="SyncTestTraverser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EquivalenceTester.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

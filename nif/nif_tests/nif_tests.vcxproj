@@ -179,6 +179,7 @@
     <ClCompile Include="TraversalTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EquivalenceTester.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SyncTestTraverser.h" />
   </ItemGroup>
