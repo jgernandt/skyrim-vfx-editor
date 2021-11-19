@@ -88,84 +88,45 @@ namespace nif
 		}
 	};
 
-	/*
-	//Brainstorming how to template the horizontal traverser. We'd rather not have to
+	
+	//A pattern for templating NiTraverser. We'd rather not have to
 	//stencil out all those traverse overloads more than once...
-
-	//Parameters could be passed as a templated struct:
-	template<template<typename> typename TraverserType> struct TraverserParams {};
-	//However, this doesn't let us pass e.g. *this as a parameter. 
-	//We can get around that, but it's weird.
-
-	//Direction can easily be templated by an enum template arg and constexpr if:
-	enum class TraverseDirection
-	{
-		DOWN,
-		UP
-	};
-
-	//Forwarding behaviour options can be added the same way. 
-	//(we could also template the forwarder class template)
-	enum class ForwardingBehaviour
-	{
-		NONE,
-		FIRST,
-		LAST
-	};
-
-	template<typename T> struct Forwarder;
-
-	template<
-		template<typename> typename VerticalType, 
-		template<typename> typename ForwarderType = Forwarder,
-		ForwardingBehaviour Fwd = ForwardingBehaviour::LAST,
-		TraverseDirection Dir = TraverseDirection::DOWN>
+	
+	//An implemented type T inherits HorizontalTraverser<T, ImplementedFcnObj>.
+	//This means that the function object has access to members on the implemented traverser type.
+	template<typename TraverserType, template<typename> typename FunctionObj>
 	class HorizontalTraverser : public NiTraverser
 	{
 	public:
-		HorizontalTraverser(const TraverserParams<VerticalType>&) {}
 		virtual ~HorizontalTraverser() = default;
 
-		virtual void traverse(NiObject& obj) override
-		{
-			if constexpr (Fwd == ForwardingBehaviour::FIRST) {
-				if constexpr (Dir == TraverseDirection::DOWN)
-					ForwarderType<NiObject>{}.down(obj, *this);
-				else
-					ForwarderType<NiObject>{}.up(obj, *this);
-			}
-
-			if constexpr (Dir == TraverseDirection::DOWN)
-				VerticalType<NiObject>{}.down(obj, params);
-			else
-				VerticalType<NiObject>{}.up(obj, params);
-
-			if constexpr (Fwd == ForwardingBehaviour::LAST) {
-				if constexpr (Dir == TraverseDirection::DOWN)
-					ForwarderType<NiObject>{}.down(obj, *this);
-				else
-					ForwarderType<NiObject>{}.up(obj, *this);
-			}
-		}
-		//etc.
-
-	private:
-		TraverserParams<VerticalType> params;
+		virtual void traverse(NiObject& obj) override { FunctionObj<NiObject>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiObjectNET& obj) override { FunctionObj<NiObjectNET>{}(obj, static_cast<TraverserType&>(*this)); }
+		//etc
 	};
+
+	class ExampleTraverser;
 
 	template<typename T>
-	struct ExampleVerticalType : VerticalTraverser<T, ExampleVerticalType>
+	struct ExampleFcn
 	{
-		void operator() (T& object, TraverserParams<ExampleVerticalType>& params) {}
+		void operator() (T& obj, ExampleTraverser& traverser);
 	};
 
-	class ExampleTraverser : public HorizontalTraverser<ExampleVerticalType>
+	class ExampleTraverser : public HorizontalTraverser<ExampleTraverser, ExampleFcn>
 	{
+		template<typename T> friend struct ExampleFcn;
+		int member;
+
 	public:
-		ExampleTraverser(const TraverserParams<ExampleVerticalType>& p) : HorizontalTraverser(p) {}
-		virtual ~ExampleTraverser() = default;
+		virtual void traverse(BSFadeNode&) override { /*do something special*/ }
+		//else it goes to ExampleFcn by default
 	};
 
-	//This isn't quite working, and I'm not sure it's a great idea anyway.
-	*/
+	template<typename T> 
+	inline void ExampleFcn<T>::operator() (T& obj, ExampleTraverser& traverser)
+	{
+		int visible = traverser.member;
+		//invoke vertical traversers or whatever
+	}
 }
