@@ -1,6 +1,5 @@
 #pragma once
 #include "CppUnitTest.h"
-#include "SyncTraversers.h"
 
 namespace nif_tests
 {
@@ -58,12 +57,6 @@ namespace nif_tests
 			Assert::IsTrue(prop.get() == val);
 			Assert::IsTrue((native->*get)() == nif_type_conversion<NativeType>::from(val));
 		}
-		template<typename ObjType, typename RetType>
-		void test(Property<T>& prop, ObjType* native, RetType(ObjType::* get)())
-		{
-			Assert::IsTrue(prop.get() == val);
-			Assert::IsTrue((native->*get)() == nif_type_conversion<NativeType>::from(val));
-		}
 	};
 	template<>
 	struct PropertySyncTest<std::string, std::string>
@@ -83,12 +76,6 @@ namespace nif_tests
 		}
 		template<typename ObjType, typename RetType>
 		void test(Property<std::string>& prop, ObjType* native, RetType(ObjType::* get)() const)
-		{
-			Assert::IsTrue(prop.get() == val);
-			Assert::IsTrue((native->*get)() == val);
-		}
-		template<typename ObjType, typename RetType>
-		void test(Property<std::string>& prop, ObjType* native, RetType(ObjType::* get)())
 		{
 			Assert::IsTrue(prop.get() == val);
 			Assert::IsTrue((native->*get)() == val);
