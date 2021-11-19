@@ -58,6 +58,12 @@ namespace nif_tests
 			Assert::IsTrue(prop.get() == val);
 			Assert::IsTrue((native->*get)() == nif_type_conversion<NativeType>::from(val));
 		}
+		template<typename ObjType, typename RetType>
+		void test(Property<T>& prop, ObjType* native, RetType(ObjType::* get)())
+		{
+			Assert::IsTrue(prop.get() == val);
+			Assert::IsTrue((native->*get)() == nif_type_conversion<NativeType>::from(val));
+		}
 	};
 	template<>
 	struct PropertySyncTest<std::string, std::string>
@@ -77,6 +83,12 @@ namespace nif_tests
 		}
 		template<typename ObjType, typename RetType>
 		void test(Property<std::string>& prop, ObjType* native, RetType(ObjType::* get)() const)
+		{
+			Assert::IsTrue(prop.get() == val);
+			Assert::IsTrue((native->*get)() == val);
+		}
+		template<typename ObjType, typename RetType>
+		void test(Property<std::string>& prop, ObjType* native, RetType(ObjType::* get)())
 		{
 			Assert::IsTrue(prop.get() == val);
 			Assert::IsTrue((native->*get)() == val);
@@ -219,5 +231,29 @@ namespace nif_tests
 		void operator() (NiFloatData& object, Niflib::NiFloatData* native, File& file, int, int);
 
 		void test(NiFloatData& object, Niflib::NiFloatData* native);
+	};
+
+	template<>
+	struct SyncTestTraverser<NiExtraData> : VerticalTraverser<NiExtraData, SyncTestTraverser>
+	{
+		PropertySyncTest<std::string> name;
+
+		void operator() (NiExtraData& object, Niflib::NiExtraData* native, File& file);
+		void operator() (NiExtraData& object, Niflib::NiExtraData* native, File& file, int);
+		void operator() (NiExtraData& object, Niflib::NiExtraData* native, File& file, int, int);
+
+		void test(NiExtraData& object, Niflib::NiExtraData* native);
+	};
+
+	template<>
+	struct SyncTestTraverser<NiStringExtraData> : VerticalTraverser<NiStringExtraData, SyncTestTraverser>
+	{
+		PropertySyncTest<std::string> value;
+
+		void operator() (NiStringExtraData& object, Niflib::NiStringExtraData* native, File& file);
+		void operator() (NiStringExtraData& object, Niflib::NiStringExtraData* native, File& file, int);
+		void operator() (NiStringExtraData& object, Niflib::NiStringExtraData* native, File& file, int, int);
+
+		void test(NiStringExtraData& object, Niflib::NiStringExtraData* native);
 	};
 }

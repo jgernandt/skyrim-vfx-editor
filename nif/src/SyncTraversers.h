@@ -40,6 +40,9 @@ namespace nif
 		virtual void traverse(NiBoolData& obj) override;
 		virtual void traverse(NiFloatData& obj) override;
 
+		virtual void traverse(NiExtraData& obj) override;
+		virtual void traverse(NiStringExtraData& obj) override;
+
 	private:
 		File& m_file;
 	};
@@ -60,6 +63,9 @@ namespace nif
 
 		virtual void traverse(NiBoolData& obj) override;
 		virtual void traverse(NiFloatData& obj) override;
+
+		virtual void traverse(NiExtraData& obj) override;
+		virtual void traverse(NiStringExtraData& obj) override;
 
 	private:
 		const File& m_file;

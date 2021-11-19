@@ -91,6 +91,22 @@ namespace nif_tests
 
 			SyncTest<nif::NiFloatData>{}.run(*object, native, file);
 		}
+
+		TEST_METHOD(NiExtraData)
+		{
+			Niflib::Ref<Niflib::NiExtraData> native = new Niflib::NiExtraData;
+			auto object = file.get<nif::NiExtraData>(native);
+
+			SyncTest<nif::NiExtraData>{}.run(*object, native, file);
+		}
+
+		TEST_METHOD(NiStringExtraData)
+		{
+			Niflib::Ref<Niflib::NiStringExtraData> native = new Niflib::NiStringExtraData;
+			auto object = file.get<nif::NiStringExtraData>(native);
+
+			SyncTest<nif::NiStringExtraData>{}.run(*object, native, file);
+		}
 	};
 
 	//Test that the syncer correctly identifies the final type of an object
@@ -175,6 +191,22 @@ namespace nif_tests
 			auto object = file.get<nif::NiFloatData>(native);
 
 			SyncTest<nif::NiFloatData>{}.run(*object, native, file);
+		}
+
+		TEST_METHOD(NiExtraData)
+		{
+			Niflib::Ref<Niflib::NiExtraData> native = new Niflib::NiExtraData;
+			auto object = file.get<nif::NiExtraData>(native);
+
+			SyncTest<nif::NiExtraData>{}.run(*object, native, file);
+		}
+
+		TEST_METHOD(NiStringExtraData)
+		{
+			Niflib::Ref<Niflib::NiStringExtraData> native = new Niflib::NiStringExtraData;
+			auto object = file.get<nif::NiStringExtraData>(native);
+
+			SyncTest<nif::NiStringExtraData>{}.run(*object, native, file);
 		}
 	};
 }

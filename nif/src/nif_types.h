@@ -81,6 +81,8 @@ namespace nif
 	struct BSFadeNode;
 
 	struct NiExtraData;
+	struct NiStringExtraData;
+
 	struct NiTimeController;
 
 	struct NiProperty;

@@ -37,6 +37,9 @@ namespace nif
 
 		virtual void traverse(NiBoolData& obj) {}
 		virtual void traverse(NiFloatData& obj) {}
+
+		virtual void traverse(NiExtraData& obj) {}
+		virtual void traverse(NiStringExtraData& obj) {}
 		//etc.
 	};
 

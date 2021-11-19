@@ -65,6 +65,16 @@ void nif::NiReadSyncer::traverse(NiFloatData& obj)
 	ReadSyncer<NiFloatData>{}.down(obj, m_file.get<Niflib::NiFloatData>(&obj), m_file);
 }
 
+void nif::NiReadSyncer::traverse(NiExtraData& obj)
+{
+	ReadSyncer<NiExtraData>{}.down(obj, m_file.get<Niflib::NiExtraData>(&obj), m_file);
+}
+
+void nif::NiReadSyncer::traverse(NiStringExtraData& obj)
+{
+	ReadSyncer<NiStringExtraData>{}.down(obj, m_file.get<Niflib::NiStringExtraData>(&obj), m_file);
+}
+
 
 
 void nif::NiWriteSyncer::traverse(NiObjectNET& obj)
@@ -110,4 +120,14 @@ void nif::NiWriteSyncer::traverse(NiBoolData& obj)
 void nif::NiWriteSyncer::traverse(NiFloatData& obj)
 {
 	WriteSyncer<NiFloatData>{}.down(obj, m_file.get<Niflib::NiFloatData>(&obj), m_file);
+}
+
+void nif::NiWriteSyncer::traverse(NiExtraData& obj)
+{
+	WriteSyncer<NiExtraData>{}.down(obj, m_file.get<Niflib::NiExtraData>(&obj), m_file);
+}
+
+void nif::NiWriteSyncer::traverse(NiStringExtraData& obj)
+{
+	WriteSyncer<NiStringExtraData>{}.down(obj, m_file.get<Niflib::NiStringExtraData>(&obj), m_file);
 }

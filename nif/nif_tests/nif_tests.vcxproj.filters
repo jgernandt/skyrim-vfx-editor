@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\helpers">
+      <UniqueIdentifier>{9f490aee-f74b-47a2-9f1a-b8d59a3f14c7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DataFieldTests.cpp">
@@ -30,23 +33,26 @@
     <ClCompile Include="TraversalTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SyncNiObjectNET.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SyncTestAVObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SyncTestNiNode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ObjectIndexTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SyncTestNiProperties.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SyncTestNiObjectNET.cpp">
+      <Filter>Source Files\helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="SyncTestAVObject.cpp">
+      <Filter>Source Files\helpers</Filter>
     </ClCompile>
     <ClCompile Include="SyncTestNiInterpolators.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="SyncTestNiNode.cpp">
+      <Filter>Source Files\helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="SyncTestNiProperties.cpp">
+      <Filter>Source Files\helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="SyncTestExtraData.cpp">
+      <Filter>Source Files\helpers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
