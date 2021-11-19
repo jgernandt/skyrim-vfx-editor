@@ -79,9 +79,22 @@ namespace nif
 			TraverserType<typename T::base_type>::down(object, std::forward<Args>(args)...);
 			static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...);
 		}
+		template<typename... Args>
+		void down(const T& object, Args&&... args)
+		{
+			TraverserType<typename T::base_type>::down(object, std::forward<Args>(args)...);
+			static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...);
+		}
+
 		//Traverse from T and up to the base type
 		template<typename... Args>
 		void up(T& object, Args&&... args)
+		{
+			static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...);
+			TraverserType<typename T::base_type>::up(object, std::forward<Args>(args)...);
+		}
+		template<typename... Args>
+		void up(const T& object, Args&&... args)
 		{
 			static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...);
 			TraverserType<typename T::base_type>::up(object, std::forward<Args>(args)...);
