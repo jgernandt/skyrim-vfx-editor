@@ -115,7 +115,19 @@ namespace nif
 
 		virtual void traverse(NiObject& obj) override { FunctionObj<NiObject>{}(obj, static_cast<TraverserType&>(*this)); }
 		virtual void traverse(NiObjectNET& obj) override { FunctionObj<NiObjectNET>{}(obj, static_cast<TraverserType&>(*this)); }
-		//etc
+		virtual void traverse(NiAVObject& obj) override { FunctionObj<NiAVObject>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiNode& obj) override { FunctionObj<NiNode>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(BSFadeNode& obj) override { FunctionObj<BSFadeNode>{}(obj, static_cast<TraverserType&>(*this)); }
+
+		virtual void traverse(NiProperty& obj) override { FunctionObj<NiProperty>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiAlphaProperty& obj) override { FunctionObj<NiAlphaProperty>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(BSEffectShaderProperty& obj) override { FunctionObj<BSEffectShaderProperty>{}(obj, static_cast<TraverserType&>(*this)); }
+
+		virtual void traverse(NiBoolData& obj) override { FunctionObj<NiBoolData>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiFloatData& obj) override { FunctionObj<NiFloatData>{}(obj, static_cast<TraverserType&>(*this)); }
+
+		virtual void traverse(NiExtraData& obj) override { FunctionObj<NiExtraData>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiStringExtraData& obj) override { FunctionObj<NiStringExtraData>{}(obj, static_cast<TraverserType&>(*this)); }
 	};
 
 	class ExampleTraverser;
