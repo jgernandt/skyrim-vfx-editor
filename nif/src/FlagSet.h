@@ -78,6 +78,7 @@ namespace nif
 				}
 			}
 		}
+		void clear() { clear(m_flags); }
 		void clear(T flags)
 		{
 			if constexpr (std::is_enum<T>::value) {
