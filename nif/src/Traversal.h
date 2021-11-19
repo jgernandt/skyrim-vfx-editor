@@ -25,12 +25,15 @@ namespace nif
 	{
 	public:
 		virtual ~NiTraverser() = default;
-		virtual void traverse(NiObject& obj);
-		virtual void traverse(NiObjectNET& obj);
-		virtual void traverse(NiAVObject& obj);
-		virtual void traverse(NiNode& obj);
-		virtual void traverse(BSFadeNode& obj);
+		virtual void traverse(NiObject& obj) {}
+		virtual void traverse(NiObjectNET& obj) {}
+		virtual void traverse(NiAVObject& obj) {}
+		virtual void traverse(NiNode& obj) {}
+		virtual void traverse(BSFadeNode& obj) {}
 
+		virtual void traverse(NiProperty& obj) {}
+		virtual void traverse(NiAlphaProperty& obj) {}
+		virtual void traverse(BSEffectShaderProperty& obj) {}
 		//etc.
 	};
 

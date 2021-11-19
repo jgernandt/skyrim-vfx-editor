@@ -23,47 +23,71 @@
 void nif::NiReadSyncer::traverse(NiObjectNET& obj)
 {
 	ReadSyncer<NiObjectNET>{}.down(obj, m_file.get<Niflib::NiObjectNET>(&obj), m_file);
-	NiTraverser::traverse(obj);
 }
 
 void nif::NiReadSyncer::traverse(NiAVObject& obj)
 {
 	ReadSyncer<NiAVObject>{}.down(obj, m_file.get<Niflib::NiAVObject>(&obj), m_file);
-	NiTraverser::traverse(obj);
 }
 
 void nif::NiReadSyncer::traverse(NiNode& obj)
 {
 	ReadSyncer<NiNode>{}.down(obj, m_file.get<Niflib::NiNode>(&obj), m_file);
-	NiTraverser::traverse(obj);
 }
 
 void nif::NiReadSyncer::traverse(BSFadeNode& obj)
 {
 	ReadSyncer<BSFadeNode>{}.down(obj, m_file.get<Niflib::BSFadeNode>(&obj), m_file);
-	NiTraverser::traverse(obj);
 }
+
+void nif::NiReadSyncer::traverse(NiProperty& obj)
+{
+	ReadSyncer<NiProperty>{}.down(obj, m_file.get<Niflib::NiProperty>(&obj), m_file);
+}
+
+void nif::NiReadSyncer::traverse(NiAlphaProperty& obj)
+{
+	ReadSyncer<NiAlphaProperty>{}.down(obj, m_file.get<Niflib::NiAlphaProperty>(&obj), m_file);
+}
+
+void nif::NiReadSyncer::traverse(BSEffectShaderProperty& obj)
+{
+	ReadSyncer<BSEffectShaderProperty>{}.down(obj, m_file.get<Niflib::BSEffectShaderProperty>(&obj), m_file);
+}
+
+
 
 void nif::NiWriteSyncer::traverse(NiObjectNET& obj)
 {
 	WriteSyncer<NiObjectNET>{}.down(obj, m_file.get<Niflib::NiObjectNET>(&obj), m_file);
-	NiTraverser::traverse(obj);
 }
 
 void nif::NiWriteSyncer::traverse(NiAVObject& obj)
 {
 	WriteSyncer<NiAVObject>{}.down(obj, m_file.get<Niflib::NiAVObject>(&obj), m_file);
-	NiTraverser::traverse(obj);
 }
 
 void nif::NiWriteSyncer::traverse(NiNode& obj)
 {
 	WriteSyncer<NiNode>{}.down(obj, m_file.get<Niflib::NiNode>(&obj), m_file);
-	NiTraverser::traverse(obj);
 }
 
 void nif::NiWriteSyncer::traverse(BSFadeNode& obj)
 {
 	WriteSyncer<BSFadeNode>{}.down(obj, m_file.get<Niflib::BSFadeNode>(&obj), m_file);
-	NiTraverser::traverse(obj);
+}
+
+void nif::NiWriteSyncer::traverse(NiProperty& obj)
+{
+	WriteSyncer<NiProperty>{}.down(obj, m_file.get<Niflib::NiProperty>(&obj), m_file);
+}
+
+void nif::NiWriteSyncer::traverse(NiAlphaProperty& obj)
+{
+	WriteSyncer<NiAlphaProperty>{}.down(obj, m_file.get<Niflib::NiAlphaProperty>(&obj), m_file);
+}
+
+void nif::NiWriteSyncer::traverse(BSEffectShaderProperty& obj)
+{
+	WriteSyncer<BSEffectShaderProperty>{}.down(obj, m_file.get<Niflib::BSEffectShaderProperty>(&obj), m_file);
 }

@@ -28,7 +28,7 @@
     <ClInclude Include="src\Traversal.h" />
     <ClInclude Include="src\Vector.h" />
     <ClInclude Include="src\nif_backend.h" />
-    <ClInclude Include="src\BSEffectShaderProperty.h" />
+    <ClInclude Include="src\NiProperties.h" />
     <ClInclude Include="src\NiController.h" />
     <ClInclude Include="src\File.h" />
     <ClInclude Include="src\NiExtraData.h" />
@@ -45,7 +45,7 @@
     <ClInclude Include="src\Set.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\BSEffectShaderProperty.cpp" />
+    <ClCompile Include="src\NiProperties.cpp" />
     <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\NiController.cpp" />
     <ClCompile Include="src\NiExtraData.cpp" />
@@ -62,7 +62,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\SyncTraversers.cpp" />
-    <ClCompile Include="src\Traversal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="niflib\niflib.vcxproj">
