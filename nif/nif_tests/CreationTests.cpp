@@ -1,16 +1,33 @@
 #include "pch.h"
 #include "CppUnitTest.h"
+#include "EquivalenceTester.h"
+#include "ObjectRandomiser.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-namespace nif_tests
+namespace creation
 {
 	using namespace nif;
 
-	TEST_CLASS(CreationTests)
+	//Test that new objects are synced with their native
+	TEST_CLASS(Sync)
 	{
 	public:
-		//Test that File creates the correct objects
+
+		TEST_METHOD(NiObjectNET)
+		{
+			File file(File::Version::SKYRIM_SE);
+			Niflib::Ref<Niflib::NiObjectNET> native = new Niflib::NiObjectNET;
+			common::Randomiser<nif::NiObjectNET>{}.down(nif::NiObjectNET(), native, file);
+			auto object = file.get<nif::NiObjectNET>(native);
+			common::EquivalenceTester<nif::NiObjectNET>{}.down(*object, native, file);
+		}
+	};
+
+	//Test that File creates the correct objects
+	TEST_CLASS(ObjectType)
+	{
+	public:
 
 		TEST_METHOD(NiObjectNET)
 		{
