@@ -34,6 +34,9 @@ namespace nif
 		virtual void traverse(NiProperty& obj) {}
 		virtual void traverse(NiAlphaProperty& obj) {}
 		virtual void traverse(BSEffectShaderProperty& obj) {}
+
+		virtual void traverse(NiBoolData& obj) {}
+		virtual void traverse(NiFloatData& obj) {}
 		//etc.
 	};
 

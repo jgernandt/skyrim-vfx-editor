@@ -37,6 +37,9 @@ namespace nif
 		virtual void traverse(NiAlphaProperty& obj) override;
 		virtual void traverse(BSEffectShaderProperty& obj) override;
 
+		virtual void traverse(NiBoolData& obj) override;
+		virtual void traverse(NiFloatData& obj) override;
+
 	private:
 		File& m_file;
 	};
@@ -54,6 +57,9 @@ namespace nif
 		virtual void traverse(NiProperty& obj) override;
 		virtual void traverse(NiAlphaProperty& obj) override;
 		virtual void traverse(BSEffectShaderProperty& obj) override;
+
+		virtual void traverse(NiBoolData& obj) override;
+		virtual void traverse(NiFloatData& obj) override;
 
 	private:
 		const File& m_file;

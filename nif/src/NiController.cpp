@@ -32,6 +32,73 @@ const size_t nif::NiTimeController::TYPE = std::hash<std::string>{}("NiTimeContr
 const size_t nif::NiSingleInterpController::TYPE = std::hash<std::string>{}("NiSingleInterpController");
 
 
+void nif::ReadSyncer<nif::NiBoolData>::operator()(NiBoolData& object, Niflib::NiBoolData* native, File& file)
+{
+	assert(native);
+
+	object.keyType.set(nif_type_conversion<KeyType>::from(native->GetKeyType()));
+
+	object.keys.clear();
+	for (auto&& key : native->GetKeysRef()) {
+		object.keys.push_back();
+		object.keys.back().time.set(key.time);
+		object.keys.back().value.set(static_cast<bool>(key.data));
+		object.keys.back().fwdTan.set(static_cast<bool>(key.forward_tangent));
+		object.keys.back().bwdTan.set(static_cast<bool>(key.backward_tangent));
+		object.keys.back().tension.set(key.tension);
+		object.keys.back().bias.set(key.bias);
+		object.keys.back().continuity.set(key.continuity);
+	}
+}
+
+void nif::WriteSyncer<nif::NiBoolData>::operator()(NiBoolData& object, Niflib::NiBoolData* native, const File& file)
+{
+	assert(native);
+
+	native->SetKeyType(nif_type_conversion<Niflib::KeyType>::from(object.keyType.get()));
+
+	auto&& keys = native->GetKeysRef();
+	keys.clear();
+	for (auto&& key : object.keys) {
+		keys.push_back({ key.time.get(), key.value.get(), key.fwdTan.get(),
+			key.bwdTan.get(), key.tension.get(), key.bias.get(), key.continuity.get() });
+	}
+}
+
+
+void nif::ReadSyncer<nif::NiFloatData>::operator()(NiFloatData& object, Niflib::NiFloatData* native, File& file)
+{
+	assert(native);
+
+	object.keyType.set(nif_type_conversion<KeyType>::from(native->GetKeyType()));
+
+	object.keys.clear();
+	for (auto&& key : native->GetKeysRef()) {
+		object.keys.push_back();
+		object.keys.back().time.set(key.time);
+		object.keys.back().value.set(key.data);
+		object.keys.back().fwdTan.set(key.forward_tangent);
+		object.keys.back().bwdTan.set(key.backward_tangent);
+		object.keys.back().tension.set(key.tension);
+		object.keys.back().bias.set(key.bias);
+		object.keys.back().continuity.set(key.continuity);
+	}
+}
+
+void nif::WriteSyncer<nif::NiFloatData>::operator()(NiFloatData& object, Niflib::NiFloatData* native, const File& file)
+{
+	assert(native);
+
+	native->SetKeyType(nif_type_conversion<Niflib::KeyType>::from(object.keyType.get()));
+
+	auto&& keys = native->GetKeysRef();
+	keys.clear();
+	for (auto&& key : object.keys) {
+		keys.push_back({ key.time.get(), key.value.get(), key.fwdTan.get(),
+			key.bwdTan.get(), key.tension.get(), key.bias.get(), key.continuity.get() });
+	}
+}
+
 /*nif::NiInterpolator::NiInterpolator(native_type* obj) : NiObject(obj) {}
 
 nif::native::NiInterpolator& nif::NiInterpolator::getNative() const

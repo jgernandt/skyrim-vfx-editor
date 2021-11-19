@@ -86,6 +86,9 @@ namespace nif
 	struct NiProperty;
 	struct NiAlphaProperty;
 	struct BSEffectShaderProperty;
+
+	struct NiBoolData;
+	struct NiFloatData;
 	//etc.
 
 	template<typename T>

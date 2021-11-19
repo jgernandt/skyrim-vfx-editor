@@ -55,6 +55,16 @@ void nif::NiReadSyncer::traverse(BSEffectShaderProperty& obj)
 	ReadSyncer<BSEffectShaderProperty>{}.down(obj, m_file.get<Niflib::BSEffectShaderProperty>(&obj), m_file);
 }
 
+void nif::NiReadSyncer::traverse(NiBoolData& obj)
+{
+	ReadSyncer<NiBoolData>{}.down(obj, m_file.get<Niflib::NiBoolData>(&obj), m_file);
+}
+
+void nif::NiReadSyncer::traverse(NiFloatData& obj)
+{
+	ReadSyncer<NiFloatData>{}.down(obj, m_file.get<Niflib::NiFloatData>(&obj), m_file);
+}
+
 
 
 void nif::NiWriteSyncer::traverse(NiObjectNET& obj)
@@ -90,4 +100,14 @@ void nif::NiWriteSyncer::traverse(NiAlphaProperty& obj)
 void nif::NiWriteSyncer::traverse(BSEffectShaderProperty& obj)
 {
 	WriteSyncer<BSEffectShaderProperty>{}.down(obj, m_file.get<Niflib::BSEffectShaderProperty>(&obj), m_file);
+}
+
+void nif::NiWriteSyncer::traverse(NiBoolData& obj)
+{
+	WriteSyncer<NiBoolData>{}.down(obj, m_file.get<Niflib::NiBoolData>(&obj), m_file);
+}
+
+void nif::NiWriteSyncer::traverse(NiFloatData& obj)
+{
+	WriteSyncer<NiFloatData>{}.down(obj, m_file.get<Niflib::NiFloatData>(&obj), m_file);
 }
