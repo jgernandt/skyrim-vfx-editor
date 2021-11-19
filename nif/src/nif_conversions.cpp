@@ -97,22 +97,6 @@ Niflib::Quaternion nif::NifConverter<Niflib::Quaternion>::convert(const math::Qu
 	return Niflib::Quaternion(q.s, q.v[0], q.v[1], q.v[2]);
 }
 
-Niflib::BillboardMode nif::NifConverter<Niflib::BillboardMode>::convert(BillboardMode f)
-{
-	return static_cast<Niflib::BillboardMode>(f);
-}
-
-Niflib::ForceType nif::NifConverter<Niflib::ForceType>::convert(ForceType f)
-{
-	return static_cast<Niflib::ForceType>(f);
-}
-
-
-Niflib::KeyType nif::NifConverter<Niflib::KeyType>::convert(KeyType f)
-{
-	return static_cast<Niflib::KeyType>(f);
-}
-
 
 std::array<int, 2> nif::NifConverter<std::array<int, 2>>::convert(const std::vector<nif::SubtextureOffset>& offsets)
 {
@@ -187,32 +171,3 @@ float& util::array_traits<Niflib::Vector3>::at(Niflib::Vector3& t, size_t i)
 	return t[i];
 }
 
-Niflib::SkyrimShaderPropertyFlags1 nif::NifConverter<Niflib::SkyrimShaderPropertyFlags1>::convert(ShaderFlags flags)
-{
-	return static_cast<Niflib::SkyrimShaderPropertyFlags1>(flags);
-}
-
-Niflib::SkyrimShaderPropertyFlags2 nif::NifConverter<Niflib::SkyrimShaderPropertyFlags2>::convert(ShaderFlags flags)
-{
-	return static_cast<Niflib::SkyrimShaderPropertyFlags2>(flags);
-}
-
-std::uint_fast32_t nif::NifConverter<std::uint_fast32_t>::convert(Niflib::SkyrimShaderPropertyFlags1 flags)
-{
-	return static_cast<std::uint_fast32_t>(flags);
-}
-
-std::uint_fast32_t nif::NifConverter<std::uint_fast32_t>::convert(Niflib::SkyrimShaderPropertyFlags2 flags)
-{
-	return static_cast<std::uint_fast32_t>(flags);
-}
-
-std::uint_fast32_t nif::NifConverter<std::uint_fast32_t>::convert(Niflib::KeyType val)
-{
-	return static_cast<std::uint_fast32_t>(val);
-}
-
-std::uint_fast32_t nif::NifConverter<std::uint_fast32_t>::convert(Niflib::ForceType val)
-{
-	return static_cast<std::uint_fast32_t>(val);
-}

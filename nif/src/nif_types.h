@@ -161,19 +161,28 @@ namespace nif
 	template<>
 	struct NifConverter<Niflib::BillboardMode>
 	{
-		static Niflib::BillboardMode convert(BillboardMode f);
+		constexpr static Niflib::BillboardMode convert(BillboardMode val)
+		{
+			return static_cast<Niflib::BillboardMode>(val);
+		}
 	};
 
 	template<>
 	struct NifConverter<Niflib::ForceType>
 	{
-		static Niflib::ForceType convert(ForceType f);
+		constexpr static Niflib::ForceType convert(ForceType val)
+		{
+			return static_cast<Niflib::ForceType>(val);
+		}
 	};
 
 	template<>
 	struct NifConverter<Niflib::KeyType>
 	{
-		static Niflib::KeyType convert(KeyType f);
+		constexpr static Niflib::KeyType convert(KeyType val)
+		{
+			return static_cast<Niflib::KeyType>(val);
+		}
 	};
 
 	template<>
@@ -191,20 +200,38 @@ namespace nif
 	template<>
 	struct NifConverter<Niflib::SkyrimShaderPropertyFlags1>
 	{
-		static Niflib::SkyrimShaderPropertyFlags1 convert(ShaderFlags flags);
+		constexpr static Niflib::SkyrimShaderPropertyFlags1 convert(ShaderFlags flags)
+		{
+			return static_cast<Niflib::SkyrimShaderPropertyFlags1>(flags);
+		}
 	};
 	template<>
 	struct NifConverter<Niflib::SkyrimShaderPropertyFlags2>
 	{
-		static Niflib::SkyrimShaderPropertyFlags2 convert(ShaderFlags flags);
+		constexpr static Niflib::SkyrimShaderPropertyFlags2 convert(ShaderFlags flags)
+		{
+			return static_cast<Niflib::SkyrimShaderPropertyFlags2>(flags);
+		}
 	};
 	template<>
 	struct NifConverter<std::uint_fast32_t>
 	{
-		static std::uint_fast32_t convert(Niflib::SkyrimShaderPropertyFlags1 flags);
-		static std::uint_fast32_t convert(Niflib::SkyrimShaderPropertyFlags2 flags);
-		static std::uint_fast32_t convert(Niflib::KeyType val);
-		static std::uint_fast32_t convert(Niflib::ForceType val);
+		constexpr static std::uint_fast32_t convert(Niflib::SkyrimShaderPropertyFlags1 val)
+		{
+			return static_cast<std::uint_fast32_t>(val);
+		}
+		constexpr static std::uint_fast32_t convert(Niflib::SkyrimShaderPropertyFlags2 val)
+		{
+			return static_cast<std::uint_fast32_t>(val);
+		}
+		constexpr static std::uint_fast32_t convert(Niflib::KeyType val)
+		{
+			return static_cast<std::uint_fast32_t>(val);
+		}
+		constexpr static std::uint_fast32_t convert(Niflib::ForceType val)
+		{
+			return static_cast<std::uint_fast32_t>(val);
+		}
 	};
 }
 
