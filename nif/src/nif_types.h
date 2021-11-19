@@ -84,6 +84,10 @@ namespace nif
 
 	struct NiExtraData;
 	struct NiTimeController;
+
+	struct NiProperty;
+	struct NiAlphaProperty;
+	struct BSEffectShaderProperty;
 	//etc.
 
 	template<typename T>
