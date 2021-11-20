@@ -42,15 +42,15 @@ void nif::ReadSyncer<nif::NiParticleSystem>::operator()(NiParticleSystem& object
 void nif::WriteSyncer<nif::NiParticleSystem>::operator()(const NiParticleSystem& object, Niflib::NiParticleSystem* native, const File& file)
 {
 	assert(native);
-	native->SetData(file.get<Niflib::NiPSysData>(object.data.assigned()));
+	native->SetData(file.getNative<Niflib::NiPSysData>(object.data.assigned()));
 
 	auto&& mods = native->GetModifiers();
 	mods.clear();
 	for (auto&& mod : object.modifiers)
-		mods.push_back(file.get<Niflib::NiPSysModifier>(mod));
+		mods.push_back(file.getNative<Niflib::NiPSysModifier>(mod));
 
-	native->SetShaderProperty(file.get<Niflib::BSShaderProperty>(object.shaderProperty.assigned()));
-	native->SetAlphaProperty(file.get<Niflib::NiAlphaProperty>(object.alphaProperty.assigned()));
+	native->SetShaderProperty(file.getNative<Niflib::BSShaderProperty>(object.shaderProperty.assigned()));
+	native->SetAlphaProperty(file.getNative<Niflib::NiAlphaProperty>(object.alphaProperty.assigned()));
 	native->SetWorldSpace(object.worldSpace.get());
 }
 

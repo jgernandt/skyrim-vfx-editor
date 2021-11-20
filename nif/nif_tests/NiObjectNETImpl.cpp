@@ -19,7 +19,7 @@ void common::EquivalenceTester<NiObjectNET>::operator()(const NiObjectNET& objec
 	Assert::IsTrue(controllers.size() == object.controllers.size());
 	int i = 0;
 	for (auto&& controller : controllers)
-		Assert::IsTrue(controller == file.get<Niflib::NiTimeController>(object.controllers.at(i++)));
+		Assert::IsTrue(controller == file.getNative<Niflib::NiTimeController>(object.controllers.at(i++)));
 }
 
 void common::Randomiser<NiObjectNET>::operator()(NiObjectNET& object, File& file, std::mt19937& rng)

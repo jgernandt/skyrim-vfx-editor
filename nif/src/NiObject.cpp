@@ -65,12 +65,12 @@ void nif::WriteSyncer<nif::NiObjectNET>::operator()(const NiObjectNET& object, N
 
 	native->ClearExtraData();
 	for (auto&& data : object.extraData)
-		native->AddExtraData(file.get<Niflib::NiExtraData>(data), Niflib::VER_20_2_0_7);
+		native->AddExtraData(file.getNative<Niflib::NiExtraData>(data), Niflib::VER_20_2_0_7);
 
 	//Niflib adds to the front, so we reverse iterate here
 	native->ClearControllers();
 	for (auto rit = object.controllers.rbegin(); rit != object.controllers.rend(); ++rit)
-		native->AddController(file.get<Niflib::NiTimeController>(*rit));
+		native->AddController(file.getNative<Niflib::NiTimeController>(*rit));
 }
 
 void nif::ReadSyncer<nif::NiAVObject>::operator()(NiAVObject& object, const Niflib::NiAVObject* native, File& file)

@@ -21,9 +21,6 @@
 
 namespace nif
 {
-	struct NiNode;
-	struct NiParticleSystem;
-
 	struct NiPSysModifierCtlr : NiTraversable<NiPSysModifierCtlr, NiSingleInterpController>
 	{
 		Property<std::string> modifierName;

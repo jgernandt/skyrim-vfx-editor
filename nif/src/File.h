@@ -118,7 +118,7 @@ namespace nif
 
 		//Return the Niflib object that corresponds to object.
 		template<typename NativeType, typename T>
-		[[nodiscard]] Niflib::Ref<NativeType> get(T* object) const;
+		[[nodiscard]] Niflib::Ref<NativeType> getNative(T* object) const;
 
 		Version getVersion() const { return m_version; }
 
@@ -177,7 +177,7 @@ namespace nif
 	}
 
 	template<typename NativeType, typename T>
-	inline [[nodiscard]] Niflib::Ref<NativeType> nif::File::get(T* object) const
+	inline [[nodiscard]] Niflib::Ref<NativeType> nif::File::getNative(T* object) const
 	{
 		static_assert(std::is_base_of<NativeType, typename type_map<T>::type>::value);
 
@@ -287,26 +287,26 @@ namespace nif
 	template<typename T>
 	inline void nif::ForwardingReadSyncer::invoke(T& object)
 	{
-		ReadSyncer<T>{}.down(object, m_file.get<typename type_map<T>::type>(&object), m_file);
+		ReadSyncer<T>{}.down(object, m_file.getNative<typename type_map<T>::type>(&object), m_file);
 		Forwarder<T>{}.down(object, *this);
 	}
 
 	template<typename T>
 	inline void nif::ForwardingWriteSyncer::invoke(T& object)
 	{
-		WriteSyncer<T>{}.down(object, m_file.get<typename type_map<T>::type>(&object), m_file);
+		WriteSyncer<T>{}.down(object, m_file.getNative<typename type_map<T>::type>(&object), m_file);
 		Forwarder<T>{}.down(object, *this);
 	}
 
 	template<typename T>
 	inline void nif::NonForwardingReadSyncer::invoke(T& object)
 	{
-		ReadSyncer<T>{}.down(object, m_file.get<typename type_map<T>::type>(&object), m_file);
+		ReadSyncer<T>{}.down(object, m_file.getNative<typename type_map<T>::type>(&object), m_file);
 	}
 
 	template<typename T>
 	inline void nif::NonForwardingWriteSyncer::invoke(T& object)
 	{
-		WriteSyncer<T>{}.down(object, m_file.get<typename type_map<T>::type>(&object), m_file);
+		WriteSyncer<T>{}.down(object, m_file.getNative<typename type_map<T>::type>(&object), m_file);
 	}
 }
