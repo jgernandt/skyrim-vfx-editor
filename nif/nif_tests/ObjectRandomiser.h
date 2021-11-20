@@ -211,4 +211,18 @@ namespace common
 		void operator() (NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file, std::mt19937& rng);
 		void operator() (const NiFloatInterpolator&, Niflib::NiFloatInterpolator* native, std::mt19937& rng);
 	};
+
+	template<>
+	struct Randomiser<NiTimeController> : VerticalTraverser<NiTimeController, Randomiser>
+	{
+		void operator() (NiTimeController& object, const Niflib::NiTimeController* native, File& file, std::mt19937& rng);
+		void operator() (const NiTimeController&, Niflib::NiTimeController* native, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, Randomiser>
+	{
+		void operator() (NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file, std::mt19937& rng);
+		void operator() (const NiSingleInterpController&, Niflib::NiSingleInterpController* native, std::mt19937& rng);
+	};
 }

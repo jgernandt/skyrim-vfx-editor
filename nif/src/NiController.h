@@ -154,7 +154,8 @@ namespace nif
 	//Controllers
 	struct NiTimeController : NiTraversable<NiTimeController, NiObject>
 	{
-		//these should only be readable?
+		//these should only be readable? Separate type, or just const Assignable?
+		//How to keep them updated, though?
 		//Readable<NiTimeController>& nextCtlr;
 		//Readable<NiObjectNET>& target;
 
@@ -169,6 +170,14 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiTimeController> { using type = NiTimeController; };
 	template<> struct type_map<NiTimeController> { using type = Niflib::NiTimeController; };
+	template<> struct ReadSyncer<NiTimeController> : VerticalTraverser<NiTimeController, ReadSyncer>
+	{
+		void operator() (NiTimeController& object, const Niflib::NiTimeController* native, File& file);
+	};
+	template<> struct WriteSyncer<NiTimeController> : VerticalTraverser<NiTimeController, WriteSyncer>
+	{
+		void operator() (const NiTimeController& object, Niflib::NiTimeController* native, const File& file);
+	};
 
 
 	struct NiSingleInterpController : NiTraversable<NiSingleInterpController, NiTimeController>
@@ -180,5 +189,13 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiSingleInterpController> { using type = NiSingleInterpController; };
 	template<> struct type_map<NiSingleInterpController> { using type = Niflib::NiSingleInterpController; };
+	template<> struct ReadSyncer<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, ReadSyncer>
+	{
+		void operator() (NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file);
+	};
+	template<> struct WriteSyncer<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, WriteSyncer>
+	{
+		void operator() (const NiSingleInterpController& object, Niflib::NiSingleInterpController* native, const File& file);
+	};
 
 }

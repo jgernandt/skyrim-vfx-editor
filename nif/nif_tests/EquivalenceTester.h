@@ -77,4 +77,16 @@ namespace common
 	{
 		void operator() (const NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file);
 	};
+
+	template<>
+	struct EquivalenceTester<NiTimeController> : VerticalTraverser<NiTimeController, EquivalenceTester>
+	{
+		void operator() (const NiTimeController& object, const Niflib::NiTimeController* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, EquivalenceTester>
+	{
+		void operator() (const NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file);
+	};
 }

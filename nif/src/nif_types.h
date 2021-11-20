@@ -97,6 +97,9 @@ namespace nif
 	struct NiInterpolator;
 	struct NiBoolInterpolator;
 	struct NiFloatInterpolator;
+
+	struct NiTimeController;
+	struct NiSingleInterpController;
 	//etc.
 
 	template<typename T>

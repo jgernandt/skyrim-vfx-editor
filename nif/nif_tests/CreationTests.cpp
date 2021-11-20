@@ -14,7 +14,7 @@ namespace creation
 	{
 	public:
 		template<typename T>
-		struct SyncTest
+		struct Test
 		{
 			void run()
 			{
@@ -30,18 +30,20 @@ namespace creation
 			}
 		};
 
-		TEST_METHOD(NiObjectNET) { SyncTest<nif::NiObjectNET>{}.run(); }
-		TEST_METHOD(NiAVObject) { SyncTest<nif::NiAVObject>{}.run(); }
-		TEST_METHOD(NiNode) { SyncTest<nif::NiNode>{}.run(); }
-		TEST_METHOD(BSFadeNode) { SyncTest<nif::BSFadeNode>{}.run(); }
-		TEST_METHOD(NiAlphaProperty) { SyncTest<nif::NiAlphaProperty>{}.run(); }
-		TEST_METHOD(BSEffectShaderProperty) { SyncTest<nif::BSEffectShaderProperty>{}.run(); }
-		TEST_METHOD(NiBoolData) { SyncTest<nif::NiBoolData>{}.run(); }
-		TEST_METHOD(NiFloatData) { SyncTest<nif::NiFloatData>{}.run(); }
-		TEST_METHOD(NiBoolInterpolator) { SyncTest<nif::NiBoolInterpolator>{}.run(); }
-		TEST_METHOD(NiFloatInterpolator) { SyncTest<nif::NiFloatInterpolator>{}.run(); }
-		TEST_METHOD(NiExtraData) { SyncTest<nif::NiExtraData>{}.run(); }
-		TEST_METHOD(NiStringExtraData) { SyncTest<nif::NiStringExtraData>{}.run(); }
+		TEST_METHOD(NiObjectNET) { Test<nif::NiObjectNET>{}.run(); }
+		TEST_METHOD(NiAVObject) { Test<nif::NiAVObject>{}.run(); }
+		TEST_METHOD(NiNode) { Test<nif::NiNode>{}.run(); }
+		TEST_METHOD(BSFadeNode) { Test<nif::BSFadeNode>{}.run(); }
+		TEST_METHOD(NiAlphaProperty) { Test<nif::NiAlphaProperty>{}.run(); }
+		TEST_METHOD(BSEffectShaderProperty) { Test<nif::BSEffectShaderProperty>{}.run(); }
+		TEST_METHOD(NiBoolData) { Test<nif::NiBoolData>{}.run(); }
+		TEST_METHOD(NiFloatData) { Test<nif::NiFloatData>{}.run(); }
+		TEST_METHOD(NiBoolInterpolator) { Test<nif::NiBoolInterpolator>{}.run(); }
+		TEST_METHOD(NiFloatInterpolator) { Test<nif::NiFloatInterpolator>{}.run(); }
+		TEST_METHOD(NiTimeController) { Test<nif::NiTimeController>{}.run(); }
+		TEST_METHOD(NiSingleInterpController) { Test<nif::NiSingleInterpController>{}.run(); }
+		TEST_METHOD(NiExtraData) { Test<nif::NiExtraData>{}.run(); }
+		TEST_METHOD(NiStringExtraData) { Test<nif::NiStringExtraData>{}.run(); }
 	};
 
 	//Test that File creates the correct objects

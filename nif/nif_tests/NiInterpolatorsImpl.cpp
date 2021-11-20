@@ -144,3 +144,47 @@ void common::Randomiser<NiFloatInterpolator>::operator()(const NiFloatInterpolat
 	native->SetFloatValue(randf<float>(rng));
 	native->SetData(new Niflib::NiFloatData);
 }
+
+
+void common::EquivalenceTester<NiTimeController>::operator()(const NiTimeController& object, const Niflib::NiTimeController* native, File& file)
+{
+	Assert::IsTrue(object.flags.get() == native->GetFlags());
+	Assert::IsTrue(object.frequency.get() == native->GetFrequency());
+	Assert::IsTrue(object.phase.get() == native->GetPhase());
+	Assert::IsTrue(object.startTime.get() == native->GetStartTime());
+	Assert::IsTrue(object.stopTime.get() == native->GetStopTime());
+}
+
+void common::Randomiser<NiTimeController>::operator()(NiTimeController& object, const Niflib::NiTimeController* native, File& file, std::mt19937& rng)
+{
+	object.flags.set(randi<unsigned short>(rng));
+	object.frequency.set(randf<float>(rng));
+	object.phase.set(randf<float>(rng));
+	object.startTime.set(randf<float>(rng));
+	object.stopTime.set(randf<float>(rng));
+}
+
+void common::Randomiser<NiTimeController>::operator()(const NiTimeController&, Niflib::NiTimeController* native, std::mt19937& rng)
+{
+	native->SetFlags(randi<unsigned short>(rng));
+	native->SetFrequency(randf<float>(rng));
+	native->SetPhase(randf<float>(rng));
+	native->SetStartTime(randf<float>(rng));
+	native->SetStopTime(randf<float>(rng));
+}
+
+
+void common::EquivalenceTester<NiSingleInterpController>::operator()(const NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file)
+{
+	Assert::IsTrue(object.interpolator.assigned() == file.get<NiInterpolator>(native->GetInterpolator()).get());
+}
+
+void common::Randomiser<NiSingleInterpController>::operator()(NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file, std::mt19937& rng)
+{
+	object.interpolator.assign(file.create<NiInterpolator>());
+}
+
+void common::Randomiser<NiSingleInterpController>::operator()(const NiSingleInterpController&, Niflib::NiSingleInterpController* native, std::mt19937& rng)
+{
+	native->SetInterpolator(new Niflib::NiInterpolator);
+}
