@@ -29,7 +29,7 @@ void common::Randomiser<NiParticleSystem>::operator()(NiParticleSystem& object, 
 	object.worldSpace.set(randi<int>(rng, { 0, 1 }));
 }
 
-void common::Randomiser<NiParticleSystem>::operator()(const NiParticleSystem&, Niflib::NiParticleSystem* native, std::mt19937& rng)
+void common::Randomiser<NiParticleSystem>::operator()(const NiParticleSystem&, Niflib::NiParticleSystem* native, File&, std::mt19937& rng)
 {
 	native->SetData(new Niflib::NiPSysData);
 
@@ -68,7 +68,7 @@ void common::Randomiser<NiPSysData>::operator()(NiPSysData& object, File& file, 
 	object.hasRotationSpeeds.set(randi<int>(rng, { 0, 1 }));
 }
 
-void common::Randomiser<NiPSysData>::operator()(const NiPSysData&, Niflib::NiPSysData* native, std::mt19937& rng)
+void common::Randomiser<NiPSysData>::operator()(const NiPSysData&, Niflib::NiPSysData* native, File&, std::mt19937& rng)
 {
 	native->SetBSMaxVertices(randi<unsigned short>(rng));
 	native->GetSubtextureOffsets() = randfv<Niflib::Vector4>(rng);
@@ -93,15 +93,15 @@ void common::Randomiser<NiPSysModifier>::operator()(NiPSysModifier& object, File
 	object.active.set(randi<int>(rng, { 0, 1 }));
 }
 
-void common::Randomiser<NiPSysModifier>::operator()(const NiPSysModifier&, Niflib::NiPSysModifier* native, std::mt19937& rng)
+void common::Randomiser<NiPSysModifier>::operator()(const NiPSysModifier&, Niflib::NiPSysModifier* native, File& file, std::mt19937& rng)
 {
 	native->SetName(rands(rng));
 	native->SetOrder(randi<unsigned int>(rng));
 
-	//Target is a weak reference, so whatever we assign will be dangling.
-	//This is better than leaking.
-	Niflib::NiParticleSystem target;
-	native->SetTarget(&target);
+	//Target is a weak reference. We need to make our new object persistent.
+	Niflib::Ref<Niflib::NiParticleSystem> target = new Niflib::NiParticleSystem;
+	file.getNative<Niflib::NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(target));
+	native->SetTarget(target);
 
 	native->SetActive(randi<int>(rng, { 0, 1 }));
 }

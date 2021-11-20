@@ -26,7 +26,7 @@ void common::Randomiser<NiAlphaProperty>::operator()(NiAlphaProperty& object, Fi
 	object.threshold.set(randi<int>(rng, { 0, 255 }));
 }
 
-void common::Randomiser<NiAlphaProperty>::operator()(const NiAlphaProperty&, Niflib::NiAlphaProperty* native, std::mt19937& rng)
+void common::Randomiser<NiAlphaProperty>::operator()(const NiAlphaProperty&, Niflib::NiAlphaProperty* native, File&, std::mt19937& rng)
 {
 	native->SetFlags(randi<unsigned short>(rng));
 	native->SetTestThreshold(randi<int>(rng, { 0, 255 }));
@@ -52,7 +52,7 @@ void common::Randomiser<BSEffectShaderProperty>::operator()(BSEffectShaderProper
 	randomiseFlags(object.shaderFlags2, rng);
 }
 
-void common::Randomiser<BSEffectShaderProperty>::operator()(const BSEffectShaderProperty&, Niflib::BSEffectShaderProperty* native, std::mt19937& rng)
+void common::Randomiser<BSEffectShaderProperty>::operator()(const BSEffectShaderProperty&, Niflib::BSEffectShaderProperty* native, File&, std::mt19937& rng)
 {
 	native->SetEmissiveColor(randf<Niflib::Color4>(rng));
 	native->SetEmissiveMultiple(randf<float>(rng));

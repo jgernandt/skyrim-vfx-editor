@@ -40,7 +40,7 @@ void common::Randomiser<NiAVObject>::operator()(NiAVObject& object, File& file, 
 	randomiseProperty(object.transform.scale, rng);
 }
 
-void common::Randomiser<NiAVObject>::operator()(const NiAVObject&, Niflib::NiAVObject* native, std::mt19937& rng)
+void common::Randomiser<NiAVObject>::operator()(const NiAVObject&, Niflib::NiAVObject* native, File&, std::mt19937& rng)
 {
 	native->SetFlags(randi<unsigned short>(rng));
 

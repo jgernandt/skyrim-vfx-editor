@@ -29,7 +29,7 @@ void common::Randomiser<NiObjectNET>::operator()(NiObjectNET& object, File& file
 	randomiseSequence(object.controllers, file, rng);
 }
 
-void common::Randomiser<NiObjectNET>::operator()(const NiObjectNET&, Niflib::NiObjectNET* native, std::mt19937& rng)
+void common::Randomiser<NiObjectNET>::operator()(const NiObjectNET&, Niflib::NiObjectNET* native, File&, std::mt19937& rng)
 {
 	native->SetName(rands(rng));
 

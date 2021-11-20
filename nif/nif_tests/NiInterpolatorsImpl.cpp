@@ -43,7 +43,7 @@ void common::Randomiser<NiBoolData>::operator()(NiBoolData& object, File& file, 
 	}
 }
 
-void common::Randomiser<NiBoolData>::operator()(const NiBoolData&, Niflib::NiBoolData* native, std::mt19937& rng)
+void common::Randomiser<NiBoolData>::operator()(const NiBoolData&, Niflib::NiBoolData* native, File&, std::mt19937& rng)
 {
 	native->SetKeyType(static_cast<Niflib::KeyType>(randi<int>(rng, { 1, 5 })));
 
@@ -94,7 +94,7 @@ void common::Randomiser<NiFloatData>::operator()(NiFloatData& object, File& file
 	}
 }
 
-void common::Randomiser<NiFloatData>::operator()(const NiFloatData&, Niflib::NiFloatData* native, std::mt19937& rng)
+void common::Randomiser<NiFloatData>::operator()(const NiFloatData&, Niflib::NiFloatData* native, File&, std::mt19937& rng)
 {
 	native->SetKeyType(static_cast<Niflib::KeyType>(randi<int>(rng, { 1, 5 })));
 
@@ -120,7 +120,7 @@ void common::Randomiser<NiBoolInterpolator>::operator()(NiBoolInterpolator& obje
 	object.data.assign(file.create<NiBoolData>());
 }
 
-void common::Randomiser<NiBoolInterpolator>::operator()(const NiBoolInterpolator&, Niflib::NiBoolInterpolator* native, std::mt19937& rng)
+void common::Randomiser<NiBoolInterpolator>::operator()(const NiBoolInterpolator&, Niflib::NiBoolInterpolator* native, File&, std::mt19937& rng)
 {
 	native->SetBoolValue(randi<int>(rng, { 0, 1 }));
 	native->SetData(new Niflib::NiBoolData);
@@ -139,7 +139,7 @@ void common::Randomiser<NiFloatInterpolator>::operator()(NiFloatInterpolator& ob
 	object.data.assign(file.create<NiFloatData>());
 }
 
-void common::Randomiser<NiFloatInterpolator>::operator()(const NiFloatInterpolator&, Niflib::NiFloatInterpolator* native, std::mt19937& rng)
+void common::Randomiser<NiFloatInterpolator>::operator()(const NiFloatInterpolator&, Niflib::NiFloatInterpolator* native, File&, std::mt19937& rng)
 {
 	native->SetFloatValue(randf<float>(rng));
 	native->SetData(new Niflib::NiFloatData);
@@ -164,7 +164,7 @@ void common::Randomiser<NiTimeController>::operator()(NiTimeController& object, 
 	object.stopTime.set(randf<float>(rng));
 }
 
-void common::Randomiser<NiTimeController>::operator()(const NiTimeController&, Niflib::NiTimeController* native, std::mt19937& rng)
+void common::Randomiser<NiTimeController>::operator()(const NiTimeController&, Niflib::NiTimeController* native, File&, std::mt19937& rng)
 {
 	native->SetFlags(randi<unsigned short>(rng));
 	native->SetFrequency(randf<float>(rng));
@@ -184,7 +184,7 @@ void common::Randomiser<NiSingleInterpController>::operator()(NiSingleInterpCont
 	object.interpolator.assign(file.create<NiInterpolator>());
 }
 
-void common::Randomiser<NiSingleInterpController>::operator()(const NiSingleInterpController&, Niflib::NiSingleInterpController* native, std::mt19937& rng)
+void common::Randomiser<NiSingleInterpController>::operator()(const NiSingleInterpController&, Niflib::NiSingleInterpController* native, File&, std::mt19937& rng)
 {
 	native->SetInterpolator(new Niflib::NiInterpolator);
 }

@@ -16,7 +16,7 @@ void common::Randomiser<NiExtraData>::operator()(NiExtraData& object, File& file
 	object.name.set(rands(rng));
 }
 
-void common::Randomiser<NiExtraData>::operator()(const NiExtraData&, Niflib::NiExtraData* native, std::mt19937& rng)
+void common::Randomiser<NiExtraData>::operator()(const NiExtraData&, Niflib::NiExtraData* native, File&, std::mt19937& rng)
 {
 	native->SetName(rands(rng));
 }
@@ -31,7 +31,7 @@ void common::Randomiser<NiStringExtraData>::operator()(NiStringExtraData& object
 	object.value.set(rands(rng));
 }
 
-void common::Randomiser<NiStringExtraData>::operator()(const NiStringExtraData&, Niflib::NiStringExtraData* native, std::mt19937& rng)
+void common::Randomiser<NiStringExtraData>::operator()(const NiStringExtraData&, Niflib::NiStringExtraData* native, File&, std::mt19937& rng)
 {
 	native->SetData(rands(rng));
 }

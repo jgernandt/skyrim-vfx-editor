@@ -19,7 +19,7 @@ void common::Randomiser<NiNode>::operator()(NiNode& object, File& file, std::mt1
 	randomiseSet(object.children, file, rng);
 }
 
-void common::Randomiser<NiNode>::operator()(const NiNode&, Niflib::NiNode* native, std::mt19937& rng)
+void common::Randomiser<NiNode>::operator()(const NiNode&, Niflib::NiNode* native, File&, std::mt19937& rng)
 {
 	native->ClearChildren();
 	for (auto&& obj : randomObjVector<NiAVObject>(rng))
