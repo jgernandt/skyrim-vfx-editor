@@ -39,5 +39,5 @@ void nif::WriteSyncer<nif::NiNode>::operator()(const NiNode& object, Niflib::NiN
 
 	native->ClearChildren();
 	for (auto&& child : object.children)
-		native->AddChild(file.getNative<Niflib::NiAVObject>(child));
+		native->AddChild(file.getNative<NiAVObject>(child));
 }

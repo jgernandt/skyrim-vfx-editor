@@ -117,8 +117,8 @@ namespace nif
 		[[nodiscard]] std::shared_ptr<T> get(const Niflib::Ref<typename type_map<T>::type>& nativeRef);
 
 		//Return the Niflib object that corresponds to object.
-		template<typename NativeType, typename T>
-		[[nodiscard]] Niflib::Ref<NativeType> getNative(T* object) const;
+		template<typename T>
+		[[nodiscard]] Niflib::Ref<typename type_map<T>::type> getNative(T* object) const;
 
 		Version getVersion() const { return m_version; }
 
@@ -174,12 +174,10 @@ namespace nif
 		return result;
 	}
 
-	template<typename NativeType, typename T>
-	inline [[nodiscard]] Niflib::Ref<NativeType> nif::File::getNative(T* object) const
+	template<typename T>
+	inline [[nodiscard]] Niflib::Ref<typename type_map<T>::type> nif::File::getNative(T* object) const
 	{
-		static_assert(std::is_base_of<NativeType, typename type_map<T>::type>::value);
-
-		Niflib::Ref<NativeType> result;
+		Niflib::Ref<typename type_map<T>::type> result;
 
 		if (object) {
 			std::shared_ptr<ObjectBlock> block;
@@ -190,9 +188,8 @@ namespace nif
 			//If the object is not indexed, it was not created by us. This is also a bug.
 			assert(block);
 
-			//We know it can be cast to NativeType since we know it was used to create object, 
-			//and NativeType is a base of the native type of T (type_map<T>::type).
-			result = static_cast<NativeType*>(block->native);
+			//We know it can be cast to the native type since we know it was used to create object
+			result = static_cast<typename type_map<T>::type*>(block->native);
 		}
 
 		return result;
@@ -285,26 +282,26 @@ namespace nif
 	template<typename T>
 	inline void nif::ForwardingReadSyncer::invoke(T& object)
 	{
-		ReadSyncer<T>{}.down(object, m_file.getNative<typename type_map<T>::type>(&object), m_file);
+		ReadSyncer<T>{}.down(object, m_file.getNative<T>(&object), m_file);
 		Forwarder<T>{}.down(object, *this);
 	}
 
 	template<typename T>
 	inline void nif::ForwardingWriteSyncer::invoke(T& object)
 	{
-		WriteSyncer<T>{}.down(object, m_file.getNative<typename type_map<T>::type>(&object), m_file);
+		WriteSyncer<T>{}.down(object, m_file.getNative<T>(&object), m_file);
 		Forwarder<T>{}.down(object, *this);
 	}
 
 	template<typename T>
 	inline void nif::NonForwardingReadSyncer::invoke(T& object)
 	{
-		ReadSyncer<T>{}.down(object, m_file.getNative<typename type_map<T>::type>(&object), m_file);
+		ReadSyncer<T>{}.down(object, m_file.getNative<T>(&object), m_file);
 	}
 
 	template<typename T>
 	inline void nif::NonForwardingWriteSyncer::invoke(T& object)
 	{
-		WriteSyncer<T>{}.down(object, m_file.getNative<typename type_map<T>::type>(&object), m_file);
+		WriteSyncer<T>{}.down(object, m_file.getNative<T>(&object), m_file);
 	}
 }

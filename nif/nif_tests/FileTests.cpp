@@ -17,7 +17,7 @@ namespace file
 			Niflib::Ref<Niflib::NiObject> native0 = new Niflib::BSFadeNode;
 			auto object0 = file.get<NiObject>(native0);
 
-			auto native1 = file.getNative<Niflib::NiObject>(object0.get());
+			auto native1 = file.getNative<NiObject>(object0.get());
 			Assert::IsTrue(native0 == native1);
 
 			auto object1 = file.get<BSFadeNode>(Niflib::StaticCast<Niflib::BSFadeNode>(native0));

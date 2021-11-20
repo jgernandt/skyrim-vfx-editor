@@ -111,7 +111,7 @@ void nif::WriteSyncer<nif::NiBoolInterpolator>::operator()(const NiBoolInterpola
 {
 	assert(native);
 	native->SetBoolValue(object.value.get());
-	native->SetData(file.getNative<Niflib::NiBoolData>(object.data.assigned()));
+	native->SetData(file.getNative<NiBoolData>(object.data.assigned()));
 }
 
 
@@ -126,7 +126,7 @@ void nif::WriteSyncer<nif::NiFloatInterpolator>::operator()(const NiFloatInterpo
 {
 	assert(native);
 	native->SetFloatValue(object.value.get());
-	native->SetData(file.getNative<Niflib::NiFloatData>(object.data.assigned()));
+	native->SetData(file.getNative<NiFloatData>(object.data.assigned()));
 }
 
 
@@ -160,5 +160,5 @@ void nif::ReadSyncer<nif::NiSingleInterpController>::operator()(NiSingleInterpCo
 void nif::WriteSyncer<nif::NiSingleInterpController>::operator()(const NiSingleInterpController& object, Niflib::NiSingleInterpController* native, const File& file)
 {
 	assert(native);
-	native->SetInterpolator(file.getNative<Niflib::NiInterpolator>(object.interpolator.assigned()));
+	native->SetInterpolator(file.getNative<NiInterpolator>(object.interpolator.assigned()));
 }

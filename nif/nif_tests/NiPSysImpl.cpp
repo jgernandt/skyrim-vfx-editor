@@ -100,7 +100,7 @@ void common::Randomiser<NiPSysModifier>::operator()(const NiPSysModifier&, Nifli
 
 	//Target is a weak reference. We need to make our new object persistent.
 	Niflib::Ref<Niflib::NiParticleSystem> target = new Niflib::NiParticleSystem;
-	file.getNative<Niflib::NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(target));
+	file.getNative<NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(target));
 	native->SetTarget(target);
 
 	native->SetActive(randi<int>(rng, { 0, 1 }));
@@ -135,7 +135,7 @@ void common::Randomiser<NiPSysGravityModifier>::operator()(const NiPSysGravityMo
 {
 	//weak ref
 	Niflib::Ref<Niflib::NiNode> gravObj = new Niflib::NiNode;
-	file.getNative<Niflib::NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(gravObj));
+	file.getNative<NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(gravObj));
 	native->SetGravityObject(gravObj);
 
 	native->SetGravityAxis(randf<Niflib::Vector3>(rng));
