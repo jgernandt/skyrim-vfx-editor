@@ -1,16 +1,15 @@
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "SyncTestTraverser.h"
 #include "EquivalenceTester.h"
 #include "ObjectRandomiser.h"
 
-namespace nif_tests
+namespace sync
 {
 	using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 	using namespace nif;
 
 	//Test that vertical sync of know types is correct
-	TEST_CLASS(SyncTests)
+	TEST_CLASS(KnownType)
 	{
 	public:
 		template<typename T>
@@ -18,7 +17,7 @@ namespace nif_tests
 		{
 			void run(File& file)
 			{
-				std::mt19937 rng;
+				static std::mt19937 rng;//or do we want a new one for every test?
 				T object{};
 				Niflib::Ref<typename type_map<T>::type> native = new typename type_map<T>::type;
 
@@ -55,7 +54,7 @@ namespace nif_tests
 	};
 
 	//Test that the syncer correctly identifies the final type of an object
-	TEST_CLASS(SyncTraverserTests)
+	TEST_CLASS(UnknownType)
 	{
 	public:
 		template<typename T>
@@ -63,7 +62,7 @@ namespace nif_tests
 		{
 			void run(File& file)
 			{
-				std::mt19937 rng;
+				static std::mt19937 rng;//or do we want a new one for every test?
 				Niflib::Ref<typename type_map<T>::type> native = new typename type_map<T>::type;
 				auto object = file.get<T>(native);
 

@@ -36,30 +36,27 @@
     <ClCompile Include="ObjectIndexTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SyncTestNiObjectNET.cpp">
+    <ClCompile Include="NiObjectNETImpl.cpp">
       <Filter>Source Files\helpers</Filter>
     </ClCompile>
-    <ClCompile Include="SyncTestAVObject.cpp">
+    <ClCompile Include="NiAVObjectImpl.cpp">
       <Filter>Source Files\helpers</Filter>
     </ClCompile>
-    <ClCompile Include="SyncTestNiInterpolators.cpp">
+    <ClCompile Include="NiInterpolatorsImpl.cpp">
       <Filter>Source Files\helpers</Filter>
     </ClCompile>
-    <ClCompile Include="SyncTestNiNode.cpp">
+    <ClCompile Include="NiNodeImpl.cpp">
       <Filter>Source Files\helpers</Filter>
     </ClCompile>
-    <ClCompile Include="SyncTestNiProperties.cpp">
+    <ClCompile Include="NiPropertiesImpl.cpp">
       <Filter>Source Files\helpers</Filter>
     </ClCompile>
-    <ClCompile Include="SyncTestExtraData.cpp">
+    <ClCompile Include="NIExtraDataImpl.cpp">
       <Filter>Source Files\helpers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SyncTestTraverser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EquivalenceTester.h">

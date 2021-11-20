@@ -169,12 +169,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SyncTestNiObjectNET.cpp" />
-    <ClCompile Include="SyncTestAVObject.cpp" />
-    <ClCompile Include="SyncTestExtraData.cpp" />
-    <ClCompile Include="SyncTestNiInterpolators.cpp" />
-    <ClCompile Include="SyncTestNiNode.cpp" />
-    <ClCompile Include="SyncTestNiProperties.cpp" />
+    <ClCompile Include="NiObjectNETImpl.cpp" />
+    <ClCompile Include="NiAVObjectImpl.cpp" />
+    <ClCompile Include="NIExtraDataImpl.cpp" />
+    <ClCompile Include="NiInterpolatorsImpl.cpp" />
+    <ClCompile Include="NiNodeImpl.cpp" />
+    <ClCompile Include="NiPropertiesImpl.cpp" />
     <ClCompile Include="SyncTests.cpp" />
     <ClCompile Include="TraversalTests.cpp" />
   </ItemGroup>
@@ -182,7 +182,6 @@
     <ClInclude Include="EquivalenceTester.h" />
     <ClInclude Include="ObjectRandomiser.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="SyncTestTraverser.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\math\math.vcxproj">
