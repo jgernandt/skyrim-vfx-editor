@@ -23,7 +23,7 @@ void common::EquivalenceTester<nif::NiBoolData>::operator()(const NiBoolData& ob
 	}
 }
 
-void common::Randomiser<NiBoolData>::operator()(NiBoolData& object, const Niflib::NiBoolData* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiBoolData>::operator()(NiBoolData& object, File& file, std::mt19937& rng)
 {
 	object.keyType.set(randi<int>(rng, { 1, 5 }));
 
@@ -75,7 +75,7 @@ void common::EquivalenceTester<nif::NiFloatData>::operator()(const NiFloatData& 
 	}
 }
 
-void common::Randomiser<NiFloatData>::operator()(NiFloatData& object, const Niflib::NiFloatData* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiFloatData>::operator()(NiFloatData& object, File& file, std::mt19937& rng)
 {
 	object.keyType.set(randi<int>(rng, { 1, 5 }));
 
@@ -114,7 +114,7 @@ void common::EquivalenceTester<NiBoolInterpolator>::operator()(const NiBoolInter
 	Assert::IsTrue(object.data.assigned() == file.get<NiBoolData>(native->GetData()).get());
 }
 
-void common::Randomiser<NiBoolInterpolator>::operator()(NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiBoolInterpolator>::operator()(NiBoolInterpolator& object, File& file, std::mt19937& rng)
 {
 	object.value.set(randi<int>(rng, { 0, 1 }));
 	object.data.assign(file.create<NiBoolData>());
@@ -133,7 +133,7 @@ void common::EquivalenceTester<NiFloatInterpolator>::operator()(const NiFloatInt
 	Assert::IsTrue(object.data.assigned() == file.get<NiFloatData>(native->GetData()).get());
 }
 
-void common::Randomiser<NiFloatInterpolator>::operator()(NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiFloatInterpolator>::operator()(NiFloatInterpolator& object, File& file, std::mt19937& rng)
 {
 	object.value.set(randf<float>(rng));
 	object.data.assign(file.create<NiFloatData>());
@@ -155,7 +155,7 @@ void common::EquivalenceTester<NiTimeController>::operator()(const NiTimeControl
 	Assert::IsTrue(object.stopTime.get() == native->GetStopTime());
 }
 
-void common::Randomiser<NiTimeController>::operator()(NiTimeController& object, const Niflib::NiTimeController* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiTimeController>::operator()(NiTimeController& object, File& file, std::mt19937& rng)
 {
 	object.flags.set(randi<unsigned short>(rng));
 	object.frequency.set(randf<float>(rng));
@@ -179,7 +179,7 @@ void common::EquivalenceTester<NiSingleInterpController>::operator()(const NiSin
 	Assert::IsTrue(object.interpolator.assigned() == file.get<NiInterpolator>(native->GetInterpolator()).get());
 }
 
-void common::Randomiser<NiSingleInterpController>::operator()(NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiSingleInterpController>::operator()(NiSingleInterpController& object, File& file, std::mt19937& rng)
 {
 	object.interpolator.assign(file.create<NiInterpolator>());
 }

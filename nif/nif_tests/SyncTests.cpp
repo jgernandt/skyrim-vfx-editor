@@ -25,7 +25,7 @@ namespace sync
 				common::Randomiser<T>{}.down(object, native, rng);//this overload randomises native
 				ReadSyncer<T>{}.down(object, native, file);
 				common::EquivalenceTester<T>{}.down(object, native, file);
-				common::Randomiser<T>{}.down(object, native, file, rng);//this overload randomises object
+				common::Randomiser<T>{}.down(object, file, rng);//this overload randomises object
 				WriteSyncer<T>{}.down(object, native, file);
 				common::EquivalenceTester<T>{}.down(object, native, file);
 			}

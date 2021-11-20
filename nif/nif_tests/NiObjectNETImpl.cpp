@@ -22,7 +22,7 @@ void common::EquivalenceTester<NiObjectNET>::operator()(const NiObjectNET& objec
 		Assert::IsTrue(controller == file.get<Niflib::NiTimeController>(object.controllers.at(i++)));
 }
 
-void common::Randomiser<NiObjectNET>::operator()(NiObjectNET& object, const Niflib::NiObjectNET* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiObjectNET>::operator()(NiObjectNET& object, File& file, std::mt19937& rng)
 {
 	randomiseProperty(object.name, rng);
 	randomiseSet(object.extraData, file, rng);

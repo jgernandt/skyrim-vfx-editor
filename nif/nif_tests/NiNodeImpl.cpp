@@ -14,7 +14,7 @@ void common::EquivalenceTester<nif::NiNode>::operator()(const NiNode& object, co
 		Assert::IsTrue(object.children.has(file.get<NiAVObject>(child).get()));
 }
 
-void common::Randomiser<NiNode>::operator()(NiNode& object, const Niflib::NiNode* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiNode>::operator()(NiNode& object, File& file, std::mt19937& rng)
 {
 	randomiseSet(object.children, file, rng);
 }

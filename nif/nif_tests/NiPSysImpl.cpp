@@ -20,7 +20,7 @@ void common::EquivalenceTester<NiParticleSystem>::operator()(const NiParticleSys
 	Assert::IsTrue(object.worldSpace.get() == native->GetWorldSpace());
 }
 
-void common::Randomiser<NiParticleSystem>::operator()(NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiParticleSystem>::operator()(NiParticleSystem& object, File& file, std::mt19937& rng)
 {
 	object.data.assign(file.create<NiPSysData>());
 	randomiseSequence(object.modifiers, file, rng);
@@ -59,7 +59,7 @@ void common::EquivalenceTester<NiPSysData>::operator()(const NiPSysData& object,
 	Assert::IsTrue(object.hasRotationSpeeds.get() == native->GetHasRotationSpeeds());
 }
 
-void common::Randomiser<NiPSysData>::operator()(NiPSysData& object, const Niflib::NiPSysData* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiPSysData>::operator()(NiPSysData& object, File& file, std::mt19937& rng)
 {
 	object.maxCount.set(randi<unsigned short>(rng));
 	object.subtexOffsets.set(randfv<SubtextureOffset>(rng));

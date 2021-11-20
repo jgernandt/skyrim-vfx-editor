@@ -21,7 +21,7 @@ void common::EquivalenceTester<nif::NiAVObject>::operator()(const NiAVObject& ob
 	Assert::IsTrue(object.transform.scale.get() == native->GetLocalScale());
 }
 
-void common::Randomiser<NiAVObject>::operator()(NiAVObject& object, const Niflib::NiAVObject* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiAVObject>::operator()(NiAVObject& object, File& file, std::mt19937& rng)
 {
 	//flags is 32 bit, but it was 16 in Niflib's days. I can't be bothered to fix that right now.
 	randomiseFlags(object.flags, rng, { 0, std::numeric_limits<unsigned short>::max() });

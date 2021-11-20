@@ -16,7 +16,7 @@ void common::EquivalenceTester<nif::NiAlphaProperty>::operator()(const NiAlphaPr
 	Assert::IsTrue(object.threshold.get() == native->GetTestThreshold());
 }
 
-void common::Randomiser<NiAlphaProperty>::operator()(NiAlphaProperty& object, const Niflib::NiAlphaProperty* native, File& file, std::mt19937& rng)
+void common::Randomiser<NiAlphaProperty>::operator()(NiAlphaProperty& object, File& file, std::mt19937& rng)
 {
 	object.mode.set(static_cast<AlphaMode>(randi<std::uint_fast16_t>(rng) & 0x201));
 	object.srcFcn.set(static_cast<BlendFunction>(randi<int>(rng, { 0, 10 })));
@@ -42,7 +42,7 @@ void common::EquivalenceTester<nif::BSEffectShaderProperty>::operator()(const BS
 	Assert::IsTrue(object.shaderFlags2.get() == native->GetShaderFlags2());
 }
 
-void common::Randomiser<BSEffectShaderProperty>::operator()(BSEffectShaderProperty& object, const Niflib::BSEffectShaderProperty* native, File& file, std::mt19937& rng)
+void common::Randomiser<BSEffectShaderProperty>::operator()(BSEffectShaderProperty& object, File& file, std::mt19937& rng)
 {
 	randomiseProperty(object.emissiveCol, rng);
 	randomiseProperty(object.emissiveMult, rng);
