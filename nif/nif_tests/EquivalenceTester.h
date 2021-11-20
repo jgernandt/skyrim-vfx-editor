@@ -1,15 +1,23 @@
 #pragma once
+#include "CppUnitTest.h"
 #include "nif.h"
 
 namespace common
 {
+	using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 	using namespace nif;
 
 	//Test an object and a native for equivalence in all fields
 	template<typename T>
 	struct EquivalenceTester : VerticalTraverser<T, EquivalenceTester>
 	{
-		void operator() (const T& object, const typename type_map<T>::type* native, File& file) {}
+		void operator() (const T& object, const typename type_map<T>::type* native, File& file) { Assert::Fail(); }
+	};
+
+	template<>
+	struct EquivalenceTester<NiObject> : VerticalTraverser<NiObject, EquivalenceTester>
+	{
+		void operator() (const NiObject& object, const Niflib::NiObject* native, File& file) {}
 	};
 
 	template<>
@@ -31,9 +39,27 @@ namespace common
 	};
 
 	template<>
+	struct EquivalenceTester<BSFadeNode> : VerticalTraverser<BSFadeNode, EquivalenceTester>
+	{
+		void operator() (const BSFadeNode& object, const Niflib::BSFadeNode* native, File& file) {}
+	};
+
+	template<>
+	struct EquivalenceTester<NiProperty> : VerticalTraverser<NiProperty, EquivalenceTester>
+	{
+		void operator() (const NiProperty& object, const Niflib::NiProperty* native, File& file) {}
+	};
+
+	template<>
 	struct EquivalenceTester<NiAlphaProperty> : VerticalTraverser<NiAlphaProperty, EquivalenceTester>
 	{
 		void operator() (const NiAlphaProperty& object, const Niflib::NiAlphaProperty* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<BSShaderProperty> : VerticalTraverser<BSShaderProperty, EquivalenceTester>
+	{
+		void operator() (const BSShaderProperty& object, const Niflib::BSShaderProperty* native, File& file) {}
 	};
 
 	template<>
@@ -52,6 +78,12 @@ namespace common
 	struct EquivalenceTester<NiFloatData> : VerticalTraverser<NiFloatData, EquivalenceTester>
 	{
 		void operator() (const NiFloatData& object, const Niflib::NiFloatData* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiInterpolator> : VerticalTraverser<NiInterpolator, EquivalenceTester>
+	{
+		void operator() (const NiInterpolator& object, const Niflib::NiInterpolator* native, File& file) {}
 	};
 
 	template<>
