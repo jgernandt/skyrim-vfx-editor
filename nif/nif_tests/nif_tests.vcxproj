@@ -161,6 +161,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DataFieldTests.cpp" />
+    <ClCompile Include="NiPSysEmittersImpl.cpp" />
     <ClCompile Include="NiPSysImpl.cpp" />
     <ClCompile Include="FileTests.cpp" />
     <ClCompile Include="ObjectTests.cpp" />

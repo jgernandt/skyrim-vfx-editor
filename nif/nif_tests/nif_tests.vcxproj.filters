@@ -51,6 +51,9 @@
     <ClCompile Include="ObjectTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="NiPSysEmittersImpl.cpp">
+      <Filter>Source Files\helpers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">

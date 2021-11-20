@@ -99,6 +99,24 @@ namespace common
 	};
 
 	template<>
+	struct EquivalenceTester<NiBlendInterpolator> : VerticalTraverser<NiBlendInterpolator, EquivalenceTester>
+	{
+		void operator() (const NiBlendInterpolator& object, const Niflib::NiBlendInterpolator* native, File& file) {}
+	};
+
+	template<>
+	struct EquivalenceTester<NiBlendBoolInterpolator> : VerticalTraverser<NiBlendBoolInterpolator, EquivalenceTester>
+	{
+		void operator() (const NiBlendBoolInterpolator& object, const Niflib::NiBlendBoolInterpolator* native, File& file) {}
+	};
+
+	template<>
+	struct EquivalenceTester<NiBlendFloatInterpolator> : VerticalTraverser<NiBlendFloatInterpolator, EquivalenceTester>
+	{
+		void operator() (const NiBlendFloatInterpolator& object, const Niflib::NiBlendFloatInterpolator* native, File& file) {}
+	};
+
+	template<>
 	struct EquivalenceTester<NiTimeController> : VerticalTraverser<NiTimeController, EquivalenceTester>
 	{
 		void operator() (const NiTimeController& object, const Niflib::NiTimeController* native, File& file);
@@ -171,6 +189,36 @@ namespace common
 	};
 
 	template<>
+	struct EquivalenceTester<NiPSysEmitter> : VerticalTraverser<NiPSysEmitter, EquivalenceTester>
+	{
+		void operator() (const NiPSysEmitter& object, const Niflib::NiPSysEmitter* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysVolumeEmitter> : VerticalTraverser<NiPSysVolumeEmitter, EquivalenceTester>
+	{
+		void operator() (const NiPSysVolumeEmitter& object, const Niflib::NiPSysVolumeEmitter* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysBoxEmitter> : VerticalTraverser<NiPSysBoxEmitter, EquivalenceTester>
+	{
+		void operator() (const NiPSysBoxEmitter& object, const Niflib::NiPSysBoxEmitter* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysCylinderEmitter> : VerticalTraverser<NiPSysCylinderEmitter, EquivalenceTester>
+	{
+		void operator() (const NiPSysCylinderEmitter& object, const Niflib::NiPSysCylinderEmitter* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysSphereEmitter> : VerticalTraverser<NiPSysSphereEmitter, EquivalenceTester>
+	{
+		void operator() (const NiPSysSphereEmitter& object, const Niflib::NiPSysSphereEmitter* native, File& file);
+	};
+
+	template<>
 	struct EquivalenceTester<NiPSysModifierCtlr> : VerticalTraverser<NiPSysModifierCtlr, EquivalenceTester>
 	{
 		void operator() (const NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file);
@@ -180,6 +228,12 @@ namespace common
 	struct EquivalenceTester<NiPSysUpdateCtlr> : VerticalTraverser<NiPSysUpdateCtlr, EquivalenceTester>
 	{
 		void operator() (const NiPSysUpdateCtlr& object, const Niflib::NiPSysUpdateCtlr* native, File& file) {}
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, EquivalenceTester>
+	{
+		void operator() (const NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file);
 	};
 
 	template<>

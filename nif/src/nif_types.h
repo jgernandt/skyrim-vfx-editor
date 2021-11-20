@@ -93,6 +93,9 @@ namespace nif
 	struct NiInterpolator;
 	struct NiBoolInterpolator;
 	struct NiFloatInterpolator;
+	struct NiBlendInterpolator;
+	struct NiBlendBoolInterpolator;
+	struct NiBlendFloatInterpolator;
 
 	struct NiTimeController;
 	struct NiSingleInterpController;
@@ -109,8 +112,15 @@ namespace nif
 	struct BSPSysScaleModifier;
 	struct BSPSysSimpleColorModifier;
 
+	struct NiPSysEmitter;
+	struct NiPSysVolumeEmitter;
+	struct NiPSysBoxEmitter;
+	struct NiPSysCylinderEmitter;
+	struct NiPSysSphereEmitter;
+
 	struct NiPSysModifierCtlr;
 	struct NiPSysUpdateCtlr;
+	struct NiPSysEmitterCtlr;
 
 	struct NiExtraData;
 	struct NiStringExtraData;

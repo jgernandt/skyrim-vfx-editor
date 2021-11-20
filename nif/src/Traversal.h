@@ -33,6 +33,7 @@ namespace nif
 
 		virtual void traverse(NiProperty& obj) {}
 		virtual void traverse(NiAlphaProperty& obj) {}
+		virtual void traverse(BSShaderProperty& obj) {}
 		virtual void traverse(BSEffectShaderProperty& obj) {}
 
 		virtual void traverse(NiBoolData& obj) {}
@@ -41,6 +42,9 @@ namespace nif
 		virtual void traverse(NiInterpolator& obj) {}
 		virtual void traverse(NiBoolInterpolator& obj) {}
 		virtual void traverse(NiFloatInterpolator& obj) {}
+		virtual void traverse(NiBlendInterpolator& obj) {}
+		virtual void traverse(NiBlendBoolInterpolator& obj) {}
+		virtual void traverse(NiBlendFloatInterpolator& obj) {}
 
 		virtual void traverse(NiTimeController& obj) {}
 		virtual void traverse(NiSingleInterpController& obj) {}
@@ -57,8 +61,15 @@ namespace nif
 		virtual void traverse(BSPSysScaleModifier& obj) {}
 		virtual void traverse(BSPSysSimpleColorModifier& obj) {}
 
+		virtual void traverse(NiPSysEmitter& obj) {}
+		virtual void traverse(NiPSysVolumeEmitter& obj) {}
+		virtual void traverse(NiPSysBoxEmitter& obj) {}
+		virtual void traverse(NiPSysCylinderEmitter& obj) {}
+		virtual void traverse(NiPSysSphereEmitter& obj) {}
+
 		virtual void traverse(NiPSysModifierCtlr& obj) {}
 		virtual void traverse(NiPSysUpdateCtlr& obj) {}
+		virtual void traverse(NiPSysEmitterCtlr& obj) {}
 
 		virtual void traverse(NiExtraData& obj) {}
 		virtual void traverse(NiStringExtraData& obj) {}
@@ -146,6 +157,7 @@ namespace nif
 
 		virtual void traverse(NiProperty& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiAlphaProperty& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(BSShaderProperty& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(BSEffectShaderProperty& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
 		virtual void traverse(NiBoolData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
@@ -154,6 +166,9 @@ namespace nif
 		virtual void traverse(NiInterpolator& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiBoolInterpolator& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiFloatInterpolator& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiBlendInterpolator& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiBlendBoolInterpolator& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiBlendFloatInterpolator& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
 		virtual void traverse(NiTimeController& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiSingleInterpController& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
@@ -170,8 +185,15 @@ namespace nif
 		virtual void traverse(BSPSysScaleModifier& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(BSPSysSimpleColorModifier& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
+		virtual void traverse(NiPSysEmitter& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysVolumeEmitter& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysBoxEmitter& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysCylinderEmitter& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysSphereEmitter& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+
 		virtual void traverse(NiPSysModifierCtlr& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiPSysUpdateCtlr& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysEmitterCtlr& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
 		virtual void traverse(NiExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiStringExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }

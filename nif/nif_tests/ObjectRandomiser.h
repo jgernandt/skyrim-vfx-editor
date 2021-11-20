@@ -292,10 +292,52 @@ namespace common
 	};
 
 	template<>
+	struct Randomiser<NiPSysEmitter> : VerticalTraverser<NiPSysEmitter, Randomiser>
+	{
+		void operator() (NiPSysEmitter& object, File& file, std::mt19937& rng);
+		void operator() (const NiPSysEmitter&, Niflib::NiPSysEmitter* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiPSysVolumeEmitter> : VerticalTraverser<NiPSysVolumeEmitter, Randomiser>
+	{
+		void operator() (NiPSysVolumeEmitter& object, File& file, std::mt19937& rng);
+		void operator() (const NiPSysVolumeEmitter&, Niflib::NiPSysVolumeEmitter* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiPSysBoxEmitter> : VerticalTraverser<NiPSysBoxEmitter, Randomiser>
+	{
+		void operator() (NiPSysBoxEmitter& object, File& file, std::mt19937& rng);
+		void operator() (const NiPSysBoxEmitter&, Niflib::NiPSysBoxEmitter* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiPSysCylinderEmitter> : VerticalTraverser<NiPSysCylinderEmitter, Randomiser>
+	{
+		void operator() (NiPSysCylinderEmitter& object, File& file, std::mt19937& rng);
+		void operator() (const NiPSysCylinderEmitter&, Niflib::NiPSysCylinderEmitter* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiPSysSphereEmitter> : VerticalTraverser<NiPSysSphereEmitter, Randomiser>
+	{
+		void operator() (NiPSysSphereEmitter& object, File& file, std::mt19937& rng);
+		void operator() (const NiPSysSphereEmitter&, Niflib::NiPSysSphereEmitter* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
 	struct Randomiser<NiPSysModifierCtlr> : VerticalTraverser<NiPSysModifierCtlr, Randomiser>
 	{
 		void operator() (NiPSysModifierCtlr& object, File& file, std::mt19937& rng);
 		void operator() (const NiPSysModifierCtlr&, Niflib::NiPSysModifierCtlr* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, Randomiser>
+	{
+		void operator() (NiPSysEmitterCtlr& object, File& file, std::mt19937& rng);
+		void operator() (const NiPSysEmitterCtlr&, Niflib::NiPSysEmitterCtlr* native, File& file, std::mt19937& rng);
 	};
 
 	template<>

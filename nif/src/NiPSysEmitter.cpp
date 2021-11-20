@@ -20,157 +20,112 @@
 #include "NiPSysEmitter.h"
 #include "File.h"
 
-const size_t nif::NiPSysEmitterCtlr::TYPE = std::hash<std::string>{}("NiPSysEmitterCtlr");
 const size_t nif::NiPSysEmitter::TYPE = std::hash<std::string>{}("NiPSysEmitter");
 const size_t nif::NiPSysVolumeEmitter::TYPE = std::hash<std::string>{}("NiPSysVolumeEmitter");
 const size_t nif::NiPSysBoxEmitter::TYPE = std::hash<std::string>{}("NiPSysBoxEmitter");
 const size_t nif::NiPSysCylinderEmitter::TYPE = std::hash<std::string>{}("NiPSysCylinderEmitter");
 const size_t nif::NiPSysSphereEmitter::TYPE = std::hash<std::string>{}("NiPSysSphereEmitter");
+const size_t nif::NiPSysEmitterCtlr::TYPE = std::hash<std::string>{}("NiPSysEmitterCtlr");
 
 
-/*nif::NiPSysEmitterCtlr::NiPSysEmitterCtlr() : NiPSysEmitterCtlr(new Niflib::NiPSysEmitterCtlr) {}
-nif::NiPSysEmitterCtlr::NiPSysEmitterCtlr(native_type* obj) :
-	NiPSysModifierCtlr(obj), 
-	m_visIplr(*this, &getNative(), &native::NiPSysEmitterCtlr::GetVisibilityInterpolator, &native::NiPSysEmitterCtlr::SetVisibilityInterpolator)
-{}
-
-nif::native::NiPSysEmitterCtlr& nif::NiPSysEmitterCtlr::getNative() const
+void nif::ReadSyncer<nif::NiPSysEmitter>::operator()(NiPSysEmitter& object, const Niflib::NiPSysEmitter* native, File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiPSysEmitterCtlr::TYPE));
-	return static_cast<native::NiPSysEmitterCtlr&>(*m_ptr);
+	assert(native);
+	object.colour.set(nif_type_conversion<ColRGBA>::from(native->GetInitialColor()));
+	object.lifeSpan.set(native->GetLifeSpan());
+	object.lifeSpanVar.set(native->GetLifeSpanVar());
+	object.size.set(native->GetInitialRadius());
+	object.sizeVar.set(native->GetInitialRadiusVar());
+	object.speed.set(native->GetSpeed());
+	object.speedVar.set(native->GetSpeedVar());
+	object.azimuth.set(native->GetPlanarAngle());
+	object.azimuthVar.set(native->GetPlanarAngleVar());
+	object.elevation.set(0.5f * math::pi<float> - native->GetDeclination());
+	object.elevationVar.set(native->GetDeclinationVar());
+}
+
+void nif::WriteSyncer<nif::NiPSysEmitter>::operator()(const NiPSysEmitter& object, Niflib::NiPSysEmitter* native, const File& file)
+{
+	native->SetInitialColor(nif_type_conversion<Niflib::Color4>::from(object.colour.get()));
+	native->SetLifeSpan(object.lifeSpan.get());
+	native->SetLifeSpanVar(object.lifeSpanVar.get());
+	native->SetInitialRadius(object.size.get());
+	native->SetInitialRadiusVar(object.sizeVar.get());
+	native->SetSpeed(object.speed.get());
+	native->SetSpeedVar(object.speedVar.get());
+	native->SetPlanarAngle(object.azimuth.get());
+	native->SetPlanarAngleVar(object.azimuthVar.get());
+	native->SetDeclination(0.5f * math::pi<float> - object.elevation.get());
+	native->SetDeclinationVar(object.elevationVar.get());
 }
 
 
-nif::NiPSysEmitter::NiPSysEmitter(native_type* obj) :
-	NiPSysModifier(obj), 
-	m_colour(*this, &getNative(), &native::NiPSysEmitter::GetInitialColor, &native::NiPSysEmitter::SetInitialColor),
-	m_lifeSpan(*this, &getNative(), &native::NiPSysEmitter::GetLifeSpan, &native::NiPSysEmitter::SetLifeSpan),
-	m_lifeSpanVar(*this, &getNative(), &native::NiPSysEmitter::GetLifeSpanVar, &native::NiPSysEmitter::SetLifeSpanVar),
-	m_size(*this, &getNative(), &native::NiPSysEmitter::GetInitialRadius, &native::NiPSysEmitter::SetInitialRadius),
-	m_sizeVar(*this, &getNative(), &native::NiPSysEmitter::GetInitialRadiusVar, &native::NiPSysEmitter::SetInitialRadiusVar),
-	m_speed(*this, &getNative(), &native::NiPSysEmitter::GetSpeed, &native::NiPSysEmitter::SetSpeed),
-	m_speedVar(*this, &getNative(), &native::NiPSysEmitter::GetSpeedVar, &native::NiPSysEmitter::SetSpeedVar),
-	m_azimuth(*this),
-	m_azimuthVar(*this),
-	m_elevation(*this),
-	m_elevationVar(*this)
-{}
-
-nif::native::NiPSysEmitter& nif::NiPSysEmitter::getNative() const
+void nif::ReadSyncer<nif::NiPSysVolumeEmitter>::operator()(NiPSysVolumeEmitter& object, const Niflib::NiPSysVolumeEmitter* native, File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiPSysEmitter::TYPE));
-	return static_cast<native::NiPSysEmitter&>(*m_ptr);
+	assert(native);
+	object.emitterObject.assign(file.get<NiNode>(native->GetEmitterObject()));
+}
+
+void nif::WriteSyncer<nif::NiPSysVolumeEmitter>::operator()(const NiPSysVolumeEmitter& object, Niflib::NiPSysVolumeEmitter* native, const File& file)
+{
+	assert(native);
+	native->SetEmitterObject(file.getNative<NiNode>(object.emitterObject.assigned()));
 }
 
 
-nif::NiPSysVolumeEmitter::NiPSysVolumeEmitter(native_type* obj) :
-	NiPSysEmitter(obj), 
-	m_emtrObj(*this, &getNative(), &native::NiPSysVolumeEmitter::GetEmitterObject, &native::NiPSysVolumeEmitter::SetEmitterObject)
-{}
-
-nif::native::NiPSysVolumeEmitter& nif::NiPSysVolumeEmitter::getNative() const
+void nif::ReadSyncer<nif::NiPSysBoxEmitter>::operator()(NiPSysBoxEmitter& object, const Niflib::NiPSysBoxEmitter* native, File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiPSysVolumeEmitter::TYPE));
-	return static_cast<native::NiPSysVolumeEmitter&>(*m_ptr);
+	assert(native);
+	object.width.set(native->GetWidth());
+	object.height.set(native->GetHeight());
+	object.depth.set(native->GetDepth());
+}
+
+void nif::WriteSyncer<nif::NiPSysBoxEmitter>::operator()(const NiPSysBoxEmitter& object, Niflib::NiPSysBoxEmitter* native, const File& file)
+{
+	assert(native);
+	native->SetWidth(object.width.get());
+	native->SetHeight(object.height.get());
+	native->SetDepth(object.depth.get());
 }
 
 
-nif::NiPSysBoxEmitter::NiPSysBoxEmitter() : NiPSysBoxEmitter(new Niflib::NiPSysBoxEmitter) {}
-nif::NiPSysBoxEmitter::NiPSysBoxEmitter(native_type* obj) :
-	NiPSysVolumeEmitter(obj), 
-	m_width(*this, &getNative(), &native::NiPSysBoxEmitter::GetWidth, &native::NiPSysBoxEmitter::SetWidth),
-	m_height(*this, &getNative(), &native::NiPSysBoxEmitter::GetHeight, &native::NiPSysBoxEmitter::SetHeight),
-	m_depth(*this, &getNative(), &native::NiPSysBoxEmitter::GetDepth, &native::NiPSysBoxEmitter::SetDepth)
-{}
-
-nif::native::NiPSysBoxEmitter& nif::NiPSysBoxEmitter::getNative() const
+void nif::ReadSyncer<nif::NiPSysCylinderEmitter>::operator()(NiPSysCylinderEmitter& object, const Niflib::NiPSysCylinderEmitter* native, File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiPSysBoxEmitter::TYPE));
-	return static_cast<native::NiPSysBoxEmitter&>(*m_ptr);
+	assert(native);
+	object.radius.set(native->GetRadius());
+	object.length.set(native->GetHeight());
+}
+
+void nif::WriteSyncer<nif::NiPSysCylinderEmitter>::operator()(const NiPSysCylinderEmitter& object, Niflib::NiPSysCylinderEmitter* native, const File& file)
+{
+	assert(native);
+	native->SetRadius(object.radius.get());
+	native->SetHeight(object.length.get());
 }
 
 
-float nif::NiPSysEmitter::EmitterAzimuth::get() const
+void nif::ReadSyncer<nif::NiPSysSphereEmitter>::operator()(NiPSysSphereEmitter& object, const Niflib::NiPSysSphereEmitter* native, File& file)
 {
-	return static_cast<math::deg>(math::rad(nativePtr()->GetPlanarAngle())).value;
+	assert(native);
+	object.radius.set(native->GetRadius());
 }
 
-void nif::NiPSysEmitter::EmitterAzimuth::set(const float& f)
+void nif::WriteSyncer<nif::NiPSysSphereEmitter>::operator()(const NiPSysSphereEmitter& object, Niflib::NiPSysSphereEmitter* native, const File& file)
 {
-	if (f != get()) {
-		nativePtr()->SetPlanarAngle(static_cast<math::rad>(math::deg(f)).value);
-		notify(f);
-	}
-}
-
-float nif::NiPSysEmitter::EmitterAzimuthVar::get() const
-{
-	return static_cast<math::deg>(math::rad(nativePtr()->GetPlanarAngleVar())).value;
-}
-
-void nif::NiPSysEmitter::EmitterAzimuthVar::set(const float& f)
-{
-	if (f != get()) {
-		nativePtr()->SetPlanarAngleVar(static_cast<math::rad>(math::deg(f)).value);
-		notify(f);
-	}
-}
-
-float nif::NiPSysEmitter::EmitterElevation::get() const
-{
-	return 90.0f - static_cast<math::deg>(math::rad(nativePtr()->GetDeclination())).value;
-}
-
-void nif::NiPSysEmitter::EmitterElevation::set(const float& f)
-{
-	if (f != get()) {
-		nativePtr()->SetDeclination(static_cast<math::rad>(math::deg(90.0f - f)).value);
-		notify(f);
-	}
-}
-
-float nif::NiPSysEmitter::EmitterElevationVar::get() const
-{
-	return static_cast<math::deg>(math::rad(nativePtr()->GetDeclinationVar())).value;
-}
-
-void nif::NiPSysEmitter::EmitterElevationVar::set(const float& f)
-{
-	if (f != get()) {
-		nativePtr()->SetDeclinationVar(static_cast<math::rad>(math::deg(f)).value);
-		notify(f);
-	}
+	assert(native);
+	native->SetRadius(object.radius.get());
 }
 
 
-nif::NiPSysCylinderEmitter::NiPSysCylinderEmitter() : 
-	NiPSysCylinderEmitter(new Niflib::NiPSysCylinderEmitter)
-{}
-
-nif::NiPSysCylinderEmitter::NiPSysCylinderEmitter(native_type* obj) :
-	NiPSysVolumeEmitter(obj),
-	m_radius(*this, &getNative(), &native::NiPSysCylinderEmitter::GetRadius, &native::NiPSysCylinderEmitter::SetRadius),
-	m_height(*this, &getNative(), &native::NiPSysCylinderEmitter::GetHeight, &native::NiPSysCylinderEmitter::SetHeight)
-{}
-
-nif::native::NiPSysCylinderEmitter& nif::NiPSysCylinderEmitter::getNative() const
+void nif::ReadSyncer<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiPSysCylinderEmitter::TYPE));
-	return static_cast<native::NiPSysCylinderEmitter&>(*m_ptr);
+	assert(native);
+	object.visIplr.assign(file.get<NiInterpolator>(native->GetVisibilityInterpolator()));
 }
 
-
-nif::NiPSysSphereEmitter::NiPSysSphereEmitter() :
-	NiPSysSphereEmitter(new Niflib::NiPSysSphereEmitter)
-{}
-
-nif::NiPSysSphereEmitter::NiPSysSphereEmitter(native_type* obj) :
-	NiPSysVolumeEmitter(obj),
-	m_radius(*this, &getNative(), &native::NiPSysSphereEmitter::GetRadius, &native::NiPSysSphereEmitter::SetRadius)
-{}
-
-nif::native::NiPSysSphereEmitter& nif::NiPSysSphereEmitter::getNative() const
+void nif::WriteSyncer<nif::NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& object, Niflib::NiPSysEmitterCtlr* native, const File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiPSysSphereEmitter::TYPE));
-	return static_cast<native::NiPSysSphereEmitter&>(*m_ptr);
-}*/
+	assert(native);
+	native->SetVisibilityInterpolator(file.getNative<NiInterpolator>(object.visIplr.assigned()));
+}
