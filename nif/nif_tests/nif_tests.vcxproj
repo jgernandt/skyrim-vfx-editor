@@ -162,6 +162,7 @@
   <ItemGroup>
     <ClCompile Include="CreationTests.cpp" />
     <ClCompile Include="DataFieldTests.cpp" />
+    <ClCompile Include="NiPSysImpl.cpp" />
     <ClCompile Include="ObjectIndexTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

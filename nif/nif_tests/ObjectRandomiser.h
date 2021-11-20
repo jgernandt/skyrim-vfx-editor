@@ -114,6 +114,24 @@ namespace common
 	}
 
 	template<typename T, typename GeneratorType>
+	std::vector<T> randfv(GeneratorType& rng, std::array<typename util::array_traits<T>::element_type, 2> limits =
+		{ typename util::array_traits<T>::element_type(0), typename util::array_traits<T>::element_type(1) })
+	{
+		using value_type = typename util::array_traits<T>::element_type;
+
+		std::uniform_int_distribution<int> I(1, 5);
+		std::uniform_real_distribution<value_type> D(limits[0], limits[1]);
+
+		std::vector<T> out(I(rng));
+		for (auto&& el : out) {
+			for (size_t i = 0; i < util::array_traits<T>::size; i++)
+				util::array_traits<T>::at(el, i) = D(rng);
+		}
+
+		return out;
+	}
+
+	template<typename T, typename GeneratorType>
 	std::vector<Niflib::Ref<typename type_map<T>::type>> randomObjVector(GeneratorType& rng)
 	{
 		std::uniform_int_distribution<int> D(1, 5);
@@ -185,20 +203,6 @@ namespace common
 	};
 
 	template<>
-	struct Randomiser<NiExtraData> : VerticalTraverser<NiExtraData, Randomiser>
-	{
-		void operator() (NiExtraData& object, const Niflib::NiExtraData* native, File& file, std::mt19937& rng);
-		void operator() (const NiExtraData&, Niflib::NiExtraData* native, std::mt19937& rng);
-	};
-
-	template<>
-	struct Randomiser<NiStringExtraData> : VerticalTraverser<NiStringExtraData, Randomiser>
-	{
-		void operator() (NiStringExtraData& object, const Niflib::NiStringExtraData* native, File& file, std::mt19937& rng);
-		void operator() (const NiStringExtraData&, Niflib::NiStringExtraData* native, std::mt19937& rng);
-	};
-
-	template<>
 	struct Randomiser<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, Randomiser>
 	{
 		void operator() (NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file, std::mt19937& rng);
@@ -224,5 +228,33 @@ namespace common
 	{
 		void operator() (NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file, std::mt19937& rng);
 		void operator() (const NiSingleInterpController&, Niflib::NiSingleInterpController* native, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiParticleSystem> : VerticalTraverser<NiParticleSystem, Randomiser>
+	{
+		void operator() (NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file, std::mt19937& rng);
+		void operator() (const NiParticleSystem&, Niflib::NiParticleSystem* native, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiPSysData> : VerticalTraverser<NiPSysData, Randomiser>
+	{
+		void operator() (NiPSysData& object, const Niflib::NiPSysData* native, File& file, std::mt19937& rng);
+		void operator() (const NiPSysData&, Niflib::NiPSysData* native, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiExtraData> : VerticalTraverser<NiExtraData, Randomiser>
+	{
+		void operator() (NiExtraData& object, const Niflib::NiExtraData* native, File& file, std::mt19937& rng);
+		void operator() (const NiExtraData&, Niflib::NiExtraData* native, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiStringExtraData> : VerticalTraverser<NiStringExtraData, Randomiser>
+	{
+		void operator() (NiStringExtraData& object, const Niflib::NiStringExtraData* native, File& file, std::mt19937& rng);
+		void operator() (const NiStringExtraData&, Niflib::NiStringExtraData* native, std::mt19937& rng);
 	};
 }

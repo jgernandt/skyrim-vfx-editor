@@ -42,6 +42,8 @@ namespace creation
 		TEST_METHOD(NiFloatInterpolator) { Test<nif::NiFloatInterpolator>{}.run(); }
 		TEST_METHOD(NiTimeController) { Test<nif::NiTimeController>{}.run(); }
 		TEST_METHOD(NiSingleInterpController) { Test<nif::NiSingleInterpController>{}.run(); }
+		TEST_METHOD(NiParticleSystem) { Test<nif::NiParticleSystem>{}.run(); }
+		TEST_METHOD(NiPSysData) { Test<nif::NiPSysData>{}.run(); }
 		TEST_METHOD(NiExtraData) { Test<nif::NiExtraData>{}.run(); }
 		TEST_METHOD(NiStringExtraData) { Test<nif::NiStringExtraData>{}.run(); }
 	};
@@ -97,6 +99,14 @@ namespace creation
 			Niflib::Ref<Niflib::NiObject> native = new Niflib::NiAlphaProperty;
 			auto object = file.get<NiObject>(native);
 			Assert::IsTrue(object->type() == nif::NiAlphaProperty::TYPE);
+		}
+
+		TEST_METHOD(BSShaderProperty)
+		{
+			File file(File::Version::SKYRIM_SE);
+			Niflib::Ref<Niflib::NiObject> native = new Niflib::BSShaderProperty;
+			auto object = file.get<NiObject>(native);
+			Assert::IsTrue(object->type() == nif::BSShaderProperty::TYPE);
 		}
 
 		TEST_METHOD(BSEffectShaderProperty)

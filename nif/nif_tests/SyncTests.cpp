@@ -43,6 +43,8 @@ namespace sync
 		TEST_METHOD(NiFloatInterpolator) { Test<nif::NiFloatInterpolator>{}.run(); }
 		TEST_METHOD(NiTimeController) { Test<nif::NiTimeController>{}.run(); }
 		TEST_METHOD(NiSingleInterpController) { Test<nif::NiSingleInterpController>{}.run(); }
+		TEST_METHOD(NiParticleSystem) { Test<nif::NiParticleSystem>{}.run(); }
+		TEST_METHOD(NiPSysData) { Test<nif::NiPSysData>{}.run(); }
 		TEST_METHOD(NiExtraData) { Test<nif::NiExtraData>{}.run(); }
 		TEST_METHOD(NiStringExtraData) { Test<nif::NiStringExtraData>{}.run(); }
 	};
@@ -82,6 +84,8 @@ namespace sync
 		TEST_METHOD(NiFloatInterpolator) { Test<nif::NiFloatInterpolator>{}.run(); }
 		TEST_METHOD(NiTimeController) { Test<nif::NiTimeController>{}.run(); }
 		TEST_METHOD(NiSingleInterpController) { Test<nif::NiSingleInterpController>{}.run(); }
+		TEST_METHOD(NiParticleSystem) { Test<nif::NiParticleSystem>{}.run(); }
+		TEST_METHOD(NiPSysData) { Test<nif::NiPSysData>{}.run(); }
 		TEST_METHOD(NiExtraData) { Test<nif::NiExtraData>{}.run(); }
 		TEST_METHOD(NiStringExtraData) { Test<nif::NiStringExtraData>{}.run(); }
 	};

@@ -55,18 +55,6 @@ namespace common
 	};
 
 	template<>
-	struct EquivalenceTester<NiExtraData> : VerticalTraverser<NiExtraData, EquivalenceTester>
-	{
-		void operator() (const NiExtraData& object, const Niflib::NiExtraData* native, File& file);
-	};
-
-	template<>
-	struct EquivalenceTester<NiStringExtraData> : VerticalTraverser<NiStringExtraData, EquivalenceTester>
-	{
-		void operator() (const NiStringExtraData& object, const Niflib::NiStringExtraData* native, File& file);
-	};
-
-	template<>
 	struct EquivalenceTester<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, EquivalenceTester>
 	{
 		void operator() (const NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file);
@@ -88,5 +76,29 @@ namespace common
 	struct EquivalenceTester<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, EquivalenceTester>
 	{
 		void operator() (const NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiParticleSystem> : VerticalTraverser<NiParticleSystem, EquivalenceTester>
+	{
+		void operator() (const NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysData> : VerticalTraverser<NiPSysData, EquivalenceTester>
+	{
+		void operator() (const NiPSysData& object, const Niflib::NiPSysData* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiExtraData> : VerticalTraverser<NiExtraData, EquivalenceTester>
+	{
+		void operator() (const NiExtraData& object, const Niflib::NiExtraData* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiStringExtraData> : VerticalTraverser<NiStringExtraData, EquivalenceTester>
+	{
+		void operator() (const NiStringExtraData& object, const Niflib::NiStringExtraData* native, File& file);
 	};
 }

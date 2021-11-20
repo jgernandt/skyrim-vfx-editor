@@ -45,6 +45,9 @@ namespace nif
 		virtual void traverse(NiTimeController& obj) {}
 		virtual void traverse(NiSingleInterpController& obj) {}
 
+		virtual void traverse(NiParticleSystem& obj) {}
+		virtual void traverse(NiPSysData& obj) {}
+
 		virtual void traverse(NiExtraData& obj) {}
 		virtual void traverse(NiStringExtraData& obj) {}
 		//etc.
@@ -139,6 +142,9 @@ namespace nif
 
 		virtual void traverse(NiTimeController& obj) override { FunctionObj<NiTimeController>{}(obj, static_cast<TraverserType&>(*this)); }
 		virtual void traverse(NiSingleInterpController& obj) override { FunctionObj<NiSingleInterpController>{}(obj, static_cast<TraverserType&>(*this)); }
+
+		virtual void traverse(NiParticleSystem& obj) override { FunctionObj<NiParticleSystem>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiPSysData& obj) override { FunctionObj<NiPSysData>{}(obj, static_cast<TraverserType&>(*this)); }
 
 		virtual void traverse(NiExtraData& obj) override { FunctionObj<NiExtraData>{}(obj, static_cast<TraverserType&>(*this)); }
 		virtual void traverse(NiStringExtraData& obj) override { FunctionObj<NiStringExtraData>{}(obj, static_cast<TraverserType&>(*this)); }

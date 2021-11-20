@@ -48,7 +48,7 @@ namespace nif
 	{
 		Property<std::string> name;
 		Property<unsigned int> order;
-		Assignable<NiParticleSystem> target;
+		Assignable<NiParticleSystem> target;//should be assigned by our Nodes
 		Property<bool> active;
 
 		static const ni_type TYPE;
