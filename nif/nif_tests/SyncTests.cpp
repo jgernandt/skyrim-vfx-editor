@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "SyncTestTraverser.h"
-
+#include "EquivalenceTester.h"
+#include "ObjectRandomiser.h"
 
 namespace nif_tests
 {
@@ -15,98 +16,42 @@ namespace nif_tests
 		template<typename T>
 		struct SyncTest
 		{
-			void run(T& object, typename type_map<T>::type* native, File& file)
+			void run(File& file)
 			{
-				SyncTestTraverser<T> t;
-				t.down(object, native, file);
+				std::mt19937 rng;
+				T object{};
+				Niflib::Ref<typename type_map<T>::type> native = new typename type_map<T>::type;
+
+				common::Randomiser<T>{}.down(object, native, rng);//this overload randomises native
 				ReadSyncer<T>{}.down(object, native, file);
-				t.down(object, native, file, 0);
+				common::EquivalenceTester<T>{}.down(object, native, file);
+				common::Randomiser<T>{}.down(object, native, file, rng);//this overload randomises object
 				WriteSyncer<T>{}.down(object, native, file);
-				t.down(object, native, file, 0, 0);
+				common::EquivalenceTester<T>{}.down(object, native, file);
 			}
 		};
 
 		nif::File file{ nif::File::Version::SKYRIM_SE };
 
-		TEST_METHOD(NiObjectNET)
-		{
-			Niflib::Ref<Niflib::NiObjectNET> native = new Niflib::NiObjectNET;
-			auto object = file.get<nif::NiObjectNET>(native);
+		TEST_METHOD(NiObjectNET) { SyncTest<nif::NiObjectNET>{}.run(file); }
 
-			SyncTest<nif::NiObjectNET>{}.run(*object, native, file);
-		}
+		TEST_METHOD(NiAVObject) { SyncTest<nif::NiAVObject>{}.run(file); }
 
-		TEST_METHOD(NiAVObject)
-		{
-			Niflib::Ref<Niflib::NiAVObject> native = new Niflib::NiAVObject;
-			auto object = file.get<nif::NiAVObject>(native);
+		TEST_METHOD(NiNode) { SyncTest<nif::NiNode>{}.run(file); }
 
-			SyncTest<nif::NiAVObject>{}.run(*object, native, file);
-		}
+		TEST_METHOD(BSFadeNode) { SyncTest<nif::BSFadeNode>{}.run(file); }
 
-		TEST_METHOD(NiNode)
-		{
-			Niflib::Ref<Niflib::NiNode> native = new Niflib::NiNode;
-			auto object = file.get<nif::NiNode>(native);
+		TEST_METHOD(NiAlphaProperty) { SyncTest<nif::NiAlphaProperty>{}.run(file); }
 
-			SyncTest<nif::NiNode>{}.run(*object, native, file);
-		}
+		TEST_METHOD(BSEffectShaderProperty) { SyncTest<nif::BSEffectShaderProperty>{}.run(file); }
 
-		TEST_METHOD(BSFadeNode)
-		{
-			Niflib::Ref<Niflib::BSFadeNode> native = new Niflib::BSFadeNode;
-			auto object = file.get<nif::BSFadeNode>(native);
+		TEST_METHOD(NiBoolData) { SyncTest<nif::NiBoolData>{}.run(file); }
 
-			SyncTest<nif::BSFadeNode>{}.run(*object, native, file);
-		}
+		TEST_METHOD(NiFloatData) { SyncTest<nif::NiFloatData>{}.run(file); }
 
-		TEST_METHOD(NiAlphaProperty)
-		{
-			Niflib::Ref<Niflib::NiAlphaProperty> native = new Niflib::NiAlphaProperty;
-			auto object = file.get<nif::NiAlphaProperty>(native);
+		TEST_METHOD(NiExtraData) { SyncTest<nif::NiExtraData>{}.run(file); }
 
-			SyncTest<nif::NiAlphaProperty>{}.run(*object, native, file);
-		}
-
-		TEST_METHOD(BSEffectShaderProperty)
-		{
-			Niflib::Ref<Niflib::BSEffectShaderProperty> native = new Niflib::BSEffectShaderProperty;
-			auto object = file.get<nif::BSEffectShaderProperty>(native);
-
-			SyncTest<nif::BSEffectShaderProperty>{}.run(*object, native, file);
-		}
-
-		TEST_METHOD(NiBoolData)
-		{
-			Niflib::Ref<Niflib::NiBoolData> native = new Niflib::NiBoolData;
-			auto object = file.get<nif::NiBoolData>(native);
-
-			SyncTest<nif::NiBoolData>{}.run(*object, native, file);
-		}
-
-		TEST_METHOD(NiFloatData)
-		{
-			Niflib::Ref<Niflib::NiFloatData> native = new Niflib::NiFloatData;
-			auto object = file.get<nif::NiFloatData>(native);
-
-			SyncTest<nif::NiFloatData>{}.run(*object, native, file);
-		}
-
-		TEST_METHOD(NiExtraData)
-		{
-			Niflib::Ref<Niflib::NiExtraData> native = new Niflib::NiExtraData;
-			auto object = file.get<nif::NiExtraData>(native);
-
-			SyncTest<nif::NiExtraData>{}.run(*object, native, file);
-		}
-
-		TEST_METHOD(NiStringExtraData)
-		{
-			Niflib::Ref<Niflib::NiStringExtraData> native = new Niflib::NiStringExtraData;
-			auto object = file.get<nif::NiStringExtraData>(native);
-
-			SyncTest<nif::NiStringExtraData>{}.run(*object, native, file);
-		}
+		TEST_METHOD(NiStringExtraData) { SyncTest<nif::NiStringExtraData>{}.run(file); }
 	};
 
 	//Test that the syncer correctly identifies the final type of an object
@@ -116,97 +61,41 @@ namespace nif_tests
 		template<typename T>
 		struct SyncTest
 		{
-			void run(T& object, typename type_map<T>::type* native, File& file)
+			void run(File& file)
 			{
-				SyncTestTraverser<T> t;
-				t.down(object, native, file);
-				static_cast<NiObject&>(object).receive(NiReadSyncer(file));
-				t.down(object, native, file, 0);
-				static_cast<NiObject&>(object).receive(NiWriteSyncer(file));
-				t.down(object, native, file, 0, 0);
+				std::mt19937 rng;
+				Niflib::Ref<typename type_map<T>::type> native = new typename type_map<T>::type;
+				auto object = file.get<T>(native);
+
+				common::Randomiser<T>{}.down(*object, native, rng);
+				static_cast<NiObject&>(*object).receive(NonForwardingReadSyncer(file));
+				common::EquivalenceTester<T>{}.down(*object, native, file);
+				common::Randomiser<T>{}.down(*object, native, file, rng);
+				static_cast<NiObject&>(*object).receive(NonForwardingWriteSyncer(file));
+				common::EquivalenceTester<T>{}.down(*object, native, file);
 			}
 		};
 
 		nif::File file{ nif::File::Version::SKYRIM_SE };
 
-		TEST_METHOD(NiObjectNET)
-		{
-			Niflib::Ref<Niflib::NiObjectNET> native = new Niflib::NiObjectNET;
-			auto object = file.get<nif::NiObjectNET>(native);
+		TEST_METHOD(NiObjectNET) { SyncTest<nif::NiObjectNET>{}.run(file); }
 
-			SyncTest<nif::NiObjectNET>{}.run(*object, native, file);
-		}
+		TEST_METHOD(NiAVObject) { SyncTest<nif::NiAVObject>{}.run(file); }
 
-		TEST_METHOD(NiAVObject)
-		{
-			Niflib::Ref<Niflib::NiAVObject> native = new Niflib::NiAVObject;
-			auto object = file.get<nif::NiAVObject>(native);
+		TEST_METHOD(NiNode) { SyncTest<nif::NiNode>{}.run(file); }
 
-			SyncTest<nif::NiAVObject>{}.run(*object, native, file);
-		}
+		TEST_METHOD(BSFadeNode) { SyncTest<nif::BSFadeNode>{}.run(file); }
 
-		TEST_METHOD(NiNode)
-		{
-			Niflib::Ref<Niflib::NiNode> native = new Niflib::NiNode;
-			auto object = file.get<nif::NiNode>(native);
+		TEST_METHOD(NiAlphaProperty) { SyncTest<nif::NiAlphaProperty>{}.run(file); }
 
-			SyncTest<nif::NiNode>{}.run(*object, native, file);
-		}
+		TEST_METHOD(BSEffectShaderProperty) { SyncTest<nif::BSEffectShaderProperty>{}.run(file); }
 
-		TEST_METHOD(BSFadeNode)
-		{
-			Niflib::Ref<Niflib::BSFadeNode> native = new Niflib::BSFadeNode;
-			auto object = file.get<nif::BSFadeNode>(native);
+		TEST_METHOD(NiBoolData) { SyncTest<nif::NiBoolData>{}.run(file); }
 
-			SyncTest<nif::BSFadeNode>{}.run(*object, native, file);
-		}
+		TEST_METHOD(NiFloatData) { SyncTest<nif::NiFloatData>{}.run(file); }
 
-		TEST_METHOD(NiAlphaProperty)
-		{
-			Niflib::Ref<Niflib::NiAlphaProperty> native = new Niflib::NiAlphaProperty;
-			auto object = file.get<nif::NiAlphaProperty>(native);
+		TEST_METHOD(NiExtraData) { SyncTest<nif::NiExtraData>{}.run(file); }
 
-			SyncTest<nif::NiAlphaProperty>{}.run(*object, native, file);
-		}
-
-		TEST_METHOD(BSEffectShaderProperty)
-		{
-			Niflib::Ref<Niflib::BSEffectShaderProperty> native = new Niflib::BSEffectShaderProperty;
-			auto object = file.get<nif::BSEffectShaderProperty>(native);
-
-			SyncTest<nif::BSEffectShaderProperty>{}.run(*object, native, file);
-		}
-
-		TEST_METHOD(NiBoolData)
-		{
-			Niflib::Ref<Niflib::NiBoolData> native = new Niflib::NiBoolData;
-			auto object = file.get<nif::NiBoolData>(native);
-
-			SyncTest<nif::NiBoolData>{}.run(*object, native, file);
-		}
-
-		TEST_METHOD(NiFloatData)
-		{
-			Niflib::Ref<Niflib::NiFloatData> native = new Niflib::NiFloatData;
-			auto object = file.get<nif::NiFloatData>(native);
-
-			SyncTest<nif::NiFloatData>{}.run(*object, native, file);
-		}
-
-		TEST_METHOD(NiExtraData)
-		{
-			Niflib::Ref<Niflib::NiExtraData> native = new Niflib::NiExtraData;
-			auto object = file.get<nif::NiExtraData>(native);
-
-			SyncTest<nif::NiExtraData>{}.run(*object, native, file);
-		}
-
-		TEST_METHOD(NiStringExtraData)
-		{
-			Niflib::Ref<Niflib::NiStringExtraData> native = new Niflib::NiStringExtraData;
-			auto object = file.get<nif::NiStringExtraData>(native);
-
-			SyncTest<nif::NiStringExtraData>{}.run(*object, native, file);
-		}
+		TEST_METHOD(NiStringExtraData) { SyncTest<nif::NiStringExtraData>{}.run(file); }
 	};
 }
