@@ -1,10 +1,8 @@
 #pragma once
-#include "CppUnitTest.h"
 #include "nif.h"
 
 namespace common
 {
-	using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 	using namespace nif;
 
 	template<typename T, typename GeneratorType>
@@ -41,17 +39,44 @@ namespace common
 	template<typename T, typename GeneratorType>
 	void randomiseSequence(Sequence<T>& seq, File& file, GeneratorType& rng)
 	{
-
+		std::uniform_int_distribution<int> D(1, 5);
+		seq.clear();
+		int size = D(rng);
+		for (int i = 0; i < size; i++)
+			seq.insert(seq.size(), file.create<T>());
 	}
 
 	template<typename T, typename GeneratorType>
-	void randomiseSet(Set<T>& set, File& file, GeneratorType& rng) {}
+	void randomiseSet(Set<T>& set, File& file, GeneratorType& rng)
+	{
+		std::uniform_int_distribution<int> D(1, 5);
+		set.clear();
+		int size = D(rng);
+		for (int i = 0; i < size; i++)
+			set.add(file.create<T>());
+	}
 
 	template<typename GeneratorType>
-	std::string randomString(GeneratorType& rng) { return std::string(); }
+	std::string randomString(GeneratorType& rng)
+	{
+		std::uniform_int_distribution<int> I(3, 12);
+		std::uniform_int_distribution<int> C('a', 'z');
+		std::string s;
+		s.reserve(I(rng));
+		for (int i = 0; i < s.size(); i++)
+			s.push_back(static_cast<char>(C(rng)));
+		return s;
+	}
 
 	template<typename T, typename GeneratorType>
-	std::vector<Niflib::Ref<typename type_map<T>::type>> randomObjVector(GeneratorType& rng) { return std::vector<Niflib::Ref<typename type_map<T>::type>>(); }
+	std::vector<Niflib::Ref<typename type_map<T>::type>> randomObjVector(GeneratorType& rng)
+	{
+		std::uniform_int_distribution<int> D(1, 5);
+		std::vector<Niflib::Ref<typename type_map<T>::type>> out(D(rng));
+		for (auto&& ref : out)
+			ref = new typename type_map<T>::type;
+		return out;
+	}
 
 	//Assign random values to all fields
 	template<typename T>
@@ -68,25 +93,7 @@ namespace common
 	template<>
 	struct Randomiser<NiObjectNET> : VerticalTraverser<NiObjectNET, Randomiser>
 	{
-		template<typename GeneratorType>
-		void operator() (NiObjectNET& object, const Niflib::NiObjectNET* native, File& file, GeneratorType& rng)
-		{
-			randomiseProperty(object.name, rng);
-			randomiseSet(object.extraData, file, rng);
-			randomiseSequence(object.controllers, file, rng);
-		}
-
-		template<typename GeneratorType>
-		void operator() (const NiObjectNET&, Niflib::NiObjectNET* native, GeneratorType& rng)
-		{
-			native->SetName(randomString(rng));
-
-			native->ClearExtraData();
-			for (auto&& obj : randomObjVector<NiExtraData>(rng))
-				native->AddExtraData(obj);
-
-			native->ClearControllers();
-			for (auto&& obj : randomObjVector<NiTimeController>(rng))
-				native->AddController(obj);
-		}
+		void operator() (NiObjectNET& object, const Niflib::NiObjectNET* native, File& file, std::mt19937& rng);
+		void operator() (const NiObjectNET&, Niflib::NiObjectNET* native, std::mt19937& rng);
 	};
+}
