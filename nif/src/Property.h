@@ -54,6 +54,19 @@ namespace nif
 				}
 			}
 		}
+		void set(T&& val)
+		{
+			if (val != m_value) {
+				m_value = std::move(val);
+				for (PropertyListener<T>* l : this->m_lsnrs) {
+					assert(l);
+					l->onSet(val);
+				}
+			}
+			else
+				//Disard val? Inconsistent otherwise?
+				T tmp = std::move(val);
+		}
 
 	private:
 		T m_value{ T() };
