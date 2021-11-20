@@ -23,8 +23,8 @@
 
 namespace nif
 {
-	template<typename T> inline bool operator==(const std::shared_ptr<T>& lhs, T* rhs) { return lhs.get() == rhs; }
-	template<typename T> inline bool operator==(T* rhs, const std::shared_ptr<T>& lhs) { return rhs == lhs; }
+	template<typename T> inline bool operator==(const std::shared_ptr<T>& lhs, T* rhs) noexcept { return lhs.get() == rhs; }
+	template<typename T> inline bool operator==(T* lhs, const std::shared_ptr<T>& rhs) noexcept { return rhs == lhs; }
 
 	template<typename T> class Sequence;
 	template<typename T>
