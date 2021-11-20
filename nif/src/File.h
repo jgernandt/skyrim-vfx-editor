@@ -113,8 +113,8 @@ namespace nif
 		//If nativeRef is non-null, returns the indexed object. Creates a new object if 
 		//nativeRef is not indexed.
 		//(Should maybe be called getOrCreate, or similar)
-		template<typename T, typename NativeType>
-		[[nodiscard]] std::shared_ptr<T> get(const Niflib::Ref<NativeType>& nativeRef);
+		template<typename T>
+		[[nodiscard]] std::shared_ptr<T> get(const Niflib::Ref<typename type_map<T>::type>& nativeRef);
 
 		//Return the Niflib object that corresponds to object.
 		template<typename NativeType, typename T>
@@ -148,15 +148,13 @@ namespace nif
 		std::map<NiObject*, std::weak_ptr<ObjectBlock>> m_objectIndex;
 	};
 	
-	template<typename T, typename NativeType>
-	inline [[nodiscard]] std::shared_ptr<T> File::get(const Niflib::Ref<NativeType>& nativeRef)
+	template<typename T>
+	inline [[nodiscard]] std::shared_ptr<T> File::get(const Niflib::Ref<typename type_map<T>::type>& nativeRef)
 	{
-		static_assert(std::is_base_of<typename type_map<T>::type, NativeType>::value);
-
 		std::shared_ptr<T> result;
 
 		if (nativeRef) {
-			if (auto it = m_nativeIndex.find(static_cast<NativeType*>(nativeRef)); it != m_nativeIndex.end()) {
+			if (auto it = m_nativeIndex.find(static_cast<Niflib::NiObject*>(nativeRef)); it != m_nativeIndex.end()) {
 				auto block = it->second.lock();
 				//if (!block) {
 					//The object is indexed, but it has expired.
