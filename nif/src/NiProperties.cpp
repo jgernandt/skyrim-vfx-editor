@@ -22,6 +22,7 @@
 
 const size_t nif::NiProperty::TYPE = std::hash<std::string>{}("NiProperty");
 const size_t nif::NiAlphaProperty::TYPE = std::hash<std::string>{}("NiAlphaProperty");
+const size_t nif::BSShaderProperty::TYPE = std::hash<std::string>{}("BSShaderProperty");
 const size_t nif::BSEffectShaderProperty::TYPE = std::hash<std::string>{}("BSEffectShaderProperty");
 
 void nif::ReadSyncer<nif::NiAlphaProperty>::operator() (NiAlphaProperty& object, Niflib::NiAlphaProperty* native, File& file)

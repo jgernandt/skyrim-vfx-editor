@@ -30,8 +30,10 @@ void nif::File::registerTypes()
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiNode::TYPE)] = &make_NiObject<nif::NiNode>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::BSFadeNode::TYPE)] = &make_NiObject<nif::BSFadeNode>;
 
-	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiExtraData::TYPE)] = &make_NiObject<nif::NiExtraData>;
-	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiStringExtraData::TYPE)] = &make_NiObject<nif::NiStringExtraData>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiProperty::TYPE)] = &make_NiObject<nif::NiProperty>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiAlphaProperty::TYPE)] = &make_NiObject<nif::NiAlphaProperty>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::BSShaderProperty::TYPE)] = &make_NiObject<nif::BSShaderProperty>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::BSEffectShaderProperty::TYPE)] = &make_NiObject<nif::BSEffectShaderProperty>;
 
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiBoolData::TYPE)] = &make_NiObject<nif::NiBoolData>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiFloatData::TYPE)] = &make_NiObject<nif::NiFloatData>;
@@ -47,8 +49,8 @@ void nif::File::registerTypes()
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiTimeController::TYPE)] = &make_NiObject<nif::NiTimeController>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiSingleInterpController::TYPE)] = &make_NiObject<nif::NiSingleInterpController>;
 
-	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysData::TYPE)] = &make_NiObject<nif::NiPSysData>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiParticleSystem::TYPE)] = &make_NiObject<nif::NiParticleSystem>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysData::TYPE)] = &make_NiObject<nif::NiPSysData>;
 
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysModifierCtlr::TYPE)] = &make_NiObject<nif::NiPSysModifierCtlr>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysUpdateCtlr::TYPE)] = &make_NiObject<nif::NiPSysUpdateCtlr>;
@@ -69,9 +71,8 @@ void nif::File::registerTypes()
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysCylinderEmitter::TYPE)] = &make_NiObject<nif::NiPSysCylinderEmitter>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysSphereEmitter::TYPE)] = &make_NiObject<nif::NiPSysSphereEmitter>;
 
-	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiProperty::TYPE)] = &make_NiObject<nif::NiProperty>;
-	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiAlphaProperty::TYPE)] = &make_NiObject<nif::NiAlphaProperty>;
-	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::BSEffectShaderProperty::TYPE)] = &make_NiObject<nif::BSEffectShaderProperty>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiExtraData::TYPE)] = &make_NiObject<nif::NiExtraData>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiStringExtraData::TYPE)] = &make_NiObject<nif::NiStringExtraData>;
 }
 
 namespace Niflib

@@ -65,6 +65,7 @@ namespace nif
 	template<> struct type_map<Niflib::NiProperty> { using type = NiProperty; };
 	template<> struct type_map<NiProperty> { using type = Niflib::NiProperty; };
 
+
 	struct NiAlphaProperty : NiTraversable<NiAlphaProperty, NiProperty>
 	{
 		Property<AlphaMode> mode;
@@ -89,7 +90,16 @@ namespace nif
 	};
 
 
-	struct BSEffectShaderProperty : NiTraversable<BSEffectShaderProperty, NiProperty>
+	struct BSShaderProperty : NiTraversable<BSShaderProperty, NiProperty>
+	{
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+	template<> struct type_map<Niflib::BSShaderProperty> { using type = BSShaderProperty; };
+	template<> struct type_map<BSShaderProperty> { using type = Niflib::BSShaderProperty; };
+
+
+	struct BSEffectShaderProperty : NiTraversable<BSEffectShaderProperty, BSShaderProperty>
 	{
 		Property<ColRGBA> emissiveCol;
 		Property<float> emissiveMult;
