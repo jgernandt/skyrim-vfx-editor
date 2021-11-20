@@ -24,16 +24,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SyncTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CreationTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TraversalTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ObjectIndexTests.cpp">
+    <ClCompile Include="FileTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NiObjectNETImpl.cpp">
@@ -56,6 +47,9 @@
     </ClCompile>
     <ClCompile Include="NiPSysImpl.cpp">
       <Filter>Source Files\helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectTests.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

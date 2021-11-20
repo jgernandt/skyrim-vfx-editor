@@ -160,10 +160,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CreationTests.cpp" />
     <ClCompile Include="DataFieldTests.cpp" />
     <ClCompile Include="NiPSysImpl.cpp" />
-    <ClCompile Include="ObjectIndexTests.cpp" />
+    <ClCompile Include="FileTests.cpp" />
+    <ClCompile Include="ObjectTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -176,8 +176,6 @@
     <ClCompile Include="NiInterpolatorsImpl.cpp" />
     <ClCompile Include="NiNodeImpl.cpp" />
     <ClCompile Include="NiPropertiesImpl.cpp" />
-    <ClCompile Include="SyncTests.cpp" />
-    <ClCompile Include="TraversalTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EquivalenceTester.h" />

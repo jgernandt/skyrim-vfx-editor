@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 
-namespace memory
+namespace file
 {
 	using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 	using namespace nif;
