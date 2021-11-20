@@ -25,11 +25,11 @@ namespace nif
 {
 	template<typename T> class Set;
 
-	template<typename T> inline bool operator<(const std::shared_ptr<T>& lhs, T* rhs)
+	template<typename T> inline bool operator<(const std::shared_ptr<T>& lhs, T* rhs) noexcept
 	{
 		return lhs.get() < rhs;
 	}
-	template<typename T> inline bool operator<(T* lhs, const std::shared_ptr<T>& rhs)
+	template<typename T> inline bool operator<(T* lhs, const std::shared_ptr<T>& rhs) noexcept
 	{
 		return lhs < rhs.get();
 	}
