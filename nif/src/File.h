@@ -118,7 +118,9 @@ namespace nif
 		[[nodiscard]] std::shared_ptr<T> create() { return make_ni<T>(nullptr); }
 
 		//Return the object that corresponds to Niflib object nativeRef.
-		//Creates a new object if none existed.
+		//If nativeRef is null, returns null.
+		//If nativeRef is non-null, returns the indexed object. Creates a new object if 
+		//nativeRef is not indexed.
 		//(Should maybe be called getOrCreate, or similar)
 		template<typename T, typename NativeType>
 		[[nodiscard]] std::shared_ptr<T> get(const Niflib::Ref<NativeType>& nativeRef);
@@ -160,21 +162,27 @@ namespace nif
 	{
 		static_assert(std::is_base_of<typename type_map<T>::type, NativeType>::value);
 
-		if (auto it = m_nativeIndex.find(static_cast<NativeType*>(nativeRef)); it != m_nativeIndex.end()) {
-			auto block = it->second.lock();
-			//if (!block) {
-				//The object is indexed, but it has expired.
-				//This is unexpected, but not really a problem. We can just recreate it.
-				//However, it is probably a bug. Let's treat it as such for now.
-			//}
-			assert(block);
+		std::shared_ptr<T> result;
 
-			//downcast safe if type_map is correct
-			return std::shared_ptr<T>(block, static_cast<T*>(block->object));
+		if (nativeRef) {
+			if (auto it = m_nativeIndex.find(static_cast<NativeType*>(nativeRef)); it != m_nativeIndex.end()) {
+				auto block = it->second.lock();
+				//if (!block) {
+					//The object is indexed, but it has expired.
+					//This is unexpected, but not really a problem. We can just recreate it.
+					//However, it is probably a bug. Let's treat it as such for now.
+				//}
+				assert(block);
+
+				//downcast safe if type_map is correct
+				result = std::shared_ptr<T>(block, static_cast<T*>(block->object));
+			}
+			else
+				//needs sync. Who's responsibility is that?
+				result = make_ni<T>(nativeRef);
 		}
-		else
-			//needs sync. Who's responsibility is that?
-			return make_ni<T>(nativeRef);
+
+		return result;
 	}
 
 	template<typename NativeType, typename T>
@@ -182,17 +190,23 @@ namespace nif
 	{
 		static_assert(std::is_base_of<NativeType, typename type_map<T>::type>::value);
 
-		std::shared_ptr<ObjectBlock> block;
-		if (auto it = m_objectIndex.find(object); it != m_objectIndex.end())
-			block = it->second.lock();
+		Niflib::Ref<NativeType> result;
 
-		//If the object is indexed but expired, object is dangling. This is a bug.
-		//If the object is not indexed, it was not created by us. This is also a bug.
-		assert(block);
+		if (object) {
+			std::shared_ptr<ObjectBlock> block;
+			if (auto it = m_objectIndex.find(object); it != m_objectIndex.end())
+				block = it->second.lock();
 
-		//We know it can be cast to NativeType since we know it was used to create object, 
-		//and NativeType is a base of the native type of T (type_map<T>::type).
-		return static_cast<NativeType*>(block->native);
+			//If the object is indexed but expired, object is dangling. This is a bug.
+			//If the object is not indexed, it was not created by us. This is also a bug.
+			assert(block);
+
+			//We know it can be cast to NativeType since we know it was used to create object, 
+			//and NativeType is a base of the native type of T (type_map<T>::type).
+			result = static_cast<NativeType*>(block->native);
+		}
+
+		return result;
 	}
 	
 	template<typename T>
