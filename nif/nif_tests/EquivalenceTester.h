@@ -123,6 +123,12 @@ namespace common
 	};
 
 	template<>
+	struct EquivalenceTester<NiPSysModifier> : VerticalTraverser<NiPSysModifier, EquivalenceTester>
+	{
+		void operator() (const NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file);
+	};
+
+	template<>
 	struct EquivalenceTester<NiExtraData> : VerticalTraverser<NiExtraData, EquivalenceTester>
 	{
 		void operator() (const NiExtraData& object, const Niflib::NiExtraData* native, File& file);

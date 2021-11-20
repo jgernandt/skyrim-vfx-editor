@@ -47,6 +47,7 @@ namespace nif
 
 		virtual void traverse(NiParticleSystem& obj) {}
 		virtual void traverse(NiPSysData& obj) {}
+		virtual void traverse(NiPSysModifier& obj) {}
 
 		virtual void traverse(NiExtraData& obj) {}
 		virtual void traverse(NiStringExtraData& obj) {}
@@ -148,6 +149,7 @@ namespace nif
 
 		virtual void traverse(NiParticleSystem& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiPSysData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysModifier& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
 		virtual void traverse(NiExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiStringExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }

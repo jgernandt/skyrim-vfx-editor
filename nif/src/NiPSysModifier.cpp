@@ -32,6 +32,24 @@ const size_t nif::BSPSysScaleModifier::TYPE = std::hash<std::string>{}("BSPSysSc
 const size_t nif::BSPSysSimpleColorModifier::TYPE = std::hash<std::string>{}("BSPSysSimpleColorModifier");
 
 
+void nif::ReadSyncer<nif::NiPSysModifier>::operator()(NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file)
+{
+	assert(native);
+	object.name.set(native->GetName());
+	object.order.set(native->GetOrder());
+	object.target.assign(file.get<NiParticleSystem, Niflib::NiParticleSystem>(native->GetTarget()));
+	object.active.set(native->GetActive());
+}
+
+void nif::WriteSyncer<nif::NiPSysModifier>::operator()(const NiPSysModifier& object, Niflib::NiPSysModifier* native, const File& file)
+{
+	assert(native);
+	native->SetName(object.name.get());
+	native->SetOrder(object.order.get());
+	native->SetTarget(file.getNative<Niflib::NiParticleSystem>(object.target.assigned()));
+	native->SetActive(object.active.get());
+}
+
 /*nif::NiPSysModifierCtlr::NiPSysModifierCtlr(native_type* obj) :
 	NiSingleInterpController(obj), 
 	m_modName(*this, &getNative(), &native::NiPSysModifierCtlr::GetModifierName, &native::NiPSysModifierCtlr::SetModifierName)

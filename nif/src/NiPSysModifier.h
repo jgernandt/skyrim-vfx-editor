@@ -53,6 +53,14 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiPSysModifier> { using type = NiPSysModifier; };
 	template<> struct type_map<NiPSysModifier> { using type = Niflib::NiPSysModifier; };
+	template<> struct ReadSyncer<NiPSysModifier> : VerticalTraverser<NiPSysModifier, ReadSyncer>
+	{
+		void operator() (NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file);
+	};
+	template<> struct WriteSyncer<NiPSysModifier> : VerticalTraverser<NiPSysModifier, WriteSyncer>
+	{
+		void operator() (const NiPSysModifier& object, Niflib::NiPSysModifier* native, const File& file);
+	};
 
 
 	struct NiPSysBoundUpdateModifier : NiTraversable<NiPSysBoundUpdateModifier, NiPSysModifier> 

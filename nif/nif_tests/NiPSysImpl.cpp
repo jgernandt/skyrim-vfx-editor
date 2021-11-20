@@ -76,3 +76,32 @@ void common::Randomiser<NiPSysData>::operator()(const NiPSysData&, Niflib::NiPSy
 	native->SetHasRotationAngles(randi<int>(rng, { 0, 1 }));
 	native->SetHasRotationSpeeds(randi<int>(rng, { 0, 1 }));
 }
+
+void common::EquivalenceTester<NiPSysModifier>::operator()(const NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file)
+{
+	Assert::IsTrue(object.name.get() == native->GetName());
+	Assert::IsTrue(object.order.get() == native->GetOrder());
+	Assert::IsTrue(object.target.assigned() == file.get<NiParticleSystem, Niflib::NiParticleSystem>(native->GetTarget()));
+	Assert::IsTrue(object.active.get() == native->GetActive());
+}
+
+void common::Randomiser<NiPSysModifier>::operator()(NiPSysModifier& object, File& file, std::mt19937& rng)
+{
+	randomiseProperty(object.name, rng);
+	randomiseProperty(object.order, rng);
+	object.target.assign(file.create<NiParticleSystem>());
+	object.active.set(randi<int>(rng, { 0, 1 }));
+}
+
+void common::Randomiser<NiPSysModifier>::operator()(const NiPSysModifier&, Niflib::NiPSysModifier* native, std::mt19937& rng)
+{
+	native->SetName(rands(rng));
+	native->SetOrder(randi<unsigned int>(rng));
+
+	//Target is a weak reference, so whatever we assign will be dangling.
+	//This is better than leaking.
+	Niflib::NiParticleSystem target;
+	native->SetTarget(&target);
+
+	native->SetActive(randi<int>(rng, { 0, 1 }));
+}

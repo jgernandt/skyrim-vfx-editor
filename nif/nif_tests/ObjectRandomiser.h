@@ -245,6 +245,13 @@ namespace common
 	};
 
 	template<>
+	struct Randomiser<NiPSysModifier> : VerticalTraverser<NiPSysModifier, Randomiser>
+	{
+		void operator() (NiPSysModifier& object, File& file, std::mt19937& rng);
+		void operator() (const NiPSysModifier&, Niflib::NiPSysModifier* native, std::mt19937& rng);
+	};
+
+	template<>
 	struct Randomiser<NiExtraData> : VerticalTraverser<NiExtraData, Randomiser>
 	{
 		void operator() (NiExtraData& object, File& file, std::mt19937& rng);
