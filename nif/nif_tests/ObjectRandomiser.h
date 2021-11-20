@@ -197,4 +197,18 @@ namespace common
 		void operator() (NiStringExtraData& object, const Niflib::NiStringExtraData* native, File& file, std::mt19937& rng);
 		void operator() (const NiStringExtraData&, Niflib::NiStringExtraData* native, std::mt19937& rng);
 	};
+
+	template<>
+	struct Randomiser<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, Randomiser>
+	{
+		void operator() (NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file, std::mt19937& rng);
+		void operator() (const NiBoolInterpolator&, Niflib::NiBoolInterpolator* native, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, Randomiser>
+	{
+		void operator() (NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file, std::mt19937& rng);
+		void operator() (const NiFloatInterpolator&, Niflib::NiFloatInterpolator* native, std::mt19937& rng);
+	};
 }

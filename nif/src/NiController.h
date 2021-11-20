@@ -94,6 +94,14 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiBoolInterpolator> { using type = NiBoolInterpolator; };
 	template<> struct type_map<NiBoolInterpolator> { using type = Niflib::NiBoolInterpolator; };
+	template<> struct ReadSyncer<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, ReadSyncer>
+	{
+		void operator() (NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file);
+	};
+	template<> struct WriteSyncer<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, WriteSyncer>
+	{
+		void operator() (const NiBoolInterpolator& object, Niflib::NiBoolInterpolator* native, const File& file);
+	};
 
 
 	struct NiFloatInterpolator : NiTraversable<NiFloatInterpolator, NiInterpolator>
@@ -106,6 +114,14 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiFloatInterpolator> { using type = NiFloatInterpolator; };
 	template<> struct type_map<NiFloatInterpolator> { using type = Niflib::NiFloatInterpolator; };
+	template<> struct ReadSyncer<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, ReadSyncer>
+	{
+		void operator() (NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file);
+	};
+	template<> struct WriteSyncer<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, WriteSyncer>
+	{
+		void operator() (const NiFloatInterpolator& object, Niflib::NiFloatInterpolator* native, const File& file);
+	};
 
 
 	struct NiBlendInterpolator : NiTraversable<NiBlendInterpolator, NiInterpolator> 

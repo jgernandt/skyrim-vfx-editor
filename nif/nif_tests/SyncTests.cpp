@@ -15,8 +15,9 @@ namespace sync
 		template<typename T>
 		struct SyncTest
 		{
-			void run(File& file)
+			void run()
 			{
+				static nif::File file{ nif::File::Version::SKYRIM_SE };
 				static std::mt19937 rng;//or do we want a new one for every test?
 				T object{};
 				Niflib::Ref<typename type_map<T>::type> native = new typename type_map<T>::type;
@@ -30,27 +31,18 @@ namespace sync
 			}
 		};
 
-		nif::File file{ nif::File::Version::SKYRIM_SE };
-
-		TEST_METHOD(NiObjectNET) { SyncTest<nif::NiObjectNET>{}.run(file); }
-
-		TEST_METHOD(NiAVObject) { SyncTest<nif::NiAVObject>{}.run(file); }
-
-		TEST_METHOD(NiNode) { SyncTest<nif::NiNode>{}.run(file); }
-
-		TEST_METHOD(BSFadeNode) { SyncTest<nif::BSFadeNode>{}.run(file); }
-
-		TEST_METHOD(NiAlphaProperty) { SyncTest<nif::NiAlphaProperty>{}.run(file); }
-
-		TEST_METHOD(BSEffectShaderProperty) { SyncTest<nif::BSEffectShaderProperty>{}.run(file); }
-
-		TEST_METHOD(NiBoolData) { SyncTest<nif::NiBoolData>{}.run(file); }
-
-		TEST_METHOD(NiFloatData) { SyncTest<nif::NiFloatData>{}.run(file); }
-
-		TEST_METHOD(NiExtraData) { SyncTest<nif::NiExtraData>{}.run(file); }
-
-		TEST_METHOD(NiStringExtraData) { SyncTest<nif::NiStringExtraData>{}.run(file); }
+		TEST_METHOD(NiObjectNET) { SyncTest<nif::NiObjectNET>{}.run(); }
+		TEST_METHOD(NiAVObject) { SyncTest<nif::NiAVObject>{}.run(); }
+		TEST_METHOD(NiNode) { SyncTest<nif::NiNode>{}.run(); }
+		TEST_METHOD(BSFadeNode) { SyncTest<nif::BSFadeNode>{}.run(); }
+		TEST_METHOD(NiAlphaProperty) { SyncTest<nif::NiAlphaProperty>{}.run(); }
+		TEST_METHOD(BSEffectShaderProperty) { SyncTest<nif::BSEffectShaderProperty>{}.run(); }
+		TEST_METHOD(NiBoolData) { SyncTest<nif::NiBoolData>{}.run(); }
+		TEST_METHOD(NiFloatData) { SyncTest<nif::NiFloatData>{}.run(); }
+		TEST_METHOD(NiBoolInterpolator) { SyncTest<nif::NiBoolInterpolator>{}.run(); }
+		TEST_METHOD(NiFloatInterpolator) { SyncTest<nif::NiFloatInterpolator>{}.run(); }
+		TEST_METHOD(NiExtraData) { SyncTest<nif::NiExtraData>{}.run(); }
+		TEST_METHOD(NiStringExtraData) { SyncTest<nif::NiStringExtraData>{}.run(); }
 	};
 
 	//Test that the syncer correctly identifies the final type of an object
@@ -60,8 +52,9 @@ namespace sync
 		template<typename T>
 		struct SyncTest
 		{
-			void run(File& file)
+			void run()
 			{
+				static nif::File file{ nif::File::Version::SKYRIM_SE };
 				static std::mt19937 rng;//or do we want a new one for every test?
 				Niflib::Ref<typename type_map<T>::type> native = new typename type_map<T>::type;
 				auto object = file.get<T>(native);
@@ -75,26 +68,17 @@ namespace sync
 			}
 		};
 
-		nif::File file{ nif::File::Version::SKYRIM_SE };
-
-		TEST_METHOD(NiObjectNET) { SyncTest<nif::NiObjectNET>{}.run(file); }
-
-		TEST_METHOD(NiAVObject) { SyncTest<nif::NiAVObject>{}.run(file); }
-
-		TEST_METHOD(NiNode) { SyncTest<nif::NiNode>{}.run(file); }
-
-		TEST_METHOD(BSFadeNode) { SyncTest<nif::BSFadeNode>{}.run(file); }
-
-		TEST_METHOD(NiAlphaProperty) { SyncTest<nif::NiAlphaProperty>{}.run(file); }
-
-		TEST_METHOD(BSEffectShaderProperty) { SyncTest<nif::BSEffectShaderProperty>{}.run(file); }
-
-		TEST_METHOD(NiBoolData) { SyncTest<nif::NiBoolData>{}.run(file); }
-
-		TEST_METHOD(NiFloatData) { SyncTest<nif::NiFloatData>{}.run(file); }
-
-		TEST_METHOD(NiExtraData) { SyncTest<nif::NiExtraData>{}.run(file); }
-
-		TEST_METHOD(NiStringExtraData) { SyncTest<nif::NiStringExtraData>{}.run(file); }
+		TEST_METHOD(NiObjectNET) { SyncTest<nif::NiObjectNET>{}.run(); }
+		TEST_METHOD(NiAVObject) { SyncTest<nif::NiAVObject>{}.run(); }
+		TEST_METHOD(NiNode) { SyncTest<nif::NiNode>{}.run(); }
+		TEST_METHOD(BSFadeNode) { SyncTest<nif::BSFadeNode>{}.run(); }
+		TEST_METHOD(NiAlphaProperty) { SyncTest<nif::NiAlphaProperty>{}.run(); }
+		TEST_METHOD(BSEffectShaderProperty) { SyncTest<nif::BSEffectShaderProperty>{}.run(); }
+		TEST_METHOD(NiBoolData) { SyncTest<nif::NiBoolData>{}.run(); }
+		TEST_METHOD(NiFloatData) { SyncTest<nif::NiFloatData>{}.run(); }
+		TEST_METHOD(NiBoolInterpolator) { SyncTest<nif::NiBoolInterpolator>{}.run(); }
+		TEST_METHOD(NiFloatInterpolator) { SyncTest<nif::NiFloatInterpolator>{}.run(); }
+		TEST_METHOD(NiExtraData) { SyncTest<nif::NiExtraData>{}.run(); }
+		TEST_METHOD(NiStringExtraData) { SyncTest<nif::NiStringExtraData>{}.run(); }
 	};
 }

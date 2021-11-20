@@ -93,6 +93,10 @@ namespace nif
 
 	struct NiBoolData;
 	struct NiFloatData;
+
+	struct NiInterpolator;
+	struct NiBoolInterpolator;
+	struct NiFloatInterpolator;
 	//etc.
 
 	template<typename T>

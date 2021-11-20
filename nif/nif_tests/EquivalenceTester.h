@@ -65,4 +65,16 @@ namespace common
 	{
 		void operator() (const NiStringExtraData& object, const Niflib::NiStringExtraData* native, File& file);
 	};
+
+	template<>
+	struct EquivalenceTester<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, EquivalenceTester>
+	{
+		void operator() (const NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, EquivalenceTester>
+	{
+		void operator() (const NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file);
+	};
 }

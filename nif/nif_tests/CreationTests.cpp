@@ -13,18 +13,35 @@ namespace creation
 	TEST_CLASS(Sync)
 	{
 	public:
-
-		TEST_METHOD(NiObjectNET)
+		template<typename T>
+		struct SyncTest
 		{
-			std::mt19937 rng;
+			void run()
+			{
+				static nif::File file{ nif::File::Version::SKYRIM_SE };
+				static std::mt19937 rng;//or do we want a new one for every test?
 
-			File file(File::Version::SKYRIM_SE);
-			Niflib::Ref<Niflib::NiObjectNET> native = new Niflib::NiObjectNET;
-			nif::NiObjectNET dummy;
-			common::Randomiser<nif::NiObjectNET>{}.down(dummy, native, rng);
-			auto object = file.get<nif::NiObjectNET>(native);
-			common::EquivalenceTester<nif::NiObjectNET>{}.down(*object, native, file);
-		}
+				Niflib::Ref<typename type_map<T>::type> native = new typename type_map<T>::type;
+				T dummy{};
+
+				common::Randomiser<T>{}.down(dummy, native, rng);
+				auto object = file.get<T>(native);
+				common::EquivalenceTester<T>{}.down(*object, native, file);
+			}
+		};
+
+		TEST_METHOD(NiObjectNET) { SyncTest<nif::NiObjectNET>{}.run(); }
+		TEST_METHOD(NiAVObject) { SyncTest<nif::NiAVObject>{}.run(); }
+		TEST_METHOD(NiNode) { SyncTest<nif::NiNode>{}.run(); }
+		TEST_METHOD(BSFadeNode) { SyncTest<nif::BSFadeNode>{}.run(); }
+		TEST_METHOD(NiAlphaProperty) { SyncTest<nif::NiAlphaProperty>{}.run(); }
+		TEST_METHOD(BSEffectShaderProperty) { SyncTest<nif::BSEffectShaderProperty>{}.run(); }
+		TEST_METHOD(NiBoolData) { SyncTest<nif::NiBoolData>{}.run(); }
+		TEST_METHOD(NiFloatData) { SyncTest<nif::NiFloatData>{}.run(); }
+		TEST_METHOD(NiBoolInterpolator) { SyncTest<nif::NiBoolInterpolator>{}.run(); }
+		TEST_METHOD(NiFloatInterpolator) { SyncTest<nif::NiFloatInterpolator>{}.run(); }
+		TEST_METHOD(NiExtraData) { SyncTest<nif::NiExtraData>{}.run(); }
+		TEST_METHOD(NiStringExtraData) { SyncTest<nif::NiStringExtraData>{}.run(); }
 	};
 
 	//Test that File creates the correct objects

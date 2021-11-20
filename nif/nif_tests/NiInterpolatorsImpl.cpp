@@ -106,3 +106,41 @@ void common::Randomiser<NiFloatData>::operator()(const NiFloatData&, Niflib::NiF
 		key = { F(rng), F(rng), F(rng),	F(rng), F(rng), F(rng), F(rng) };
 	}
 }
+
+
+void common::EquivalenceTester<NiBoolInterpolator>::operator()(const NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file)
+{
+	Assert::IsTrue(object.value.get() == native->GetBoolValue());
+	Assert::IsTrue(object.data.assigned() == file.get<NiBoolData>(native->GetData()).get());
+}
+
+void common::Randomiser<NiBoolInterpolator>::operator()(NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file, std::mt19937& rng)
+{
+	object.value.set(randi<int>(rng, { 0, 1 }));
+	object.data.assign(file.create<NiBoolData>());
+}
+
+void common::Randomiser<NiBoolInterpolator>::operator()(const NiBoolInterpolator&, Niflib::NiBoolInterpolator* native, std::mt19937& rng)
+{
+	native->SetBoolValue(randi<int>(rng, { 0, 1 }));
+	native->SetData(new Niflib::NiBoolData);
+}
+
+
+void common::EquivalenceTester<NiFloatInterpolator>::operator()(const NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file)
+{
+	Assert::IsTrue(object.value.get() == native->GetFloatValue());
+	Assert::IsTrue(object.data.assigned() == file.get<NiFloatData>(native->GetData()).get());
+}
+
+void common::Randomiser<NiFloatInterpolator>::operator()(NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file, std::mt19937& rng)
+{
+	object.value.set(randf<float>(rng));
+	object.data.assign(file.create<NiFloatData>());
+}
+
+void common::Randomiser<NiFloatInterpolator>::operator()(const NiFloatInterpolator&, Niflib::NiFloatInterpolator* native, std::mt19937& rng)
+{
+	native->SetFloatValue(randf<float>(rng));
+	native->SetData(new Niflib::NiFloatData);
+}

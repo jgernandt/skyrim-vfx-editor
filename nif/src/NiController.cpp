@@ -99,6 +99,36 @@ void nif::WriteSyncer<nif::NiFloatData>::operator()(const NiFloatData& object, N
 	}
 }
 
+
+void nif::ReadSyncer<nif::NiBoolInterpolator>::operator()(NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file)
+{
+	assert(native);
+	object.value.set(native->GetBoolValue());
+	object.data.assign(file.get<NiBoolData>(native->GetData()));
+}
+
+void nif::WriteSyncer<nif::NiBoolInterpolator>::operator()(const NiBoolInterpolator& object, Niflib::NiBoolInterpolator* native, const File& file)
+{
+	assert(native);
+	native->SetBoolValue(object.value.get());
+	native->SetData(file.get<Niflib::NiBoolData>(object.data.assigned()));
+}
+
+
+void nif::ReadSyncer<nif::NiFloatInterpolator>::operator()(NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file)
+{
+	assert(native);
+	object.value.set(native->GetFloatValue());
+	object.data.assign(file.get<NiFloatData>(native->GetData()));
+}
+
+void nif::WriteSyncer<nif::NiFloatInterpolator>::operator()(const NiFloatInterpolator& object, Niflib::NiFloatInterpolator* native, const File& file)
+{
+	assert(native);
+	native->SetFloatValue(object.value.get());
+	native->SetData(file.get<Niflib::NiFloatData>(object.data.assigned()));
+}
+
 /*nif::NiInterpolator::NiInterpolator(native_type* obj) : NiObject(obj) {}
 
 nif::native::NiInterpolator& nif::NiInterpolator::getNative() const
