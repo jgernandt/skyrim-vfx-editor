@@ -62,9 +62,10 @@ namespace nif
 				}
 			}
 		}
-		bool isAssigned(T* t) const
+
+		constexpr T* assigned() const noexcept
 		{
-			return m_assigned.get() == t;
+			return m_assigned.get();
 		}
 
 	private:
