@@ -71,8 +71,8 @@ namespace nif
 		Property<BlendFunction> srcFcn;
 		Property<BlendFunction> dstFcn;
 		Property<TestFunction> testFcn;
-		Property<std::uint_fast8_t> threshold;
 		Property<bool> noSorting;
+		Property<std::uint_fast8_t> threshold;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }

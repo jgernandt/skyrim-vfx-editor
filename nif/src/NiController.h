@@ -138,9 +138,9 @@ namespace nif
 	//Controllers
 	struct NiTimeController : NiTraversable<NiTimeController, NiObject>
 	{
-		//disallow access to these?
-		//Assignable<NiTimeController>& nextCtlr;
-		//Assignable<NiObjectNET>& target;
+		//these should only be readable?
+		//Readable<NiTimeController>& nextCtlr;
+		//Readable<NiObjectNET>& target;
 
 		Property<unsigned short> flags;
 		Property<float> frequency;

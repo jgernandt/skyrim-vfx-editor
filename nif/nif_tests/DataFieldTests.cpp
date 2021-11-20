@@ -3,14 +3,15 @@
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-namespace nif_tests
+namespace fields
 {
 	using namespace nif;
 
-	TEST_CLASS(DataFieldTests)
+	//Should probably split into smaller tests, if I can be bothered
+
+	TEST_CLASS(Assignable) 
 	{
 	public:
-		
 		TEST_METHOD(AssignableTest)
 		{
 			struct Listener : AssignableListener<NiObject>
@@ -44,7 +45,7 @@ namespace nif_tests
 
 			Listener lsnr;
 			{
-				Assignable<NiObject> ass;
+				nif::Assignable<NiObject> ass;
 				ass.addListener(lsnr);
 				Assert::IsFalse(lsnr.wasAssigned());
 
@@ -93,6 +94,11 @@ namespace nif_tests
 			//Signal unassign on destruction
 			Assert::IsTrue(lsnr.wasAssigned(nullptr));
 		}
+	};
+
+	TEST_CLASS(FlagSet)
+	{
+	public:
 
 		TEST_METHOD(FlagSetTest)
 		{
@@ -102,7 +108,7 @@ namespace nif_tests
 				{
 					m_set = flags;
 				}
-				virtual void onClear(unsigned int flags) override 
+				virtual void onClear(unsigned int flags) override
 				{
 					m_cleared = flags;
 				}
@@ -142,7 +148,7 @@ namespace nif_tests
 
 			Listener lsnr;
 			{
-				FlagSet<unsigned int> flags;
+				nif::FlagSet<unsigned int> flags;
 				Assert::IsFalse(flags.isSet(F1));
 				Assert::IsFalse(flags.isSet(F2));
 
@@ -226,6 +232,11 @@ namespace nif_tests
 			Assert::IsFalse(lsnr.wasSet());
 			Assert::IsTrue(lsnr.wasCleared(F1 | F2));//or should this call twice?
 		}
+	};
+
+	TEST_CLASS(List)
+	{
+	public:
 
 		TEST_METHOD(ListTest)
 		{
@@ -280,7 +291,7 @@ namespace nif_tests
 
 			Listener lsnr;
 			{
-				List<Key<float>> list;
+				nif::List<Key<float>> list;
 				list.addListener(lsnr);
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
@@ -413,6 +424,11 @@ namespace nif_tests
 			Assert::IsTrue(lsnr.wasErased(0));
 			Assert::IsFalse(lsnr.wasErased());
 		}
+	};
+
+	TEST_CLASS(Property)
+	{
+	public:
 
 		TEST_METHOD(PropertyTest)
 		{
@@ -445,7 +461,7 @@ namespace nif_tests
 				bool m_signalled{ false };
 			};
 
-			Property<float> prop;
+			nif::Property<float> prop;
 			Listener lsnr;
 			prop.addListener(lsnr);
 			Assert::IsFalse(lsnr.wasSet());
@@ -469,6 +485,11 @@ namespace nif_tests
 			prop.set(val);
 			Assert::IsFalse(lsnr.wasSet(val));
 		}
+	};
+
+	TEST_CLASS(Sequence)
+	{
+	public:
 
 		TEST_METHOD(SequenceTest)
 		{
@@ -523,7 +544,7 @@ namespace nif_tests
 
 			Listener lsnr;
 			{
-				Sequence<NiObject> seq;
+				nif::Sequence<NiObject> seq;
 				seq.addListener(lsnr);
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
@@ -636,6 +657,11 @@ namespace nif_tests
 			Assert::IsTrue(lsnr.wasErased(0));
 			Assert::IsFalse(lsnr.wasErased());
 		}
+	};
+
+	TEST_CLASS(Set)
+	{
+	public:
 
 		TEST_METHOD(SetTest)
 		{
@@ -690,7 +716,7 @@ namespace nif_tests
 			auto o1 = std::make_shared<NiObject>();
 			auto o2 = std::make_shared<NiObject>();
 			{
-				Set<NiObject> set;
+				nif::Set<NiObject> set;
 				set.addListener(lsnr);
 				Assert::IsFalse(lsnr.wasAdded());
 				Assert::IsFalse(lsnr.wasRemoved());
@@ -789,6 +815,11 @@ namespace nif_tests
 			Assert::IsTrue(lsnr.wasRemoved(o2.get()));
 			Assert::IsFalse(lsnr.wasRemoved());
 		}
+	};
+
+	TEST_CLASS(Vector)
+	{
+	public:
 
 		TEST_METHOD(VectorTest)
 		{
@@ -843,7 +874,7 @@ namespace nif_tests
 
 			Listener lsnr;
 			{
-				Vector<float> vec;
+				nif::Vector<float> vec;
 				vec.addListener(lsnr);
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
