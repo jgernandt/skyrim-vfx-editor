@@ -168,6 +168,13 @@ std::vector<nif::SubtextureOffset> nif::NifConverter<std::vector<nif::Subtexture
 
 float& util::array_traits<Niflib::Vector3>::at(Niflib::Vector3& t, size_t i)
 {
+	assert(i >= 0 && i < 3);
+	return t[i];
+}
+
+float& util::array_traits<Niflib::Vector4>::at(Niflib::Vector4& t, size_t i)
+{
+	assert(i >= 0 && i < 4);
 	return t[i];
 }
 

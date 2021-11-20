@@ -82,13 +82,9 @@ namespace nif
 	struct NiNode;
 	struct BSFadeNode;
 
-	struct NiExtraData;
-	struct NiStringExtraData;
-
-	struct NiTimeController;
-
 	struct NiProperty;
 	struct NiAlphaProperty;
+	struct BSShaderProperty;
 	struct BSEffectShaderProperty;
 
 	struct NiBoolData;
@@ -100,6 +96,13 @@ namespace nif
 
 	struct NiTimeController;
 	struct NiSingleInterpController;
+
+	struct NiParticleSystem;
+	struct NiPSysData;
+	struct NiPSysModifier;
+
+	struct NiExtraData;
+	struct NiStringExtraData;
 	//etc.
 
 	template<typename T>
@@ -258,6 +261,15 @@ struct util::array_traits<Niflib::Vector3>
 	using array_type = Niflib::Vector3;
 	using element_type = float;
 	constexpr static size_t size = 3;
+	static element_type& at(array_type& t, size_t i);
+};
+
+template<>
+struct util::array_traits<Niflib::Vector4>
+{
+	using array_type = Niflib::Vector4;
+	using element_type = float;
+	constexpr static size_t size = 4;
 	static element_type& at(array_type& t, size_t i);
 };
 
