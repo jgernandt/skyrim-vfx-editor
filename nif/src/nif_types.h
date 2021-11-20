@@ -253,3 +253,25 @@ struct util::array_traits<Niflib::Vector3>
 	constexpr static size_t size = 3;
 	static element_type& at(array_type& t, size_t i);
 };
+
+template<>
+struct util::array_traits<Niflib::Color4>
+{
+	using array_type = Niflib::Color4;
+	using element_type = float;
+	constexpr static size_t size = 4;
+	static element_type& at(array_type& t, size_t i);
+};
+
+template<>
+struct util::colour_traits<Niflib::Color4>
+{
+	using colour_type = Niflib::Color4;
+	using component_type = float;
+	constexpr static size_t channels = 4;
+	constexpr static bool is_array = true;//are the channels laid out contiguously in memory?
+	constexpr static component_type& R(colour_type& col) { return col.r; }
+	constexpr static component_type& G(colour_type& col) { return col.g; }
+	constexpr static component_type& B(colour_type& col) { return col.b; }
+	constexpr static component_type& A(colour_type& col) { return col.a; }
+};

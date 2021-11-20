@@ -171,3 +171,13 @@ float& util::array_traits<Niflib::Vector3>::at(Niflib::Vector3& t, size_t i)
 	return t[i];
 }
 
+float& util::array_traits<Niflib::Color4>::at(Niflib::Color4& t, size_t i)
+{
+	static_assert(offsetof(Niflib::Color4, r) == 0);
+	static_assert(offsetof(Niflib::Color4, g) == 4);
+	static_assert(offsetof(Niflib::Color4, b) == 8);
+	static_assert(offsetof(Niflib::Color4, a) == 12);
+
+	assert(i >= 0 && i < 4);
+	return *(reinterpret_cast<float*>(&t) + i);
+}
