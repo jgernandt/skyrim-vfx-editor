@@ -114,40 +114,80 @@ namespace nif
 	
 	//A pattern for templating NiTraverser. We'd rather not have to
 	//stencil out all those traverse overloads more than once...
-	
-	//An implemented type T inherits HorizontalTraverser<T, ImplementedFcnObj>.
-	//This means that the function object has access to members on the implemented traverser type.
-	template<typename TraverserType, template<typename> typename FunctionObj>
+
+	//TraverserType should inherit HorizontalTraverser<TraverserType> 
+	//and implement a template function void invoke(T&)
+	template<typename TraverserType>
 	class HorizontalTraverser : public NiTraverser
 	{
 	public:
 		virtual ~HorizontalTraverser() = default;
 
-		virtual void traverse(NiObject& obj) override { FunctionObj<NiObject>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(NiObjectNET& obj) override { FunctionObj<NiObjectNET>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(NiAVObject& obj) override { FunctionObj<NiAVObject>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(NiNode& obj) override { FunctionObj<NiNode>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(BSFadeNode& obj) override { FunctionObj<BSFadeNode>{}(obj, static_cast<TraverserType&>(*this)); }
+		//implement in TraverserType
+		//template<typename T> void invoke(T&) {}
 
-		virtual void traverse(NiProperty& obj) override { FunctionObj<NiProperty>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(NiAlphaProperty& obj) override { FunctionObj<NiAlphaProperty>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(BSEffectShaderProperty& obj) override { FunctionObj<BSEffectShaderProperty>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiObject& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiObjectNET& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiAVObject& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiNode& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(BSFadeNode& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
-		virtual void traverse(NiBoolData& obj) override { FunctionObj<NiBoolData>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(NiFloatData& obj) override { FunctionObj<NiFloatData>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiProperty& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiAlphaProperty& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(BSEffectShaderProperty& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
-		virtual void traverse(NiInterpolator& obj) override { FunctionObj<NiInterpolator>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(NiBoolInterpolator& obj) override { FunctionObj<NiBoolInterpolator>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(NiFloatInterpolator& obj) override { FunctionObj<NiFloatInterpolator>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiBoolData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiFloatData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
-		virtual void traverse(NiTimeController& obj) override { FunctionObj<NiTimeController>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(NiSingleInterpController& obj) override { FunctionObj<NiSingleInterpController>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiInterpolator& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiBoolInterpolator& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiFloatInterpolator& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
-		virtual void traverse(NiParticleSystem& obj) override { FunctionObj<NiParticleSystem>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(NiPSysData& obj) override { FunctionObj<NiPSysData>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiTimeController& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiSingleInterpController& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
-		virtual void traverse(NiExtraData& obj) override { FunctionObj<NiExtraData>{}(obj, static_cast<TraverserType&>(*this)); }
-		virtual void traverse(NiStringExtraData& obj) override { FunctionObj<NiStringExtraData>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiParticleSystem& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+
+		virtual void traverse(NiExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiStringExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+	};
+	
+	//A variant that calls a separate function object instead of a member function.
+	//Slightly more wordy, but has the advantage that specialisations of the function template
+	//can be added outside the class that uses them.
+	//TraverserType should inherit HorizontalTraverser<TraverserType, ImplementedFcnObj> 
+	template<typename TraverserType, template<typename> typename Fcn>
+	class HorizontalTraverser2 : public NiTraverser
+	{
+	public:
+		virtual ~HorizontalTraverser2() = default;
+
+		virtual void traverse(NiObject& obj) override { Fcn<NiObject>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiObjectNET& obj) override { Fcn<NiObjectNET>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiAVObject& obj) override { Fcn<NiAVObject>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiNode& obj) override { Fcn<NiNode>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(BSFadeNode& obj) override { Fcn<BSFadeNode>{}(obj, static_cast<TraverserType&>(*this)); }
+
+		virtual void traverse(NiProperty& obj) override { Fcn<NiProperty>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiAlphaProperty& obj) override { Fcn<NiAlphaProperty>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(BSEffectShaderProperty& obj) override { Fcn<BSEffectShaderProperty>{}(obj, static_cast<TraverserType&>(*this)); }
+
+		virtual void traverse(NiBoolData& obj) override { Fcn<NiBoolData>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiFloatData& obj) override { Fcn<NiFloatData>{}(obj, static_cast<TraverserType&>(*this)); }
+
+		virtual void traverse(NiInterpolator& obj) override { Fcn<NiInterpolator>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiBoolInterpolator& obj) override { Fcn<NiBoolInterpolator>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiFloatInterpolator& obj) override { Fcn<NiFloatInterpolator>{}(obj, static_cast<TraverserType&>(*this)); }
+
+		virtual void traverse(NiTimeController& obj) override { Fcn<NiTimeController>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiSingleInterpController& obj) override { Fcn<NiSingleInterpController>{}(obj, static_cast<TraverserType&>(*this)); }
+
+		virtual void traverse(NiParticleSystem& obj) override { Fcn<NiParticleSystem>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiPSysData& obj) override { Fcn<NiPSysData>{}(obj, static_cast<TraverserType&>(*this)); }
+
+		virtual void traverse(NiExtraData& obj) override { Fcn<NiExtraData>{}(obj, static_cast<TraverserType&>(*this)); }
+		virtual void traverse(NiStringExtraData& obj) override { Fcn<NiStringExtraData>{}(obj, static_cast<TraverserType&>(*this)); }
 	};
 
 	class ExampleTraverser;
@@ -158,14 +198,10 @@ namespace nif
 		void operator() (T& obj, ExampleTraverser& traverser);
 	};
 
-	class ExampleTraverser : public HorizontalTraverser<ExampleTraverser, ExampleFcn>
+	class ExampleTraverser : public HorizontalTraverser2<ExampleTraverser, ExampleFcn>
 	{
 		template<typename T> friend struct ExampleFcn;
 		int member;
-
-	public:
-		virtual void traverse(BSFadeNode&) override { /*do something special*/ }
-		//else it goes to ExampleFcn by default
 	};
 
 	template<typename T> 

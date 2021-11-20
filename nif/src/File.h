@@ -27,58 +27,49 @@
 namespace nif
 {
 	class File;
-	class ForwardingReadSyncer;
-	class ForwardingWriteSyncer;
-	class NonForwardingReadSyncer;
-	class NonForwardingWriteSyncer;
 
-	template<typename T>
-	struct ForwardingReader
+	class ForwardingReadSyncer final : public HorizontalTraverser<ForwardingReadSyncer>
 	{
-		void operator() (T& obj, ForwardingReadSyncer& t);
-	};
-	template<typename T>
-	struct ForwardingWriter
-	{
-		void operator() (T& obj, ForwardingWriteSyncer& t);
-	};
-	template<typename T>
-	struct NonForwardingReader
-	{
-		void operator() (T& obj, NonForwardingReadSyncer& t);
-	};
-	template<typename T>
-	struct NonForwardingWriter
-	{
-		void operator() (T& obj, NonForwardingWriteSyncer& t);
-	};
+		File& m_file;
 
-	class ForwardingReadSyncer final : public HorizontalTraverser<ForwardingReadSyncer, ForwardingReader>
-	{
 	public:
-		File& file;
-		ForwardingReadSyncer(File& file) : file{ file } {}
+		ForwardingReadSyncer(File& file) : m_file{ file } {}
+
+		template<typename T>
+		void invoke(T& object);
 	};
 
-	class ForwardingWriteSyncer final : public HorizontalTraverser<ForwardingWriteSyncer, ForwardingWriter>
+	class ForwardingWriteSyncer final : public HorizontalTraverser<ForwardingWriteSyncer>
 	{
+		File& m_file;
+
 	public:
-		File& file;
-		ForwardingWriteSyncer(File& file) : file{ file } {}
+		ForwardingWriteSyncer(File& file) : m_file{ file } {}
+
+		template<typename T>
+		void invoke(T& object);
 	};
 
-	class NonForwardingReadSyncer final : public HorizontalTraverser<NonForwardingReadSyncer, NonForwardingReader>
+	class NonForwardingReadSyncer final : public HorizontalTraverser<NonForwardingReadSyncer>
 	{
+		File& m_file;
+
 	public:
-		File& file;
-		NonForwardingReadSyncer(File& file) : file{ file } {}
+		NonForwardingReadSyncer(File& file) : m_file{ file } {}
+
+		template<typename T>
+		void invoke(T& object);
 	};
 
-	class NonForwardingWriteSyncer final : public HorizontalTraverser<NonForwardingWriteSyncer, NonForwardingWriter>
+	class NonForwardingWriteSyncer final : public HorizontalTraverser<NonForwardingWriteSyncer>
 	{
+		File& m_file;
+
 	public:
-		File& file;
-		NonForwardingWriteSyncer(File& file) : file{ file } {}
+		NonForwardingWriteSyncer(File& file) : m_file{ file } {}
+
+		template<typename T>
+		void invoke(T& object);
 	};
 
 	class File
@@ -294,28 +285,28 @@ namespace nif
 	}
 
 	template<typename T>
-	inline void nif::ForwardingReader<T>::operator()(T& obj, ForwardingReadSyncer& t)
+	inline void nif::ForwardingReadSyncer::invoke(T& object)
 	{
-		ReadSyncer<T>{}.down(obj, t.file.get<typename type_map<T>::type>(&obj), t.file);
-		Forwarder<T>{}.down(obj, t);
+		ReadSyncer<T>{}.down(object, m_file.get<typename type_map<T>::type>(&object), m_file);
+		Forwarder<T>{}.down(object, *this);
 	}
 
 	template<typename T>
-	inline void nif::ForwardingWriter<T>::operator()(T& obj, ForwardingWriteSyncer& t)
+	inline void nif::ForwardingWriteSyncer::invoke(T& object)
 	{
-		WriteSyncer<T>{}.down(obj, t.file.get<typename type_map<T>::type>(&obj), t.file);
-		Forwarder<T>{}.down(obj, t);
+		WriteSyncer<T>{}.down(object, m_file.get<typename type_map<T>::type>(&object), m_file);
+		Forwarder<T>{}.down(object, *this);
 	}
 
 	template<typename T>
-	inline void nif::NonForwardingReader<T>::operator()(T& obj, NonForwardingReadSyncer& t)
+	inline void nif::NonForwardingReadSyncer::invoke(T& object)
 	{
-		ReadSyncer<T>{}.down(obj, t.file.get<typename type_map<T>::type>(&obj), t.file);
+		ReadSyncer<T>{}.down(object, m_file.get<typename type_map<T>::type>(&object), m_file);
 	}
 
 	template<typename T>
-	inline void nif::NonForwardingWriter<T>::operator()(T& obj, NonForwardingWriteSyncer& t)
+	inline void nif::NonForwardingWriteSyncer::invoke(T& object)
 	{
-		WriteSyncer<T>{}.down(obj, t.file.get<typename type_map<T>::type>(&obj), t.file);
+		WriteSyncer<T>{}.down(object, m_file.get<typename type_map<T>::type>(&object), m_file);
 	}
 }
