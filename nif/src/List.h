@@ -130,6 +130,15 @@ namespace nif
 			insert(0);
 		}
 
+		void resize(int size)
+		{
+			assert(size >= 0);
+			while (m_ctnr.size() > (size_t)size)
+				pop_back();
+			while (m_ctnr.size() < (size_t)size)
+				push_back();
+		}
+
 		size_t size() const
 		{
 			return m_ctnr.size();

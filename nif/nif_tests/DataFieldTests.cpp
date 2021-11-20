@@ -370,6 +370,24 @@ namespace nif_tests
 				Assert::IsFalse(lsnr.wasErased());
 				Assert::IsTrue(key0 == &list.at(0));
 
+				//resize larger
+				list.resize(3);
+				Assert::IsTrue(list.size() == 3);
+				Assert::IsTrue(lsnr.wasInserted(1));
+				Assert::IsTrue(lsnr.wasInserted(2));
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == &list.at(0));
+
+				//resize smaller
+				list.resize(1);
+				Assert::IsTrue(list.size() == 1);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsTrue(lsnr.wasErased(2));
+				Assert::IsTrue(lsnr.wasErased(1));
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == &list.at(0));
+
 				//clear
 				list.insert(1);
 				Assert::IsTrue(lsnr.wasInserted());
