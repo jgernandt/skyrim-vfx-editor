@@ -16,9 +16,12 @@ namespace creation
 
 		TEST_METHOD(NiObjectNET)
 		{
+			std::mt19937 rng;
+
 			File file(File::Version::SKYRIM_SE);
 			Niflib::Ref<Niflib::NiObjectNET> native = new Niflib::NiObjectNET;
-			common::Randomiser<nif::NiObjectNET>{}.down(nif::NiObjectNET(), native, file);
+			nif::NiObjectNET dummy;
+			common::Randomiser<nif::NiObjectNET>{}.down(dummy, native, rng);
 			auto object = file.get<nif::NiObjectNET>(native);
 			common::EquivalenceTester<nif::NiObjectNET>{}.down(*object, native, file);
 		}
