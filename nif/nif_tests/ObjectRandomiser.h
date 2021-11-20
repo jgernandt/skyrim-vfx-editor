@@ -30,6 +30,11 @@ namespace common
 			for (size_t i = 0; i < util::array_traits<T>::size; i++)
 				util::array_traits<T>::at(val, i) = rands(rng);
 		}
+		else if constexpr (std::is_same<value_type, bool>::value) {
+			std::uniform_int_distribution<int> D(0, 1);
+			for (size_t i = 0; i < util::array_traits<T>::size; i++)
+				util::array_traits<T>::at(val, i) = D(rng);
+		}
 		else if constexpr (std::is_arithmetic<value_type>::value) {
 			if constexpr (std::is_floating_point<value_type>::value) {
 				std::uniform_real_distribution<value_type> D;
@@ -69,6 +74,13 @@ namespace common
 		int size = D(rng);
 		for (int i = 0; i < size; i++)
 			set.add(file.create<T>());
+	}
+
+	template<typename GeneratorType>
+	bool randb(GeneratorType& rng)
+	{
+		std::uniform_int_distribution<int> D(0, 1);
+		return D(rng);
 	}
 
 	template<typename T, typename GeneratorType>
@@ -249,6 +261,41 @@ namespace common
 	{
 		void operator() (NiPSysModifier& object, File& file, std::mt19937& rng);
 		void operator() (const NiPSysModifier&, Niflib::NiPSysModifier* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiPSysGravityModifier> : VerticalTraverser<NiPSysGravityModifier, Randomiser>
+	{
+		void operator() (NiPSysGravityModifier& object, File& file, std::mt19937& rng);
+		void operator() (const NiPSysGravityModifier&, Niflib::NiPSysGravityModifier* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiPSysRotationModifier> : VerticalTraverser<NiPSysRotationModifier, Randomiser>
+	{
+		void operator() (NiPSysRotationModifier& object, File& file, std::mt19937& rng);
+		void operator() (const NiPSysRotationModifier&, Niflib::NiPSysRotationModifier* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<BSPSysScaleModifier> : VerticalTraverser<BSPSysScaleModifier, Randomiser>
+	{
+		void operator() (BSPSysScaleModifier& object, File& file, std::mt19937& rng);
+		void operator() (const BSPSysScaleModifier&, Niflib::BSPSysScaleModifier* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<BSPSysSimpleColorModifier> : VerticalTraverser<BSPSysSimpleColorModifier, Randomiser>
+	{
+		void operator() (BSPSysSimpleColorModifier& object, File& file, std::mt19937& rng);
+		void operator() (const BSPSysSimpleColorModifier&, Niflib::BSPSysSimpleColorModifier* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiPSysModifierCtlr> : VerticalTraverser<NiPSysModifierCtlr, Randomiser>
+	{
+		void operator() (NiPSysModifierCtlr& object, File& file, std::mt19937& rng);
+		void operator() (const NiPSysModifierCtlr&, Niflib::NiPSysModifierCtlr* native, File& file, std::mt19937& rng);
 	};
 
 	template<>

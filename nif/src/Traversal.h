@@ -47,7 +47,18 @@ namespace nif
 
 		virtual void traverse(NiParticleSystem& obj) {}
 		virtual void traverse(NiPSysData& obj) {}
+
 		virtual void traverse(NiPSysModifier& obj) {}
+		virtual void traverse(NiPSysAgeDeathModifier& obj) {}
+		virtual void traverse(NiPSysBoundUpdateModifier& obj) {}
+		virtual void traverse(NiPSysGravityModifier& obj) {}
+		virtual void traverse(NiPSysPositionModifier& obj) {}
+		virtual void traverse(NiPSysRotationModifier& obj) {}
+		virtual void traverse(BSPSysScaleModifier& obj) {}
+		virtual void traverse(BSPSysSimpleColorModifier& obj) {}
+
+		virtual void traverse(NiPSysModifierCtlr& obj) {}
+		virtual void traverse(NiPSysUpdateCtlr& obj) {}
 
 		virtual void traverse(NiExtraData& obj) {}
 		virtual void traverse(NiStringExtraData& obj) {}
@@ -149,7 +160,18 @@ namespace nif
 
 		virtual void traverse(NiParticleSystem& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiPSysData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+
 		virtual void traverse(NiPSysModifier& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysAgeDeathModifier& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysBoundUpdateModifier& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysGravityModifier& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysPositionModifier& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysRotationModifier& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(BSPSysScaleModifier& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(BSPSysSimpleColorModifier& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+
+		virtual void traverse(NiPSysModifierCtlr& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysUpdateCtlr& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
 		virtual void traverse(NiExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiStringExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
@@ -159,6 +181,7 @@ namespace nif
 	//Slightly more wordy, but has the advantage that specialisations of the function template
 	//can be added outside the class that uses them.
 	//TraverserType should inherit HorizontalTraverser<TraverserType, ImplementedFcnObj> 
+	/*
 	template<typename TraverserType, template<typename> typename Fcn>
 	class HorizontalTraverser2 : public NiTraverser
 	{
@@ -212,4 +235,5 @@ namespace nif
 		int visible = traverser.member;
 		//invoke vertical traversers or whatever
 	}
+	*/
 }

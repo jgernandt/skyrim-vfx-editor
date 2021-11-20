@@ -20,16 +20,16 @@
 #include "NiPSysModifier.h"
 #include "File.h"
 
-const size_t nif::NiPSysModifierCtlr::TYPE = std::hash<std::string>{}("NiPSysModifierCtlr");
-const size_t nif::NiPSysUpdateCtlr::TYPE = std::hash<std::string>{}("NiPSysUpdateCtlr");
 const size_t nif::NiPSysModifier::TYPE = std::hash<std::string>{}("NiPSysModifier");
-const size_t nif::NiPSysBoundUpdateModifier::TYPE = std::hash<std::string>{}("NiPSysBoundUpdateModifier");
 const size_t nif::NiPSysAgeDeathModifier::TYPE = std::hash<std::string>{}("NiPSysAgeDeathModifier");
-const size_t nif::NiPSysPositionModifier::TYPE = std::hash<std::string>{}("NiPSysPositionModifier");
+const size_t nif::NiPSysBoundUpdateModifier::TYPE = std::hash<std::string>{}("NiPSysBoundUpdateModifier");
 const size_t nif::NiPSysGravityModifier::TYPE = std::hash<std::string>{}("NiPSysGravityModifier");
+const size_t nif::NiPSysPositionModifier::TYPE = std::hash<std::string>{}("NiPSysPositionModifier");
 const size_t nif::NiPSysRotationModifier::TYPE = std::hash<std::string>{}("NiPSysRotationModifier");
 const size_t nif::BSPSysScaleModifier::TYPE = std::hash<std::string>{}("BSPSysScaleModifier");
 const size_t nif::BSPSysSimpleColorModifier::TYPE = std::hash<std::string>{}("BSPSysSimpleColorModifier");
+const size_t nif::NiPSysModifierCtlr::TYPE = std::hash<std::string>{}("NiPSysModifierCtlr");
+const size_t nif::NiPSysUpdateCtlr::TYPE = std::hash<std::string>{}("NiPSysUpdateCtlr");
 
 
 void nif::ReadSyncer<nif::NiPSysModifier>::operator()(NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file)
@@ -37,7 +37,7 @@ void nif::ReadSyncer<nif::NiPSysModifier>::operator()(NiPSysModifier& object, co
 	assert(native);
 	object.name.set(native->GetName());
 	object.order.set(native->GetOrder());
-	object.target.assign(file.get<NiParticleSystem, Niflib::NiParticleSystem>(native->GetTarget()));
+	object.target.assign(file.get<NiParticleSystem>(native->GetTarget()));
 	object.active.set(native->GetActive());
 }
 
@@ -48,6 +48,113 @@ void nif::WriteSyncer<nif::NiPSysModifier>::operator()(const NiPSysModifier& obj
 	native->SetOrder(object.order.get());
 	native->SetTarget(file.getNative<Niflib::NiParticleSystem>(object.target.assigned()));
 	native->SetActive(object.active.get());
+}
+
+
+void nif::ReadSyncer<nif::NiPSysGravityModifier>::operator()(NiPSysGravityModifier& object, const Niflib::NiPSysGravityModifier* native, File& file)
+{
+	assert(native);
+	object.gravityObject.assign(file.get<NiNode>(native->GetGravityObject()));
+	object.gravityAxis.set(nif_type_conversion<Floats<3>>::from(native->GetGravityAxis()));
+	object.decay.set(native->GetDecay());
+	object.strength.set(native->GetStrength());
+	object.forceType.set(native->GetForceType());
+	object.turbulence.set(native->GetTurbulence());
+	object.turbulenceScale.set(native->GetTurbulenceScale());
+	object.worldAligned.set(native->GetWorldAligned());
+}
+
+void nif::WriteSyncer<nif::NiPSysGravityModifier>::operator()(const NiPSysGravityModifier& object, Niflib::NiPSysGravityModifier* native, const File& file)
+{
+	assert(native);
+	native->SetGravityObject(file.getNative<Niflib::NiNode>(object.gravityObject.assigned()));
+	native->SetGravityAxis(nif_type_conversion<Niflib::Vector3>::from(object.gravityAxis.get()));
+	native->SetDecay(object.decay.get());
+	native->SetStrength(object.strength.get());
+	native->SetForceType(nif_type_conversion<Niflib::ForceType>::from(object.forceType.get()));
+	native->SetTurbulence(object.turbulence.get());
+	native->SetTurbulenceScale(object.turbulenceScale.get());
+	native->SetWorldAligned(object.worldAligned.get());
+}
+
+
+void nif::ReadSyncer<nif::NiPSysRotationModifier>::operator()(NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file)
+{
+	assert(native);
+	object.speed.set(native->GetRotationSpeed());
+	object.speedVar.set(native->GetRotationSpeedVar());
+	object.angle.set(native->GetRotationAngle());
+	object.angleVar.set(native->GetRotationAngleVar());
+	object.randomSign.set(native->GetRandomSpeedSign());
+}
+
+void nif::WriteSyncer<nif::NiPSysRotationModifier>::operator()(const NiPSysRotationModifier& object, Niflib::NiPSysRotationModifier* native, const File& file)
+{
+	assert(native);
+	native->SetRotationSpeed(object.speed.get());
+	native->SetRotationSpeedVar(object.speedVar.get());
+	native->SetRotationAngle(object.angle.get());
+	native->SetRotationAngleVar(object.angleVar.get());
+	native->SetRandomSpeedSign(object.randomSign.get());
+}
+
+
+void nif::ReadSyncer<nif::BSPSysScaleModifier>::operator()(BSPSysScaleModifier& object, const Niflib::BSPSysScaleModifier* native, File& file)
+{
+	assert(native);
+	object.scales.set(native->GetScales());
+}
+
+void nif::WriteSyncer<nif::BSPSysScaleModifier>::operator()(const BSPSysScaleModifier& object, Niflib::BSPSysScaleModifier* native, const File& file)
+{
+	assert(native);
+	native->SetScales(object.scales.get());
+}
+
+
+void nif::ReadSyncer<nif::BSPSysSimpleColorModifier>::operator()(BSPSysSimpleColorModifier& object, const Niflib::BSPSysSimpleColorModifier* native, File& file)
+{
+	assert(native);
+	object.col1.value.set(nif_type_conversion<ColRGBA>::from(native->GetColor(0)));
+	object.col1.RGBend.set(native->GetColor1End());
+
+	object.col2.value.set(nif_type_conversion<ColRGBA>::from(native->GetColor(1)));
+	object.col2.RGBbegin.set(native->GetColor2Begin());
+	object.col2.RGBend.set(native->GetColor2End());
+	object.col2.Abegin.set(native->GetFadeInEnd());
+	object.col2.Aend.set(native->GetFadeOutBegin());
+
+	object.col3.value.set(nif_type_conversion<ColRGBA>::from(native->GetColor(2)));
+	object.col3.RGBbegin.set(native->GetColor3Begin());
+}
+
+void nif::WriteSyncer<nif::BSPSysSimpleColorModifier>::operator()(const BSPSysSimpleColorModifier& object, Niflib::BSPSysSimpleColorModifier* native, const File& file)
+{
+	assert(native);
+	native->SetColor(0, nif_type_conversion<Niflib::Color4>::from(object.col1.value.get()));
+	native->SetColor1End(object.col1.RGBend.get());
+
+	native->SetColor(1, nif_type_conversion<Niflib::Color4>::from(object.col2.value.get()));
+	native->SetColor2Begin(object.col2.RGBbegin.get());
+	native->SetColor2End(object.col2.RGBend.get());
+	native->SetFadeInEnd(object.col2.Abegin.get());
+	native->SetFadeOutBegin(object.col2.Aend.get());
+
+	native->SetColor(2, nif_type_conversion<Niflib::Color4>::from(object.col3.value.get()));
+	native->SetColor3Begin(object.col3.RGBbegin.get());
+}
+
+
+void nif::ReadSyncer<nif::NiPSysModifierCtlr>::operator()(NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file)
+{
+	assert(native);
+	object.modifierName.set(native->GetModifierName());
+}
+
+void nif::WriteSyncer<nif::NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr& object, Niflib::NiPSysModifierCtlr* native, const File& file)
+{
+	assert(native);
+	native->SetModifierName(object.modifierName.get());
 }
 
 /*nif::NiPSysModifierCtlr::NiPSysModifierCtlr(native_type* obj) :

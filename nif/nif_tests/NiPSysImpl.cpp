@@ -81,7 +81,7 @@ void common::EquivalenceTester<NiPSysModifier>::operator()(const NiPSysModifier&
 {
 	Assert::IsTrue(object.name.get() == native->GetName());
 	Assert::IsTrue(object.order.get() == native->GetOrder());
-	Assert::IsTrue(object.target.assigned() == file.get<NiParticleSystem, Niflib::NiParticleSystem>(native->GetTarget()));
+	Assert::IsTrue(object.target.assigned() == file.get<NiParticleSystem>(native->GetTarget()));
 	Assert::IsTrue(object.active.get() == native->GetActive());
 }
 
@@ -104,4 +104,151 @@ void common::Randomiser<NiPSysModifier>::operator()(const NiPSysModifier&, Nifli
 	native->SetTarget(target);
 
 	native->SetActive(randi<int>(rng, { 0, 1 }));
+}
+
+
+void common::EquivalenceTester<NiPSysGravityModifier>::operator()(const NiPSysGravityModifier& object, const Niflib::NiPSysGravityModifier* native, File& file)
+{
+	Assert::IsTrue(object.gravityObject.assigned() == file.get<NiNode>(native->GetGravityObject()).get());
+	Assert::IsTrue(object.gravityAxis.get() == nif_type_conversion<Floats<3>>::from(native->GetGravityAxis()));
+	Assert::IsTrue(object.decay.get() == native->GetDecay());
+	Assert::IsTrue(object.strength.get() == native->GetStrength());
+	Assert::IsTrue(object.forceType.get() == native->GetForceType());
+	Assert::IsTrue(object.turbulence.get() == native->GetTurbulence());
+	Assert::IsTrue(object.turbulenceScale.get() == native->GetTurbulenceScale());
+	Assert::IsTrue(object.worldAligned.get() == native->GetWorldAligned());
+}
+
+void common::Randomiser<NiPSysGravityModifier>::operator()(NiPSysGravityModifier& object, File& file, std::mt19937& rng)
+{
+	object.gravityObject.assign(file.create<NiNode>());
+	randomiseProperty(object.gravityAxis, rng);
+	randomiseProperty(object.decay, rng);
+	randomiseProperty(object.strength, rng);
+	randomiseProperty(object.forceType, rng);
+	randomiseProperty(object.turbulence, rng);
+	randomiseProperty(object.turbulenceScale, rng);
+	randomiseProperty(object.worldAligned, rng);
+}
+
+void common::Randomiser<NiPSysGravityModifier>::operator()(const NiPSysGravityModifier&, Niflib::NiPSysGravityModifier* native, File& file, std::mt19937& rng)
+{
+	//weak ref
+	Niflib::Ref<Niflib::NiNode> gravObj = new Niflib::NiNode;
+	file.getNative<Niflib::NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(gravObj));
+	native->SetGravityObject(gravObj);
+
+	native->SetGravityAxis(randf<Niflib::Vector3>(rng));
+	native->SetDecay(randf<float>(rng));
+	native->SetStrength(randf<float>(rng));
+	native->SetForceType(static_cast<Niflib::ForceType>(randi<int>(rng, { 0, 2 })));
+	native->SetTurbulence(randf<float>(rng));
+	native->SetTurbulenceScale(randf<float>(rng));
+	native->SetWorldAligned(randb(rng));
+}
+
+
+void common::EquivalenceTester<NiPSysRotationModifier>::operator()(const NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file)
+{
+	Assert::IsTrue(object.speed.get() == native->GetRotationSpeed());
+	Assert::IsTrue(object.speedVar.get() == native->GetRotationSpeedVar());
+	Assert::IsTrue(object.angle.get() == native->GetRotationAngle());
+	Assert::IsTrue(object.angleVar.get() == native->GetRotationAngleVar());
+	Assert::IsTrue(object.randomSign.get() == native->GetRandomSpeedSign());
+}
+
+void common::Randomiser<NiPSysRotationModifier>::operator()(NiPSysRotationModifier& object, File& file, std::mt19937& rng)
+{
+	randomiseProperty(object.speed, rng);
+	randomiseProperty(object.speedVar, rng);
+	randomiseProperty(object.angle, rng);
+	randomiseProperty(object.angleVar, rng);
+	randomiseProperty(object.randomSign, rng);
+}
+
+void common::Randomiser<NiPSysRotationModifier>::operator()(const NiPSysRotationModifier&, Niflib::NiPSysRotationModifier* native, File& file, std::mt19937& rng)
+{
+	native->SetRotationSpeed(randf<float>(rng));
+	native->SetRotationSpeedVar(randf<float>(rng));
+	native->SetRotationAngle(randf<float>(rng));
+	native->SetRotationAngleVar(randf<float>(rng));
+	native->SetRandomSpeedSign(randb(rng));
+}
+
+
+void common::EquivalenceTester<NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file)
+{
+	Assert::IsTrue(object.modifierName.get() == native->GetModifierName());
+}
+
+void common::Randomiser<NiPSysModifierCtlr>::operator()(NiPSysModifierCtlr& object, File& file, std::mt19937& rng)
+{
+	object.modifierName.set(rands(rng));
+}
+
+void common::Randomiser<NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr&, Niflib::NiPSysModifierCtlr* native, File& file, std::mt19937& rng)
+{
+	native->SetModifierName(rands(rng));
+}
+
+
+void common::EquivalenceTester<BSPSysScaleModifier>::operator()(const BSPSysScaleModifier& object, const Niflib::BSPSysScaleModifier* native, File& file)
+{
+	Assert::IsTrue(object.scales.get() == native->GetScales());
+}
+
+void common::Randomiser<BSPSysScaleModifier>::operator()(BSPSysScaleModifier& object, File& file, std::mt19937& rng)
+{
+	object.scales.set(randfv<float>(rng));
+}
+
+void common::Randomiser<BSPSysScaleModifier>::operator()(const BSPSysScaleModifier&, Niflib::BSPSysScaleModifier* native, File& file, std::mt19937& rng)
+{
+	native->SetScales(randfv<float>(rng));
+}
+
+
+void common::EquivalenceTester<BSPSysSimpleColorModifier>::operator()(const BSPSysSimpleColorModifier& object, const Niflib::BSPSysSimpleColorModifier* native, File& file)
+{
+	Assert::IsTrue(object.col1.value.get() == nif_type_conversion<ColRGBA>::from(native->GetColor(0)));
+	Assert::IsTrue(object.col1.RGBend.get() == native->GetColor1End());
+
+	Assert::IsTrue(object.col2.value.get() == nif_type_conversion<ColRGBA>::from(native->GetColor(1)));
+	Assert::IsTrue(object.col2.RGBbegin.get() == native->GetColor2Begin());
+	Assert::IsTrue(object.col2.RGBend.get() == native->GetColor2End());
+	Assert::IsTrue(object.col2.Abegin.get() == native->GetFadeInEnd());
+	Assert::IsTrue(object.col2.Aend.get() == native->GetFadeOutBegin());
+
+	Assert::IsTrue(object.col3.value.get() == nif_type_conversion<ColRGBA>::from(native->GetColor(2)));
+	Assert::IsTrue(object.col3.RGBbegin.get() == native->GetColor3Begin());
+}
+
+void common::Randomiser<BSPSysSimpleColorModifier>::operator()(BSPSysSimpleColorModifier& object, File& file, std::mt19937& rng)
+{
+	randomiseProperty(object.col1.value, rng);
+	randomiseProperty(object.col1.RGBend, rng);
+
+	randomiseProperty(object.col2.value, rng);
+	randomiseProperty(object.col2.RGBbegin, rng);
+	randomiseProperty(object.col2.RGBend, rng);
+	randomiseProperty(object.col2.Abegin, rng);
+	randomiseProperty(object.col2.Aend, rng);
+
+	randomiseProperty(object.col3.value, rng);
+	randomiseProperty(object.col3.RGBbegin, rng);
+}
+
+void common::Randomiser<BSPSysSimpleColorModifier>::operator()(const BSPSysSimpleColorModifier&, Niflib::BSPSysSimpleColorModifier* native, File& file, std::mt19937& rng)
+{
+	native->SetColor(0, randf<Niflib::Color4>(rng));
+	native->SetColor1End(randf<float>(rng));
+
+	native->SetColor(1, randf<Niflib::Color4>(rng));
+	native->SetColor2Begin(randf<float>(rng));
+	native->SetColor2End(randf<float>(rng));
+	native->SetFadeInEnd(randf<float>(rng));
+	native->SetFadeOutBegin(randf<float>(rng));
+
+	native->SetColor(2, randf<Niflib::Color4>(rng));
+	native->SetColor3Begin(randf<float>(rng));
 }

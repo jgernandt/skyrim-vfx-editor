@@ -21,26 +21,6 @@
 
 namespace nif
 {
-	struct NiPSysModifierCtlr : NiTraversable<NiPSysModifierCtlr, NiSingleInterpController>
-	{
-		Property<std::string> modifierName;
-
-		static const ni_type TYPE;
-		virtual ni_type type() const override { return TYPE; }
-	};
-	template<> struct type_map<Niflib::NiPSysModifierCtlr> { using type = NiPSysModifierCtlr; };
-	template<> struct type_map<NiPSysModifierCtlr> { using type = Niflib::NiPSysModifierCtlr; };
-
-
-	struct NiPSysUpdateCtlr : NiTraversable<NiPSysUpdateCtlr, NiTimeController> 
-	{
-		static const ni_type TYPE;
-		virtual ni_type type() const override { return TYPE; }
-	};
-	template<> struct type_map<Niflib::NiPSysUpdateCtlr> { using type = NiPSysUpdateCtlr; };
-	template<> struct type_map<NiPSysUpdateCtlr> { using type = Niflib::NiPSysUpdateCtlr; };
-
-
 	struct NiPSysModifier : NiTraversable<NiPSysModifier, NiObject>
 	{
 		Property<std::string> name;
@@ -53,6 +33,7 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiPSysModifier> { using type = NiPSysModifier; };
 	template<> struct type_map<NiPSysModifier> { using type = Niflib::NiPSysModifier; };
+
 	template<> struct ReadSyncer<NiPSysModifier> : VerticalTraverser<NiPSysModifier, ReadSyncer>
 	{
 		void operator() (NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file);
@@ -107,6 +88,15 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysGravityModifier> { using type = NiPSysGravityModifier; };
 	template<> struct type_map<NiPSysGravityModifier> { using type = Niflib::NiPSysGravityModifier; };
 
+	template<> struct ReadSyncer<NiPSysGravityModifier> : VerticalTraverser<NiPSysGravityModifier, ReadSyncer>
+	{
+		void operator() (NiPSysGravityModifier& object, const Niflib::NiPSysGravityModifier* native, File& file);
+	};
+	template<> struct WriteSyncer<NiPSysGravityModifier> : VerticalTraverser<NiPSysGravityModifier, WriteSyncer>
+	{
+		void operator() (const NiPSysGravityModifier& object, Niflib::NiPSysGravityModifier* native, const File& file);
+	};
+
 
 	struct NiPSysRotationModifier : NiTraversable<NiPSysRotationModifier, NiPSysModifier>
 	{
@@ -122,6 +112,15 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysRotationModifier> { using type = NiPSysRotationModifier; };
 	template<> struct type_map<NiPSysRotationModifier> { using type = Niflib::NiPSysRotationModifier; };
 
+	template<> struct ReadSyncer<NiPSysRotationModifier> : VerticalTraverser<NiPSysRotationModifier, ReadSyncer>
+	{
+		void operator() (NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file);
+	};
+	template<> struct WriteSyncer<NiPSysRotationModifier> : VerticalTraverser<NiPSysRotationModifier, WriteSyncer>
+	{
+		void operator() (const NiPSysRotationModifier& object, Niflib::NiPSysRotationModifier* native, const File& file);
+	};
+
 
 	struct BSPSysScaleModifier : NiTraversable<BSPSysScaleModifier, NiPSysModifier>
 	{
@@ -133,42 +132,91 @@ namespace nif
 	template<> struct type_map<Niflib::BSPSysScaleModifier> { using type = BSPSysScaleModifier; };
 	template<> struct type_map<BSPSysScaleModifier> { using type = Niflib::BSPSysScaleModifier; };
 
+	template<> struct ReadSyncer<BSPSysScaleModifier> : VerticalTraverser<BSPSysScaleModifier, ReadSyncer>
+	{
+		void operator() (BSPSysScaleModifier& object, const Niflib::BSPSysScaleModifier* native, File& file);
+	};
+	template<> struct WriteSyncer<BSPSysScaleModifier> : VerticalTraverser<BSPSysScaleModifier, WriteSyncer>
+	{
+		void operator() (const BSPSysScaleModifier& object, Niflib::BSPSysScaleModifier* native, const File& file);
+	};
+
 
 	struct BSPSysSimpleColorModifier : NiTraversable<BSPSysSimpleColorModifier, NiPSysModifier>
 	{
 		struct
 		{
-			Property<nif::ColRGBA> col;
-			Property<float> RGB_end;
+			Property<ColRGBA> value;
+
+			const Property<float> RGBbegin{ 0.0f };
+			Property<float> RGBend;
+
+			const Property<float> Abegin{ 0.0f };
+			const Property<float> Aend{ 0.0f };
 		} col1;
 		struct
 		{
-			Property<nif::ColRGBA> col;
-			Property<float> RGB_begin;
-			Property<float> RGB_end;
-			Property<float> alpha_begin;
-			Property<float> alpha_end;
+			Property<ColRGBA> value;
+
+			Property<float> RGBbegin;
+			Property<float> RGBend;
+
+			Property<float> Abegin;
+			Property<float> Aend;
 		} col2;
 		struct
 		{
-			Property<nif::ColRGBA> col;
-			Property<float> RGB_begin;
-		} col3;
+			Property<ColRGBA> value;
 
-		//Property<float> alpha2Begin;
-		//Property<float> alpha2End;
-		//Property<float> rgb1End;
-		//Property<float> rgb2Begin;
-		//Property<float> rgb2End;
-		//Property<float> rgb3Begin;
-		//Property<nif::ColRGBA> col1;
-		//Property<nif::ColRGBA> col2;
-		//Property<nif::ColRGBA> col3;
+			Property<float> RGBbegin;
+			const Property<float> RGBend{ 1.0f };
+
+			const Property<float> Abegin{ 1.0f };
+			const Property<float> Aend{ 1.0f };
+		} col3;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
 	};
 	template<> struct type_map<Niflib::BSPSysSimpleColorModifier> { using type = BSPSysSimpleColorModifier; };
 	template<> struct type_map<BSPSysSimpleColorModifier> { using type = Niflib::BSPSysSimpleColorModifier; };
+
+	template<> struct ReadSyncer<BSPSysSimpleColorModifier> : VerticalTraverser<BSPSysSimpleColorModifier, ReadSyncer>
+	{
+		void operator() (BSPSysSimpleColorModifier& object, const Niflib::BSPSysSimpleColorModifier* native, File& file);
+	};
+	template<> struct WriteSyncer<BSPSysSimpleColorModifier> : VerticalTraverser<BSPSysSimpleColorModifier, WriteSyncer>
+	{
+		void operator() (const BSPSysSimpleColorModifier& object, Niflib::BSPSysSimpleColorModifier* native, const File& file);
+	};
+
+
+	struct NiPSysModifierCtlr : NiTraversable<NiPSysModifierCtlr, NiSingleInterpController>
+	{
+		Property<std::string> modifierName;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+	template<> struct type_map<Niflib::NiPSysModifierCtlr> { using type = NiPSysModifierCtlr; };
+	template<> struct type_map<NiPSysModifierCtlr> { using type = Niflib::NiPSysModifierCtlr; };
+
+	template<> struct ReadSyncer<NiPSysModifierCtlr> : VerticalTraverser<NiPSysModifierCtlr, ReadSyncer>
+	{
+		void operator() (NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file);
+	};
+	template<> struct WriteSyncer<NiPSysModifierCtlr> : VerticalTraverser<NiPSysModifierCtlr, WriteSyncer>
+	{
+		void operator() (const NiPSysModifierCtlr& object, Niflib::NiPSysModifierCtlr* native, const File& file);
+	};
+
+
+	struct NiPSysUpdateCtlr : NiTraversable<NiPSysUpdateCtlr, NiTimeController>
+	{
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+	template<> struct type_map<Niflib::NiPSysUpdateCtlr> { using type = NiPSysUpdateCtlr; };
+	template<> struct type_map<NiPSysUpdateCtlr> { using type = Niflib::NiPSysUpdateCtlr; };
 
 }

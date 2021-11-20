@@ -129,6 +129,60 @@ namespace common
 	};
 
 	template<>
+	struct EquivalenceTester<NiPSysAgeDeathModifier> : VerticalTraverser<NiPSysAgeDeathModifier, EquivalenceTester>
+	{
+		void operator() (const NiPSysAgeDeathModifier& object, const Niflib::NiPSysAgeDeathModifier* native, File& file) {}
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysBoundUpdateModifier> : VerticalTraverser<NiPSysBoundUpdateModifier, EquivalenceTester>
+	{
+		void operator() (const NiPSysBoundUpdateModifier& object, const Niflib::NiPSysBoundUpdateModifier* native, File& file) {}
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysGravityModifier> : VerticalTraverser<NiPSysGravityModifier, EquivalenceTester>
+	{
+		void operator() (const NiPSysGravityModifier& object, const Niflib::NiPSysGravityModifier* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysPositionModifier> : VerticalTraverser<NiPSysPositionModifier, EquivalenceTester>
+	{
+		void operator() (const NiPSysPositionModifier& object, const Niflib::NiPSysPositionModifier* native, File& file) {}
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysRotationModifier> : VerticalTraverser<NiPSysRotationModifier, EquivalenceTester>
+	{
+		void operator() (const NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<BSPSysScaleModifier> : VerticalTraverser<BSPSysScaleModifier, EquivalenceTester>
+	{
+		void operator() (const BSPSysScaleModifier& object, const Niflib::BSPSysScaleModifier* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<BSPSysSimpleColorModifier> : VerticalTraverser<BSPSysSimpleColorModifier, EquivalenceTester>
+	{
+		void operator() (const BSPSysSimpleColorModifier& object, const Niflib::BSPSysSimpleColorModifier* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysModifierCtlr> : VerticalTraverser<NiPSysModifierCtlr, EquivalenceTester>
+	{
+		void operator() (const NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiPSysUpdateCtlr> : VerticalTraverser<NiPSysUpdateCtlr, EquivalenceTester>
+	{
+		void operator() (const NiPSysUpdateCtlr& object, const Niflib::NiPSysUpdateCtlr* native, File& file) {}
+	};
+
+	template<>
 	struct EquivalenceTester<NiExtraData> : VerticalTraverser<NiExtraData, EquivalenceTester>
 	{
 		void operator() (const NiExtraData& object, const Niflib::NiExtraData* native, File& file);

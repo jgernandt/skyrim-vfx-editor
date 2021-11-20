@@ -99,7 +99,18 @@ namespace nif
 
 	struct NiParticleSystem;
 	struct NiPSysData;
+
 	struct NiPSysModifier;
+	struct NiPSysAgeDeathModifier;
+	struct NiPSysBoundUpdateModifier;
+	struct NiPSysGravityModifier;
+	struct NiPSysPositionModifier;
+	struct NiPSysRotationModifier;
+	struct BSPSysScaleModifier;
+	struct BSPSysSimpleColorModifier;
+
+	struct NiPSysModifierCtlr;
+	struct NiPSysUpdateCtlr;
 
 	struct NiExtraData;
 	struct NiStringExtraData;
