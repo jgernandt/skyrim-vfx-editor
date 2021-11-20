@@ -25,7 +25,7 @@ const size_t nif::NiAlphaProperty::TYPE = std::hash<std::string>{}("NiAlphaPrope
 const size_t nif::BSShaderProperty::TYPE = std::hash<std::string>{}("BSShaderProperty");
 const size_t nif::BSEffectShaderProperty::TYPE = std::hash<std::string>{}("BSEffectShaderProperty");
 
-void nif::ReadSyncer<nif::NiAlphaProperty>::operator() (NiAlphaProperty& object, Niflib::NiAlphaProperty* native, File& file)
+void nif::ReadSyncer<nif::NiAlphaProperty>::operator() (NiAlphaProperty& object, const Niflib::NiAlphaProperty* native, File& file)
 {
 	assert(native);
 	object.mode.set(static_cast<AlphaMode>(native->GetFlags() & 0x201));
@@ -36,7 +36,7 @@ void nif::ReadSyncer<nif::NiAlphaProperty>::operator() (NiAlphaProperty& object,
 	object.noSorting.set(native->GetTriangleSortMode());
 }
 
-void nif::WriteSyncer<nif::NiAlphaProperty>::operator() (NiAlphaProperty& object, Niflib::NiAlphaProperty* native, const File& file)
+void nif::WriteSyncer<nif::NiAlphaProperty>::operator() (const NiAlphaProperty& object, Niflib::NiAlphaProperty* native, const File& file)
 {
 	assert(native);
 	native->SetFlags(static_cast<unsigned short>(object.mode.get()));
@@ -47,7 +47,7 @@ void nif::WriteSyncer<nif::NiAlphaProperty>::operator() (NiAlphaProperty& object
 	native->SetTriangleSortMode(object.noSorting.get());
 }
 
-void nif::ReadSyncer<nif::BSEffectShaderProperty>::operator()(BSEffectShaderProperty& object, Niflib::BSEffectShaderProperty* native, File& file)
+void nif::ReadSyncer<nif::BSEffectShaderProperty>::operator()(BSEffectShaderProperty& object, const Niflib::BSEffectShaderProperty* native, File& file)
 {
 	assert(native);
 	object.emissiveCol.set(nif_type_conversion<ColRGBA>::from(native->GetEmissiveColor()));
@@ -58,7 +58,7 @@ void nif::ReadSyncer<nif::BSEffectShaderProperty>::operator()(BSEffectShaderProp
 	object.shaderFlags2.set(nif_type_conversion<ShaderFlags>::from(native->GetShaderFlags2()));
 }
 
-void nif::WriteSyncer<nif::BSEffectShaderProperty>::operator()(BSEffectShaderProperty& object, Niflib::BSEffectShaderProperty* native, const File& file)
+void nif::WriteSyncer<nif::BSEffectShaderProperty>::operator()(const BSEffectShaderProperty& object, Niflib::BSEffectShaderProperty* native, const File& file)
 {
 	assert(native);
 	native->SetEmissiveColor(nif_type_conversion<Niflib::Color4>::from(object.emissiveCol.get()));

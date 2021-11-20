@@ -82,11 +82,11 @@ namespace nif
 	template<> struct type_map<NiAlphaProperty> { using type = Niflib::NiAlphaProperty; };
 	template<> struct ReadSyncer<NiAlphaProperty> : VerticalTraverser<NiAlphaProperty, ReadSyncer>
 	{
-		void operator() (NiAlphaProperty& object, Niflib::NiAlphaProperty* native, File& file);
+		void operator() (NiAlphaProperty& object, const Niflib::NiAlphaProperty* native, File& file);
 	};
 	template<> struct WriteSyncer<NiAlphaProperty> : VerticalTraverser<NiAlphaProperty, WriteSyncer>
 	{
-		void operator() (NiAlphaProperty& object, Niflib::NiAlphaProperty* native, const File& file);
+		void operator() (const NiAlphaProperty& object, Niflib::NiAlphaProperty* native, const File& file);
 	};
 
 
@@ -115,11 +115,11 @@ namespace nif
 	template<> struct type_map<BSEffectShaderProperty> { using type = Niflib::BSEffectShaderProperty; };
 	template<> struct ReadSyncer<BSEffectShaderProperty> : VerticalTraverser<BSEffectShaderProperty, ReadSyncer>
 	{
-		void operator() (BSEffectShaderProperty& object, Niflib::BSEffectShaderProperty* native, File& file);
+		void operator() (BSEffectShaderProperty& object, const Niflib::BSEffectShaderProperty* native, File& file);
 	};
 	template<> struct WriteSyncer<BSEffectShaderProperty> : VerticalTraverser<BSEffectShaderProperty, WriteSyncer>
 	{
-		void operator() (BSEffectShaderProperty& object, Niflib::BSEffectShaderProperty* native, const File& file);
+		void operator() (const BSEffectShaderProperty& object, Niflib::BSEffectShaderProperty* native, const File& file);
 	};
 
 }
