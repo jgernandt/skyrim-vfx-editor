@@ -63,16 +63,16 @@ namespace nif
 
 		if (nativeRef) {
 			if (auto it = m_nativeIndex.find(static_cast<Niflib::NiObject*>(nativeRef)); it != m_nativeIndex.end()) {
-				auto block = it->second.lock();
-				//if (!block) {
+				auto object = it->second.lock();
+				//if (!object) {
 					//The object is indexed, but it has expired.
 					//This is unexpected, but not really a problem. We can just recreate it.
 					//However, it is probably a bug. Let's treat it as such for now.
 				//}
-				assert(block);
+				assert(object);
 
 				//downcast safe if type_map is correct
-				result = std::shared_ptr<T>(block, static_cast<T*>(block->object));
+				result = std::static_pointer_cast<T>(object);
 			}
 			else
 				//needs sync. Who's responsibility is that?
@@ -88,16 +88,17 @@ namespace nif
 		Niflib::Ref<typename type_map<T>::type> result;
 
 		if (object) {
-			std::shared_ptr<ObjectBlock> block;
-			if (auto it = m_objectIndex.find(object); it != m_objectIndex.end())
-				block = it->second.lock();
-
-			//If the object is indexed but expired, object is dangling. This is a bug.
-			//If the object is not indexed, it was not created by us. This is also a bug.
-			assert(block);
-
-			//We know it can be cast to the native type since we know it was used to create object
-			result = static_cast<typename type_map<T>::type*>(block->native);
+			if (auto it = m_objectIndex.find(object); it != m_objectIndex.end()) {
+				if (auto native = it->second.lock())
+					//We know it can be cast to the native type since we know it was used to create object
+					result = static_cast<typename type_map<T>::type*>(native.get());
+				else
+					//object is indexed but has expired, so it is dangling. This is a bug.
+					assert(false);
+			}
+			else
+				//object is not indexed, so it does not belong to us. This is also a bug.
+				assert(false);
 		}
 
 		return result;
@@ -140,29 +141,29 @@ namespace nif
 		//type_map<Y>::type, where Y is the Niflib type associated with the Niflib::Type object
 		//that the CreateFcn is mapped to.
 
-		auto block = fcn(Niflib::StaticCast<Niflib::NiObject>(native));
+		auto pair = fcn(Niflib::StaticCast<Niflib::NiObject>(native));
 
 		//factory should throw on failure. We won't catch it, we'll typically be part of a longer procedure.
-		assert(block);
+		assert(pair.first && pair.second);
 
-		if (auto res = m_objectIndex.insert({ block->object, block }); !res.second) {
+		if (auto res = m_objectIndex.insert({ pair.first.get(), pair.second }); !res.second) {
 			//The object has already been indexed. Since we just created it, this must be a reused address.
 			//The block must have expired.
 			assert(res.first->second.expired());
-			res.first->second = block;
+			res.first->second = pair.second;
 		}
-		if (auto res = m_nativeIndex.insert({ block->native, block }); !res.second) {
+		if (auto res = m_nativeIndex.insert({ pair.second.get(), pair.first }); !res.second) {
 			//if native was created by us, the address has been reused and the block must have expired.
 			assert(!native || res.first->second.expired());
-			res.first->second = block;
+			res.first->second = pair.first;
 		}
 
 		//Make sure the output object is synced to the Niflib object
 		NonForwardingReadSyncer syncer(*this);
-		block->object->receive(syncer);
+		pair.first->receive(syncer);
 
 		//downcast safe if type_map is correct
-		return std::shared_ptr<T>(block, static_cast<T*>(block->object));
+		return std::static_pointer_cast<T>(pair.first);
 	}
 
 	template<typename T>

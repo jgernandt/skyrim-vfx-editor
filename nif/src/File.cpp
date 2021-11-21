@@ -23,28 +23,30 @@
 using namespace nif;
 
 template<typename T>
-inline std::shared_ptr<File::ObjectBlock> File::make_NiObject(const Niflib::Ref<Niflib::NiObject>& native)
+inline File::ObjectPair File::make_NiObject(const Niflib::Ref<Niflib::NiObject>& native)
 {
-	//Our implementation of ObjectBlock keeps everything in the same object.
-	//The pointers in ObjectBlock are aliases for the members of the derived type.
-	struct NiObjectBlock : ObjectBlock
-	{
-		NiObjectBlock(const Niflib::Ref<Niflib::NiObject>& ref) :
-			nativeRef{ ref }
-		{
-			if (!nativeRef)
-				nativeRef = new typename type_map<T>::type();
-			this->native = nativeRef;
-			this->object = &objectImpl;
-		}
-		NiObjectBlock(const NiObjectBlock&) = delete;
-		NiObjectBlock& operator=(const NiObjectBlock&) = delete;
+	//We will be returning two shared_ptrs to the same resource, but aliased to different members.
+	//One member is an object of type T, the other is a Niflib::Ref to a Niflib::NiObject.
+	//We will alias the second shared_ptr to the object *referenced* by the Niflib::Ref.
+	//This is safe since we know that the resource that the shared_ptr is managing keeps a 
+	//Niflib::Ref to the object it is pointing to.
 
-		Niflib::Ref<Niflib::NiObject> nativeRef;
-		T objectImpl;
+	struct NiObjectBlock
+	{
+		Niflib::Ref<Niflib::NiObject> native;
+		T object;
 	};
 
-	return std::make_shared<NiObjectBlock>(native);
+	auto block = std::make_shared<NiObjectBlock>();
+	if (native) {
+		assert(native->IsDerivedType(type_map<T>::type::TYPE));//Or we are mapped incorrectly
+		block->native = native;
+	}
+	else
+		block->native = new typename type_map<T>::type();
+
+	return { std::shared_ptr<NiObject>(block, &block->object),
+		std::shared_ptr<Niflib::NiObject>(block, block->native) };
 }
 
 template<> [[nodiscard]] std::shared_ptr<NiObject> File::create() { return make_ni<NiObject>(nullptr); }
@@ -189,7 +191,7 @@ void nif::File::write(const std::filesystem::path& path)
 {
 	if (m_rootNode && !path.empty()) {
 		if (auto it = m_objectIndex.find(m_rootNode.get()); it != m_objectIndex.end()) {
-			if (auto block = it->second.lock()) {
+			if (auto native = it->second.lock()) {
 
 				ForwardingWriteSyncer syncer(*this);
 				m_rootNode->receive(syncer);
@@ -211,7 +213,7 @@ void nif::File::write(const std::filesystem::path& path)
 				fileInfo.exportInfo2 = "Niflib";
 
 				std::ofstream out(path, std::ofstream::binary);
-				Niflib::WriteNifTree(out, block->native, fileInfo);
+				Niflib::WriteNifTree(out, native.get(), fileInfo);
 			}
 		}
 	}

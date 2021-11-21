@@ -40,14 +40,8 @@ namespace nif
 		};
 
 	private:
-		//This object owns the resources that it points to and will clean them up on destruction.
-		struct ObjectBlock
-		{
-			Niflib::NiObject* native;
-			NiObject* object;
-		};
-
-		using CreateFcn = std::shared_ptr<ObjectBlock>(*)(const Niflib::Ref<Niflib::NiObject>&);
+		using ObjectPair = std::pair<std::shared_ptr<NiObject>, std::shared_ptr<Niflib::NiObject>>;
+		using CreateFcn = ObjectPair(*)(const Niflib::Ref<Niflib::NiObject>&);
 
 	public:
 		File(Version version = Version::UNKNOWN);
@@ -91,11 +85,12 @@ namespace nif
 		template<typename T>
 		std::shared_ptr<T> make_ni(const Niflib::Ref<typename type_map<T>::type>& native);
 
+	private:
 		//Our factory functions
 		template<typename T>
-		static std::shared_ptr<ObjectBlock> make_NiObject(const Niflib::Ref<Niflib::NiObject>& native);
+		static ObjectPair make_NiObject(const Niflib::Ref<Niflib::NiObject>& native);
 
-	private:
+		//Register factory functions on first use
 		static void registerTypes();
 
 	private:
@@ -104,8 +99,8 @@ namespace nif
 		Version m_version{ Version::UNKNOWN };
 		std::shared_ptr<NiNode> m_rootNode;
 
-		std::map<Niflib::NiObject*, std::weak_ptr<ObjectBlock>> m_nativeIndex;
-		std::map<NiObject*, std::weak_ptr<ObjectBlock>> m_objectIndex;
+		std::map<Niflib::NiObject*, std::weak_ptr<NiObject>> m_nativeIndex;
+		std::map<NiObject*, std::weak_ptr<Niflib::NiObject>> m_objectIndex;
 	};
 
 	//Use explicit specialisation here to avoid the public having to know anything about the native type.
