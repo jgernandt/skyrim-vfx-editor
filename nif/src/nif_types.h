@@ -51,6 +51,17 @@ namespace nif
 	constexpr BillboardMode BS_ROTATE_ABOUT_UP = 5;
 	constexpr BillboardMode ROTATE_ABOUT_UP2 = 9;
 
+	using ControllerFlags = std::uint_fast16_t;
+	constexpr ControllerFlags CTLR_APP_INIT = 0x01;
+	//Not sure if loop types work like flags or like an enum (0 = loop, 1 = reverse, 2 = clamp).
+	//Need to test what happens if you set both reverse and clamp.
+	constexpr ControllerFlags CTLR_LOOP_REVERSE = 0x02;
+	constexpr ControllerFlags CTLR_LOOP_CLAMP = 0x04;
+	constexpr ControllerFlags CTLR_ACTIVE = 0x08;
+	constexpr ControllerFlags CTLR_PLAY_BWD = 0x10;
+	constexpr ControllerFlags CTLR_MNGR_CTRLD = 0x20;
+	constexpr ControllerFlags CTLR_BS_UNKNOWN = 0x40;
+
 	using ForceType = uint_fast32_t;
 	constexpr ForceType FORCE_PLANAR = 0;
 	constexpr ForceType FORCE_SPHERICAL = 1;

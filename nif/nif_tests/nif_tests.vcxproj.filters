@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\helpers">
+    <Filter Include="Source Files\impl">
       <UniqueIdentifier>{9f490aee-f74b-47a2-9f1a-b8d59a3f14c7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -28,31 +28,31 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NiObjectNETImpl.cpp">
-      <Filter>Source Files\helpers</Filter>
+      <Filter>Source Files\impl</Filter>
     </ClCompile>
     <ClCompile Include="NiAVObjectImpl.cpp">
-      <Filter>Source Files\helpers</Filter>
+      <Filter>Source Files\impl</Filter>
     </ClCompile>
     <ClCompile Include="NiInterpolatorsImpl.cpp">
-      <Filter>Source Files\helpers</Filter>
+      <Filter>Source Files\impl</Filter>
     </ClCompile>
     <ClCompile Include="NiNodeImpl.cpp">
-      <Filter>Source Files\helpers</Filter>
+      <Filter>Source Files\impl</Filter>
     </ClCompile>
     <ClCompile Include="NiPropertiesImpl.cpp">
-      <Filter>Source Files\helpers</Filter>
+      <Filter>Source Files\impl</Filter>
     </ClCompile>
     <ClCompile Include="NIExtraDataImpl.cpp">
-      <Filter>Source Files\helpers</Filter>
+      <Filter>Source Files\impl</Filter>
     </ClCompile>
     <ClCompile Include="NiPSysImpl.cpp">
-      <Filter>Source Files\helpers</Filter>
+      <Filter>Source Files\impl</Filter>
     </ClCompile>
     <ClCompile Include="ObjectTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NiPSysEmittersImpl.cpp">
-      <Filter>Source Files\helpers</Filter>
+      <Filter>Source Files\impl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

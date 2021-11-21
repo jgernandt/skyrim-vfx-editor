@@ -144,6 +144,7 @@ void nif::WriteSyncer<nif::NiFloatInterpolator>::operator()(const NiFloatInterpo
 void nif::ReadSyncer<nif::NiTimeController>::operator()(NiTimeController& object, const Niflib::NiTimeController* native, File& file)
 {
 	assert(native);
+	object.flags.clear();
 	object.flags.set(native->GetFlags());
 	object.frequency.set(native->GetFrequency());
 	object.phase.set(native->GetPhase());
@@ -154,7 +155,7 @@ void nif::ReadSyncer<nif::NiTimeController>::operator()(NiTimeController& object
 void nif::WriteSyncer<nif::NiTimeController>::operator()(const NiTimeController& object, Niflib::NiTimeController* native, const File& file)
 {
 	assert(native);
-	native->SetFlags(object.flags.get());
+	native->SetFlags(static_cast<unsigned short>(object.flags.get()));
 	native->SetFrequency(object.frequency.get());
 	native->SetPhase(object.phase.get());
 	native->SetStartTime(object.startTime.get());

@@ -108,7 +108,7 @@ namespace nif
 		//Readable<NiTimeController>& nextCtlr;
 		//Readable<NiObjectNET>& target;
 
-		Property<unsigned short> flags;
+		FlagSet<ControllerFlags> flags;
 		Property<float> frequency;
 		Property<float> phase;
 		Property<float> startTime;

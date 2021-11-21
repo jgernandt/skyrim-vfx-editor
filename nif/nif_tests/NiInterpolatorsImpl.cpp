@@ -170,11 +170,11 @@ void common::EquivalenceTester<NiTimeController>::operator()(const NiTimeControl
 
 void common::Randomiser<NiTimeController>::operator()(NiTimeController& object, File& file, std::mt19937& rng)
 {
-	object.flags.set(randi<unsigned short>(rng));
-	object.frequency.set(randf<float>(rng));
-	object.phase.set(randf<float>(rng));
-	object.startTime.set(randf<float>(rng));
-	object.stopTime.set(randf<float>(rng));
+	randomiseFlags(object.flags, rng, { 0, std::numeric_limits<unsigned short>::max() });
+	randomiseProperty(object.frequency, rng);
+	randomiseProperty(object.phase, rng);
+	randomiseProperty(object.startTime, rng);
+	randomiseProperty(object.stopTime, rng);
 }
 
 void common::Randomiser<NiTimeController>::operator()(const NiTimeController&, Niflib::NiTimeController* native, File&, std::mt19937& rng)
