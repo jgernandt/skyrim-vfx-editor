@@ -146,12 +146,15 @@ namespace nif
 		assert(block);
 
 		if (auto res = m_objectIndex.insert({ block->object, block }); !res.second) {
-			//The object has already been indexed. This should be checked before calling us.
-			assert(false);
+			//The object has already been indexed. Since we just created it, this must be a reused address.
+			//The block must have expired.
+			assert(res.first->second.expired());
+			res.first->second = block;
 		}
 		if (auto res = m_nativeIndex.insert({ block->native, block }); !res.second) {
-			//same here
-			assert(false);
+			//if native was created by us, the address has been reused and the block must have expired.
+			assert(!native || res.first->second.expired());
+			res.first->second = block;
 		}
 
 		//Make sure the output object is synced to the Niflib object
