@@ -59,7 +59,7 @@ namespace common
 	template<typename T, typename GeneratorType>
 	void randomiseSequence(Sequence<T>& seq, File& file, GeneratorType& rng)
 	{
-		std::uniform_int_distribution<int> D(1, 5);
+		std::uniform_int_distribution<int> D(2, 5);
 		seq.clear();
 		int size = D(rng);
 		for (int i = 0; i < size; i++)
@@ -69,7 +69,7 @@ namespace common
 	template<typename T, typename GeneratorType>
 	void randomiseSet(Set<T>& set, File& file, GeneratorType& rng)
 	{
-		std::uniform_int_distribution<int> D(1, 5);
+		std::uniform_int_distribution<int> D(2, 5);
 		set.clear();
 		int size = D(rng);
 		for (int i = 0; i < size; i++)
