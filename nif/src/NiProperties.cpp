@@ -53,7 +53,9 @@ void nif::ReadSyncer<nif::BSEffectShaderProperty>::operator()(BSEffectShaderProp
 	object.emissiveMult.set(native->GetEmissiveMultiple());
 	object.sourceTex.set(native->GetSourceTexture());
 	object.greyscaleTex.set(native->GetGreyscaleTexture());
+	object.shaderFlags1.clear();
 	object.shaderFlags1.set(nif_type_conversion<ShaderFlags>::from(native->GetShaderFlags1()));
+	object.shaderFlags2.clear();
 	object.shaderFlags2.set(nif_type_conversion<ShaderFlags>::from(native->GetShaderFlags2()));
 }
 
