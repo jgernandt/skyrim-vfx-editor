@@ -175,7 +175,7 @@ namespace objects
 			ForwarderTestTraverser t(traversed);
 			object.receive(t);
 
-			ForwardOrderTester<T>{}.down(object, traversed.cbegin());
+			ForwardOrderTester<T>{}.down(object, traversed.begin(), traversed.end());
 		}
 	};
 
