@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "EquivalenceTester.h"
+#include "ForwardOrderTester.h"
 #include "ObjectRandomiser.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -142,13 +143,6 @@ namespace objects
 		}
 	};
 
-	//Define and specialise in separate file
-	template<typename T>
-	struct ForwardOrderTester : nif::VerticalTraverser<T, ForwardOrderTester>
-	{
-		void operator() (const T&, std::vector<nif::NiObject*>::const_iterator) { Assert::Fail(); }
-	};
-
 	class ForwarderTestTraverser : public HorizontalTraverser<ForwarderTestTraverser>
 	{
 		std::vector<nif::NiObject*>& m_traversed;
@@ -175,8 +169,6 @@ namespace objects
 			nif::File file{ nif::File::Version::SKYRIM_SE };
 			T object{};
 
-			//We need at least 2 items in every Sequence and Set, to test order.
-			//Does Randomiser ensure that?
 			Randomiser<T>{}.down(object, file, g_rng);
 
 			std::vector<nif::NiObject*> traversed;
