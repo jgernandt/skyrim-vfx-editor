@@ -51,9 +51,9 @@ namespace nif
 			}
 		}
 
-		T get() const { return m_flags; }
+		T raised() const { return m_flags; }
 
-		void set(T flags) 
+		void raise(T flags) 
 		{
 			if constexpr (std::is_enum<T>::value) {
 				//We need to do bitmanipulations on the underlying type
@@ -102,7 +102,7 @@ namespace nif
 				}
 			}
 		}
-		bool isSet(T flags) const 
+		bool hasRaised(T flags) const 
 		{ 
 			return (m_flags & flags) == flags;
 		}

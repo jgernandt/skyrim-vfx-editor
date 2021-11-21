@@ -38,8 +38,8 @@ void common::EquivalenceTester<nif::BSEffectShaderProperty>::operator()(const BS
 	Assert::IsTrue(object.emissiveMult.get() == native->GetEmissiveMultiple());
 	Assert::IsTrue(object.sourceTex.get() == native->GetSourceTexture());
 	Assert::IsTrue(object.greyscaleTex.get() == native->GetGreyscaleTexture());
-	Assert::IsTrue(object.shaderFlags1.get() == native->GetShaderFlags1());
-	Assert::IsTrue(object.shaderFlags2.get() == native->GetShaderFlags2());
+	Assert::IsTrue(object.shaderFlags1.raised() == native->GetShaderFlags1());
+	Assert::IsTrue(object.shaderFlags2.raised() == native->GetShaderFlags2());
 }
 
 void common::Randomiser<BSEffectShaderProperty>::operator()(BSEffectShaderProperty& object, File& file, std::mt19937& rng)

@@ -149,80 +149,80 @@ namespace fields
 			Listener lsnr;
 			{
 				nif::FlagSet<unsigned int> flags;
-				Assert::IsFalse(flags.isSet(F1));
-				Assert::IsFalse(flags.isSet(F2));
+				Assert::IsFalse(flags.hasRaised(F1));
+				Assert::IsFalse(flags.hasRaised(F2));
 
 				flags.addListener(lsnr);
 				Assert::IsFalse(lsnr.wasSet());
 				Assert::IsFalse(lsnr.wasCleared());
 
 				//set one
-				flags.set(F1);
-				Assert::IsTrue(flags.isSet(F1));
-				Assert::IsFalse(flags.isSet(F2));
-				Assert::IsFalse(flags.isSet(F1 | F2));
+				flags.raise(F1);
+				Assert::IsTrue(flags.hasRaised(F1));
+				Assert::IsFalse(flags.hasRaised(F2));
+				Assert::IsFalse(flags.hasRaised(F1 | F2));
 				Assert::IsTrue(lsnr.wasSet(F1));
 				Assert::IsFalse(lsnr.wasCleared());
 
 				//reset should not call
-				flags.set(F1);
-				Assert::IsTrue(flags.isSet(F1));
-				Assert::IsFalse(flags.isSet(F2));
-				Assert::IsFalse(flags.isSet(F1 | F2));
+				flags.raise(F1);
+				Assert::IsTrue(flags.hasRaised(F1));
+				Assert::IsFalse(flags.hasRaised(F2));
+				Assert::IsFalse(flags.hasRaised(F1 | F2));
 				Assert::IsFalse(lsnr.wasSet());
 				Assert::IsFalse(lsnr.wasCleared());
 
 				//clear
 				flags.clear(F1);
-				Assert::IsFalse(flags.isSet(F1));
-				Assert::IsFalse(flags.isSet(F2));
-				Assert::IsFalse(flags.isSet(F1 | F2));
+				Assert::IsFalse(flags.hasRaised(F1));
+				Assert::IsFalse(flags.hasRaised(F2));
+				Assert::IsFalse(flags.hasRaised(F1 | F2));
 				Assert::IsFalse(lsnr.wasSet());
 				Assert::IsTrue(lsnr.wasCleared(F1));
 
 				//clearing unset should not call
 				flags.clear(F1);
-				Assert::IsFalse(flags.isSet(F1));
-				Assert::IsFalse(flags.isSet(F2));
-				Assert::IsFalse(flags.isSet(F1 | F2));
+				Assert::IsFalse(flags.hasRaised(F1));
+				Assert::IsFalse(flags.hasRaised(F2));
+				Assert::IsFalse(flags.hasRaised(F1 | F2));
 				Assert::IsFalse(lsnr.wasSet());
 				Assert::IsFalse(lsnr.wasCleared());
 
 				//set two
-				flags.set(F1 | F2);
-				Assert::IsTrue(flags.isSet(F1));
-				Assert::IsTrue(flags.isSet(F2));
-				Assert::IsTrue(flags.isSet(F1 | F2));
+				flags.raise(F1 | F2);
+				Assert::IsTrue(flags.hasRaised(F1));
+				Assert::IsTrue(flags.hasRaised(F2));
+				Assert::IsTrue(flags.hasRaised(F1 | F2));
 				Assert::IsTrue(lsnr.wasSet(F1 | F2));//or should this call twice?
 				Assert::IsFalse(lsnr.wasCleared());
 
 				//clear one
 				flags.clear(F1);
-				Assert::IsFalse(flags.isSet(F1));
-				Assert::IsTrue(flags.isSet(F2));
-				Assert::IsFalse(flags.isSet(F1 | F2));
+				Assert::IsFalse(flags.hasRaised(F1));
+				Assert::IsTrue(flags.hasRaised(F2));
+				Assert::IsFalse(flags.hasRaised(F1 | F2));
 				Assert::IsFalse(lsnr.wasSet());
 				Assert::IsTrue(lsnr.wasCleared(F1));
 
 				//Set two, one already set
-				flags.set(F1 | F2);
-				Assert::IsTrue(flags.isSet(F1));
-				Assert::IsTrue(flags.isSet(F2));
-				Assert::IsTrue(flags.isSet(F1 | F2));
+				flags.raise(F1 | F2);
+				Assert::IsTrue(flags.hasRaised(F1));
+				Assert::IsTrue(flags.hasRaised(F2));
+				Assert::IsTrue(flags.hasRaised(F1 | F2));
 				Assert::IsTrue(lsnr.wasSet(F1));//only signal the one that was set
 				Assert::IsFalse(lsnr.wasCleared());
 
 				//Clear two
 				flags.clear(F1 | F2);
-				Assert::IsFalse(flags.isSet(F1));
-				Assert::IsFalse(flags.isSet(F2));
-				Assert::IsFalse(flags.isSet(F1 | F2));
+				Assert::IsFalse(flags.hasRaised(F1));
+				Assert::IsFalse(flags.hasRaised(F2));
+				Assert::IsFalse(flags.hasRaised(F1 | F2));
 				Assert::IsFalse(lsnr.wasSet());
 				Assert::IsTrue(lsnr.wasCleared(F1 | F2));//or should this call twice?
 
 				//remove lsnr
 				flags.removeListener(lsnr);
-				flags.set(F1 | F2);
+				flags.raise(F1 | F2);
 				Assert::IsFalse(lsnr.wasSet());
 				Assert::IsFalse(lsnr.wasCleared());
 

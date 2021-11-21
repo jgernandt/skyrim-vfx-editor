@@ -54,9 +54,9 @@ void nif::ReadSyncer<nif::BSEffectShaderProperty>::operator()(BSEffectShaderProp
 	object.sourceTex.set(native->GetSourceTexture());
 	object.greyscaleTex.set(native->GetGreyscaleTexture());
 	object.shaderFlags1.clear();
-	object.shaderFlags1.set(nif_type_conversion<ShaderFlags>::from(native->GetShaderFlags1()));
+	object.shaderFlags1.raise(nif_type_conversion<ShaderFlags>::from(native->GetShaderFlags1()));
 	object.shaderFlags2.clear();
-	object.shaderFlags2.set(nif_type_conversion<ShaderFlags>::from(native->GetShaderFlags2()));
+	object.shaderFlags2.raise(nif_type_conversion<ShaderFlags>::from(native->GetShaderFlags2()));
 }
 
 void nif::WriteSyncer<nif::BSEffectShaderProperty>::operator()(const BSEffectShaderProperty& object, Niflib::BSEffectShaderProperty* native, const File& file)
@@ -66,6 +66,6 @@ void nif::WriteSyncer<nif::BSEffectShaderProperty>::operator()(const BSEffectSha
 	native->SetEmissiveMultiple(object.emissiveMult.get());
 	native->SetSourceTexture(object.sourceTex.get());
 	native->SetGreyscaleTexture(object.greyscaleTex.get());
-	native->SetShaderFlags1(nif_type_conversion<Niflib::SkyrimShaderPropertyFlags1>::from(object.shaderFlags1.get()));
-	native->SetShaderFlags2(nif_type_conversion<Niflib::SkyrimShaderPropertyFlags2>::from(object.shaderFlags2.get()));
+	native->SetShaderFlags1(nif_type_conversion<Niflib::SkyrimShaderPropertyFlags1>::from(object.shaderFlags1.raised()));
+	native->SetShaderFlags2(nif_type_conversion<Niflib::SkyrimShaderPropertyFlags2>::from(object.shaderFlags2.raised()));
 }

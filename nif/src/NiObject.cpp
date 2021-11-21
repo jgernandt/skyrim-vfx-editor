@@ -91,7 +91,7 @@ void nif::ReadSyncer<nif::NiAVObject>::operator()(NiAVObject& object, const Nifl
 	assert(native);
 
 	object.flags.clear(-1);
-	object.flags.set(native->GetFlags());
+	object.flags.raise(native->GetFlags());
 	object.transform.translation.set(nif_type_conversion<translation_t>::from(native->GetLocalTranslation()));
 	object.transform.rotation.set(nif_type_conversion<rotation_t>::from(native->GetLocalRotation()));
 	object.transform.scale.set(native->GetLocalScale());
@@ -101,7 +101,7 @@ void nif::WriteSyncer<nif::NiAVObject>::operator()(const NiAVObject& object, Nif
 {
 	assert(native);
 
-	native->SetFlags(object.flags.get());
+	native->SetFlags(object.flags.raised());
 	native->SetLocalTranslation(nif_type_conversion<Niflib::Vector3>::from(object.transform.translation.get()));
 	native->SetLocalRotation(nif_type_conversion<Niflib::Matrix33>::from(object.transform.rotation.get()));
 	native->SetLocalScale(object.transform.scale.get());

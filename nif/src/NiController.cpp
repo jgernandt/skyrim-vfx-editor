@@ -145,7 +145,7 @@ void nif::ReadSyncer<nif::NiTimeController>::operator()(NiTimeController& object
 {
 	assert(native);
 	object.flags.clear();
-	object.flags.set(native->GetFlags());
+	object.flags.raise(native->GetFlags());
 	object.frequency.set(native->GetFrequency());
 	object.phase.set(native->GetPhase());
 	object.startTime.set(native->GetStartTime());
@@ -155,7 +155,7 @@ void nif::ReadSyncer<nif::NiTimeController>::operator()(NiTimeController& object
 void nif::WriteSyncer<nif::NiTimeController>::operator()(const NiTimeController& object, Niflib::NiTimeController* native, const File& file)
 {
 	assert(native);
-	native->SetFlags(static_cast<unsigned short>(object.flags.get()));
+	native->SetFlags(static_cast<unsigned short>(object.flags.raised()));
 	native->SetFrequency(object.frequency.get());
 	native->SetPhase(object.phase.get());
 	native->SetStartTime(object.startTime.get());

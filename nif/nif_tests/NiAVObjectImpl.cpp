@@ -9,7 +9,7 @@ using namespace nif;
 
 void common::EquivalenceTester<nif::NiAVObject>::operator()(const NiAVObject& object, const Niflib::NiAVObject* native, File& file)
 {
-	Assert::IsTrue(object.flags.get() == native->GetFlags());
+	Assert::IsTrue(object.flags.raised() == native->GetFlags());
 	Assert::IsTrue(object.transform.translation.get() == nif_type_conversion<translation_t>::from(native->GetLocalTranslation()));
 
 	auto q1 = object.transform.rotation.get().getQuaternion();

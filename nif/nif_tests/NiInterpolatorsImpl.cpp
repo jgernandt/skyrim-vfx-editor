@@ -161,7 +161,7 @@ void common::Randomiser<NiFloatInterpolator>::operator()(const NiFloatInterpolat
 
 void common::EquivalenceTester<NiTimeController>::operator()(const NiTimeController& object, const Niflib::NiTimeController* native, File& file)
 {
-	Assert::IsTrue(object.flags.get() == native->GetFlags());
+	Assert::IsTrue(object.flags.raised() == native->GetFlags());
 	Assert::IsTrue(object.frequency.get() == native->GetFrequency());
 	Assert::IsTrue(object.phase.get() == native->GetPhase());
 	Assert::IsTrue(object.startTime.get() == native->GetStartTime());

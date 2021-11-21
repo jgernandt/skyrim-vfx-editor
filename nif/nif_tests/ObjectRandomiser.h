@@ -11,12 +11,12 @@ namespace common
 		flags.clear();
 		if constexpr (std::is_integral<T>::value) {
 			std::uniform_int_distribution<T> D(limits[0], limits[1]);
-			flags.set(D(rng));
+			flags.raise(D(rng));
 		}
 		else {
 			//enum
 			std::uniform_int_distribution<typename std::underlying_type<T>::type> D;
-			flags.set(static_cast<T>(D(rng)));
+			flags.raise(static_cast<T>(D(rng)));
 		}
 	}
 
