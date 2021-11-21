@@ -28,28 +28,14 @@ namespace nif
 		static const ni_type TYPE;
 		virtual ni_type type() const { return TYPE; }
 	};
-	template<> struct type_map<Niflib::NiNode> { using type = NiNode; };
-	template<> struct type_map<NiNode> { using type = Niflib::NiNode; };
-
 	template<> struct Forwarder<NiNode> : VerticalTraverser<NiNode, Forwarder>
 	{
 		void operator() (NiNode& object, NiTraverser& traverser);
 	};
-	template<> struct ReadSyncer<NiNode> : VerticalTraverser<NiNode, ReadSyncer>
-	{
-		void operator() (NiNode& object, const Niflib::NiNode* native, File& file);
-	};
-	template<> struct WriteSyncer<NiNode> : VerticalTraverser<NiNode, WriteSyncer>
-	{
-		void operator() (const NiNode& object, Niflib::NiNode* native, const File& file);
-	};
-
 
 	struct BSFadeNode : NiTraversable<BSFadeNode, NiNode> 
 	{
 		static const ni_type TYPE;
 		virtual ni_type type() const { return TYPE; }
 	};
-	template<> struct type_map<Niflib::BSFadeNode> { using type = BSFadeNode; };
-	template<> struct type_map<BSFadeNode> { using type = Niflib::BSFadeNode; };
 }

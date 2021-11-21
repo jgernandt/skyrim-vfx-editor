@@ -17,8 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "NiProperties.h"
-#include "File.h"
+#include "nif_internal.h"
 
 const size_t nif::NiProperty::TYPE = std::hash<std::string>{}("NiProperty");
 const size_t nif::NiAlphaProperty::TYPE = std::hash<std::string>{}("NiAlphaProperty");

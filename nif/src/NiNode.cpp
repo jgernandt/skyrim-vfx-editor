@@ -17,8 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "NiNode.h"
-#include "File.h"
+#include "nif_internal.h"
 
 const size_t nif::NiNode::TYPE = std::hash<std::string>{}("NiNode");
 const size_t nif::BSFadeNode::TYPE = std::hash<std::string>{}("BSFadeNode");

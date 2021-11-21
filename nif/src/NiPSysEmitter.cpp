@@ -17,8 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "NiPSysEmitter.h"
-#include "File.h"
+#include "nif_internal.h"
 
 const size_t nif::NiPSysEmitter::TYPE = std::hash<std::string>{}("NiPSysEmitter");
 const size_t nif::NiPSysVolumeEmitter::TYPE = std::hash<std::string>{}("NiPSysVolumeEmitter");
@@ -117,23 +116,4 @@ void nif::WriteSyncer<nif::NiPSysSphereEmitter>::operator()(const NiPSysSphereEm
 {
 	assert(native);
 	native->SetRadius(object.radius.get());
-}
-
-
-void nif::Forwarder<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, NiTraverser& traverser)
-{
-	if (auto&& obj = object.visIplr.assigned())
-		obj->receive(traverser);
-}
-
-void nif::ReadSyncer<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file)
-{
-	assert(native);
-	object.visIplr.assign(file.get<NiInterpolator>(native->GetVisibilityInterpolator()));
-}
-
-void nif::WriteSyncer<nif::NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& object, Niflib::NiPSysEmitterCtlr* native, const File& file)
-{
-	assert(native);
-	native->SetVisibilityInterpolator(file.getNative<NiInterpolator>(object.visIplr.assigned()));
 }

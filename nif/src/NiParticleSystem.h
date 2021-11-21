@@ -32,22 +32,10 @@ namespace nif
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
 	};
-	template<> struct type_map<Niflib::NiParticleSystem> { using type = NiParticleSystem; };
-	template<> struct type_map<NiParticleSystem> { using type = Niflib::NiParticleSystem; };
-
 	template<> struct Forwarder<NiParticleSystem> : VerticalTraverser<NiParticleSystem, Forwarder>
 	{
 		void operator() (NiParticleSystem& object, NiTraverser& traverser);
 	};
-	template<> struct ReadSyncer<NiParticleSystem> : VerticalTraverser<NiParticleSystem, ReadSyncer>
-	{
-		void operator() (NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file);
-	};
-	template<> struct WriteSyncer<NiParticleSystem> : VerticalTraverser<NiParticleSystem, WriteSyncer>
-	{
-		void operator() (const NiParticleSystem& object, Niflib::NiParticleSystem* native, const File& file);
-	};
-
 
 	struct NiPSysData : NiTraversable<NiPSysData, NiObject>
 	{
@@ -60,15 +48,4 @@ namespace nif
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
 	};
-	template<> struct type_map<Niflib::NiPSysData> { using type = NiPSysData; };
-	template<> struct type_map<NiPSysData> { using type = Niflib::NiPSysData; };
-	template<> struct ReadSyncer<NiPSysData> : VerticalTraverser<NiPSysData, ReadSyncer>
-	{
-		void operator() (NiPSysData& object, const Niflib::NiPSysData* native, File& file);
-	};
-	template<> struct WriteSyncer<NiPSysData> : VerticalTraverser<NiPSysData, WriteSyncer>
-	{
-		void operator() (const NiPSysData& object, Niflib::NiPSysData* native, const File& file);
-	};
-
 }

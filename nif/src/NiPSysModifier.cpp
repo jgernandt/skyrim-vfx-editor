@@ -17,8 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "NiPSysModifier.h"
-#include "File.h"
+#include "nif_internal.h"
 
 const size_t nif::NiPSysModifier::TYPE = std::hash<std::string>{}("NiPSysModifier");
 const size_t nif::NiPSysAgeDeathModifier::TYPE = std::hash<std::string>{}("NiPSysAgeDeathModifier");
@@ -143,17 +142,4 @@ void nif::WriteSyncer<nif::BSPSysSimpleColorModifier>::operator()(const BSPSysSi
 
 	native->SetColor(2, nif_type_conversion<Niflib::Color4>::from(object.col3.value.get()));
 	native->SetColor3Begin(object.col3.RGBbegin.get());
-}
-
-
-void nif::ReadSyncer<nif::NiPSysModifierCtlr>::operator()(NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file)
-{
-	assert(native);
-	object.modifierName.set(native->GetModifierName());
-}
-
-void nif::WriteSyncer<nif::NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr& object, Niflib::NiPSysModifierCtlr* native, const File& file)
-{
-	assert(native);
-	native->SetModifierName(object.modifierName.get());
 }

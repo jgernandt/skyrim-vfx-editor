@@ -17,7 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "nif_types.h"
+#include "nif_conversions.h"
 
 static bool equalToWithin(float l, float r, float relTol)
 {
@@ -164,27 +164,4 @@ std::vector<nif::SubtextureOffset> nif::NifConverter<std::vector<nif::Subtexture
 	}
 
 	return result;
-}
-
-float& util::array_traits<Niflib::Vector3>::at(Niflib::Vector3& t, size_t i)
-{
-	assert(i >= 0 && i < 3);
-	return t[i];
-}
-
-float& util::array_traits<Niflib::Vector4>::at(Niflib::Vector4& t, size_t i)
-{
-	assert(i >= 0 && i < 4);
-	return t[i];
-}
-
-float& util::array_traits<Niflib::Color4>::at(Niflib::Color4& t, size_t i)
-{
-	static_assert(offsetof(Niflib::Color4, r) == 0);
-	static_assert(offsetof(Niflib::Color4, g) == 4);
-	static_assert(offsetof(Niflib::Color4, b) == 8);
-	static_assert(offsetof(Niflib::Color4, a) == 12);
-
-	assert(i >= 0 && i < 4);
-	return *(reinterpret_cast<float*>(&t) + i);
 }

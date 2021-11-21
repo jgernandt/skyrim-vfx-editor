@@ -22,56 +22,10 @@
 #include <set>
 #include <vector>
 
-#include "ni_objects.h"
+#include "nif_objects.h"
 
 namespace nif
 {
-	class File;
-
-	class ForwardingReadSyncer final : public HorizontalTraverser<ForwardingReadSyncer>
-	{
-		File& m_file;
-
-	public:
-		ForwardingReadSyncer(File& file) : m_file{ file } {}
-
-		template<typename T>
-		void invoke(T& object);
-	};
-
-	class ForwardingWriteSyncer final : public HorizontalTraverser<ForwardingWriteSyncer>
-	{
-		File& m_file;
-
-	public:
-		ForwardingWriteSyncer(File& file) : m_file{ file } {}
-
-		template<typename T>
-		void invoke(T& object);
-	};
-
-	class NonForwardingReadSyncer final : public HorizontalTraverser<NonForwardingReadSyncer>
-	{
-		File& m_file;
-
-	public:
-		NonForwardingReadSyncer(File& file) : m_file{ file } {}
-
-		template<typename T>
-		void invoke(T& object);
-	};
-
-	class NonForwardingWriteSyncer final : public HorizontalTraverser<NonForwardingWriteSyncer>
-	{
-		File& m_file;
-
-	public:
-		NonForwardingWriteSyncer(File& file) : m_file{ file } {}
-
-		template<typename T>
-		void invoke(T& object);
-	};
-
 	class File
 	{
 	public:
@@ -106,7 +60,19 @@ namespace nif
 
 		//Create a new object of type T.
 		template<typename T>
-		[[nodiscard]] std::shared_ptr<T> create() { return make_ni<T>(nullptr); }
+		[[nodiscard]] std::shared_ptr<T> create();
+
+		//Get a pointer to the root node
+		std::shared_ptr<NiNode> getRoot() const { return m_rootNode; }
+
+		//The the nif version of the file
+		Version getVersion() const { return m_version; }
+
+		//Write the file to the target path
+		void write(const std::filesystem::path& path);
+
+
+		//These getters should not be part of the public interface, they are nif internal business!
 
 		//Return the object that corresponds to Niflib object nativeRef.
 		//If nativeRef is null, returns null.
@@ -119,12 +85,6 @@ namespace nif
 		//Return the Niflib object that corresponds to object.
 		template<typename T>
 		[[nodiscard]] Niflib::Ref<typename type_map<T>::type> getNative(T* object) const;
-
-		Version getVersion() const { return m_version; }
-
-		std::shared_ptr<NiNode> getRoot() const { return m_rootNode; }
-
-		void write(const std::filesystem::path& path);
 
 	private:
 		//Create a new object and add to our index
@@ -147,161 +107,57 @@ namespace nif
 		std::map<Niflib::NiObject*, std::weak_ptr<ObjectBlock>> m_nativeIndex;
 		std::map<NiObject*, std::weak_ptr<ObjectBlock>> m_objectIndex;
 	};
-	
-	template<typename T>
-	inline [[nodiscard]] std::shared_ptr<T> File::get(const Niflib::Ref<typename type_map<T>::type>& nativeRef)
-	{
-		std::shared_ptr<T> result;
 
-		if (nativeRef) {
-			if (auto it = m_nativeIndex.find(static_cast<Niflib::NiObject*>(nativeRef)); it != m_nativeIndex.end()) {
-				auto block = it->second.lock();
-				//if (!block) {
-					//The object is indexed, but it has expired.
-					//This is unexpected, but not really a problem. We can just recreate it.
-					//However, it is probably a bug. Let's treat it as such for now.
-				//}
-				assert(block);
+	//Use explicit specialisation here to avoid the public having to know anything about the native type.
+	//Annoying, but what are the alternatives? We could map another set of factory functions, which is
+	//just as much work for a worse solution.
+	template<typename T> [[nodiscard]] std::shared_ptr<T> File::create() { return std::shared_ptr<T>(); }
+	template<> [[nodiscard]] std::shared_ptr<NiObject> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiObjectNET> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiAVObject> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiNode> File::create();
+	template<> [[nodiscard]] std::shared_ptr<BSFadeNode> File::create();
 
-				//downcast safe if type_map is correct
-				result = std::shared_ptr<T>(block, static_cast<T*>(block->object));
-			}
-			else
-				//needs sync. Who's responsibility is that?
-				result = make_ni<T>(nativeRef);
-		}
+	template<> [[nodiscard]] std::shared_ptr<NiProperty> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiAlphaProperty> File::create();
+	template<> [[nodiscard]] std::shared_ptr<BSShaderProperty> File::create();
+	template<> [[nodiscard]] std::shared_ptr<BSEffectShaderProperty> File::create();
 
-		return result;
-	}
+	template<> [[nodiscard]] std::shared_ptr<NiBoolData> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiFloatData> File::create();
 
-	template<typename T>
-	inline [[nodiscard]] Niflib::Ref<typename type_map<T>::type> nif::File::getNative(T* object) const
-	{
-		Niflib::Ref<typename type_map<T>::type> result;
+	template<> [[nodiscard]] std::shared_ptr<NiInterpolator> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiBoolInterpolator> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiFloatInterpolator> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiBlendInterpolator> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiBlendBoolInterpolator> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiBlendFloatInterpolator> File::create();
 
-		if (object) {
-			std::shared_ptr<ObjectBlock> block;
-			if (auto it = m_objectIndex.find(object); it != m_objectIndex.end())
-				block = it->second.lock();
+	template<> [[nodiscard]] std::shared_ptr<NiTimeController> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiSingleInterpController> File::create();
 
-			//If the object is indexed but expired, object is dangling. This is a bug.
-			//If the object is not indexed, it was not created by us. This is also a bug.
-			assert(block);
+	template<> [[nodiscard]] std::shared_ptr<NiParticleSystem> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysData> File::create();
 
-			//We know it can be cast to the native type since we know it was used to create object
-			result = static_cast<typename type_map<T>::type*>(block->native);
-		}
+	template<> [[nodiscard]] std::shared_ptr<NiPSysModifier> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysAgeDeathModifier> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysBoundUpdateModifier> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysGravityModifier> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysPositionModifier> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysRotationModifier> File::create();
+	template<> [[nodiscard]] std::shared_ptr<BSPSysScaleModifier> File::create();
+	template<> [[nodiscard]] std::shared_ptr<BSPSysSimpleColorModifier> File::create();
 
-		return result;
-	}
-	
-	template<typename T>
-	inline std::shared_ptr<T> File::make_ni(const Niflib::Ref<typename type_map<T>::type>& native)
-	{
-		//Our type registry contains all the types that we care about.
-		//If we step up through the inheritance chain of Niflib's type object,
-		//the first one we find in our registry is the most derived type that 
-		//we care about.
+	template<> [[nodiscard]] std::shared_ptr<NiPSysEmitter> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysVolumeEmitter> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysBoxEmitter> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysCylinderEmitter> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysSphereEmitter> File::create();
 
-		//We must not go higher up than type_map<T>::type, since that should be
-		//the least derived type that maps to T.
-		static bool registered = false;
-		if (!registered) {
-			registerTypes();
-			registered = true;
-		}
+	template<> [[nodiscard]] std::shared_ptr<NiPSysModifierCtlr> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysUpdateCtlr> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysEmitterCtlr> File::create();
 
-		CreateFcn fcn = nullptr;
-
-		const Niflib::Type* type = native ? &native->GetType() : &type_map<T>::type::TYPE;
-
-		do {
-			if (auto it = s_typeRegistry.find(std::hash<const Niflib::Type*>{}(type)); it != s_typeRegistry.end()) {
-				fcn = it->second;
-				break;
-			}
-			else {
-				assert(type != &type_map<T>::type::TYPE);//or we failed to register this type
-				type = type->base_type;
-			}
-		} while (type != &type_map<T>::type::TYPE);
-
-		assert(fcn);
-
-		//The CreateFcn must guarantee that it creates an object of the type mapped to from
-		//type_map<Y>::type, where Y is the Niflib type associated with the Niflib::Type object
-		//that the CreateFcn is mapped to.
-
-		auto block = fcn(Niflib::StaticCast<Niflib::NiObject>(native));
-
-		//factory should throw on failure. We won't catch it, we'll typically be part of a longer procedure.
-		assert(block);
-
-		if (auto res = m_objectIndex.insert({ block->object, block }); !res.second) {
-			//The object has already been indexed. This should be checked before calling us.
-			assert(false);
-		}
-		if (auto res = m_nativeIndex.insert({ block->native, block }); !res.second) {
-			//same here
-			assert(false);
-		}
-
-		//Make sure the output object is synced to the Niflib object
-		NonForwardingReadSyncer syncer(*this);
-		block->object->receive(syncer);
-
-		//downcast safe if type_map is correct
-		return std::shared_ptr<T>(block, static_cast<T*>(block->object));
-	}
-
-	template<typename T>
-	inline std::shared_ptr<File::ObjectBlock> File::make_NiObject(const Niflib::Ref<Niflib::NiObject>& native)
-	{
-		//Our implementation of ObjectBlock keeps everything in the same object.
-		//The pointers in ObjectBlock are aliases for the members of the derived type.
-		struct NiObjectBlock : ObjectBlock
-		{
-			NiObjectBlock(const Niflib::Ref<Niflib::NiObject>& ref) :
-				nativeRef{ ref }
-			{
-				if (!nativeRef)
-					nativeRef = new typename type_map<T>::type();
-				this->native = nativeRef;
-				this->object = &objectImpl;
-			}
-			NiObjectBlock(const NiObjectBlock&) = delete;
-			NiObjectBlock& operator=(const NiObjectBlock&) = delete;
-
-			Niflib::Ref<Niflib::NiObject> nativeRef;
-			T objectImpl;
-		};
-
-		return std::make_shared<NiObjectBlock>(native);
-	}
-
-	template<typename T>
-	inline void nif::ForwardingReadSyncer::invoke(T& object)
-	{
-		ReadSyncer<T>{}.down(object, m_file.getNative<T>(&object), m_file);
-		Forwarder<T>{}.down(object, *this);
-	}
-
-	template<typename T>
-	inline void nif::ForwardingWriteSyncer::invoke(T& object)
-	{
-		WriteSyncer<T>{}.down(object, m_file.getNative<T>(&object), m_file);
-		Forwarder<T>{}.down(object, *this);
-	}
-
-	template<typename T>
-	inline void nif::NonForwardingReadSyncer::invoke(T& object)
-	{
-		ReadSyncer<T>{}.down(object, m_file.getNative<T>(&object), m_file);
-	}
-
-	template<typename T>
-	inline void nif::NonForwardingWriteSyncer::invoke(T& object)
-	{
-		WriteSyncer<T>{}.down(object, m_file.getNative<T>(&object), m_file);
-	}
+	template<> [[nodiscard]] std::shared_ptr<NiExtraData> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiStringExtraData> File::create();
 }

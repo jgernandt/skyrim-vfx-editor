@@ -17,8 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "NiExtraData.h"
-#include "File.h"
+#include "nif_internal.h"
 
 const size_t nif::NiExtraData::TYPE = std::hash<std::string>{}("NiExtraData");
 const size_t nif::NiStringExtraData::TYPE = std::hash<std::string>{}("NiStringExtraData");

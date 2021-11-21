@@ -18,7 +18,83 @@
 
 #include "pch.h"
 #include "File.h"
+#include "File.inl"
 
+using namespace nif;
+
+template<typename T>
+inline std::shared_ptr<File::ObjectBlock> File::make_NiObject(const Niflib::Ref<Niflib::NiObject>& native)
+{
+	//Our implementation of ObjectBlock keeps everything in the same object.
+	//The pointers in ObjectBlock are aliases for the members of the derived type.
+	struct NiObjectBlock : ObjectBlock
+	{
+		NiObjectBlock(const Niflib::Ref<Niflib::NiObject>& ref) :
+			nativeRef{ ref }
+		{
+			if (!nativeRef)
+				nativeRef = new typename type_map<T>::type();
+			this->native = nativeRef;
+			this->object = &objectImpl;
+		}
+		NiObjectBlock(const NiObjectBlock&) = delete;
+		NiObjectBlock& operator=(const NiObjectBlock&) = delete;
+
+		Niflib::Ref<Niflib::NiObject> nativeRef;
+		T objectImpl;
+	};
+
+	return std::make_shared<NiObjectBlock>(native);
+}
+
+template<> [[nodiscard]] std::shared_ptr<NiObject> File::create() { return make_ni<NiObject>(new Niflib::NiObject); }
+template<> [[nodiscard]] std::shared_ptr<NiObjectNET> File::create() { return make_ni<NiObjectNET>(new Niflib::NiObjectNET); }
+template<> [[nodiscard]] std::shared_ptr<NiAVObject> File::create() { return make_ni<NiAVObject>(new Niflib::NiAVObject); }
+template<> [[nodiscard]] std::shared_ptr<NiNode> File::create() { return make_ni<NiNode>(new Niflib::NiNode); }
+template<> [[nodiscard]] std::shared_ptr<BSFadeNode> File::create() { return make_ni<BSFadeNode>(new Niflib::BSFadeNode); }
+
+template<> [[nodiscard]] std::shared_ptr<NiProperty> File::create() { return make_ni<NiProperty>(new Niflib::NiProperty); }
+template<> [[nodiscard]] std::shared_ptr<NiAlphaProperty> File::create() { return make_ni<NiAlphaProperty>(new Niflib::NiAlphaProperty); }
+template<> [[nodiscard]] std::shared_ptr<BSShaderProperty> File::create() { return make_ni<BSShaderProperty>(new Niflib::BSShaderProperty); }
+template<> [[nodiscard]] std::shared_ptr<BSEffectShaderProperty> File::create() { return make_ni<BSEffectShaderProperty>(new Niflib::BSEffectShaderProperty); }
+
+template<> [[nodiscard]] std::shared_ptr<NiBoolData> File::create() { return make_ni<NiBoolData>(new Niflib::NiBoolData); }
+template<> [[nodiscard]] std::shared_ptr<NiFloatData> File::create() { return make_ni<NiFloatData>(new Niflib::NiFloatData); }
+
+template<> [[nodiscard]] std::shared_ptr<NiInterpolator> File::create() { return make_ni<NiInterpolator>(new Niflib::NiInterpolator); }
+template<> [[nodiscard]] std::shared_ptr<NiBoolInterpolator> File::create() { return make_ni<NiBoolInterpolator>(new Niflib::NiBoolInterpolator); }
+template<> [[nodiscard]] std::shared_ptr<NiFloatInterpolator> File::create() { return make_ni<NiFloatInterpolator>(new Niflib::NiFloatInterpolator); }
+template<> [[nodiscard]] std::shared_ptr<NiBlendInterpolator> File::create() { return make_ni<NiBlendInterpolator>(new Niflib::NiBlendInterpolator); }
+template<> [[nodiscard]] std::shared_ptr<NiBlendBoolInterpolator> File::create() { return make_ni<NiBlendBoolInterpolator>(new Niflib::NiBlendBoolInterpolator); }
+template<> [[nodiscard]] std::shared_ptr<NiBlendFloatInterpolator> File::create() { return make_ni<NiBlendFloatInterpolator>(new Niflib::NiBlendFloatInterpolator); }
+
+template<> [[nodiscard]] std::shared_ptr<NiTimeController> File::create() { return make_ni<NiTimeController>(new Niflib::NiTimeController); }
+template<> [[nodiscard]] std::shared_ptr<NiSingleInterpController> File::create() { return make_ni<NiSingleInterpController>(new Niflib::NiSingleInterpController); }
+
+template<> [[nodiscard]] std::shared_ptr<NiParticleSystem> File::create() { return make_ni<NiParticleSystem>(new Niflib::NiParticleSystem); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysData> File::create() { return make_ni<NiPSysData>(new Niflib::NiPSysData); }
+
+template<> [[nodiscard]] std::shared_ptr<NiPSysModifier> File::create() { return make_ni<NiPSysModifier>(new Niflib::NiPSysModifier); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysAgeDeathModifier> File::create() { return make_ni<NiPSysAgeDeathModifier>(new Niflib::NiPSysAgeDeathModifier); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysBoundUpdateModifier> File::create() { return make_ni<NiPSysBoundUpdateModifier>(new Niflib::NiPSysBoundUpdateModifier); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysGravityModifier> File::create() { return make_ni<NiPSysGravityModifier>(new Niflib::NiPSysGravityModifier); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysPositionModifier> File::create() { return make_ni<NiPSysPositionModifier>(new Niflib::NiPSysPositionModifier); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysRotationModifier> File::create() { return make_ni<NiPSysRotationModifier>(new Niflib::NiPSysRotationModifier); }
+template<> [[nodiscard]] std::shared_ptr<BSPSysScaleModifier> File::create() { return make_ni<BSPSysScaleModifier>(new Niflib::BSPSysScaleModifier); }
+template<> [[nodiscard]] std::shared_ptr<BSPSysSimpleColorModifier> File::create() { return make_ni<BSPSysSimpleColorModifier>(new Niflib::BSPSysSimpleColorModifier); }
+
+template<> [[nodiscard]] std::shared_ptr<NiPSysEmitter> File::create() { return make_ni<NiPSysEmitter>(new Niflib::NiPSysEmitter); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysVolumeEmitter> File::create() { return make_ni<NiPSysVolumeEmitter>(new Niflib::NiPSysVolumeEmitter); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysBoxEmitter> File::create() { return make_ni<NiPSysBoxEmitter>(new Niflib::NiPSysBoxEmitter); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysCylinderEmitter> File::create() { return make_ni<NiPSysCylinderEmitter>(new Niflib::NiPSysCylinderEmitter); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysSphereEmitter> File::create() { return make_ni<NiPSysSphereEmitter>(new Niflib::NiPSysSphereEmitter); }
+
+template<> [[nodiscard]] std::shared_ptr<NiPSysModifierCtlr> File::create() { return make_ni<NiPSysModifierCtlr>(new Niflib::NiPSysModifierCtlr); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysUpdateCtlr> File::create() { return make_ni<NiPSysUpdateCtlr>(new Niflib::NiPSysUpdateCtlr); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysEmitterCtlr> File::create() { return make_ni<NiPSysEmitterCtlr>(new Niflib::NiPSysEmitterCtlr); }
+
+template<> [[nodiscard]] std::shared_ptr<NiExtraData> File::create() { return make_ni<NiExtraData>(new Niflib::NiExtraData); }
+template<> [[nodiscard]] std::shared_ptr<NiStringExtraData> File::create() { return make_ni<NiStringExtraData>(new Niflib::NiStringExtraData); }
 
 std::map<size_t, nif::File::CreateFcn> nif::File::s_typeRegistry;
 void nif::File::registerTypes()

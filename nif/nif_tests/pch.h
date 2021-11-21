@@ -6,5 +6,6 @@
 #include <set>
 
 #include "nif.h"
+#include "nif_internal.h"
 
 #endif //PCH_H

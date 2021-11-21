@@ -19,11 +19,7 @@
 #pragma once
 #include <memory>
 #include <string>
-#include "traits.h"
-#include "type_conversion.h"
 #include "Rotation.h"
-
-#include "nif_backend.h"
 
 namespace nif
 {
@@ -75,7 +71,9 @@ namespace nif
 	constexpr ShaderFlags SF2_DOUBLE_SIDED = 0x00000010;
 	constexpr ShaderFlags SF2_VERTEX_COLOUR = 0x00000020;
 
-	//Forward declare all object types
+	template<typename T>
+	using ni_ptr = std::shared_ptr<T>;
+
 	struct NiObject;
 	struct NiObjectNET;
 	struct NiAVObject;
@@ -124,194 +122,58 @@ namespace nif
 
 	struct NiExtraData;
 	struct NiStringExtraData;
-	//etc.
-
-	template<typename T>
-	struct NifConverter
-	{
-		template<typename From>
-		static T convert(From&& f) { return util::DefaultConverter<T>::convert(f); }
-	};
-
-	template<>
-	struct NifConverter<std::array<float, 3>>
-	{
-		static std::array<float, 3> convert(const Niflib::Color3& f);
-		static std::array<float, 3> convert(const Niflib::Vector3& f);
-	};
-
-	template<>
-	struct NifConverter<std::array<float, 4>>
-	{
-		static std::array<float, 4> convert(const Niflib::Color4& f);
-		static std::array<float, 4> convert(const Niflib::Vector4& f);
-	};
-
-	template<>
-	struct NifConverter<math::Rotation>
-	{
-		static math::Rotation convert(const Niflib::Matrix33& f);
-		static math::Rotation convert(const Niflib::Quaternion& f);
-	};
-
-	template<>
-	struct NifConverter<math::Quaternion>
-	{
-		static math::Quaternion convert(const Niflib::Quaternion& f);
-	};
-
-	template<>
-	struct NifConverter<Niflib::Color3>
-	{
-		static Niflib::Color3 convert(const std::array<float, 3>& f);
-	};
-
-	template<>
-	struct NifConverter<Niflib::Color4>
-	{
-		static Niflib::Color4 convert(const std::array<float, 4>& f);
-	};
-
-	template<>
-	struct NifConverter<Niflib::Vector3>
-	{
-		static Niflib::Vector3 convert(const std::array<float, 3>& f);
-	};
-
-	template<>
-	struct NifConverter<Niflib::Vector4>
-	{
-		static Niflib::Vector4 convert(const std::array<float, 4>& f);
-	};
-
-	template<>
-	struct NifConverter<Niflib::Matrix33>
-	{
-		static Niflib::Matrix33 convert(const math::Rotation& f);
-	};
-
-	template<>
-	struct NifConverter<Niflib::Quaternion>
-	{
-		static Niflib::Quaternion convert(const math::Quaternion& f);
-	};
-
-	template<>
-	struct NifConverter<Niflib::BillboardMode>
-	{
-		constexpr static Niflib::BillboardMode convert(BillboardMode val)
-		{
-			return static_cast<Niflib::BillboardMode>(val);
-		}
-	};
-
-	template<>
-	struct NifConverter<Niflib::ForceType>
-	{
-		constexpr static Niflib::ForceType convert(ForceType val)
-		{
-			return static_cast<Niflib::ForceType>(val);
-		}
-	};
-
-	template<>
-	struct NifConverter<Niflib::KeyType>
-	{
-		constexpr static Niflib::KeyType convert(KeyType val)
-		{
-			return static_cast<Niflib::KeyType>(val);
-		}
-	};
-
-	template<>
-	struct NifConverter<std::array<int, 2>>
-	{
-		static std::array<int, 2> convert(const std::vector<nif::SubtextureOffset>& offsets);
-	};
-
-	template<>
-	struct NifConverter<std::vector<nif::SubtextureOffset>>
-	{
-		static std::vector<nif::SubtextureOffset> convert(const std::array<int, 2>& count);
-	};
-
-	template<>
-	struct NifConverter<Niflib::SkyrimShaderPropertyFlags1>
-	{
-		constexpr static Niflib::SkyrimShaderPropertyFlags1 convert(ShaderFlags flags)
-		{
-			return static_cast<Niflib::SkyrimShaderPropertyFlags1>(flags);
-		}
-	};
-	template<>
-	struct NifConverter<Niflib::SkyrimShaderPropertyFlags2>
-	{
-		constexpr static Niflib::SkyrimShaderPropertyFlags2 convert(ShaderFlags flags)
-		{
-			return static_cast<Niflib::SkyrimShaderPropertyFlags2>(flags);
-		}
-	};
-	template<>
-	struct NifConverter<std::uint_fast32_t>
-	{
-		constexpr static std::uint_fast32_t convert(Niflib::SkyrimShaderPropertyFlags1 val)
-		{
-			return static_cast<std::uint_fast32_t>(val);
-		}
-		constexpr static std::uint_fast32_t convert(Niflib::SkyrimShaderPropertyFlags2 val)
-		{
-			return static_cast<std::uint_fast32_t>(val);
-		}
-		constexpr static std::uint_fast32_t convert(Niflib::KeyType val)
-		{
-			return static_cast<std::uint_fast32_t>(val);
-		}
-		constexpr static std::uint_fast32_t convert(Niflib::ForceType val)
-		{
-			return static_cast<std::uint_fast32_t>(val);
-		}
-	};
 }
 
-template<typename T>
-using nif_type_conversion = util::type_conversion<T, nif::NifConverter<T>>;
-
-template<>
-struct util::array_traits<Niflib::Vector3>
+namespace Niflib
 {
-	using array_type = Niflib::Vector3;
-	using element_type = float;
-	constexpr static size_t size = 3;
-	static element_type& at(array_type& t, size_t i);
-};
+	template<typename T> class Ref;
 
-template<>
-struct util::array_traits<Niflib::Vector4>
-{
-	using array_type = Niflib::Vector4;
-	using element_type = float;
-	constexpr static size_t size = 4;
-	static element_type& at(array_type& t, size_t i);
-};
+	class NiObject;
+	class NiObjectNET;
+	class NiAVObject;
+	class NiNode;
+	class BSFadeNode;
 
-template<>
-struct util::array_traits<Niflib::Color4>
-{
-	using array_type = Niflib::Color4;
-	using element_type = float;
-	constexpr static size_t size = 4;
-	static element_type& at(array_type& t, size_t i);
-};
+	class NiProperty;
+	class NiAlphaProperty;
+	class BSShaderProperty;
+	class BSEffectShaderProperty;
 
-template<>
-struct util::colour_traits<Niflib::Color4>
-{
-	using colour_type = Niflib::Color4;
-	using component_type = float;
-	constexpr static size_t channels = 4;
-	constexpr static bool is_array = true;//are the channels laid out contiguously in memory?
-	constexpr static component_type& R(colour_type& col) { return col.r; }
-	constexpr static component_type& G(colour_type& col) { return col.g; }
-	constexpr static component_type& B(colour_type& col) { return col.b; }
-	constexpr static component_type& A(colour_type& col) { return col.a; }
-};
+	class NiBoolData;
+	class NiFloatData;
+
+	class NiInterpolator;
+	class NiBoolInterpolator;
+	class NiFloatInterpolator;
+	class NiBlendInterpolator;
+	class NiBlendBoolInterpolator;
+	class NiBlendFloatInterpolator;
+
+	class NiTimeController;
+	class NiSingleInterpController;
+
+	class NiParticleSystem;
+	class NiPSysData;
+
+	class NiPSysModifier;
+	class NiPSysAgeDeathModifier;
+	class NiPSysBoundUpdateModifier;
+	class NiPSysGravityModifier;
+	class NiPSysPositionModifier;
+	class NiPSysRotationModifier;
+	class BSPSysScaleModifier;
+	class BSPSysSimpleColorModifier;
+
+	class NiPSysEmitter;
+	class NiPSysVolumeEmitter;
+	class NiPSysBoxEmitter;
+	class NiPSysCylinderEmitter;
+	class NiPSysSphereEmitter;
+
+	class NiPSysModifierCtlr;
+	class NiPSysUpdateCtlr;
+	class NiPSysEmitterCtlr;
+
+	class NiExtraData;
+	class NiStringExtraData;
+}

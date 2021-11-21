@@ -23,7 +23,11 @@
     <ClInclude Include="src\FlagSet.h" />
     <ClInclude Include="src\List.h" />
     <ClInclude Include="src\nif.h" />
-    <ClInclude Include="src\ni_objects.h" />
+    <ClInclude Include="src\nif_conversions.h" />
+    <ClInclude Include="src\nif_internal.h" />
+    <ClInclude Include="src\nif_traits.h" />
+    <ClInclude Include="src\nif_data.h" />
+    <ClInclude Include="src\nif_objects.h" />
     <ClInclude Include="src\Traversal.h" />
     <ClInclude Include="src\Vector.h" />
     <ClInclude Include="src\nif_backend.h" />
@@ -65,6 +69,17 @@
     <ProjectReference Include="niflib\niflib.vcxproj">
       <Project>{afdff268-ac3d-4cb4-92a0-8fa5855abe75}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\File.inl" />
+    <None Include="src\NiController_internal.h" />
+    <None Include="src\NiExtraData_internal.h" />
+    <None Include="src\NiNode_internal.h" />
+    <None Include="src\NiObject_internal.h" />
+    <None Include="src\NiParticleSystem_internal.h" />
+    <None Include="src\NiProperties_internal.h" />
+    <None Include="src\NiPSysEmitter_internal.h" />
+    <None Include="src\NiPSysModifier_internal.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

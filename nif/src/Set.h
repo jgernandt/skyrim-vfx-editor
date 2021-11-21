@@ -18,6 +18,7 @@
 
 #pragma once
 #include <cassert>
+#include <map>
 #include <set>
 #include "Observable.h"
 

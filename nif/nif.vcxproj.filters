@@ -54,7 +54,7 @@
     <ClInclude Include="src\Vector.h">
       <Filter>Header Files\Data fields</Filter>
     </ClInclude>
-    <ClInclude Include="src\ni_objects.h">
+    <ClInclude Include="src\nif_objects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\nif.h">
@@ -93,6 +93,18 @@
     <ClInclude Include="src\Traversal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\nif_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nif_conversions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nif_traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nif_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\nif_conversions.cpp">
@@ -128,5 +140,34 @@
     <ClCompile Include="src\NiPSysModifier.cpp">
       <Filter>Source Files\Objects</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\File.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="src\NiObject_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiController_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiExtraData_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiNode_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiParticleSystem_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiProperties_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiPSysModifier_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiPSysEmitter_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
   </ItemGroup>
 </Project>

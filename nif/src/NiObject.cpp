@@ -17,8 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "NiObject.h"
-#include "File.h"
+#include "nif_internal.h"
 
 const size_t nif::NiObject::TYPE = std::hash<std::string>{}("NiObject");
 const size_t nif::NiObjectNET::TYPE = std::hash<std::string>{}("NiObjectNET");

@@ -17,8 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "NiController.h"
-#include "File.h"
+#include "nif_internal.h"
 
 const size_t nif::NiBoolData::TYPE = std::hash<std::string>{}("NiBoolData");
 const size_t nif::NiFloatData::TYPE = std::hash<std::string>{}("NiFloatData");
@@ -179,4 +178,36 @@ void nif::WriteSyncer<nif::NiSingleInterpController>::operator()(const NiSingleI
 {
 	assert(native);
 	native->SetInterpolator(file.getNative<NiInterpolator>(object.interpolator.assigned()));
+}
+
+
+void nif::ReadSyncer<nif::NiPSysModifierCtlr>::operator()(NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file)
+{
+	assert(native);
+	object.modifierName.set(native->GetModifierName());
+}
+
+void nif::WriteSyncer<nif::NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr& object, Niflib::NiPSysModifierCtlr* native, const File& file)
+{
+	assert(native);
+	native->SetModifierName(object.modifierName.get());
+}
+
+
+void nif::Forwarder<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, NiTraverser& traverser)
+{
+	if (auto&& obj = object.visIplr.assigned())
+		obj->receive(traverser);
+}
+
+void nif::ReadSyncer<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file)
+{
+	assert(native);
+	object.visIplr.assign(file.get<NiInterpolator>(native->GetVisibilityInterpolator()));
+}
+
+void nif::WriteSyncer<nif::NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& object, Niflib::NiPSysEmitterCtlr* native, const File& file)
+{
+	assert(native);
+	native->SetVisibilityInterpolator(file.getNative<NiInterpolator>(object.visIplr.assigned()));
 }
