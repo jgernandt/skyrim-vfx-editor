@@ -34,6 +34,11 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiParticleSystem> { using type = NiParticleSystem; };
 	template<> struct type_map<NiParticleSystem> { using type = Niflib::NiParticleSystem; };
+
+	template<> struct Forwarder<NiParticleSystem> : VerticalTraverser<NiParticleSystem, Forwarder>
+	{
+		void operator() (NiParticleSystem& object, NiTraverser& traverser);
+	};
 	template<> struct ReadSyncer<NiParticleSystem> : VerticalTraverser<NiParticleSystem, ReadSyncer>
 	{
 		void operator() (NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file);

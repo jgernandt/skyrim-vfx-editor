@@ -120,6 +120,12 @@ void nif::WriteSyncer<nif::NiPSysSphereEmitter>::operator()(const NiPSysSphereEm
 }
 
 
+void nif::Forwarder<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, NiTraverser& traverser)
+{
+	if (auto&& obj = object.visIplr.assigned())
+		obj->receive(traverser);
+}
+
 void nif::ReadSyncer<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file)
 {
 	assert(native);

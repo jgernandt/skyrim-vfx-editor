@@ -111,12 +111,10 @@ namespace nif
 	template<> struct type_map<Niflib::NiObjectNET> { using type = NiObjectNET; };
 	template<> struct type_map<NiObjectNET> { using type = Niflib::NiObjectNET; };
 
-	template<>
-	struct Forwarder<NiObjectNET> : VerticalTraverser<NiObjectNET, Forwarder>
+	template<> struct Forwarder<NiObjectNET> : VerticalTraverser<NiObjectNET, Forwarder>
 	{
 		void operator() (NiObjectNET& object, NiTraverser& traverser);
 	};
-
 	template<> struct ReadSyncer<NiObjectNET> : VerticalTraverser<NiObjectNET, ReadSyncer>
 	{
 		void operator() (NiObjectNET& object, const Niflib::NiObjectNET* native, File& file);

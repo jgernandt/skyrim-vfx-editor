@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "EquivalenceTester.h"
+#include "ForwardOrderTester.h"
 #include "ObjectRandomiser.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -19,6 +20,15 @@ void common::EquivalenceTester<NiParticleSystem>::operator()(const NiParticleSys
 	Assert::IsTrue(object.shaderProperty.assigned() == file.get<BSShaderProperty>(native->GetShaderProperty()).get());
 	Assert::IsTrue(object.alphaProperty.assigned() == file.get<NiAlphaProperty>(native->GetAlphaProperty()).get());
 	Assert::IsTrue(object.worldSpace.get() == native->GetWorldSpace());
+}
+
+void common::ForwardOrderTester<NiParticleSystem>::operator()(
+	const NiParticleSystem& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
+{
+	fwdAssignable(object.data, it, end);
+	fwdSequence(object.modifiers, it, end);
+	fwdAssignable(object.shaderProperty, it, end);
+	fwdAssignable(object.alphaProperty, it, end);
 }
 
 void common::Randomiser<NiParticleSystem>::operator()(NiParticleSystem& object, File& file, std::mt19937& rng)

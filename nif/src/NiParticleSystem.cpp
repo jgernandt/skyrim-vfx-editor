@@ -25,6 +25,23 @@ const size_t nif::NiParticleSystem::TYPE = std::hash<std::string>{}("NiParticleS
 const size_t nif::NiPSysData::TYPE = std::hash<std::string>{}("NiPSysData");
 
 
+void nif::Forwarder<nif::NiParticleSystem>::operator()(NiParticleSystem& object, NiTraverser& traverser)
+{
+	if (auto&& obj = object.data.assigned())
+		obj->receive(traverser);
+
+	for (auto&& obj : object.modifiers) {
+		assert(obj);
+		obj->receive(traverser);
+	}
+
+	if (auto&& obj = object.shaderProperty.assigned())
+		obj->receive(traverser);
+
+	if (auto&& obj = object.alphaProperty.assigned())
+		obj->receive(traverser);
+}
+
 void nif::ReadSyncer<nif::NiParticleSystem>::operator()(NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file)
 {
 	assert(native);

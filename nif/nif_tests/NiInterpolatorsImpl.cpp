@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "EquivalenceTester.h"
+#include "ForwardOrderTester.h"
 #include "ObjectRandomiser.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -114,6 +115,12 @@ void common::EquivalenceTester<NiBoolInterpolator>::operator()(const NiBoolInter
 	Assert::IsTrue(object.data.assigned() == file.get<NiBoolData>(native->GetData()).get());
 }
 
+void common::ForwardOrderTester<NiBoolInterpolator>::operator()(
+	const NiBoolInterpolator& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
+{
+	fwdAssignable(object.data, it, end);
+}
+
 void common::Randomiser<NiBoolInterpolator>::operator()(NiBoolInterpolator& object, File& file, std::mt19937& rng)
 {
 	object.value.set(randi<int>(rng, { 0, 1 }));
@@ -131,6 +138,12 @@ void common::EquivalenceTester<NiFloatInterpolator>::operator()(const NiFloatInt
 {
 	Assert::IsTrue(object.value.get() == native->GetFloatValue());
 	Assert::IsTrue(object.data.assigned() == file.get<NiFloatData>(native->GetData()).get());
+}
+
+void common::ForwardOrderTester<NiFloatInterpolator>::operator()(
+	const NiFloatInterpolator& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
+{
+	fwdAssignable(object.data, it, end);
 }
 
 void common::Randomiser<NiFloatInterpolator>::operator()(NiFloatInterpolator& object, File& file, std::mt19937& rng)
@@ -177,6 +190,12 @@ void common::Randomiser<NiTimeController>::operator()(const NiTimeController&, N
 void common::EquivalenceTester<NiSingleInterpController>::operator()(const NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file)
 {
 	Assert::IsTrue(object.interpolator.assigned() == file.get<NiInterpolator>(native->GetInterpolator()).get());
+}
+
+void common::ForwardOrderTester<NiSingleInterpController>::operator()(
+	const NiSingleInterpController& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
+{
+	fwdAssignable(object.interpolator, it, end);
 }
 
 void common::Randomiser<NiSingleInterpController>::operator()(NiSingleInterpController& object, File& file, std::mt19937& rng)

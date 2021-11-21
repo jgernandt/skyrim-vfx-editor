@@ -105,6 +105,8 @@ namespace nif
 	template<typename T, template<typename> typename TraverserType>
 	struct VerticalTraverser : TraverserType<typename T::base_type>
 	{
+		//return bool to indicate continue/break traversal?
+
 		//Traverse from the base type and down to T
 		template<typename... Args>
 		void down(T& object, Args&&... args)

@@ -23,6 +23,15 @@
 const size_t nif::NiNode::TYPE = std::hash<std::string>{}("NiNode");
 const size_t nif::BSFadeNode::TYPE = std::hash<std::string>{}("BSFadeNode");
 
+
+void nif::Forwarder<nif::NiNode>::operator()(NiNode& object, NiTraverser& traverser)
+{
+	for (auto&& child : object.children) {
+		assert(child);
+		child->receive(traverser);
+	}
+}
+
 void nif::ReadSyncer<nif::NiNode>::operator()(NiNode& object, const Niflib::NiNode* native, File& file)
 {
 	assert(native);

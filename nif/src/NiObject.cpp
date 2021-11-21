@@ -45,14 +45,14 @@ nif::NiObject::~NiObject()
 
 void nif::Forwarder<nif::NiObjectNET>::operator()(NiObjectNET& object, NiTraverser& traverser)
 {
-	for (auto&& controller : object.controllers) {
-		assert(controller);
-		controller->receive(traverser);
-	}
-
 	for (auto&& data : object.extraData) {
 		assert(data);
 		data->receive(traverser);
+	}
+
+	for (auto&& controller : object.controllers) {
+		assert(controller);
+		controller->receive(traverser);
 	}
 }
 

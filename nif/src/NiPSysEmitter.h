@@ -149,6 +149,10 @@ namespace nif
 	template<> struct type_map<Niflib::NiPSysEmitterCtlr> { using type = NiPSysEmitterCtlr; };
 	template<> struct type_map<NiPSysEmitterCtlr> { using type = Niflib::NiPSysEmitterCtlr; };
 
+	template<> struct Forwarder<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, Forwarder>
+	{
+		void operator() (NiPSysEmitterCtlr& object, NiTraverser& traverser);
+	};
 	template<> struct ReadSyncer<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, ReadSyncer>
 	{
 		void operator() (NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file);

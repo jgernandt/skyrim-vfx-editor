@@ -94,6 +94,11 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiBoolInterpolator> { using type = NiBoolInterpolator; };
 	template<> struct type_map<NiBoolInterpolator> { using type = Niflib::NiBoolInterpolator; };
+
+	template<> struct Forwarder<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, Forwarder>
+	{
+		void operator() (NiBoolInterpolator& object, NiTraverser& traverser);
+	};
 	template<> struct ReadSyncer<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, ReadSyncer>
 	{
 		void operator() (NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file);
@@ -114,6 +119,11 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiFloatInterpolator> { using type = NiFloatInterpolator; };
 	template<> struct type_map<NiFloatInterpolator> { using type = Niflib::NiFloatInterpolator; };
+
+	template<> struct Forwarder<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, Forwarder>
+	{
+		void operator() (NiFloatInterpolator& object, NiTraverser& traverser);
+	};
 	template<> struct ReadSyncer<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, ReadSyncer>
 	{
 		void operator() (NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file);
@@ -189,6 +199,11 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiSingleInterpController> { using type = NiSingleInterpController; };
 	template<> struct type_map<NiSingleInterpController> { using type = Niflib::NiSingleInterpController; };
+
+	template<> struct Forwarder<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, Forwarder>
+	{
+		void operator() (NiSingleInterpController& object, NiTraverser& traverser);
+	};
 	template<> struct ReadSyncer<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, ReadSyncer>
 	{
 		void operator() (NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file);

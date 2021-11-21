@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "EquivalenceTester.h"
+#include"ForwardOrderTester.h"
 #include "ObjectRandomiser.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -12,6 +13,11 @@ void common::EquivalenceTester<nif::NiNode>::operator()(const NiNode& object, co
 	Assert::IsTrue(children.size() == object.children.size());
 	for (auto&& child : children)
 		Assert::IsTrue(object.children.has(file.get<NiAVObject>(child).get()));
+}
+
+void common::ForwardOrderTester<NiNode>::operator()(const NiNode& object, std::vector<nif::NiObject*>::iterator& it, const std::vector<nif::NiObject*>::iterator end)
+{
+	fwdSet(object.children, it, end);
 }
 
 void common::Randomiser<NiNode>::operator()(NiNode& object, File& file, std::mt19937& rng)

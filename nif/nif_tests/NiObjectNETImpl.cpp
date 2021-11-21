@@ -35,20 +35,8 @@ void common::EquivalenceTester<NiObjectNET>::operator()(const NiObjectNET& objec
 
 void common::ForwardOrderTester<NiObjectNET>::operator()(const NiObjectNET& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
 {
-	//Controllers should be traversed from first to last
-	for (auto&& controller : object.controllers) {
-		Assert::IsTrue(it != end);
-		Assert::IsTrue(*it == controller);
-		++it;
-	}
-
-	//Order of traversal of a set is not specified
-	for (size_t i = 0; i < object.extraData.size(); i++) {
-		Assert::IsTrue(it != end);
-		//We don't need to check the type, we're just looking at the address
-		Assert::IsTrue(object.extraData.has(static_cast<NiExtraData*>(*it)));
-		++it;
-	}
+	fwdSet(object.extraData, it, end);
+	fwdSequence(object.controllers, it, end);
 }
 
 void common::Randomiser<NiObjectNET>::operator()(NiObjectNET& object, File& file, std::mt19937& rng)

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "EquivalenceTester.h"
+#include "ForwardOrderTester.h"
 #include "ObjectRandomiser.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -132,6 +133,12 @@ void common::Randomiser<NiPSysSphereEmitter>::operator()(const NiPSysSphereEmitt
 void common::EquivalenceTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file)
 {
 	Assert::IsTrue(object.visIplr.assigned() == file.get<NiInterpolator>(native->GetVisibilityInterpolator()));
+}
+
+void common::ForwardOrderTester<NiPSysEmitterCtlr>::operator()(
+	const NiPSysEmitterCtlr& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
+{
+	fwdAssignable(object.visIplr, it, end);
 }
 
 void common::Randomiser<NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, File& file, std::mt19937& rng)

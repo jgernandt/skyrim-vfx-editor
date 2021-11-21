@@ -30,6 +30,11 @@ namespace nif
 	};
 	template<> struct type_map<Niflib::NiNode> { using type = NiNode; };
 	template<> struct type_map<NiNode> { using type = Niflib::NiNode; };
+
+	template<> struct Forwarder<NiNode> : VerticalTraverser<NiNode, Forwarder>
+	{
+		void operator() (NiNode& object, NiTraverser& traverser);
+	};
 	template<> struct ReadSyncer<NiNode> : VerticalTraverser<NiNode, ReadSyncer>
 	{
 		void operator() (NiNode& object, const Niflib::NiNode* native, File& file);

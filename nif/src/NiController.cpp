@@ -100,6 +100,12 @@ void nif::WriteSyncer<nif::NiFloatData>::operator()(const NiFloatData& object, N
 }
 
 
+void nif::Forwarder<nif::NiBoolInterpolator>::operator()(NiBoolInterpolator& object, NiTraverser& traverser)
+{
+	if (auto&& data = object.data.assigned())
+		data->receive(traverser);
+}
+
 void nif::ReadSyncer<nif::NiBoolInterpolator>::operator()(NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file)
 {
 	assert(native);
@@ -114,6 +120,12 @@ void nif::WriteSyncer<nif::NiBoolInterpolator>::operator()(const NiBoolInterpola
 	native->SetData(file.getNative<NiBoolData>(object.data.assigned()));
 }
 
+
+void nif::Forwarder<nif::NiFloatInterpolator>::operator()(NiFloatInterpolator& object, NiTraverser& traverser)
+{
+	if (auto&& data = object.data.assigned())
+		data->receive(traverser);
+}
 
 void nif::ReadSyncer<nif::NiFloatInterpolator>::operator()(NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file)
 {
@@ -150,6 +162,12 @@ void nif::WriteSyncer<nif::NiTimeController>::operator()(const NiTimeController&
 	native->SetStopTime(object.stopTime.get());
 }
 
+
+void nif::Forwarder<nif::NiSingleInterpController>::operator()(NiSingleInterpController& object, NiTraverser& traverser)
+{
+	if (auto&& iplr = object.interpolator.assigned())
+		iplr->receive(traverser);
+}
 
 void nif::ReadSyncer<nif::NiSingleInterpController>::operator()(NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file)
 {
