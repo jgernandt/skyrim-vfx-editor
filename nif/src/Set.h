@@ -76,7 +76,7 @@ namespace nif
 			friend bool operator==(const const_iterator& lhs, const const_iterator& rhs) noexcept { return lhs.m_it == rhs.m_it; }
 			friend bool operator!=(const const_iterator& lhs, const const_iterator& rhs) noexcept { return !(lhs == rhs); }
 
-		private:
+		protected:
 			typename ctnr_type::iterator m_it;
 		};
 		class iterator : public const_iterator
