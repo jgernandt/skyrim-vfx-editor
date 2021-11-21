@@ -180,6 +180,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EquivalenceTester.h" />
+    <ClInclude Include="ForwardOrderTester.h" />
     <ClInclude Include="ObjectRandomiser.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
