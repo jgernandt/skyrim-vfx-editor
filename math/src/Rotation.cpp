@@ -73,18 +73,18 @@ math::Rotation::euler_type math::Rotation::getEuler(EulerOrder order) const
 	//but this arbitrary tolerance works for now.
 	if (std::abs(a) >= 1.0f || 1.0f - std::abs(a) < 1.0e-5f) {
 		//singularity
-		result[axis[0]] = 2.0f * k * std::atan2(Q.v[axis[0]], Q.s);//someone wanted +/- here, but that seems wrong
-		result[axis[1]] = std::copysign(90.0f, a);
-		result[axis[2]] = 0.0f;
+		result[axis[0]] = degf(2.0f * k * std::atan2(Q.v[axis[0]], Q.s));//someone wanted +/- here, but that seems wrong
+		result[axis[1]] = degf(std::copysign(90.0f, a));
+		result[axis[2]] = degf(0.0f);
 	}
 	else {
-		result[axis[0]] = k * std::atan2(
+		result[axis[0]] = degf(k * std::atan2(
 			2.0f * (Q.s * Q.v[axis[0]] - sign * Q.v[axis[1]] * Q.v[axis[2]]),
-			1.0f - 2.0f * (Q.v[axis[0]] * Q.v[axis[0]] + Q.v[axis[1]] * Q.v[axis[1]]));
-		result[axis[1]] = k * std::asin(a);
-		result[axis[2]] = k * std::atan2(
+			1.0f - 2.0f * (Q.v[axis[0]] * Q.v[axis[0]] + Q.v[axis[1]] * Q.v[axis[1]])));
+		result[axis[1]] = degf(k * std::asin(a));
+		result[axis[2]] = degf(k * std::atan2(
 			2.0f * (Q.s * Q.v[axis[2]] - sign * Q.v[axis[0]] * Q.v[axis[1]]),
-			1.0f - 2.0f * (Q.v[axis[1]] * Q.v[axis[1]] + Q.v[axis[2]] * Q.v[axis[2]]));
+			1.0f - 2.0f * (Q.v[axis[1]] * Q.v[axis[1]] + Q.v[axis[2]] * Q.v[axis[2]])));
 	}
 
 	return result;
@@ -95,12 +95,12 @@ math::Rotation& math::Rotation::setEuler(const euler_type& v)
 	auto axis = axisOrder(v.order);
 	int sign = handedness(v.order);
 
-	float c1 = std::cos(0.5f * rad(v[axis[0]]).value);
-	float c2 = std::cos(0.5f * rad(v[axis[1]]).value);
-	float c3 = std::cos(0.5f * rad(v[axis[2]]).value);
-	float s1 = std::sin(0.5f * rad(v[axis[0]]).value);
-	float s2 = std::sin(0.5f * rad(v[axis[1]]).value);
-	float s3 = std::sin(0.5f * rad(v[axis[2]]).value);
+	float c1 = std::cos(0.5f * radf(v[axis[0]]).value);
+	float c2 = std::cos(0.5f * radf(v[axis[1]]).value);
+	float c3 = std::cos(0.5f * radf(v[axis[2]]).value);
+	float s1 = std::sin(0.5f * radf(v[axis[0]]).value);
+	float s2 = std::sin(0.5f * radf(v[axis[1]]).value);
+	float s3 = std::sin(0.5f * radf(v[axis[2]]).value);
 	/*float k = pi<float> / 360.0f;
 	float c1 = std::cos(k * v[axis[0]]);
 	float c2 = std::cos(k * v[axis[1]]);

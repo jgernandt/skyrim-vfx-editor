@@ -26,59 +26,77 @@ namespace math
 	template<typename T>
 	struct degrees
 	{
-		degrees(T t = T()) : value{ t } {}
-		explicit degrees(radians<T> r);
 		T value;
+
+		explicit degrees(T t = T()) : value{ t } {}
+		degrees(const degrees<T>&) = default;
+		template<typename Y> explicit degrees(degrees<Y> other) : value{ static_cast<T>(other) } {}
+		degrees(radians<T> r);
+
+		~degrees() = default;
+
+		degrees<T>& operator=(const degrees<T>&) = default;
+
 		degrees& operator+=(const degrees& r) { value += r.value; return *this; }
 		degrees& operator-=(const degrees& r) { value -= r.value; return *this; }
 		degrees& operator*=(T r) { value *= r; return *this; }
 		degrees& operator/=(T r) { value /= r; return *this; }
-		explicit operator radians<T>() const;
 
-		friend bool operator==(const degrees<T>& l, const degrees<T>& r) { return l.value == r.value; }
-		friend bool operator!=(const degrees<T>& l, const degrees<T>& r) { return !(l == r); }
+		friend constexpr bool operator==(const degrees<T>& lhs, const degrees<T>& rhs) { return lhs.value == rhs.value; }
+		friend constexpr bool operator!=(const degrees<T>& lhs, const degrees<T>& rhs) { return !(lhs == rhs); }
+		friend constexpr bool operator<(const degrees<T>& lhs, const degrees<T>& rhs) { return lhs.value < rhs.value; }
+		friend constexpr bool operator>(const degrees<T>& lhs, const degrees<T>& rhs) { return rhs < lhs; }
+		friend constexpr bool operator<=(const degrees<T>& lhs, const degrees<T>& rhs) { return !(rhs < lhs); }
+		friend constexpr bool operator>=(const degrees<T>& lhs, const degrees<T>& rhs) { return !(lhs < rhs); }
 	};
 
 	template<typename T>
 	struct radians
 	{
-		radians(T t = T()) : value{ t } {}
-		explicit radians(degrees<T> d);
 		T value;
+
+		explicit radians(T t = T()) : value{ t } {}
+		radians(const radians<T>&) = default;
+		template<typename Y> explicit radians(radians<Y> other) : value{ static_cast<T>(other) } {}
+		radians(degrees<T> d);
+
+		~radians() = default;
+
+		radians<T>& operator=(const radians<T>&) = default;
+
 		radians& operator+=(const radians& r) { value += r.value; return *this; }
 		radians& operator-=(const radians& r) { value -= r.value; return *this; }
 		radians& operator*=(T r) { value *= r; return *this; }
 		radians& operator/=(T r) { value /= r; return *this; }
-		explicit operator degrees<T>() const;
 
-		friend bool operator==(const radians<T>& l, const radians<T>& r) { return l.value == r.value; }
-		friend bool operator!=(const radians<T>& l, const radians<T>& r) { return !(l == r); }
+		friend constexpr bool operator==(const radians<T>& lhs, const radians<T>& rhs) { return lhs.value == rhs.value; }
+		friend constexpr bool operator!=(const radians<T>& lhs, const radians<T>& rhs) { return !(lhs == rhs); }
+		friend constexpr bool operator<(const radians<T>& lhs, const radians<T>& rhs) { return lhs.value < rhs.value; }
+		friend constexpr bool operator>(const radians<T>& lhs, const radians<T>& rhs) { return rhs < lhs; }
+		friend constexpr bool operator<=(const radians<T>& lhs, const radians<T>& rhs) { return !(rhs < lhs); }
+		friend constexpr bool operator>=(const radians<T>& lhs, const radians<T>& rhs) { return !(lhs < rhs); }
 	};
 
-	template<typename T> inline degrees<T> operator+(degrees<T> l, degrees<T> r) { return l += r; }
-	template<typename T> inline degrees<T> operator-(degrees<T> l, degrees<T> r) { return l -= r; }
-	template<typename T> inline degrees<T> operator*(degrees<T> l, T r) { return l *= r; }
-	template<typename T> inline degrees<T> operator*(T l, degrees<T> r) { return r * l; }
-	template<typename T> inline degrees<T> operator/(degrees<T> l, T r) { return l /= r; }
+	template<typename T> constexpr degrees<T> operator+(degrees<T> l, degrees<T> r) { return l += r; }
+	template<typename T> constexpr degrees<T> operator-(degrees<T> l, degrees<T> r) { return l -= r; }
+	template<typename T> constexpr degrees<T> operator*(degrees<T> l, T r) { return l *= r; }
+	template<typename T> constexpr degrees<T> operator*(T l, degrees<T> r) { return r * l; }
+	template<typename T> constexpr degrees<T> operator/(degrees<T> l, T r) { return l /= r; }
 
-	template<typename T> inline radians<T> operator+(radians<T> l, radians<T> r) { return l += r; }
-	template<typename T> inline radians<T> operator-(radians<T> l, radians<T> r) { return l -= r; }
-	template<typename T> inline radians<T> operator*(radians<T> l, T r) { return l *= r; }
-	template<typename T> inline radians<T> operator*(T l, radians<T> r) { return r * l; }
-	template<typename T> inline radians<T> operator/(radians<T> l, T r) { return l /= r; }
-
-	template<typename T>
-	inline degrees<T>::degrees(radians<T> r) : value{ r.value * T(180.0) / pi<T> }	{}
+	template<typename T> constexpr radians<T> operator+(radians<T> l, radians<T> r) { return l += r; }
+	template<typename T> constexpr radians<T> operator-(radians<T> l, radians<T> r) { return l -= r; }
+	template<typename T> constexpr radians<T> operator*(radians<T> l, T r) { return l *= r; }
+	template<typename T> constexpr radians<T> operator*(T l, radians<T> r) { return r * l; }
+	template<typename T> constexpr radians<T> operator/(radians<T> l, T r) { return l /= r; }
 
 	template<typename T>
-	inline degrees<T>::operator radians<T>() const { return radians<T>{ value * pi<T> / T(180.0) }; }
+	inline degrees<T>::degrees(radians<T> r) : value{ r.value * T(180.0) / pi<T> } {}
 
 	template<typename T>
-	inline math::radians<T>::radians(degrees<T> d) : value{ d.value * pi<T> / T(180.0) } {}
+	inline radians<T>::radians(degrees<T> d) : value{ d.value * pi<T> / T(180.0) } {}
 
-	template<typename T>
-	inline math::radians<T>::operator degrees<T>() const { return degrees<T>{ value * T(180.0) / pi<T> }; }
-
-	using deg = degrees<float>;
-	using rad = radians<float>;
+	using deg = degrees<double>;
+	using rad = radians<double>;
+	using degf = degrees<float>;
+	using radf = radians<float>;
 }

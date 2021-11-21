@@ -4,6 +4,7 @@
 #include "ObjectRandomiser.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+using namespace math;
 using namespace nif;
 
 void common::EquivalenceTester<nif::NiAVObject>::operator()(const NiAVObject& object, const Niflib::NiAVObject* native, File& file)
@@ -28,12 +29,12 @@ void common::Randomiser<NiAVObject>::operator()(NiAVObject& object, File& file, 
 	randomiseProperty(object.transform.translation, rng);
 
 	std::uniform_real_distribution<float> F;
-	math::Rotation rot;
+	Rotation rot;
 	rot.setEuler({
-		F(rng) * 180.0f - 90.0f,
-		F(rng) * 180.0f - 90.0f,
-		F(rng) * 180.0f - 90.0f,
-		math::EulerOrder::XYZ });
+		degf(F(rng) * 180.0f - 90.0f),
+		degf(F(rng) * 180.0f - 90.0f),
+		degf(F(rng) * 180.0f - 90.0f),
+		EulerOrder::XYZ });
 
 	object.transform.rotation.set(rot);
 
@@ -47,12 +48,12 @@ void common::Randomiser<NiAVObject>::operator()(const NiAVObject&, Niflib::NiAVO
 	std::uniform_real_distribution<float> F;
 	native->SetLocalTranslation({ F(rng), F(rng), F(rng) });
 
-	math::Rotation rot;
+	Rotation rot;
 	rot.setEuler({
-		F(rng) * 180.0f - 90.0f,
-		F(rng) * 180.0f - 90.0f,
-		F(rng) * 180.0f - 90.0f,
-		math::EulerOrder::XYZ });
+		degf(F(rng) * 180.0f - 90.0f),
+		degf(F(rng) * 180.0f - 90.0f),
+		degf(F(rng) * 180.0f - 90.0f),
+		EulerOrder::XYZ });
 
 	native->SetLocalRotation(nif_type_conversion<Niflib::Matrix33>::from(rot));
 

@@ -51,11 +51,11 @@ namespace math
 	public:
 		struct EulerAngles
 		{
-			std::array<deg, 3> value{ 0.0f, 0.0f, 0.0f };
+			std::array<degf, 3> value{ degf(0.0f), degf(0.0f), degf(0.0f) };
 			EulerOrder order{ EulerOrder::XYZ };
 
-			constexpr deg& operator[](size_t i) { return value[i]; }
-			constexpr const deg& operator[](size_t i) const { return value[i]; }
+			constexpr degf& operator[](size_t i) { return value[i]; }
+			constexpr const degf& operator[](size_t i) const { return value[i]; }
 
 			constexpr static size_t size() { return 3; }
 
