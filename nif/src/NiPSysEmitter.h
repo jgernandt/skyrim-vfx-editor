@@ -34,11 +34,11 @@ namespace nif
 		Property<float> speed;
 		Property<float> speedVar;
 
-		Property<float> azimuth;
-		Property<float> azimuthVar;
+		Property<math::degf> azimuth;
+		Property<math::degf> azimuthVar;
 
-		Property<float> elevation;
-		Property<float> elevationVar;
+		Property<math::degf> elevation;
+		Property<math::degf> elevationVar;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }

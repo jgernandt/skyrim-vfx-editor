@@ -4,8 +4,8 @@
 #include "ObjectRandomiser.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+using namespace math;
 using namespace nif;
-
 
 void common::EquivalenceTester<NiPSysEmitter>::operator()(const NiPSysEmitter& object, const Niflib::NiPSysEmitter* native, File& file)
 {
@@ -16,10 +16,10 @@ void common::EquivalenceTester<NiPSysEmitter>::operator()(const NiPSysEmitter& o
 	Assert::IsTrue(object.sizeVar.get() == native->GetInitialRadiusVar());
 	Assert::IsTrue(object.speed.get() == native->GetSpeed());
 	Assert::IsTrue(object.speedVar.get() == native->GetSpeedVar());
-	Assert::IsTrue(object.azimuth.get() == native->GetPlanarAngle());
-	Assert::IsTrue(object.azimuthVar.get() == native->GetPlanarAngleVar());
-	Assert::AreEqual(object.elevation.get(), 0.5f * math::pi<float> - native->GetDeclination(), 1.0e-5f);
-	Assert::IsTrue(object.elevationVar.get() == native->GetDeclinationVar());
+	Assert::AreEqual(radf(object.azimuth.get()).value, native->GetPlanarAngle(), native->GetPlanarAngle() * 1.0e-5f);
+	Assert::AreEqual(radf(object.azimuthVar.get()).value, native->GetPlanarAngleVar(), native->GetPlanarAngleVar() * 1.0e-5f);
+	Assert::AreEqual(radf(degf(90.0f) - object.elevation.get()).value, native->GetDeclination(), native->GetDeclination() * 1.0e-5f);
+	Assert::AreEqual(radf(object.elevationVar.get()).value, native->GetDeclinationVar(), native->GetDeclinationVar() * 1.0e-5f);
 }
 
 void common::Randomiser<NiPSysEmitter>::operator()(NiPSysEmitter& object, File& file, std::mt19937& rng)
@@ -31,10 +31,10 @@ void common::Randomiser<NiPSysEmitter>::operator()(NiPSysEmitter& object, File& 
 	randomiseProperty(object.sizeVar, rng);
 	randomiseProperty(object.speed, rng);
 	randomiseProperty(object.speedVar, rng);
-	randomiseProperty(object.azimuth, rng);
-	randomiseProperty(object.azimuthVar, rng);
-	randomiseProperty(object.elevation, rng);
-	randomiseProperty(object.elevationVar, rng);
+	object.azimuth.set(degf(randf<float>(rng, { 0.0f, 360.0f })));
+	object.azimuthVar.set(degf(randf<float>(rng, { 0.0f, 180.0f })));
+	object.elevation.set(degf(randf<float>(rng, { 0.0f, 180.0f })));
+	object.elevationVar.set(degf(randf<float>(rng, { 0.0f, 90.0f })));
 }
 
 void common::Randomiser<NiPSysEmitter>::operator()(const NiPSysEmitter&, Niflib::NiPSysEmitter* native, File& file, std::mt19937& rng)

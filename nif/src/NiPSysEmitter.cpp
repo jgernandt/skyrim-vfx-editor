@@ -27,6 +27,7 @@ const size_t nif::NiPSysCylinderEmitter::TYPE = std::hash<std::string>{}("NiPSys
 const size_t nif::NiPSysSphereEmitter::TYPE = std::hash<std::string>{}("NiPSysSphereEmitter");
 const size_t nif::NiPSysEmitterCtlr::TYPE = std::hash<std::string>{}("NiPSysEmitterCtlr");
 
+using namespace math;
 
 void nif::ReadSyncer<nif::NiPSysEmitter>::operator()(NiPSysEmitter& object, const Niflib::NiPSysEmitter* native, File& file)
 {
@@ -38,14 +39,15 @@ void nif::ReadSyncer<nif::NiPSysEmitter>::operator()(NiPSysEmitter& object, cons
 	object.sizeVar.set(native->GetInitialRadiusVar());
 	object.speed.set(native->GetSpeed());
 	object.speedVar.set(native->GetSpeedVar());
-	object.azimuth.set(native->GetPlanarAngle());
-	object.azimuthVar.set(native->GetPlanarAngleVar());
-	object.elevation.set(0.5f * math::pi<float> - native->GetDeclination());
-	object.elevationVar.set(native->GetDeclinationVar());
+	object.azimuth.set(radf(native->GetPlanarAngle()));
+	object.azimuthVar.set(radf(native->GetPlanarAngleVar()));
+	object.elevation.set(radf(0.5f * pi<float> - native->GetDeclination()));
+	object.elevationVar.set(radf(native->GetDeclinationVar()));
 }
 
 void nif::WriteSyncer<nif::NiPSysEmitter>::operator()(const NiPSysEmitter& object, Niflib::NiPSysEmitter* native, const File& file)
 {
+	assert(native);
 	native->SetInitialColor(nif_type_conversion<Niflib::Color4>::from(object.colour.get()));
 	native->SetLifeSpan(object.lifeSpan.get());
 	native->SetLifeSpanVar(object.lifeSpanVar.get());
@@ -53,10 +55,10 @@ void nif::WriteSyncer<nif::NiPSysEmitter>::operator()(const NiPSysEmitter& objec
 	native->SetInitialRadiusVar(object.sizeVar.get());
 	native->SetSpeed(object.speed.get());
 	native->SetSpeedVar(object.speedVar.get());
-	native->SetPlanarAngle(object.azimuth.get());
-	native->SetPlanarAngleVar(object.azimuthVar.get());
-	native->SetDeclination(0.5f * math::pi<float> - object.elevation.get());
-	native->SetDeclinationVar(object.elevationVar.get());
+	native->SetPlanarAngle(static_cast<radf>(object.azimuth.get()).value);
+	native->SetPlanarAngleVar(static_cast<radf>(object.azimuthVar.get()).value);
+	native->SetDeclination(static_cast<radf>(degf(90.0f) - object.elevation.get()).value);
+	native->SetDeclinationVar(static_cast<radf>(object.elevationVar.get()).value);
 }
 
 

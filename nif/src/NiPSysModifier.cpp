@@ -31,6 +31,7 @@ const size_t nif::BSPSysSimpleColorModifier::TYPE = std::hash<std::string>{}("BS
 const size_t nif::NiPSysModifierCtlr::TYPE = std::hash<std::string>{}("NiPSysModifierCtlr");
 const size_t nif::NiPSysUpdateCtlr::TYPE = std::hash<std::string>{}("NiPSysUpdateCtlr");
 
+using namespace math;
 
 void nif::ReadSyncer<nif::NiPSysModifier>::operator()(NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file)
 {
@@ -81,20 +82,20 @@ void nif::WriteSyncer<nif::NiPSysGravityModifier>::operator()(const NiPSysGravit
 void nif::ReadSyncer<nif::NiPSysRotationModifier>::operator()(NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file)
 {
 	assert(native);
-	object.speed.set(native->GetRotationSpeed());
-	object.speedVar.set(native->GetRotationSpeedVar());
-	object.angle.set(native->GetRotationAngle());
-	object.angleVar.set(native->GetRotationAngleVar());
+	object.speed.set(static_cast<radf>(native->GetRotationSpeed()));
+	object.speedVar.set(static_cast<radf>(native->GetRotationSpeedVar()));
+	object.angle.set(static_cast<radf>(native->GetRotationAngle()));
+	object.angleVar.set(static_cast<radf>(native->GetRotationAngleVar()));
 	object.randomSign.set(native->GetRandomSpeedSign());
 }
 
 void nif::WriteSyncer<nif::NiPSysRotationModifier>::operator()(const NiPSysRotationModifier& object, Niflib::NiPSysRotationModifier* native, const File& file)
 {
 	assert(native);
-	native->SetRotationSpeed(object.speed.get());
-	native->SetRotationSpeedVar(object.speedVar.get());
-	native->SetRotationAngle(object.angle.get());
-	native->SetRotationAngleVar(object.angleVar.get());
+	native->SetRotationSpeed(static_cast<radf>(object.speed.get()).value);
+	native->SetRotationSpeedVar(static_cast<radf>(object.speedVar.get()).value);
+	native->SetRotationAngle(static_cast<radf>(object.angle.get()).value);
+	native->SetRotationAngleVar(static_cast<radf>(object.angleVar.get()).value);
 	native->SetRandomSpeedSign(object.randomSign.get());
 }
 

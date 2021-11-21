@@ -4,6 +4,7 @@
 #include "ObjectRandomiser.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+using namespace math;
 using namespace nif;
 
 void common::EquivalenceTester<NiParticleSystem>::operator()(const NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file)
@@ -150,19 +151,19 @@ void common::Randomiser<NiPSysGravityModifier>::operator()(const NiPSysGravityMo
 
 void common::EquivalenceTester<NiPSysRotationModifier>::operator()(const NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file)
 {
-	Assert::IsTrue(object.speed.get() == native->GetRotationSpeed());
-	Assert::IsTrue(object.speedVar.get() == native->GetRotationSpeedVar());
-	Assert::IsTrue(object.angle.get() == native->GetRotationAngle());
-	Assert::IsTrue(object.angleVar.get() == native->GetRotationAngleVar());
+	Assert::AreEqual(radf(object.speed.get()).value, native->GetRotationSpeed(), native->GetRotationSpeed() * 1.0e-5f);
+	Assert::AreEqual(radf(object.speedVar.get()).value, native->GetRotationSpeedVar(), native->GetRotationSpeedVar() * 1.0e-5f);
+	Assert::AreEqual(radf(object.angle.get()).value, native->GetRotationAngle(), native->GetRotationSpeedVar() * 1.0e-5f);
+	Assert::AreEqual(radf(object.angleVar.get()).value, native->GetRotationAngleVar(), native->GetRotationSpeedVar() * 1.0e-5f);
 	Assert::IsTrue(object.randomSign.get() == native->GetRandomSpeedSign());
 }
 
 void common::Randomiser<NiPSysRotationModifier>::operator()(NiPSysRotationModifier& object, File& file, std::mt19937& rng)
 {
-	randomiseProperty(object.speed, rng);
-	randomiseProperty(object.speedVar, rng);
-	randomiseProperty(object.angle, rng);
-	randomiseProperty(object.angleVar, rng);
+	object.speed.set(degf(randf<float>(rng, { -1000.0f, 1000.0f })));
+	object.speedVar.set(degf(randf<float>(rng, { 0.0f, 1000.0f })));
+	object.angle.set(degf(randf<float>(rng, { -180.0f, 180.0f })));
+	object.angleVar.set(degf(randf<float>(rng, { 0.0f, 180.0f })));
 	randomiseProperty(object.randomSign, rng);
 }
 

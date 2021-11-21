@@ -100,10 +100,10 @@ namespace nif
 
 	struct NiPSysRotationModifier : NiTraversable<NiPSysRotationModifier, NiPSysModifier>
 	{
-		Property<float> speed;
-		Property<float> speedVar;
-		Property<float> angle;
-		Property<float> angleVar;
+		Property<math::degf> speed;
+		Property<math::degf> speedVar;
+		Property<math::degf> angle;
+		Property<math::degf> angleVar;
 		Property<bool> randomSign;
 
 		static const ni_type TYPE;
