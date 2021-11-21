@@ -26,10 +26,14 @@ namespace objects
 			T object{};
 			Niflib::Ref<typename type_map<T>::type> native = new typename type_map<T>::type;
 
-			Randomiser<T>{}.down(object, native, file, g_rng);//this overload randomises native
+			//Read test
+			Randomiser<T>{}.down(object, file, g_rng);//randomise object
+			Randomiser<T>{}.down(object, native, file, g_rng);//randomise native
 			nif::ReadSyncer<T>{}.down(object, native, file);
 			EquivalenceTester<T>{}.down(object, native, file);
-			Randomiser<T>{}.down(object, file, g_rng);//this overload randomises object
+
+			//Write test
+			Randomiser<T>{}.down(object, file, g_rng);
 			nif::WriteSyncer<T>{}.down(object, native, file);
 			EquivalenceTester<T>{}.down(object, native, file);
 		}
