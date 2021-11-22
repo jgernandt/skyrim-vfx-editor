@@ -63,9 +63,9 @@ namespace nif
 			}
 		}
 
-		constexpr T* assigned() const noexcept
+		const std::shared_ptr<T>& assigned() const noexcept
 		{
-			return m_assigned.get();
+			return m_assigned;
 		}
 
 	private:

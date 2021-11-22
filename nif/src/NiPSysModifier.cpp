@@ -46,7 +46,7 @@ void nif::WriteSyncer<nif::NiPSysModifier>::operator()(const NiPSysModifier& obj
 	assert(native);
 	native->SetName(object.name.get());
 	native->SetOrder(object.order.get());
-	native->SetTarget(file.getNative<NiParticleSystem>(object.target.assigned()));
+	native->SetTarget(file.getNative<NiParticleSystem>(object.target.assigned().get()));
 	native->SetActive(object.active.get());
 }
 
@@ -67,7 +67,7 @@ void nif::ReadSyncer<nif::NiPSysGravityModifier>::operator()(NiPSysGravityModifi
 void nif::WriteSyncer<nif::NiPSysGravityModifier>::operator()(const NiPSysGravityModifier& object, Niflib::NiPSysGravityModifier* native, const File& file)
 {
 	assert(native);
-	native->SetGravityObject(file.getNative<NiNode>(object.gravityObject.assigned()));
+	native->SetGravityObject(file.getNative<NiNode>(object.gravityObject.assigned().get()));
 	native->SetGravityAxis(nif_type_conversion<Niflib::Vector3>::from(object.gravityAxis.get()));
 	native->SetDecay(object.decay.get());
 	native->SetStrength(object.strength.get());

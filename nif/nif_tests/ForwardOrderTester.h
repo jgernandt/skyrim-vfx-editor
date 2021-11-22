@@ -12,7 +12,7 @@ namespace common
 	{
 		if (auto&& obj = ass.assigned()) {
 			Assert::IsTrue(it != end);
-			Assert::IsTrue(*it == obj);
+			Assert::IsTrue(*it == obj.get());
 			++it;
 		}
 	}

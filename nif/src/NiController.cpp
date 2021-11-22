@@ -116,7 +116,7 @@ void nif::WriteSyncer<nif::NiBoolInterpolator>::operator()(const NiBoolInterpola
 {
 	assert(native);
 	native->SetBoolValue(object.value.get());
-	native->SetData(file.getNative<NiBoolData>(object.data.assigned()));
+	native->SetData(file.getNative<NiBoolData>(object.data.assigned().get()));
 }
 
 
@@ -137,7 +137,7 @@ void nif::WriteSyncer<nif::NiFloatInterpolator>::operator()(const NiFloatInterpo
 {
 	assert(native);
 	native->SetFloatValue(object.value.get());
-	native->SetData(file.getNative<NiFloatData>(object.data.assigned()));
+	native->SetData(file.getNative<NiFloatData>(object.data.assigned().get()));
 }
 
 
@@ -178,7 +178,7 @@ void nif::ReadSyncer<nif::NiSingleInterpController>::operator()(NiSingleInterpCo
 void nif::WriteSyncer<nif::NiSingleInterpController>::operator()(const NiSingleInterpController& object, Niflib::NiSingleInterpController* native, const File& file)
 {
 	assert(native);
-	native->SetInterpolator(file.getNative<NiInterpolator>(object.interpolator.assigned()));
+	native->SetInterpolator(file.getNative<NiInterpolator>(object.interpolator.assigned().get()));
 }
 
 
@@ -210,5 +210,5 @@ void nif::ReadSyncer<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& obje
 void nif::WriteSyncer<nif::NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& object, Niflib::NiPSysEmitterCtlr* native, const File& file)
 {
 	assert(native);
-	native->SetVisibilityInterpolator(file.getNative<NiInterpolator>(object.visIplr.assigned()));
+	native->SetVisibilityInterpolator(file.getNative<NiInterpolator>(object.visIplr.assigned().get()));
 }

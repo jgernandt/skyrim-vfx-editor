@@ -51,11 +51,11 @@ namespace fields
 
 				auto o1 = std::make_shared<NiObject>();
 				std::weak_ptr<NiObject> weak1 = o1;
-				Assert::IsFalse(ass.assigned());
+				Assert::IsTrue(ass.assigned() == nullptr);
 
 				//Assign
 				ass.assign(o1);
-				Assert::IsTrue(ass.assigned() == o1.get());
+				Assert::IsTrue(ass.assigned() == o1);
 				Assert::IsTrue(lsnr.wasAssigned(o1.get()));
 
 				//Reassigning
@@ -66,13 +66,13 @@ namespace fields
 
 				//Assign replacer
 				ass.assign(o2);
-				Assert::IsFalse(ass.assigned() == o1.get());
-				Assert::IsTrue(ass.assigned() == o2.get());
+				Assert::IsFalse(ass.assigned() == o1);
+				Assert::IsTrue(ass.assigned() == o2);
 				Assert::IsTrue(lsnr.wasAssigned(o2.get()));
 
 				//Assign null
 				ass.assign(nullptr);
-				Assert::IsFalse(ass.assigned() == o2.get());
+				Assert::IsFalse(ass.assigned() == o2);
 				Assert::IsTrue(lsnr.wasAssigned(nullptr));
 
 				//Remove listener
