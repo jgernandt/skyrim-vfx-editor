@@ -94,7 +94,7 @@ namespace nif
 	{
 		Property<translation_t> translation;
 		Property<rotation_t> rotation;
-		Property<scale_t> scale;
+		Property<float> scale;
 	};
 
 	struct NiAVObject : NiTraversable<NiAVObject, NiObjectNET>

@@ -40,7 +40,6 @@ namespace nif
 
 	using translation_t = Floats<3>;
 	using rotation_t = math::Rotation;
-	using scale_t = float;
 
 	using BillboardMode = uint_fast16_t;
 	constexpr BillboardMode ALWAYS_FACE_CAMERA = 0;
