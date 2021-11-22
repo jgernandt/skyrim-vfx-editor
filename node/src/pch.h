@@ -22,8 +22,15 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
+#include <list>
+#include <map>
 #include <memory>
+#include <set>
+#include <stdexcept>
 #include <thread>
+#include <vector>
+
+#include "nif.h"
 
 #define EIGEN_MPL2_ONLY
 #include "Eigen\Dense"

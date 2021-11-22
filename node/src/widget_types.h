@@ -24,17 +24,17 @@
 
 namespace node
 {
-	using Checkbox = gui::Checkbox<bool, 1, IProperty<bool>, nif::NifConverter>;
+	using Checkbox = gui::Checkbox<bool, 1, nif::Property<bool>>;
 
 	template<typename T, size_t N>
-	using DragInput = gui::DragInput<T, N, IProperty<T>, nif::NifConverter, gui::DefaultLayout>;
+	using DragInput = gui::DragInput<T, N, nif::Property<T>, util::DefaultConverter, gui::DefaultLayout>;
 	template<typename T, size_t N>
-	using DragInputH = gui::DragInput<T, N, IProperty<T>, nif::NifConverter, gui::HorizontalLayout>;
+	using DragInputH = gui::DragInput<T, N, nif::Property<T>, util::DefaultConverter, gui::HorizontalLayout>;
 
 	using DragFloat = DragInput<float, 1>;
 	using DragInt = DragInput<int, 1>;
 
-	using ColourInput = gui::ColourInput<nif::ColRGBA, IProperty<nif::ColRGBA>, nif::NifConverter>;
+	using ColourInput = gui::ColourInput<nif::ColRGBA, nif::Property<nif::ColRGBA>>;
 
-	using StringInput = gui::TextInput<IProperty<std::string>>;
+	using StringInput = gui::TextInput<nif::Property<std::string>>;
 }

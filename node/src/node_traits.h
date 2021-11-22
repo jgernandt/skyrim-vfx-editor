@@ -17,16 +17,17 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "data_model.h"
+#include "nif_data.h"
 #include "traits.h"
 
 template<typename T>
-struct util::property_traits<IProperty<T>>
+struct util::property_traits<nif::Property<T>>
 {
-	using property_type = IProperty<T>;
+	using property_type = nif::Property<T>;
 	using value_type = T;
 	using get_type = T;
 
 	static T get(const property_type& p) { return p.get(); }
 	static void set(property_type& p, const T& data) { p.set(data); }
+	static void set(property_type& p, T&& data) { p.set(std::move(data)); }
 };

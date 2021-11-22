@@ -23,13 +23,11 @@
 #include "Connector.h"
 #include "Window.h"
 
-#include "File.h"
+#include "nif.h"
 
-#include "NiController.h"
-
-//We need to rework the ownership of resources.
-//The current design was intended to make safe destruction simple (and it does),
-//but resource ownership is hard to setup and even harder to overview.
+#include "node_concepts.h"
+#include "node_devices.h"
+#include "node_traits.h"
 
 namespace node
 {

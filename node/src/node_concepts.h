@@ -17,46 +17,65 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "data_model.h"
+#include "nif_data.h"
+#include "type_conversion.h"
+
+//This is just a bunch of random stuff that doesn't belong anywhere else?
+
+
+//Should nif provide functions like these? I want something to simplify redirecting 
+//shared_ptr to a member (will be doing that a lot!), but don't really like this. 
+//Would like to test using expression objects to encapsulate this.
+
+//Safe, but limited. You cant chain members, like avobject.transform.translation or data.keys.at(3).value
+template<typename T, typename ObjType>
+std::shared_ptr<T> make_ni_ptr(const std::shared_ptr<ObjType>& obj, T ObjType::* mbrVar)
+{
+	if (obj && mbrVar)
+		return std::shared_ptr<T>(obj, &(obj.get()->*mbrVar));
+	else
+		return std::shared_ptr<T>();
+}
+//More flexible, but we can't check that var is valid. 
+template<typename T, typename ObjType>
+std::shared_ptr<T> make_ni_ptr(const std::shared_ptr<ObjType>& obj, T* var)
+{
+	if (obj && var)
+		return std::shared_ptr<T>(obj, var);
+	else
+		return std::shared_ptr<T>();
+}
 
 namespace node
 {
-	//Alias the ptr type used by the data model
-	template<typename T>
-	using ni_ptr = std::shared_ptr<T>;
-	template<typename T, typename... Args>
-	inline ni_ptr<T> make_ni(Args&&... args)
-	{
-		return std::make_shared<T>(std::forward<Args>(args)...);
-	}
-
 	//A wrapper that allows reserving positions at the beginning and end of a sequence
 	template<typename T>
-	class ReservableSequence final : public OSequence<T>
+	class ReservableSequence final : public nif::Sequence<T>
 	{
 	public:
-		ReservableSequence(IObservable<ISequence<T>>& seq) : m_seq{ seq }
+		ReservableSequence(const std::shared_ptr<nif::Sequence<T>>& seq) : m_seq{ seq }
 		{
-			m_lim[1] = m_seq.size();
+			assert(seq);
+			m_lim[1] = m_seq->size();
 		}
 
 		virtual size_t insert(size_t pos, const T& obj) final override
 		{
-			size_t size = m_seq.size();
+			size_t size = m_seq->size();
 
 			//restrict pos to [lim[0], lim[1]]
 			pos = std::min(std::max(pos, m_lim[0]), m_lim[1]);
-			size_t result = m_seq.insert(pos, obj);
+			size_t result = m_seq->insert(pos, obj);
 
 			//If an actual insertion took place, increase upper limit
-			if (m_seq.size() > size)
+			if (m_seq->size() > size)
 				m_lim[1]++;
 
 			return result;
 		}
 		virtual size_t erase(size_t pos) final override
 		{
-			size_t result = m_seq.erase(pos);
+			size_t result = m_seq->erase(pos);
 
 			//If erase took place at or above lim[1], no change. 
 			//If below lim[1], decrease lim[1].
@@ -68,11 +87,11 @@ namespace node
 
 			return result;
 		}
-		virtual size_t find(const T& obj) const final override { return m_seq.find(obj); }
-		virtual size_t size() const override { return m_seq.size(); }
+		virtual size_t find(const T& obj) const final override { return m_seq->find(obj); }
+		virtual size_t size() const override { return m_seq->size(); }
 
-		virtual void addListener(nif::SequenceListener<T>& l) final override { m_seq.addListener(l); }
-		virtual void removeListener(nif::SequenceListener<T>& l) final override { m_seq.removeListener(l); }
+		virtual void addListener(nif::SequenceListener<T>& l) final override { m_seq->addListener(l); }
+		virtual void removeListener(nif::SequenceListener<T>& l) final override { m_seq->removeListener(l); }
 
 		size_t reserve(size_t pos, const T& obj)
 		{
@@ -93,22 +112,26 @@ namespace node
 		}
 
 	private:
-		OSequence<T>& m_seq;
+		const std::shared_ptr<nif::Sequence<T>> m_seq;
 		size_t m_lim[2]{ 0, 0 };//the min and max pos allowed for inserts
 	};
 
+	//Should this still be abstract?
 	template<typename T>//template only to distinguish types
 	class IController
 	{
 	public:
 		virtual ~IController() = default;
 
-		virtual OProperty<unsigned short>& flags() = 0;
-		virtual OProperty<float>& frequency() = 0;
-		virtual OProperty<float>& phase() = 0;
-		virtual OProperty<float>& startTime() = 0;
-		virtual OProperty<float>& stopTime() = 0;
+		virtual nif::FlagSet<nif::ControllerFlags>& flags() = 0;
+		virtual nif::Property<float>& frequency() = 0;
+		virtual nif::Property<float>& phase() = 0;
+		virtual nif::Property<float>& startTime() = 0;
+		virtual nif::Property<float>& stopTime() = 0;
 	}; 
+
+	/*
+	We don't need this anymore, right?
 
 	template<typename T>
 	class LocalProperty : public ObservableBase<IProperty<T>>
@@ -132,21 +155,24 @@ namespace node
 	private:
 		T m_val;
 	};
+	*/
 
 	//May need a conversion before setting
-	template<typename T, typename TargetType = T, template<typename> typename ConverterType = nif::NifConverter>
+	template<typename T, typename TargetType = T, template<typename> typename ConverterType = util::DefaultConverter>
 	class SetterListener : public nif::PropertyListener<T>
 	{
 	public:
-		SetterListener(IProperty<TargetType>& prop) : m_ifc{ prop } {}
+		SetterListener(const std::shared_ptr<nif::Property<TargetType>>& prop) : 
+			m_target{ prop } {}
 		virtual ~SetterListener() = default;
 
 		virtual void onSet(const T& t) override 
 		{ 
-			m_ifc.set(util::type_conversion<TargetType, ConverterType<TargetType>>::from(t));
+			if (auto ptr = m_target.lock())
+				ptr->set(util::type_conversion<TargetType, ConverterType<TargetType>>::from(t));
 		}
 
 	private:
-		IProperty<TargetType>& m_ifc;
+		std::weak_ptr<nif::Property<TargetType>> m_target;
 	};
 }

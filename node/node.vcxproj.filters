@@ -27,7 +27,7 @@
     <ClInclude Include="src\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\DeviceImpl.h">
+    <ClInclude Include="src\node_devices.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\style.h">
