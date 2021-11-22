@@ -44,10 +44,9 @@ void common::Randomiser<NiParticleSystem>::operator()(const NiParticleSystem&, N
 {
 	native->SetData(new Niflib::NiPSysData);
 
-	auto&& mods = native->GetModifiers();
-	mods.clear();
-	for (auto&& mod : randomObjVector<NiPSysModifier>(rng))
-		mods.push_back(mod);
+	native->ClearModifiers();
+	for (auto&& obj : randomObjVector<NiPSysModifier>(rng))
+		native->AddModifier(obj);
 
 	native->SetShaderProperty(new Niflib::BSShaderProperty);
 	native->SetAlphaProperty(new Niflib::NiAlphaProperty);
