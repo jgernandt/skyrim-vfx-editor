@@ -86,7 +86,7 @@ namespace gui
 		}
 
 	private:
-		PropertyType& m_property;
+		PropertyType m_property;
 		UniqueLabel<1> m_label;
 		T m_tmp{ T() };
 	};
