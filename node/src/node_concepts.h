@@ -48,6 +48,8 @@ std::shared_ptr<T> make_ni_ptr(const std::shared_ptr<ObjType>& obj, T* var)
 
 namespace node
 {
+	using namespace nif;
+
 	//A wrapper that allows reserving positions at the beginning and end of a sequence
 	template<typename T>
 	class ReservableSequence final : public nif::Sequence<T>
@@ -157,22 +159,46 @@ namespace node
 	};
 	*/
 
-	//May need a conversion before setting
-	template<typename T, typename TargetType = T, template<typename> typename ConverterType = util::DefaultConverter>
-	class SetterListener : public nif::PropertyListener<T>
+	//A listener that updates one data field to match another (to be specialised)
+	template<typename T>
+	class FieldSyncer : public IListener<T> {};
+
+	template<typename T>
+	class FieldSyncer<FlagSet<T>> : public FlagSetListener<T>
 	{
 	public:
-		SetterListener(const std::shared_ptr<nif::Property<TargetType>>& prop) : 
-			m_target{ prop } {}
-		virtual ~SetterListener() = default;
+		FieldSyncer(const ni_ptr<FlagSet<T>>& target) : m_target{ target } {}
+		virtual ~FieldSyncer() = default;
 
-		virtual void onSet(const T& t) override 
-		{ 
+		virtual void onRaise(T flag) override
+		{
 			if (auto ptr = m_target.lock())
-				ptr->set(util::type_conversion<TargetType, ConverterType<TargetType>>::from(t));
+				ptr->raise(flag);
+		}
+		virtual void onClear(T flag) override
+		{
+			if (auto ptr = m_target.lock())
+				ptr->clear(flag);
 		}
 
 	private:
-		std::weak_ptr<nif::Property<TargetType>> m_target;
+		std::weak_ptr<FlagSet<T>> m_target;
+	};
+
+	template<typename T>
+	class FieldSyncer<Property<T>> : public PropertyListener<T>
+	{
+	public:
+		FieldSyncer(const ni_ptr<Property<T>>& target) : m_target{ target } {}
+		virtual ~FieldSyncer() = default;
+
+		virtual void onSet(const T& t) override
+		{
+			if (auto ptr = m_target.lock())
+				ptr->set(t);
+		}
+
+	private:
+		std::weak_ptr<Property<T>> m_target;
 	};
 }
