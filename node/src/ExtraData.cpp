@@ -21,54 +21,40 @@
 #include "style.h"
 #include "widget_types.h"
 
-node::ExtraData::TargetField::TargetField(const std::string& name, ExtraData& node) :
-	Field(name), m_rvr(node.object())
+node::ExtraData::TargetField::TargetField(const std::string& name, NodeBase& node, const ni_ptr<NiExtraData>& obj) :
+	Field(name), m_rvr(obj)
 {
 	connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::MultiConnector>(m_sdr, m_rvr));
 }
 
-node::ExtraData::ExtraData(ni_ptr<nif::NiExtraData>&& obj) : m_obj{ std::move(obj) }
+node::ExtraData::ExtraData(const ni_ptr<NiExtraData>& obj)
 {
-	assert(m_obj);
-
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_XData);
 	setColour(COL_TITLE_ACTIVE, TitleCol_XDataActive);
 
-	m_targetField = newField<TargetField>(TARGET, *this);
-}
-
-nif::NiExtraData& node::ExtraData::object()
-{
-	return *m_obj;
+	m_targetField = newField<TargetField>(TARGET, *this, obj);
 }
 
 
-node::StringDataShared::StringDataShared(ni_ptr<nif::NiStringExtraData>&& obj) :
-	ExtraData(std::move(obj))
-{
-}
-
-nif::NiStringExtraData& node::StringDataShared::object()
-{
-	assert(m_obj);
-	return *static_cast<nif::NiStringExtraData*>(m_obj.get());
-}
+node::StringDataShared::StringDataShared(const ni_ptr<NiStringExtraData>& obj) :
+	ExtraData(obj)
+{}
 
 
 node::StringData::StringData(nif::File& file) : StringData(file.create<nif::NiStringExtraData>()) {}
 
 node::StringData::StringData(ni_ptr<nif::NiStringExtraData>&& obj) :
-	StringDataShared(std::move(obj))
+	StringDataShared(obj)
 {
 	setTitle("String data");
 	setSize({ WIDTH, HEIGHT });
 
 	newChild<gui::Text>(NAME);
-	newChild<StringInput>(object().name());
+	newChild<StringInput>(make_ni_ptr(std::static_pointer_cast<NiExtraData>(obj), &NiExtraData::name));
 
 	newChild<gui::Text>(VALUE);
-	newChild<StringInput>(object().value());
+	newChild<StringInput>(make_ni_ptr(obj, &NiStringExtraData::value));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(TARGET)->connector->setTranslation({ 0.0f, 38.0f });
@@ -82,15 +68,16 @@ node::StringData::~StringData()
 node::WeaponTypeData::WeaponTypeData(nif::File& file) : WeaponTypeData(file.create<nif::NiStringExtraData>()) {}
 
 node::WeaponTypeData::WeaponTypeData(ni_ptr<nif::NiStringExtraData>&& obj) :
-	StringDataShared(std::move(obj))
+	StringDataShared(obj)
 {
 	setTitle("Weapon type data");
 	setSize({ WIDTH, HEIGHT });
 
-	object().name().set("Prn");
+	assert(obj);
+	obj->name.set("Prn");
 
-	using widget_type = gui::Selector<std::string, IProperty<std::string>>;
-	newChild<widget_type>(object().value(), TYPE,
+	using widget_type = gui::Selector<std::string, ni_ptr<Property<std::string>>>;
+	newChild<widget_type>(make_ni_ptr(obj, &NiStringExtraData::value), TYPE,
 		widget_type::ItemList{
 			{ "WeaponAxe", "Axe" },
 			{ "WeaponDagger", "Dagger" },
@@ -110,12 +97,13 @@ node::WeaponTypeData::~WeaponTypeData()
 }
 
 node::DummyExtraData::DummyExtraData(ni_ptr<nif::NiExtraData>&& obj) :
-	ExtraData(std::move(obj))
+	ExtraData(obj)
 {
+	assert(obj);
 	setTitle("Extra data");
 	setSize({ WIDTH, HEIGHT });
 	newChild<gui::Separator>();
-	newChild<gui::Label>(object().name().get());
+	newChild<gui::Label>(obj->name.get());
 
 	//until we have some other way to determine connector position for loading placement
 	getField(TARGET)->connector->setTranslation({ 0.0f, 38.0f });
