@@ -17,23 +17,20 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "node_concepts.h"
-#include "node_traits.h"
-#include "DeviceImpl.h"
 #include "NodeBase.h"
-
-#include "NiNode.h"
 
 namespace node
 {
+	using namespace nif;
+
 	class ObjectNET : public NodeBase
 	{
 	protected:
-		ObjectNET(ni_ptr<nif::NiObjectNET>&& obj);
+		ObjectNET(ni_ptr<NiObjectNET>&& obj);
 
 	public:
 		virtual ~ObjectNET() = default;
-		virtual nif::NiObjectNET& object() override;
+		virtual NiObjectNET& object() override;
 
 	public:
 		constexpr static const char* OBJECT = "References";
@@ -68,11 +65,11 @@ namespace node
 
 		private:
 			Receiver<void> m_rvr;
-			Sender<ISet<nif::NiExtraData>> m_sdr;
+			Sender<Set<NiExtraData>> m_sdr;
 		};
 
 	protected:
-		const ni_ptr<nif::NiObjectNET> m_obj;
+		const ni_ptr<NiObjectNET> m_obj;
 
 		std::unique_ptr<Field> m_name;
 		std::unique_ptr<Field> m_extraData;
@@ -82,24 +79,58 @@ namespace node
 	class AVObject : public ObjectNET
 	{
 	protected:
-		AVObject(ni_ptr<nif::NiAVObject>&& obj);
+		AVObject(ni_ptr<NiAVObject>&& obj);
 
 	public:
 		virtual ~AVObject() = default;
-		virtual nif::NiAVObject& object() override;
+		virtual NiAVObject& object() override;
 
 	public:
 		constexpr static const char* PARENT = "Parent";
 		constexpr static const char* TRANSFORM = "Transform";
 
 	protected:
+		//these dummies are used to make RotationAdapter three distinct property types
+		class DummyClass1 {};
+		class DummyClass2 {};
+
+		//Calculates the values to be displayed by the rotation widget.
+		class RotationAdapter final : 
+			public PropertyListener<rotation_t>, public DummyClass1, public DummyClass2
+		{
+		public:
+			RotationAdapter(ni_ptr<Property<math::Rotation>>&& backend);
+			~RotationAdapter();
+
+			//Recalculate our stored value
+			virtual void onSet(const math::Rotation& rot) override;
+
+			//Calculate and set backend property
+			void setEuler(const math::Rotation::euler_type& euler);
+
+			//Set a different display format. Recalulates stored values and updates
+			//the UI, as appropriate.
+			void setEulerOrder(math::EulerOrder order);
+			void setIntrinsic(bool intrinsic);
+
+			void updateUI(gui::Composite* root);
+
+			const ni_ptr<Property<math::Rotation>> m_backend;
+			gui::Composite* m_guiRoot{ nullptr };
+			math::Rotation::euler_type m_current;
+			bool m_intrinsic{ false };
+		};
+		friend struct util::property_traits<DummyClass1*>;
+		friend struct util::property_traits<DummyClass2*>;
+		friend struct util::property_traits<RotationAdapter*>;
+
 		class ParentField final : public Field
 		{
 		public:
 			ParentField(const std::string& name, AVObject& node);
 
 		private:
-			SetReceiver<nif::NiAVObject> m_rvr;
+			SetReceiver<NiAVObject> m_rvr;
 			Sender<void> m_sdr;
 		};
 
@@ -109,6 +140,7 @@ namespace node
 			TransformField(const std::string& name, AVObject& node);
 		};
 
+		RotationAdapter m_rotAdapter;
 		std::unique_ptr<Field> m_parent;
 		std::unique_ptr<Field> m_transform;
 	};
@@ -116,7 +148,7 @@ namespace node
 	class DummyAVObject final : public AVObject
 	{
 	public:
-		DummyAVObject(ni_ptr<nif::NiAVObject>&& obj);
+		DummyAVObject(ni_ptr<NiAVObject>&& obj);
 		~DummyAVObject();
 
 		constexpr static float WIDTH = 150.0f;
