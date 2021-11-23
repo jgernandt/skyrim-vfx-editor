@@ -29,7 +29,7 @@ namespace nif
 	{
 	public:
 		virtual ~IListener() = default;
-		virtual void onSet(T) {}
+		virtual void onRaise(T) {}
 		virtual void onClear(T) {}
 	};
 
@@ -63,7 +63,7 @@ namespace nif
 					m_flags = (T)((E)m_flags | (E)flags);
 					for (FlagSetListener<T>* l : this->m_lsnrs) {
 						assert(l);
-						l->onSet((T)to_set);
+						l->onRaise((T)to_set);
 					}
 				}
 			}
@@ -73,7 +73,7 @@ namespace nif
 					m_flags |= flags;
 					for (FlagSetListener<T>* l : this->m_lsnrs) {
 						assert(l);
-						l->onSet(to_set);
+						l->onRaise(to_set);
 					}
 				}
 			}
@@ -111,14 +111,3 @@ namespace nif
 		T m_flags;
 	};
 }
-
-template<typename T>
-struct util::field_traits<nif::FlagSet<T>>
-{
-	using field_type = nif::FlagSet<T>;
-	using index_type = T;
-	using value_type = bool;
-
-	static bool get(const field_type& t, index_type i) { return t.isSet(i); }
-	static void set(field_type& t, index_type i, bool val) { t.set(i, val); }
-};
