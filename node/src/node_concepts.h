@@ -18,7 +18,7 @@
 
 #pragma once
 #include "nif_data.h"
-#include "type_conversion.h"
+#include "node_conversions.h"
 
 //This is just a bunch of random stuff that doesn't belong anywhere else?
 
@@ -159,46 +159,52 @@ namespace node
 	};
 	*/
 
-	//A listener that updates one data field to match another (to be specialised)
-	template<typename T>
-	class FieldSyncer : public IListener<T> {};
-
-	template<typename T>
-	class FieldSyncer<FlagSet<T>> : public FlagSetListener<T>
+	//A listener that updates one data field to match another.
+	//Converter must have defined a conversion from (S)ource to (T)arget.
+	template<template<typename> typename FieldType, typename S, typename T, 
+		template<typename> typename Converter>
+	class FieldSyncerBase : public IListener<FieldType<S>> 
 	{
 	public:
-		FieldSyncer(const ni_ptr<FlagSet<T>>& target) : m_target{ target } {}
-		virtual ~FieldSyncer() = default;
+		FieldSyncerBase(const ni_ptr<FieldType<T>>& target) : m_target{ target } {}
+		virtual ~FieldSyncerBase() = default;
 
-		virtual void onRaise(T flag) override
-		{
-			if (auto ptr = m_target.lock())
-				ptr->raise(flag);
-		}
-		virtual void onClear(T flag) override
-		{
-			if (auto ptr = m_target.lock())
-				ptr->clear(flag);
-		}
+		void setTarget(const ni_ptr<FieldType<T>>& target) { m_target = target; }
 
-	private:
-		std::weak_ptr<FlagSet<T>> m_target;
+	protected:
+		std::weak_ptr<FieldType<T>> m_target;
 	};
 
-	template<typename T>
-	class FieldSyncer<Property<T>> : public PropertyListener<T>
+	template<typename S, typename T = S, template<typename> typename Converter = NodeConverter>
+	class FlagSetSyncer final : public FieldSyncerBase<FlagSet, S, T, Converter>
 	{
 	public:
-		FieldSyncer(const ni_ptr<Property<T>>& target) : m_target{ target } {}
-		virtual ~FieldSyncer() = default;
+		FlagSetSyncer(const ni_ptr<FlagSet<T>>& target) : 
+			FieldSyncerBase<FlagSet, S, T, Converter>(target) {}
 
-		virtual void onSet(const T& t) override
+		virtual void onRaise(S flag) override
 		{
-			if (auto ptr = m_target.lock())
-				ptr->set(t);
+			if (auto ptr = this->m_target.lock())
+				ptr->raise(util::type_conversion<T, Converter<T>>::from(flag));
 		}
+		virtual void onClear(S flag) override
+		{
+			if (auto ptr = this->m_target.lock())
+				ptr->clear(util::type_conversion<T, Converter<T>>::from(flag));
+		}
+	};
 
-	private:
-		std::weak_ptr<Property<T>> m_target;
+	template<typename S, typename T = S, template<typename> typename Converter = NodeConverter>
+	class PropertySyncer final : public FieldSyncerBase<Property, S, T, Converter>
+	{
+	public:
+		PropertySyncer(const ni_ptr<Property<T>>& target) : 
+			FieldSyncerBase<Property, S, T, Converter>(target) {}
+
+		virtual void onSet(const S& val) override
+		{
+			if (auto ptr = this->m_target.lock())
+				ptr->set(util::type_conversion<T, Converter<T>>::from(val));
+		}
 	};
 }

@@ -123,11 +123,11 @@ private:
 		}
 
 	private:
-		FieldSyncer<FlagSet<ControllerFlags>> m_lFlags;
-		FieldSyncer<Property<float>> m_lFrequency;
-		FieldSyncer<Property<float>> m_lPhase;
-		FieldSyncer<Property<float>> m_lStartTime;
-		FieldSyncer<Property<float>> m_lStopTime;
+		FlagSetSyncer<ControllerFlags> m_lFlags;
+		PropertySyncer<float> m_lFrequency;
+		PropertySyncer<float> m_lPhase;
+		PropertySyncer<float> m_lStartTime;
+		PropertySyncer<float> m_lStopTime;
 	};
 	
 	ni_ptr<NiPSysEmitterCtlr> m_ctlr;
