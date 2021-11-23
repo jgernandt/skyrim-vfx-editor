@@ -19,6 +19,7 @@
 #pragma once
 #include "gui_types.h"
 #include "nif_types.h"
+#include "node_conversions.h"
 #include "node_traits.h"
 #include "widgets.h"
 
@@ -27,14 +28,14 @@ namespace node
 	using Checkbox = gui::Checkbox<bool, 1, nif::ni_ptr<nif::Property<bool>>>;
 
 	template<typename T, size_t N>
-	using DragInput = gui::DragInput<T, N, nif::ni_ptr<nif::Property<T>>, util::DefaultConverter, gui::DefaultLayout>;
+	using DragInput = gui::DragInput<T, N, nif::ni_ptr<nif::Property<T>>, NodeConverter, gui::DefaultLayout>;
 	template<typename T, size_t N>
-	using DragInputH = gui::DragInput<T, N, nif::ni_ptr<nif::Property<T>>, util::DefaultConverter, gui::HorizontalLayout>;
+	using DragInputH = gui::DragInput<T, N, nif::ni_ptr<nif::Property<T>>, NodeConverter, gui::HorizontalLayout>;
 
 	using DragFloat = DragInput<float, 1>;
 	using DragInt = DragInput<int, 1>;
 
-	using ColourInput = gui::ColourInput<nif::ColRGBA, nif::ni_ptr<nif::Property<nif::ColRGBA>>>;
+	using ColourInput = gui::ColourInput<nif::ColRGBA, nif::ni_ptr<nif::Property<nif::ColRGBA>>, NodeConverter>;
 
 	using StringInput = gui::TextInput<nif::ni_ptr<nif::Property<std::string>>>;
 }

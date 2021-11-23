@@ -23,6 +23,7 @@
     <ClInclude Include="src\Constructor.h" />
     <ClInclude Include="src\Controllers.h" />
     <ClInclude Include="src\Controls.h" />
+    <ClInclude Include="src\node_conversions.h" />
     <ClInclude Include="src\node_devices.h" />
     <ClInclude Include="src\Emitters.h" />
     <ClInclude Include="src\ExtraData.h" />
