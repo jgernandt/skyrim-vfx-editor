@@ -18,31 +18,29 @@
 
 #pragma once
 #include "AVObject.h"
-#include "NiParticleSystem.h"
-#include "NiPSysModifier.h"
 
 namespace node
 {
+	using namespace nif;
+
 	class ParticleSystem final : public AVObject
 	{
 	public:
-		ParticleSystem(nif::File& file);
-		ParticleSystem(nif::File& file,
-			ni_ptr<nif::NiParticleSystem>&& obj,
-			ni_ptr<nif::NiPSysData>&& data,
-			ni_ptr<nif::NiAlphaProperty>&& alpha,
-			ni_ptr<nif::NiPSysUpdateCtlr>&& ctlr,
-			ni_ptr<nif::NiPSysAgeDeathModifier>&& adm,
-			ni_ptr<nif::NiPSysPositionModifier>&& pm,
-			ni_ptr<nif::NiPSysBoundUpdateModifier>&& bum);
+		ParticleSystem(File& file);
+		ParticleSystem(File& file,
+			ni_ptr<NiParticleSystem>&& obj,
+			ni_ptr<NiPSysData>&& data,
+			ni_ptr<NiAlphaProperty>&& alpha,
+			ni_ptr<NiPSysUpdateCtlr>&& ctlr,
+			ni_ptr<NiPSysAgeDeathModifier>&& adm,
+			ni_ptr<NiPSysPositionModifier>&& pm,
+			ni_ptr<NiPSysBoundUpdateModifier>&& bum);
 
 		~ParticleSystem();
 
-		virtual nif::NiParticleSystem& object() override;
-		nif::NiPSysData& data();
-		nif::NiAlphaProperty& alphaProperty();
+		virtual NiParticleSystem& object() override;
 
-		IProperty<nif::SubtextureCount>& subtexCount() { return m_subtexCount; }
+		Property<SubtextureCount>& subtexCount() { return *m_subtexCount; }
 
 	public:
 		constexpr static const char* WORLD_SPACE = "World space";
@@ -55,19 +53,16 @@ namespace node
 
 	private:
 		class MaxCountField;
-		class WorldSpaceField;
 		class ShaderField;
 		class ModifiersField;
-		class ModifiersManager;
 
-		ni_ptr<nif::NiPSysData> m_data;
-		ni_ptr<nif::NiAlphaProperty> m_alpha;
+		ni_ptr<NiPSysData> m_data;
+		ni_ptr<NiAlphaProperty> m_alpha;
 
-		LocalProperty<nif::SubtextureCount> m_subtexCount;
-		std::unique_ptr<SetterListener<nif::SubtextureCount, std::vector<nif::SubtextureOffset>>> m_subtexLsnr;
+		PropertySyncer<SubtextureCount, std::vector<SubtextureOffset>> m_subtexLsnr;
+		ni_ptr<Property<SubtextureCount>> m_subtexCount;
 
 		std::unique_ptr<Field> m_shaderField;
-		std::unique_ptr<Field> m_worldSpaceField;
 		std::unique_ptr<Field> m_maxCountField;
 		std::unique_ptr<Field> m_modifiersField;
 	};

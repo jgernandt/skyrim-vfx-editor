@@ -17,87 +17,178 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
+#include "Modifier.h"
 #include "ParticleSystem.h"
+
 #include "style.h"
 #include "widget_types.h"
 
-#include "Modifier.h"
-#include "ModifierRequirements.h"
+using namespace nif;
 
-//Needs better memory management!
-//Sequences are passed around by reference, not updated to our new system.
-//Also a lot of stuff being sent around needlessly. There's a better way to do this.
-class node::ParticleSystem::ModifiersManager final : public IModifiable
+constexpr unsigned short DEFAULT_MAX_COUNT = 100;
+
+class node::ParticleSystem::ModifiersField final :
+	public Field, public IModifiable, public SequenceListener<NiPSysModifier>
 {
+	Receiver<void> m_rcvr;
+	Sender<IModifiable> m_sndr;
+
+	const ni_ptr<NiParticleSystem> m_psys;
+	const ni_ptr<NiPSysData> m_data;
+
+	const std::weak_ptr<NiPSysAgeDeathModifier> m_adm;
+	const std::weak_ptr<NiPSysPositionModifier> m_pm;
+	const std::weak_ptr<NiPSysBoundUpdateModifier> m_bum;
+
+	Modifier::NameUpdater m_admName;
+	Modifier::NameUpdater m_pmName;
+	Modifier::NameUpdater m_bumName;
+
+	int m_colReqs{ 0 };
+	int m_rotReqs{ 0 };
+
 public:
-	ModifiersManager(
-		OSequence<nif::NiPSysModifier>& mods,
-		OSequence<nif::NiTimeController>& ctlrs,
-		const ni_ptr<nif::NiPSysData>& data,
-		ni_ptr<nif::NiPSysAgeDeathModifier>&& adm,
-		ni_ptr<nif::NiPSysPositionModifier>&& pm,
-		ni_ptr<nif::NiPSysBoundUpdateModifier>&& bum,
-		ni_ptr<nif::NiPSysUpdateCtlr>&& puc) :
-		m_mods(mods),
-		m_ctlrs(ctlrs),
-		m_reqs(data, std::move(adm), std::move(pm), std::move(bum), std::move(puc), m_mods, m_ctlrs)
+	ModifiersField(
+		const std::string& name, 
+		NodeBase& node,
+		const ni_ptr<NiParticleSystem>& psys,
+		const ni_ptr<NiPSysData>& data,
+		ni_ptr<NiPSysAgeDeathModifier>&& adm,
+		ni_ptr<NiPSysPositionModifier>&& pm,
+		ni_ptr<NiPSysBoundUpdateModifier>&& bum,
+		ni_ptr<NiPSysUpdateCtlr>&& puc)
+		:
+		Field{ name },
+		m_sndr{ *this },
+		m_psys{ psys },
+		m_data{ data },
+		m_adm{ adm },
+		m_pm{ pm },
+		m_bum{ bum },
+		m_admName{ make_ni_ptr<Property<std::string>, NiPSysModifier>(adm, &NiPSysModifier::name) },
+		m_pmName{ make_ni_ptr<Property<std::string>, NiPSysModifier>(pm, &NiPSysModifier::name) },
+		m_bumName{ make_ni_ptr<Property<std::string>, NiPSysModifier>(bum, &NiPSysModifier::name) }
 	{
-		//This should always be active and, the way we made it, must be first listener to the sequence
-		m_reqs.add(Modifier::Requirement::UPDATE);
+		assert(m_psys && m_data);
+		//The sequence should have been cleared
+		assert(m_psys->modifiers.size() == 0);
 
-		//This seems to be required even if there is no movement. You get weird behaviour without it.
-		m_reqs.add(Modifier::Requirement::MOVEMENT);
+		//We are updating the order of modifiers
+		m_psys->modifiers.addListener(*this);
 
-		//After some consideration, let's keep this permanent too. The usefulness of 0 life span particles lasting forever seems limited.
-		m_reqs.add(Modifier::Requirement::LIFETIME);
+		assert(adm);
+		adm->order.addListener(m_admName);
+		adm->order.set(0);
+		m_psys->modifiers.insert(0, std::move(adm));
+
+		assert(pm);
+		pm->order.addListener(m_pmName);
+		pm->order.set(1);
+		m_psys->modifiers.insert(1, std::move(pm));
+
+		assert(bum);
+		bum->order.addListener(m_bumName);
+		bum->order.set(2);
+		m_psys->modifiers.insert(2, std::move(bum));
+
+		//Should we require controllers to also be cleared?
+		//Should we move the update controller to last? Do we care?
+		if (int pos = m_psys->controllers.find(puc.get()); pos >= 0)
+			m_psys->controllers.erase(pos);
+		m_psys->controllers.insert(m_psys->controllers.size(), std::move(puc));
+
+		connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
 	}
 
-	~ModifiersManager()
+	~ModifiersField()
 	{
-		m_reqs.remove(Modifier::Requirement::UPDATE);
-		m_reqs.remove(Modifier::Requirement::MOVEMENT);
-		m_reqs.remove(Modifier::Requirement::LIFETIME);
+		if (auto adm = m_adm.lock())
+			adm->order.removeListener(m_admName);
+		if (auto pm = m_pm.lock())
+			pm->order.removeListener(m_pmName);
+		if (auto bum = m_bum.lock())
+			bum->order.removeListener(m_bumName);
 	}
 
-	virtual ReservableSequence<nif::NiPSysModifier>& modifiers() override { return m_mods; }
-	virtual ReservableSequence<nif::NiTimeController>& controllers() override { return m_ctlrs; }
-	virtual IObservable<ISet<Modifier::Requirement>>& requirements() override { return m_reqs; }
-
-private:
-	struct Requirements : IObservable<ISet<Modifier::Requirement>>
+	virtual void addModifier(const ni_ptr<NiPSysModifier>& mod) override 
 	{
-		Requirements(
-			const ni_ptr<nif::NiPSysData>& data,
-			ni_ptr<nif::NiPSysAgeDeathModifier>&& adm,
-			ni_ptr<nif::NiPSysPositionModifier>&& pm,
-			ni_ptr<nif::NiPSysBoundUpdateModifier>&& bum,
-			ni_ptr<nif::NiPSysUpdateCtlr>&& puc,
-			ReservableSequence<nif::NiPSysModifier>& mods,
-			ReservableSequence<nif::NiTimeController>& ctlrs);
+		//Insert before position mod (end - 2)
+		if (mod)
+			m_psys->modifiers.insert(m_psys->modifiers.size() - 2, mod);
+	}
+	virtual void removeModifier(NiPSysModifier* mod) override 
+	{
+		if (mod) {
+			if (int pos = m_psys->modifiers.find(mod); pos >= 0) {
+				m_psys->modifiers.erase(pos);
+				mod->order.set(-1);
+			}
+		}
+	}
 
-		virtual void add(const Modifier::Requirement&) override;
-		virtual void remove(const Modifier::Requirement&) override;
-		virtual bool has(const Modifier::Requirement&) const override;
-		virtual size_t size() const override { return 0; }//doesn't really make sense on us
+	virtual void addController(const ni_ptr<NiTimeController>& ctlr) override 
+	{
+		//Insert before update ctlr (end - 1)
+		if (ctlr)
+			m_psys->controllers.insert(m_psys->controllers.size() - 1, ctlr);
+	}
+	virtual void removeController(NiTimeController* ctlr) override
+	{
+		if (ctlr) {
+			if (int pos = m_psys->controllers.find(ctlr); pos >= 0)
+				m_psys->controllers.erase(pos);
+		}
+	}
 
-		virtual void addListener(nif::SetListener<Modifier::Requirement>&) override { assert(false); }
-		virtual void removeListener(nif::SetListener<Modifier::Requirement>&) override { assert(false); }
+	virtual void addRequirement(ModRequirement req) override 
+	{
+		switch (req) {
+		case ModRequirement::COLOUR:
+			if (++m_colReqs == 1) {
+				m_data->hasColour.set(true);
+			}
+			break;
+		case ModRequirement::ROTATION:
+			if (++m_rotReqs == 1) {
+				m_data->hasRotationAngles.set(true);
+				m_data->hasRotationSpeeds.set(true);
+			}
+			break;
+		}
+	}
+	virtual void removeRequirement(ModRequirement req) override 
+	{
+		switch (req) {
+		case ModRequirement::COLOUR:
+			if (--m_colReqs == 0) {
+				m_data->hasColour.set(false);
+			}
+			break;
+		case ModRequirement::ROTATION:
+			if (--m_rotReqs == 0) {
+				m_data->hasRotationAngles.set(false);
+				m_data->hasRotationSpeeds.set(false);
+			}
+			break;
+		}
+	}
 
-	private:
-		std::map<Modifier::Requirement, std::unique_ptr<ModifierRequirement>> m_mngrs;
-	};
-
-	ReservableSequence<nif::NiPSysModifier> m_mods;
-	ReservableSequence<nif::NiTimeController> m_ctlrs;
-	Requirements m_reqs;
+	virtual void onInsert(int pos) override 
+	{
+		//update order of all mods >= pos
+		for (; pos < m_psys->modifiers.size(); pos++)
+			m_psys->modifiers.at(pos)->order.set(pos);
+	}
+	virtual void onErase(int pos) override { ModifiersField::onInsert(pos); }
 };
 
 class node::ParticleSystem::MaxCountField final : public Field
 {
 public:
-	MaxCountField(const std::string& name, ParticleSystem& node) : Field(name)
+	MaxCountField(const std::string& name, NodeBase& node, ni_ptr<Property<unsigned short>>&& maxCount) : 
+		Field(name)
 	{
-		auto w = node.newChild<DragInput<unsigned short, 1>>(node.data().maxCount(), name);
+		auto w = node.newChild<DragInput<unsigned short, 1>>(maxCount, name);
 		w->setSensitivity(0.5f);
 		w->setLowerLimit(0);
 		w->setAlwaysClamp();
@@ -106,207 +197,109 @@ public:
 	}
 };
 
-class node::ParticleSystem::WorldSpaceField final : public Field
-{
-public:
-	WorldSpaceField(const std::string& name, ParticleSystem& node) : Field(name)
-	{
-		widget = node.newChild<Checkbox>(node.object().worldSpace(), name);
-	}
-};
-
 class node::ParticleSystem::ShaderField : public Field
 {
 public:
-	ShaderField(const std::string& name, ParticleSystem& node) :
-		Field(name), m_sender(node.object().shaderProperty())
+	ShaderField(const std::string& name, NodeBase& node, ni_ptr<Assignable<BSShaderProperty>>&& shaderProperty) :
+		Field(name), 
+		m_sender(*shaderProperty)//old format, should use ptr
 	{
 		connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sender, m_rcvr));
-
-		//Put alpha blend mode here for now. We might want more options for that later, though.
-		using widget_type = gui::Selector<unsigned short, IProperty<unsigned short>>;
-		auto item = node.newChild<gui::Item>();
-		item->newChild<gui::Text>("Blend mode");
-		item->newChild<widget_type>(node.alphaProperty().flags(), std::string(),
-			widget_type::ItemList{ { 13, "Add" }, { 237, "Mix" } });
 	}
 
 private:
 	Receiver<void> m_rcvr;
-	Sender<IAssignable<nif::BSEffectShaderProperty>> m_sender;
+	Sender<Assignable<BSShaderProperty>> m_sender;
 };
 
-/*If we want to receive subtexture offsets from the shader node
-class node::ParticleSystem::ShaderField : public Field
-{
-public:
-	ShaderField(const std::string& name, ParticleSystem& node) :
-		Field(name), m_ifc(node.object().shaderProperty()), m_receiver(node.data().subtexOffsets()), m_sender(m_ifc)
-	{
-		connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sender, m_receiver));
-	}
-
-private:
-	//Forwards external assignments to our target and manages our default shader
-	struct ShaderAssigner : IAssignable<nif::BSEffectShaderProperty>
-	{
-		ShaderAssigner(IAssignable<nif::BSEffectShaderProperty>& target) : m_shader{ target } {}
-		~ShaderAssigner()
-		{
-			if (m_shader.isAssigned(&m_default))
-				m_shader.assign(nullptr);
-		}
-
-		virtual void assign(nif::BSEffectShaderProperty* obj) override { m_shader.assign(obj ? obj : &m_default); }
-		virtual bool isAssigned(nif::BSEffectShaderProperty* obj) const override { return m_shader.isAssigned(obj); }
-
-		virtual void addListener(AssignableListener<nif::BSEffectShaderProperty>&) override {}
-		virtual void removeListener(AssignableListener<nif::BSEffectShaderProperty>&) override {}
-
-		IAssignable<nif::BSEffectShaderProperty>& m_shader;//will survive us
-		nif::BSEffectShaderProperty m_default;
-
-	};
-
-	//Connects external subtexture properties with our target, and clears them on dc
-	struct SubtexReceiver : Receiver<IProperty<nif::SubtextureCount>>
-	{
-		SubtexReceiver(IProperty<std::vector<nif::SubtextureOffset>>& prop) : m_target{ prop }, m_lsnr{ prop } {}
-
-		virtual void onConnect(IProperty<nif::SubtextureCount>& ifc) override { ifc.addListener(m_lsnr); }
-		virtual void onDisconnect(IProperty<nif::SubtextureCount>& ifc) override
-		{
-			ifc.removeListener(m_lsnr);
-			m_target.set(std::vector<nif::SubtextureOffset>());
-		}
-
-		class Listener : public PropertyListener<nif::SubtextureCount>
-		{
-		public:
-			Listener(IProperty<std::vector<nif::SubtextureOffset>>& prop) : m_ifc{ prop } {}
-			virtual ~Listener() = default;
-
-			virtual void onSet(const nif::SubtextureCount& t) override
-			{
-				//if the count is irregular, we don't want to touch it
-				if (t != nif::SubtextureCount{ 0, 0 })
-					m_ifc.set(nif::nif_type_conversion<std::vector<nif::SubtextureOffset>>::from(t));
-			}
-
-		private:
-			IProperty<std::vector<nif::SubtextureOffset>>& m_ifc;
-		};
-
-		IProperty<std::vector<nif::SubtextureOffset>>& m_target;
-		Listener m_lsnr;
-	};
-
-	ShaderAssigner m_ifc;
-	SubtexReceiver m_receiver;
-	Sender<IAssignable<nif::BSEffectShaderProperty>> m_sender;
-};*/
-
-class node::ParticleSystem::ModifiersField final : public Field
-{
-public:
-	ModifiersField(const std::string& name, ParticleSystem& node, std::unique_ptr<IModifiable>&& ifc) : 
-		Field(name), m_ifc{ std::move(ifc) }, m_sndr(*m_ifc)
-	{
-		connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
-	}
-
-private:
-	std::unique_ptr<IModifiable> m_ifc;
-	Receiver<void> m_rcvr;
-	Sender<IModifiable> m_sndr;
-};
-
-node::ParticleSystem::ParticleSystem(nif::File& file) :
+node::ParticleSystem::ParticleSystem(File& file) :
 	ParticleSystem(file,
-		file.create<nif::NiParticleSystem>(), 
-		ni_ptr<nif::NiPSysData>(),
-		ni_ptr<nif::NiAlphaProperty>(),
-		ni_ptr<nif::NiPSysUpdateCtlr>(),
-		ni_ptr<nif::NiPSysAgeDeathModifier>(),
-		ni_ptr<nif::NiPSysPositionModifier>(),
-		ni_ptr<nif::NiPSysBoundUpdateModifier>())
+		file.create<NiParticleSystem>(), 
+		ni_ptr<NiPSysData>(),
+		ni_ptr<NiAlphaProperty>(),
+		ni_ptr<NiPSysUpdateCtlr>(),
+		ni_ptr<NiPSysAgeDeathModifier>(),
+		ni_ptr<NiPSysPositionModifier>(),
+		ni_ptr<NiPSysBoundUpdateModifier>())
 {
+	assert(m_subtexCount);
+	m_subtexCount->set({ 1, 1 });
 }
 
-node::ParticleSystem::ParticleSystem(nif::File& file,
-	ni_ptr<nif::NiParticleSystem>&& obj,
-	ni_ptr<nif::NiPSysData>&& dat,
-	ni_ptr<nif::NiAlphaProperty>&& alpha,
-	ni_ptr<nif::NiPSysUpdateCtlr>&& ctlr,
-	ni_ptr<nif::NiPSysAgeDeathModifier>&& adm,
-	ni_ptr<nif::NiPSysPositionModifier>&& pm,
-	ni_ptr<nif::NiPSysBoundUpdateModifier>&& bum) :
-	AVObject(std::move(obj)),
-	m_data{ std::move(dat) },
-	m_alpha{ std::move(alpha) }
+node::ParticleSystem::ParticleSystem(File& file,
+	ni_ptr<NiParticleSystem>&& obj,
+	ni_ptr<NiPSysData>&& data,
+	ni_ptr<NiAlphaProperty>&& alpha,
+	ni_ptr<NiPSysUpdateCtlr>&& ctlr,
+	ni_ptr<NiPSysAgeDeathModifier>&& adm,
+	ni_ptr<NiPSysPositionModifier>&& pm,
+	ni_ptr<NiPSysBoundUpdateModifier>&& bum) :
+	AVObject{ std::move(obj) },
+	m_data{ std::move(data) },
+	m_alpha{ std::move(alpha) },
+	m_subtexLsnr{ make_ni_ptr(data, &NiPSysData::subtexOffsets) },
+	m_subtexCount{ std::make_shared<Property<SubtextureCount>>() }
 {
+	//I'm not sure we want to keep storing our obj in the base class
+	ni_ptr<NiParticleSystem> psys = std::static_pointer_cast<NiParticleSystem>(m_obj);
+	assert(psys);
+
 	if (!m_data) {
 		m_data = file.create<nif::NiPSysData>();
-		object().data().assign(m_data.get());
-		m_data->maxCount().set(100);
+		if (!m_data)
+			throw std::runtime_error("Failed to create NiPSysData");
+
+		assert(!psys->data.assigned());
+		psys->data.assign(m_data);
+		m_data->maxCount.set(DEFAULT_MAX_COUNT);
 	}
 
 	if (!m_alpha) {
 		m_alpha = file.create<nif::NiAlphaProperty>();
-		m_alpha->flags().set(13);
-		object().alphaProperty().assign(m_alpha.get());
+		if (!m_alpha)
+			throw std::runtime_error("Failed to create NiAlphaProperty");
+
+		m_alpha->mode.set(AlphaMode::BLEND);
+		m_alpha->srcFcn.set(BlendFunction::SRC_ALPHA);
+		m_alpha->dstFcn.set(BlendFunction::ONE_MINUS_SRC_ALPHA);
+
+		assert(!psys->alphaProperty.assigned());
+		psys->alphaProperty.assign(m_alpha);
 	}
 
 	//Controllers and modifiers are all handled by our ModifiersField.
-	if (ctlr) {
-		//Move to last
-		if (size_t pos = object().controllers().find(*ctlr); pos != -1)
-			object().controllers().erase(pos);
-		object().controllers().insert(-1, *ctlr);
-	}
-	else {
+	if (!ctlr) {
 		ctlr = file.create<nif::NiPSysUpdateCtlr>();
-		ctlr->flags().set(72);
-		ctlr->frequency().set(1.0f);
-		ctlr->phase().set(0.0f);
-		ctlr->startTime().set(0.0f);
-		ctlr->stopTime().set(1.0f);
+		if (!ctlr)
+			throw std::runtime_error("Failed to create NiPSysUpdateCtlr");
+
+		ctlr->flags.raise(72);
+		ctlr->frequency.set(1.0f);
+		ctlr->phase.set(0.0f);
+		ctlr->startTime.set(0.0f);
+		ctlr->stopTime.set(1.0f);
 	}
 
-	if (adm) {
-		//Move to first
-		if (size_t pos = object().modifiers().find(*adm); pos != -1)
-			object().modifiers().erase(pos);
-		object().modifiers().insert(0, *adm);
-	}
-	else {
+	if (!adm) {
 		adm = file.create<nif::NiPSysAgeDeathModifier>();
+		if (!adm)
+			throw std::runtime_error("Failed to create NiPSysAgeDeathModifier");
 	}
 
-	if (pm) {
-		//Move to last
-		if (size_t pos = object().modifiers().find(*pm); pos != -1)
-			object().modifiers().erase(pos);
-		object().modifiers().insert(-1, *pm);
-	}
-	else {
+	if (!pm) {
 		pm = file.create<nif::NiPSysPositionModifier>();
+		if (!pm)
+			throw std::runtime_error("Failed to create NiPSysPositionModifier");
 	}
 
-	if (bum) {
-		//Move to last
-		if (size_t pos = object().modifiers().find(*bum); pos != -1)
-			object().modifiers().erase(pos);
-		object().modifiers().insert(-1, *bum);
-	}
-	else {
+	if (!bum) {
 		bum = file.create<nif::NiPSysBoundUpdateModifier>();
+		if (!bum)
+			throw std::runtime_error("Failed to create NiPSysBoundUpdateModifier");
 	}
 
-	m_subtexCount.set(nif::nif_type_conversion<nif::SubtextureCount>::from(data().subtexOffsets().get()));
-	m_subtexLsnr = std::make_unique<SetterListener<nif::SubtextureCount, std::vector<nif::SubtextureOffset>>>(data().subtexOffsets());
-	m_subtexCount.addListener(*m_subtexLsnr);
-	m_subtexLsnr->onSet(m_subtexCount.get());
+	m_subtexCount->set(node_conversion<SubtextureCount>::from(m_data->subtexOffsets.get()));
+	m_subtexCount->addListener(m_subtexLsnr);
 
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_Geom);
@@ -320,18 +313,25 @@ node::ParticleSystem::ParticleSystem(nif::File& file,
 
 	newChild<gui::Separator>();
 
-	m_shaderField = newField<ShaderField>(SHADER, *this);
+	m_shaderField = newField<ShaderField>(SHADER, *this, make_ni_ptr(psys, &NiParticleSystem::shaderProperty));
+
+	//Put alpha blend mode here for now. We might want more options for that later, though.
+	using widget_type = gui::Selector<BlendFunction, ni_ptr<Property<BlendFunction>>>;
+	auto item = newChild<gui::Item>();
+	item->newChild<gui::Text>("Blend mode");
+	item->newChild<widget_type>(make_ni_ptr(m_alpha, &NiAlphaProperty::dstFcn), std::string(),
+		widget_type::ItemList{ { BlendFunction::ONE, "Add" }, { BlendFunction::ONE_MINUS_SRC_ALPHA, "Mix" } });
 
 	newChild<gui::Separator>();
 
-	m_worldSpaceField = newField<WorldSpaceField>(WORLD_SPACE, *this);
-	m_maxCountField = newField<MaxCountField>(MAX_COUNT, *this);
+	newChild<Checkbox>(make_ni_ptr(psys, &NiParticleSystem::worldSpace), WORLD_SPACE);
+	m_maxCountField = newField<MaxCountField>(MAX_COUNT, *this, make_ni_ptr(m_data, &NiPSysData::maxCount));
 
 	newChild<gui::Separator>();
 
 	newChild<gui::Text>("Texture atlas layout");
 	std::array<std::string, 2> labels{ "H", "V" };
-	auto w = newChild<DragInputH<nif::SubtextureCount, 2>>(m_subtexCount, labels);
+	auto w = newChild<DragInputH<SubtextureCount, 2>>(m_subtexCount, labels);
 	w->setSensitivity(0.05f);
 	w->setLowerLimit(1);
 	w->setUpperLimit(100);//crazy numbers could be problematic, since we don't multithread
@@ -339,9 +339,15 @@ node::ParticleSystem::ParticleSystem(nif::File& file,
 
 	newChild<gui::Separator>();
 
-	auto modifiable = std::make_unique<ModifiersManager>(object().modifiers(), object().controllers(), 
-		m_data, std::move(adm), std::move(pm), std::move(bum), std::move(ctlr));
-	m_modifiersField = newField<ModifiersField>(MODIFIERS, *this, std::move(modifiable));
+	m_modifiersField = newField<ModifiersField>(
+		MODIFIERS,
+		*this,
+		psys,
+		m_data,
+		std::move(adm),
+		std::move(pm),
+		std::move(bum),
+		std::move(ctlr));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(PARENT)->connector->setTranslation({ 0.0f, 62.0f });
@@ -351,9 +357,6 @@ node::ParticleSystem::ParticleSystem(nif::File& file,
 
 node::ParticleSystem::~ParticleSystem()
 {
-	assert(m_subtexLsnr);
-	m_subtexCount.removeListener(*m_subtexLsnr);
-
 	disconnect();
 }
 
@@ -362,68 +365,3 @@ nif::NiParticleSystem& node::ParticleSystem::object()
 	assert(m_obj);
 	return *static_cast<nif::NiParticleSystem*>(m_obj.get());
 }
-
-nif::NiPSysData& node::ParticleSystem::data()
-{
-	assert(m_data);
-	return *m_data;
-}
-
-nif::NiAlphaProperty& node::ParticleSystem::alphaProperty()
-{
-	assert(m_alpha);
-	return *m_alpha;
-}
-
-node::ParticleSystem::ModifiersManager::Requirements::Requirements(
-	const ni_ptr<nif::NiPSysData>& data,
-	ni_ptr<nif::NiPSysAgeDeathModifier>&& adm,
-	ni_ptr<nif::NiPSysPositionModifier>&& pm,
-	ni_ptr<nif::NiPSysBoundUpdateModifier>&& bum,
-	ni_ptr<nif::NiPSysUpdateCtlr>&& puc,
-	ReservableSequence<nif::NiPSysModifier>& mods,
-	ReservableSequence<nif::NiTimeController>& ctlrs)
-{
-	assert(data);
-	m_mngrs.insert(
-		{ Modifier::Requirement::COLOUR, 
-		std::make_unique<ColourRequirement>(nif::make_field_ptr(data, &data->hasColour())) });
-
-	assert(adm);
-	m_mngrs.insert(
-		{ Modifier::Requirement::LIFETIME, std::make_unique<LifetimeRequirement>(std::move(adm), mods) });
-
-	assert(pm);
-	m_mngrs.insert(
-		{ Modifier::Requirement::MOVEMENT, std::make_unique<MovementRequirement>(std::move(pm), mods) });
-
-	m_mngrs.insert({ Modifier::Requirement::ROTATION, 
-		std::make_unique<RotationsRequirement>(
-			nif::make_field_ptr(data, &data->hasRotationAngles()), nif::make_field_ptr(data, &data->hasRotationSpeeds())) });
-
-	assert(bum && puc);
-	m_mngrs.insert({ Modifier::Requirement::UPDATE, 
-		std::make_unique<UpdateRequirement>(std::move(bum), std::move(puc), mods, ctlrs) });
-}
-
-void node::ParticleSystem::ModifiersManager::Requirements::add(const Modifier::Requirement& req)
-{
-	if (auto it = m_mngrs.find(req); it != m_mngrs.end())
-		it->second->incr();
-}
-
-void node::ParticleSystem::ModifiersManager::Requirements::remove(const Modifier::Requirement& req)
-{
-	if (auto it = m_mngrs.find(req); it != m_mngrs.end())
-		it->second->decr();
-}
-
-bool node::ParticleSystem::ModifiersManager::Requirements::has(const Modifier::Requirement& req) const
-{
-	if (auto it = m_mngrs.find(req); it != m_mngrs.end())
-		return it->second->active();
-	else
-		return false;
-}
-
-
