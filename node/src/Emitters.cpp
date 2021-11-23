@@ -315,8 +315,6 @@ node::Emitter::Emitter(nif::File& file,
 	m_device.addController(ctlr);
 	object().colour.addListener(*this);//add colour requirement dynamically
 	onSet(object().colour.get());
-	m_device.addRequirement(Requirement::LIFETIME);
-	m_device.addRequirement(Requirement::MOVEMENT);
 
 	if (!iplr) {
 		iplr = file.create<nif::NiFloatInterpolator>();
@@ -384,9 +382,9 @@ void node::Emitter::onSet(const nif::ColRGBA& col)
 {
 	if (m_colActive != (col != nif::COL_WHITE)) {
 		if (m_colActive)
-			m_device.removeRequirement(Requirement::COLOUR);
+			m_device.removeRequirement(ModRequirement::COLOUR);
 		else
-			m_device.addRequirement(Requirement::COLOUR);
+			m_device.addRequirement(ModRequirement::COLOUR);
 		m_colActive = !m_colActive;
 	}
 }

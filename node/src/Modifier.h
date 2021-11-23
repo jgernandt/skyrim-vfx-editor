@@ -30,17 +30,6 @@ namespace node
 	protected:
 		class Device;
 
-	public:
-		enum class Requirement
-		{
-			NONE,
-			COLOUR,
-			LIFETIME,
-			MOVEMENT,
-			ROTATION,
-			UPDATE,//Not really a modifier requirement
-		};
-
 	protected:
 		Modifier(ni_ptr<NiPSysModifier>&& obj);
 
@@ -54,19 +43,6 @@ namespace node
 		constexpr static const char* TARGET = "Target";
 		constexpr static const char* NEXT_MODIFIER = "Next modifier";
 
-		//Updates modifier order to match position in the sequence
-		class OrderUpdater : public SequenceListener<NiPSysModifier>
-		{
-		public:
-			OrderUpdater(ni_ptr<Property<unsigned int>>&& order);
-
-			virtual void onInsert(int pos) override;
-			virtual void onErase(int pos) override;
-
-		private:
-			const ni_ptr<Property<unsigned int>> m_order;
-		};
-
 		//Updates modifier name to match its order
 		class NameUpdater : public PropertyListener<unsigned int>
 		{
@@ -77,17 +53,6 @@ namespace node
 
 		private:
 			const ni_ptr<Property<std::string>> m_name;
-		};
-
-		//Updates one string to match another string (useful for the modifier name on a NiPSysModifierCtlr)
-		class StringMatcher : public nif::PropertyListener<std::string>
-		{
-		public:
-			StringMatcher(ni_ptr<Property<std::string>>&& target);
-			virtual void onSet(const std::string& s) override { m_target->set(s); }
-
-		private:
-			const ni_ptr<Property<std::string>> m_target;
 		};
 
 	protected:
@@ -105,19 +70,19 @@ namespace node
 			void removeController(NiPSysModifierCtlr* ctlr);
 
 			//Add a requirement to our connected interface (current or future).
-			void addRequirement(Requirement req);
-			void removeRequirement(Requirement req);
+			void addRequirement(ModRequirement req);
+			void removeRequirement(ModRequirement req);
 
 		private:
 			const ni_ptr<NiPSysModifier> m_mod;
 
 			//Listens to our connected sequence and keeps our order correct
-			OrderUpdater m_orderUpdater;
+			//OrderUpdater m_orderUpdater;
 
 			//Controllers and requirements may change dynamically
-			using ControllerPair = std::pair<ni_ptr<NiPSysModifierCtlr>, std::unique_ptr<StringMatcher>>;
+			using ControllerPair = std::pair<ni_ptr<NiPSysModifierCtlr>, std::unique_ptr<PropertySyncer<std::string>>>;
 			std::vector<ControllerPair> m_ctlrs;
-			std::map<Requirement, int> m_reqs;
+			std::map<ModRequirement, int> m_reqs;
 
 			//Our connected interface
 			IModifiable* m_ifc{ nullptr };
@@ -156,16 +121,6 @@ namespace node
 
 		std::unique_ptr<Field> m_targetField;
 		std::unique_ptr<Field> m_nextField;
-	};
-
-	class IModifiable
-	{
-	public:
-		virtual ~IModifiable() = default;
-
-		virtual Sequence<NiPSysModifier>& modifiers() = 0;
-		virtual Sequence<NiTimeController>& controllers() = 0;
-		virtual std::map<Modifier::Requirement, int>& requirements() = 0;
 	};
 
 

@@ -130,34 +130,35 @@ namespace node
 		virtual nif::Property<float>& phase() = 0;
 		virtual nif::Property<float>& startTime() = 0;
 		virtual nif::Property<float>& stopTime() = 0;
-	}; 
+	};
 
-	/*
-	We don't need this anymore, right?
+	enum class ModRequirement
+	{
+		NONE,
+		COLOUR,
+		ROTATION,
+	};
 
-	template<typename T>
-	class LocalProperty : public ObservableBase<IProperty<T>>
+	class IModifiable
 	{
 	public:
-		LocalProperty(const T& def = T()) : m_val{ def } {}
-		virtual ~LocalProperty() = default;
+		virtual ~IModifiable() = default;
 
-		virtual T get() const final override { return m_val; }
-		virtual void set(const T& val) final override 
-		{
-			if (val != m_val) {
-				m_val = val;
-				for (auto&& l : this->getListeners()) {
-					assert(l);
-					l->onSet(val);
-				}
-			}
-		}
+		virtual void addModifier(const ni_ptr<NiPSysModifier>&) = 0;
+		virtual void removeModifier(NiPSysModifier*) = 0;
 
-	private:
-		T m_val;
+		//Spawn mod needs to be added to AgeDeath as well
+		//virtual void addModifier(const ni_ptr<NiPSysSpawnModifier>& mod) = 0;
+		//virtual void removeModifier(NiPSysSpawnModifier* mod) = 0;
+
+		virtual void addController(const ni_ptr<NiTimeController>&) = 0;
+		virtual void removeController(NiTimeController*) = 0;
+
+		virtual void addRequirement(ModRequirement) = 0;
+		virtual void removeRequirement(ModRequirement) = 0;
+
 	};
-	*/
+
 
 	//A listener that updates one data field to match another.
 	//Converter must have defined a conversion from (S)ource to (T)arget.
