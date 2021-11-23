@@ -28,7 +28,7 @@ namespace math
 	{
 		T value;
 
-		explicit degrees(T t = T()) : value{ t } {}
+		constexpr explicit degrees(T t = T()) : value{ t } {}
 		degrees(const degrees<T>&) = default;
 		template<typename Y> explicit degrees(degrees<Y> other) : value{ static_cast<T>(other) } {}
 		degrees(radians<T> r);
@@ -55,7 +55,7 @@ namespace math
 	{
 		T value;
 
-		explicit radians(T t = T()) : value{ t } {}
+		constexpr explicit radians(T t = T()) : value{ t } {}
 		radians(const radians<T>&) = default;
 		template<typename Y> explicit radians(radians<Y> other) : value{ static_cast<T>(other) } {}
 		radians(degrees<T> d);
