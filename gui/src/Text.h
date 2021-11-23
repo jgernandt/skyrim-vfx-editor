@@ -78,6 +78,6 @@ namespace gui
 		}
 
 	private:
-		const PropertyType& m_property;
+		PropertyType m_property;
 	};
 }

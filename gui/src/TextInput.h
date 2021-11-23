@@ -35,7 +35,7 @@ namespace gui
 		public Component
 	{
 	public:
-		TextInput(PropertyType& prop, const std::string& label = std::string()) :
+		TextInput(const PropertyType& prop, const std::string& label = std::string()) :
 			m_property{ prop }, m_label(label) {}
 
 		//We only work with std::string, for now
@@ -56,7 +56,7 @@ namespace gui
 		virtual Floats<2> getSizeHint() const override { return { -1.0f, getDefaultHeight() }; }
 
 	private:
-		PropertyType& m_property;
+		PropertyType m_property;
 		UniqueLabel<1> m_label;
 		std::string m_tmp;
 	};

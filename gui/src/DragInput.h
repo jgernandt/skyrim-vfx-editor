@@ -237,9 +237,9 @@ namespace gui
         static_assert(std::is_default_constructible<WidgetLayout>::value, "cannot construct layout object");
 
     public:
-        DragInput(PropertyType& p, const std::string& label) :
+        DragInput(const PropertyType& p, const std::string& label) :
             DragInputBase<element_type, N>(label), m_property{ p } {}
-        DragInput(PropertyType& p, const std::array<std::string, N>& labels) :
+        DragInput(const PropertyType& p, const std::array<std::string, N>& labels) :
             DragInputBase<element_type, N>(labels), m_property{ p } {}
         virtual ~DragInput() = default;
 
@@ -288,7 +288,7 @@ namespace gui
         virtual Floats<2> getSizeHint() const override { return { this->m_sizeHint[0], WidgetLayout().height(N) }; }
 
     private:
-        PropertyType& m_property;
+        PropertyType m_property;
         T m_tmp{ T() };
     };
 }

@@ -67,8 +67,8 @@ namespace gui
         static_assert(std::is_assignable<T&, converted_type>::value, "property return cannot be assigned to value type");
 
     public:
-        Checkbox(PropertyType& p, const std::string& label) : m_property{ p }, m_labels(label) {}
-        Checkbox(PropertyType& p, const std::array<std::string, N>& labels) : m_property{ p }, m_labels(labels) {}
+        Checkbox(const PropertyType& p, const std::string& label) : m_property{ p }, m_labels(label) {}
+        Checkbox(const PropertyType& p, const std::array<std::string, N>& labels) : m_property{ p }, m_labels(labels) {}
 
         virtual void frame(FrameDrawer& fd) override
         {
@@ -85,7 +85,7 @@ namespace gui
         virtual Floats<2> getSizeHint() const override { return backend::getCheckboxSize(m_labels[0]); }
 
     protected:
-        PropertyType& m_property;
+        PropertyType m_property;
         UniqueLabel<N> m_labels;
     };
 

@@ -43,7 +43,7 @@ namespace gui
 		typedef std::map<T, std::string> ItemList;
 
 	public:
-		Selector(PropertyType& prop, const std::string& label, ItemList&& items) :
+		Selector(const PropertyType& prop, const std::string& label, ItemList&& items) :
 			m_property{ prop }, m_label(label), m_items{ std::move(items) } 
 		{
 			setSizeHint({ -1.0f, -1.0f });
@@ -65,7 +65,7 @@ namespace gui
 		virtual Floats<2> getSizeHint() const override { return { m_sizeHint[0], getDefaultHeight() }; }
 
 	private:
-		PropertyType& m_property;
+		PropertyType m_property;
 		UniqueLabel<1> m_label;
 		ItemList m_items;
 	};
