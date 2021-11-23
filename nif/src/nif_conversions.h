@@ -103,18 +103,6 @@ namespace nif
 	};
 
 	template<>
-	struct NifConverter<std::array<int, 2>>
-	{
-		static std::array<int, 2> convert(const std::vector<nif::SubtextureOffset>& offsets);
-	};
-
-	template<>
-	struct NifConverter<std::vector<nif::SubtextureOffset>>
-	{
-		static std::vector<nif::SubtextureOffset> convert(const std::array<int, 2>& count);
-	};
-
-	template<>
 	struct NifConverter<Niflib::SkyrimShaderPropertyFlags1>
 	{
 		constexpr static Niflib::SkyrimShaderPropertyFlags1 convert(ShaderFlags flags)

@@ -238,8 +238,8 @@ public:
 	{
 		//Angle around z, counter-clockwise from x
 		gui::Item* item = node.newChild<gui::Item>();
-		auto main = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, NodeConverter>>(azimuth, name);
-		auto var = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, NodeConverter>>(azimuthVar, u8"±");
+		auto main = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, Converter>>(azimuth, name);
+		auto var = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, Converter>>(azimuthVar, u8"±");
 		main->setSensitivity(0.5f);
 		main->setLowerLimit(0.0f);
 		main->setUpperLimit(360.0f);
@@ -270,8 +270,8 @@ public:
 	{
 		//Angle around z, counter-clockwise from x
 		gui::Item* item = node.newChild<gui::Item>();
-		auto main = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, NodeConverter>>(elevation, name);
-		auto var = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, NodeConverter>>(elevationVar, u8"±");
+		auto main = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, Converter>>(elevation, name);
+		auto var = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, Converter>>(elevationVar, u8"±");
 		main->setSensitivity(0.5f);
 		main->setLowerLimit(-90.0f);
 		main->setUpperLimit(90.0f);
@@ -302,7 +302,7 @@ node::Emitter::Emitter(nif::File& file,
 {
 	if (ctlr) {
 		ctlr = file.create<nif::NiPSysEmitterCtlr>();
-		if (ctlr)
+		if (!ctlr)
 			throw std::runtime_error("Failed to create NiPSysEmitterCtlr");
 
 		ctlr->flags.raise(DEFAULT_FLAGS);

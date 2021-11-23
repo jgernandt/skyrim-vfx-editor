@@ -30,7 +30,6 @@
     <ClInclude Include="src\GravityModifier.h" />
     <ClInclude Include="src\KeyEditor.h" />
     <ClInclude Include="src\Modifier.h" />
-    <ClInclude Include="src\ModifierRequirements.h" />
     <ClInclude Include="src\Node.h" />
     <ClInclude Include="src\NodeBase.h" />
     <ClInclude Include="src\Editor.h" />
@@ -62,10 +61,10 @@
     <ClCompile Include="src\GravityModifier.cpp" />
     <ClCompile Include="src\KeyEditor.cpp" />
     <ClCompile Include="src\Modifier.cpp" />
-    <ClCompile Include="src\ModifierRequirements.cpp" />
     <ClCompile Include="src\Node.cpp" />
     <ClCompile Include="src\NodeBase.cpp" />
     <ClCompile Include="src\Editor.cpp" />
+    <ClCompile Include="src\node_conversions.cpp" />
     <ClCompile Include="src\ParticleSystem.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -176,7 +176,7 @@ namespace node
 		std::weak_ptr<FieldType<T>> m_target;
 	};
 
-	template<typename S, typename T = S, template<typename> typename Converter = NodeConverter>
+	template<typename S, typename T = S, template<typename> typename Converter = node::Converter>
 	class FlagSetSyncer final : public FieldSyncerBase<FlagSet, S, T, Converter>
 	{
 	public:
@@ -195,7 +195,7 @@ namespace node
 		}
 	};
 
-	template<typename S, typename T = S, template<typename> typename Converter = NodeConverter>
+	template<typename S, typename T = S, template<typename> typename Converter = node::Converter>
 	class PropertySyncer final : public FieldSyncerBase<Property, S, T, Converter>
 	{
 	public:
