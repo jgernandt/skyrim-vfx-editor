@@ -17,21 +17,18 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "Controls.h"
-#include "BSEffectShaderProperty.h"
+#include "NodeBase.h"
 
 namespace node
 {
+	using namespace nif;
+
 	class EffectShader : public NodeBase
 	{
 	public:
-		EffectShader(nif::File& file);
-		EffectShader(ni_ptr<nif::BSEffectShaderProperty>&& obj);
+		EffectShader(File& file);
+		EffectShader(ni_ptr<BSEffectShaderProperty>&& obj);
 		~EffectShader();
-
-	public:
-		virtual nif::BSEffectShaderProperty& object() override;
-		//IProperty<nif::SubtextureCount>& subtexCount();
 
 	public:
 		constexpr static const char* GEOMETRY = "Targets";
@@ -47,17 +44,6 @@ namespace node
 		constexpr static float HEIGHT = 250.0f;
 
 	private:
-		class GeometryField;
-		class ShaderFlagsField1;
-		class ShaderFlagsField2;
-		class SourceTexField;
-		class SubtexturesField;
-		class EmissiveColourField;
-		class EmissiveMultipleField;
-		class PaletteTexField;
-
-		const ni_ptr<nif::BSEffectShaderProperty> m_obj;
-
 		std::unique_ptr<Field> m_targetField;
 		std::unique_ptr<Field> m_colField;
 		std::unique_ptr<Field> m_multField;

@@ -21,38 +21,21 @@
 #include "style.h"
 #include "widget_types.h"
 
-class node::EffectShader::GeometryField final : public Field
-{
-public:
-	GeometryField(const std::string& name, EffectShader& node) :
-		Field(name), m_receiver(node.object())
-	{
-		connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::MultiConnector>(m_sender, m_receiver));
-	}
+using namespace node;
 
-private:
-	AssignableReceiver<nif::BSEffectShaderProperty> m_receiver;
+class GeometryField final : public Field
+{
+	AssignableReceiver<BSShaderProperty> m_receiver;//Should be BSEffecShaderProperty, but we need to fix device inheritance
 	Sender<void> m_sender;
 
-};
-/*class node::EffectShader::GeometryField final : public Field
-{
 public:
-	GeometryField(const std::string& name, EffectShader& node) : 
-		Field(name), m_receiver(node.object()), m_sender(m_subtexCount)
+	GeometryField(const std::string& name, NodeBase& node, const ni_ptr<BSShaderProperty>& shader) :
+		Field(name), m_receiver(shader)
 	{
 		connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::MultiConnector>(m_sender, m_receiver));
 	}
-
-	IProperty<nif::SubtextureCount>& subtexCount() { return m_subtexCount; }
-
-private:
-	LocalProperty<nif::SubtextureCount> m_subtexCount{ { 1, 1 } };
-	AssignableReceiver<nif::BSEffectShaderProperty> m_receiver;
-	Sender<IProperty<nif::SubtextureCount>> m_sender;
-
-};*/
-
+};
+/*
 class node::EffectShader::ShaderFlagsField1 final : public Field
 {
 public:
@@ -79,53 +62,35 @@ public:
 				{ nif::ShaderFlag2::VERTEX_COLOUR, "Vertex colour" } });
 	}
 };
-
-class node::EffectShader::SourceTexField final : public Field
+*/
+class SourceTexField final : public Field
 {
 public:
-	SourceTexField(const std::string& name, EffectShader& node) : Field(name)
+	SourceTexField(const std::string& name, NodeBase& node, ni_ptr<Property<std::string>>&& tex) : 
+		Field(name)
 	{
 		node.newChild<gui::Text>("Texture");
-		widget = node.newChild<gui::TextInput<IProperty<std::string>>>(node.object().sourceTex(), "");
+		widget = node.newChild<StringInput>(tex, "");
 	}
 };
 
-/*class node::EffectShader::SubtexturesField final : public Field
+class EmissiveColourField final : public Field
 {
 public:
-	SubtexturesField(const std::string& name, EffectShader& node) : Field(name)
+	EmissiveColourField(const std::string& name, NodeBase& node, ni_ptr<Property<ColRGBA>>&& col) : 
+		Field(name)
 	{
-		Composite* item = node.newChild<gui::Item>();
-
-		item->newChild<gui::FramePadded>(std::make_unique<gui::Text>("Subtextures"));
-
-		std::array<std::string, 2> labels{ "X", "Y" };
-		assert(node.m_geomField);
-		auto w = item->newChild<DragInputH<nif::SubtextureCount, 2>>(node.m_geomField->subtexCount(), labels);
-		w->setSensitivity(0.02f);
-		w->setLowerLimit(1);
-		w->setUpperLimit(100);//crazy numbers could be problematic, since we don't multithread
-		w->setAlwaysClamp();
-
-		widget = w;
-	}
-};*/
-
-class node::EffectShader::EmissiveColourField final : public Field
-{
-public:
-	EmissiveColourField(const std::string& name, EffectShader& node) : Field(name)
-	{
-		widget = node.newChild<ColourInput>(node.object().emissiveCol(), "Emissive colour");
+		widget = node.newChild<ColourInput>(col, "Emissive colour");
 	}
 };
 
-class node::EffectShader::EmissiveMultipleField final : public Field
+class EmissiveMultipleField final : public Field
 {
 public:
-	EmissiveMultipleField(const std::string& name, EffectShader& node) : Field(name)
+	EmissiveMultipleField(const std::string& name, NodeBase& node, ni_ptr<Property<float>>&& mult) : 
+		Field(name)
 	{
-		auto w = node.newChild<DragFloat>(node.object().emissiveMult(), "Emissive multiple");
+		auto w = node.newChild<DragFloat>(mult, "Emissive multiple");
 		w->setSensitivity(0.01f);
 		w->setLowerLimit(0.0f);
 		w->setAlwaysClamp();
@@ -135,53 +100,61 @@ public:
 	}
 };
 
-class node::EffectShader::PaletteTexField final : public Field
+class PaletteTexField final : public Field
 {
+	const ni_ptr<FlagSet<ShaderFlags>> m_flags;
+
 public:
-	PaletteTexField(const std::string& name, EffectShader& node) : Field(name), m_prop(node.object())
+	PaletteTexField(const std::string& name, NodeBase& node, 
+		ni_ptr<Property<std::string>>&& tex, ni_ptr<FlagSet<ShaderFlags>>&& flags) 
+		: Field(name), m_flags{ std::move(flags) }
 	{
 		node.newChild<gui::Text>("Palette");
-		widget = node.newChild<gui::TextInput<IProperty<std::string>>>(node.object().greyscaleTex(), "");
+		widget = node.newChild<StringInput>(tex, "");
+
+		//Using raw pointer as property here, even though the widget will survive us.
+		//They should not access us during destruction, though.
 		std::array<std::string, 2> labels{ "Use RGB", "Use alpha" };
-		node.newChild<gui::Checkbox<std::array<bool, 2>, 2, IProperty<std::array<bool, 2>>>>(m_prop, labels);
-		
+		node.newChild<gui::Checkbox<std::array<bool, 2>, 2, PaletteTexField*>>(this, labels);
 	}
 
-private:
-	struct FlagsProperty : IObservable<IProperty<std::array<bool, 2>>>
+	std::array<bool, 2> getFlags() const 
 	{
-		FlagsProperty(nif::BSEffectShaderProperty& obj) : m_obj{ obj } {}
-		virtual std::array<bool, 2> get() const override
-		{
-			return { m_obj.shaderFlags1().isSet(nif::ShaderFlag1::PALETTE_COLOUR), 
-				m_obj.shaderFlags1().isSet(nif::ShaderFlag1::PALETTE_ALPHA) };
-		}
-		virtual void set(const std::array<bool, 2>& val) override
-		{
-			m_obj.shaderFlags1().set(nif::ShaderFlag1::PALETTE_COLOUR, val[0]);
-			m_obj.shaderFlags1().set(nif::ShaderFlag1::PALETTE_ALPHA, val[1]);
-		}
-		virtual void addListener(nif::PropertyListener<std::array<bool, 2>>& l) override {}
-		virtual void removeListener(nif::PropertyListener<std::array<bool, 2>>& l) override {}
-
-		nif::BSEffectShaderProperty& m_obj;
-
-	} m_prop;
+		ShaderFlags flags = m_flags->raised();
+		return { (flags & SF1_PALETTE_COLOUR) != 0, (flags & SF1_PALETTE_ALPHA) != 0 };
+	}
+	void setFlags(std::array<bool, 2> flags) 
+	{
+		m_flags->clear((!flags[0] ? SF1_PALETTE_COLOUR : 0) | (!flags[1] ? SF1_PALETTE_ALPHA : 0));
+		m_flags->raise((flags[0] ? SF1_PALETTE_COLOUR : 0) | (flags[1] ? SF1_PALETTE_ALPHA : 0));
+	}
 };
 
-node::EffectShader::EffectShader(nif::File& file) : 
-	EffectShader(file.create<nif::BSEffectShaderProperty>())
+template<>
+struct util::property_traits<PaletteTexField*>
 {
-	object().shaderFlags1().set(nif::ShaderFlag1::ZBUFFER_TEST, true);
-	object().shaderFlags2().set(nif::ShaderFlag2::VERTEX_COLOUR, true);
-	object().emissiveCol().set(nif::COL_WHITE);
-	object().emissiveMult().set(1.0f);
+	using property_type = PaletteTexField*;
+	using value_type = std::array<bool, 2>;
+	using get_type = std::array<bool, 2>;
+
+	static std::array<bool, 2> get(PaletteTexField* p) { return p->getFlags(); }
+	static void set(PaletteTexField* p, std::array<bool, 2> data) { p->setFlags(data); }
+};
+
+node::EffectShader::EffectShader(File& file) : 
+	EffectShader(file.create<BSEffectShaderProperty>())
+{
+	//Again, is this where we want to set defaults?
+	// 
+	//object().shaderFlags1().set(nif::ShaderFlag1::ZBUFFER_TEST, true);
+	//object().shaderFlags2().set(nif::ShaderFlag2::VERTEX_COLOUR, true);
+	//object().emissiveCol().set(nif::COL_WHITE);
+	//object().emissiveMult().set(1.0f);
 }
 
-node::EffectShader::EffectShader(ni_ptr<nif::BSEffectShaderProperty>&& obj) :
-	m_obj{ std::move(obj) }
+node::EffectShader::EffectShader(ni_ptr<nif::BSEffectShaderProperty>&& obj)
 {
-	assert(m_obj);
+	assert(obj);
 
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_Shader);
@@ -189,24 +162,28 @@ node::EffectShader::EffectShader(ni_ptr<nif::BSEffectShaderProperty>&& obj) :
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Effect shader");
 
-	m_targetField = newField<GeometryField>(GEOMETRY, *this);
+	m_targetField = newField<GeometryField>(GEOMETRY, *this, obj);
 	//flags can wait
 	//newField<ShaderFlagsField1>(SHADER_FLAGS_1, *this);
 	//newField<ShaderFlagsField2>(SHADER_FLAGS_2, *this);
 
 	newChild<gui::Separator>();
 
-	m_colField = newField<EmissiveColourField>(EMISSIVE_COLOUR, *this);
-	m_multField = newField<EmissiveMultipleField>(EMISSIVE_MULTIPLE, *this);
+	m_colField = newField<EmissiveColourField>(EMISSIVE_COLOUR, *this, 
+		make_ni_ptr(obj, &BSEffectShaderProperty::emissiveCol));
+
+	m_multField = newField<EmissiveMultipleField>(EMISSIVE_MULTIPLE, *this, 
+		make_ni_ptr(obj, &BSEffectShaderProperty::emissiveMult));
 
 	newChild<gui::Separator>();
 
-	m_texField = newField<SourceTexField>(SOURCE_TEXTURE, *this);
-	//newField<SubtexturesField>(SUBTEXTURES, *this);
+	m_texField = newField<SourceTexField>(SOURCE_TEXTURE, *this, 
+		make_ni_ptr(obj, &BSEffectShaderProperty::sourceTex));
 
 	newChild<gui::Separator>();
 
-	m_paletteField = newField<PaletteTexField>(PALETTE_TEXTURE, *this);
+	m_paletteField = newField<PaletteTexField>(PALETTE_TEXTURE, *this, 
+		make_ni_ptr(obj, &BSEffectShaderProperty::greyscaleTex), make_ni_ptr(obj, &BSEffectShaderProperty::shaderFlags1));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(GEOMETRY)->connector->setTranslation({ 0.0f, 38.0f });
@@ -216,14 +193,3 @@ node::EffectShader::~EffectShader()
 {
 	disconnect();
 }
-
-nif::BSEffectShaderProperty& node::EffectShader::object()
-{
-	return *m_obj;
-}
-
-/*IProperty<nif::SubtextureCount>& node::EffectShader::subtexCount()
-{
-	assert(m_geomField);
-	return m_geomField->subtexCount();
-}*/
