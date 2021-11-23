@@ -40,6 +40,9 @@ namespace nif
 	{
 		static_assert(std::is_integral<T>::value || std::is_enum<T>::value);
 	public:
+		using flag_type = T;
+
+	public:
 		FlagSet(T val = T()) : m_flags{ val } {}
 		~FlagSet()
 		{

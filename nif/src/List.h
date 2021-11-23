@@ -43,6 +43,8 @@ namespace nif
 	class List final : public Observable<List<T>>
 	{
 		using ctnr_type = std::list<T>;
+	public:
+		using element_type = T;
 
 	public:
 		List() = default;

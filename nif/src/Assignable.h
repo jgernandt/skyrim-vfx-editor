@@ -41,6 +41,9 @@ namespace nif
 	class Assignable final : public Observable<Assignable<T>>
 	{
 	public:
+		using ref_type = T;
+
+	public:
 		Assignable(const std::shared_ptr<T>& t = std::shared_ptr<T>()) : m_assigned{ t } {}
 		~Assignable()
 		{

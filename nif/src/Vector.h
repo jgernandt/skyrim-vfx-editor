@@ -42,6 +42,9 @@ namespace nif
 		using ctnr_type = std::vector<T>;
 
 	public:
+		using element_type = T;
+
+	public:
 		Vector() = default;
 		~Vector() { clear(); }
 

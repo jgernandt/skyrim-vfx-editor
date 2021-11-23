@@ -51,6 +51,10 @@ namespace nif
 	class Set final : public Observable<Set<T>>
 	{
 		using ctnr_type = std::map<T*, std::shared_ptr<T>>;
+
+	public:
+		using ref_type = T;
+
 	public:
 		Set() = default;
 		~Set() { clear(); }

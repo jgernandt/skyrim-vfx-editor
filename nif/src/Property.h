@@ -37,6 +37,9 @@ namespace nif
 	class Property final : public Observable<Property<T>>
 	{
 	public:
+		using value_type = T;
+
+	public:
 		Property(const T& val = T()) : m_value{ val } {}
 		~Property() = default;
 

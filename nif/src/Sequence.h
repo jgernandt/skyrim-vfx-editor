@@ -18,6 +18,7 @@
 
 #pragma once
 #include <cassert>
+#include <memory>
 #include <vector>
 #include "Observable.h"
 
@@ -45,6 +46,9 @@ namespace nif
 		//Advantage of list is that iterators aren't invalidated on insert/erase, but
 		//we're not really taking advantage of that. vector might be better for now.
 		using ctnr_type = std::vector<std::shared_ptr<T>>;
+
+	public:
+		using ref_type = T;
 
 	public:
 		Sequence() = default;
