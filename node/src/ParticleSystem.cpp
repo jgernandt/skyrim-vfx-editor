@@ -227,44 +227,40 @@ node::ParticleSystem::ParticleSystem(File& file) :
 }
 
 node::ParticleSystem::ParticleSystem(File& file,
-	ni_ptr<NiParticleSystem>&& obj,
+	ni_ptr<NiParticleSystem>&& psys,
 	ni_ptr<NiPSysData>&& data,
 	ni_ptr<NiAlphaProperty>&& alpha,
 	ni_ptr<NiPSysUpdateCtlr>&& ctlr,
 	ni_ptr<NiPSysAgeDeathModifier>&& adm,
 	ni_ptr<NiPSysPositionModifier>&& pm,
 	ni_ptr<NiPSysBoundUpdateModifier>&& bum) :
-	AVObject{ std::move(obj) },
-	m_data{ std::move(data) },
-	m_alpha{ std::move(alpha) },
+	AVObject{ psys },
 	m_subtexLsnr{ make_ni_ptr(data, &NiPSysData::subtexOffsets) },
 	m_subtexCount{ std::make_shared<Property<SubtextureCount>>() }
 {
-	//I'm not sure we want to keep storing our obj in the base class
-	ni_ptr<NiParticleSystem> psys = std::static_pointer_cast<NiParticleSystem>(m_obj);
 	assert(psys);
 
-	if (!m_data) {
-		m_data = file.create<nif::NiPSysData>();
-		if (!m_data)
+	if (!data) {
+		data = file.create<nif::NiPSysData>();
+		if (!data)
 			throw std::runtime_error("Failed to create NiPSysData");
 
 		assert(!psys->data.assigned());
-		psys->data.assign(m_data);
-		m_data->maxCount.set(DEFAULT_MAX_COUNT);
+		psys->data.assign(data);
+		data->maxCount.set(DEFAULT_MAX_COUNT);
 	}
 
-	if (!m_alpha) {
-		m_alpha = file.create<nif::NiAlphaProperty>();
-		if (!m_alpha)
+	if (!alpha) {
+		alpha = file.create<nif::NiAlphaProperty>();
+		if (!alpha)
 			throw std::runtime_error("Failed to create NiAlphaProperty");
 
-		m_alpha->mode.set(AlphaMode::BLEND);
-		m_alpha->srcFcn.set(BlendFunction::SRC_ALPHA);
-		m_alpha->dstFcn.set(BlendFunction::ONE_MINUS_SRC_ALPHA);
+		alpha->mode.set(AlphaMode::BLEND);
+		alpha->srcFcn.set(BlendFunction::SRC_ALPHA);
+		alpha->dstFcn.set(BlendFunction::ONE_MINUS_SRC_ALPHA);
 
 		assert(!psys->alphaProperty.assigned());
-		psys->alphaProperty.assign(m_alpha);
+		psys->alphaProperty.assign(alpha);
 	}
 
 	//Controllers and modifiers are all handled by our ModifiersField.
@@ -298,7 +294,7 @@ node::ParticleSystem::ParticleSystem(File& file,
 			throw std::runtime_error("Failed to create NiPSysBoundUpdateModifier");
 	}
 
-	m_subtexCount->set(node_conversion<SubtextureCount>::from(m_data->subtexOffsets.get()));
+	m_subtexCount->set(node_conversion<SubtextureCount>::from(data->subtexOffsets.get()));
 	m_subtexCount->addListener(m_subtexLsnr);
 
 	setClosable(true);
@@ -307,9 +303,9 @@ node::ParticleSystem::ParticleSystem(File& file,
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Particle system");
 
-	m_name = newField<NameField>(NAME, *this);
-	m_parent = newField<ParentField>(PARENT, *this);
-	m_transform = newField<TransformField>(TRANSFORM, *this);
+	m_name = newField<NameField>(NAME, *this, make_ni_ptr(std::static_pointer_cast<NiObjectNET>(psys), &NiObjectNET::name));
+	m_parent = newField<ParentField>(PARENT, *this, psys);
+	m_transform = newField<TransformField>(TRANSFORM, *this, make_ni_ptr(std::static_pointer_cast<NiAVObject>(psys), &NiAVObject::transform));
 
 	newChild<gui::Separator>();
 
@@ -319,13 +315,13 @@ node::ParticleSystem::ParticleSystem(File& file,
 	using widget_type = gui::Selector<BlendFunction, ni_ptr<Property<BlendFunction>>>;
 	auto item = newChild<gui::Item>();
 	item->newChild<gui::Text>("Blend mode");
-	item->newChild<widget_type>(make_ni_ptr(m_alpha, &NiAlphaProperty::dstFcn), std::string(),
+	item->newChild<widget_type>(make_ni_ptr(alpha, &NiAlphaProperty::dstFcn), std::string(),
 		widget_type::ItemList{ { BlendFunction::ONE, "Add" }, { BlendFunction::ONE_MINUS_SRC_ALPHA, "Mix" } });
 
 	newChild<gui::Separator>();
 
 	newChild<Checkbox>(make_ni_ptr(psys, &NiParticleSystem::worldSpace), WORLD_SPACE);
-	m_maxCountField = newField<MaxCountField>(MAX_COUNT, *this, make_ni_ptr(m_data, &NiPSysData::maxCount));
+	m_maxCountField = newField<MaxCountField>(MAX_COUNT, *this, make_ni_ptr(data, &NiPSysData::maxCount));
 
 	newChild<gui::Separator>();
 
@@ -343,7 +339,7 @@ node::ParticleSystem::ParticleSystem(File& file,
 		MODIFIERS,
 		*this,
 		psys,
-		m_data,
+		data,
 		std::move(adm),
 		std::move(pm),
 		std::move(bum),
@@ -358,10 +354,4 @@ node::ParticleSystem::ParticleSystem(File& file,
 node::ParticleSystem::~ParticleSystem()
 {
 	disconnect();
-}
-
-nif::NiParticleSystem& node::ParticleSystem::object()
-{
-	assert(m_obj);
-	return *static_cast<nif::NiParticleSystem*>(m_obj.get());
 }

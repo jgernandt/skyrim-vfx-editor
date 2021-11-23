@@ -29,15 +29,13 @@ namespace node
 	{
 	protected:
 		Emitter(File& file, 
-			ni_ptr<NiPSysEmitter>&& obj,
+			const ni_ptr<NiPSysEmitter>& obj,
 			ni_ptr<NiPSysEmitterCtlr>&& ctlr,
 			ni_ptr<NiFloatInterpolator>&& iplr,
 			ni_ptr<NiBoolInterpolator>&& vis_iplr);
 
 	public:
 		virtual ~Emitter();
-
-		virtual NiPSysEmitter& object() override;
 
 		virtual void onSet(const nif::ColRGBA& col) override;
 
@@ -76,14 +74,13 @@ namespace node
 	{
 	protected:
 		VolumeEmitter(File& file, 
-			ni_ptr<NiPSysVolumeEmitter>&& obj,
+			const ni_ptr<NiPSysVolumeEmitter>& obj,
 			ni_ptr<NiPSysEmitterCtlr>&& ctlr,
 			ni_ptr<NiFloatInterpolator>&& iplr,
 			ni_ptr<NiBoolInterpolator>&& vis_iplr);
 
 	public:
 		virtual ~VolumeEmitter() = default;
-		virtual NiPSysVolumeEmitter& object() override;
 
 	public:
 		constexpr static const char* EMITTER_OBJECT = "Emitter object";
@@ -121,8 +118,6 @@ namespace node
 			ni_ptr<NiBoolInterpolator>&& vis_iplr = ni_ptr<NiBoolInterpolator>());
 		~BoxEmitter();
 
-		virtual NiPSysBoxEmitter& object() override;
-
 	public:
 		constexpr static const char* BOX_WIDTH = "Width (X)";
 		constexpr static const char* BOX_HEIGHT = "Height (Y)";
@@ -149,9 +144,6 @@ namespace node
 		~CylinderEmitter();
 
 	public:
-		virtual NiPSysCylinderEmitter& object() override;
-
-	public:
 		constexpr static const char* CYL_RADIUS = "Radius (XY)";
 		constexpr static const char* CYL_LENGTH = "Length (Z)";
 
@@ -173,9 +165,6 @@ namespace node
 			ni_ptr<NiFloatInterpolator>&& iplr = ni_ptr<NiFloatInterpolator>(),
 			ni_ptr<NiBoolInterpolator>&& vis_iplr = ni_ptr<NiBoolInterpolator>());
 		~SphereEmitter();
-
-	public:
-		virtual NiPSysSphereEmitter& object() override;
 
 	public:
 		constexpr static const char* SPH_RADIUS = "Radius";

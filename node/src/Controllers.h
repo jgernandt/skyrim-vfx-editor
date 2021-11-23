@@ -62,8 +62,6 @@ namespace node
 			const NiTimeController* ctlr);
 		~FloatController();
 
-		virtual NiFloatInterpolator& object() override;
-
 		FlagSet<ControllerFlags>& flags() { return m_ctlr->flags; }
 		const FlagSet<ControllerFlags>& flags() const { return m_ctlr->flags; }
 		Property<float>& frequency() { return m_ctlr->frequency; }

@@ -179,12 +179,6 @@ node::FloatController::~FloatController()
 	disconnect();
 }
 
-nif::NiFloatInterpolator& node::FloatController::object()
-{
-	assert(m_iplr);
-	return *m_iplr;
-}
-
 void node::FloatController::openKeyEditor()
 {
 	auto c = std::make_unique<FloatKeyEditor>(

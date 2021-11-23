@@ -31,11 +31,10 @@ namespace node
 		class Device;
 
 	protected:
-		Modifier(ni_ptr<NiPSysModifier>&& obj);
+		Modifier(const ni_ptr<NiPSysModifier>& obj);
 
 	public:
 		virtual ~Modifier();
-		virtual NiPSysModifier& object() override;
 
 		void addUnknownController(ni_ptr<NiPSysModifierCtlr>&& ctlr);
 
@@ -109,7 +108,6 @@ namespace node
 		};
 
 	protected:
-		const ni_ptr<NiPSysModifier> m_obj;
 		Device m_device;
 
 	private:

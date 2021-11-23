@@ -21,19 +21,18 @@
 #include "style.h"
 #include "widget_types.h"
 
-node::Modifier::Modifier(ni_ptr<NiPSysModifier>&& obj) :
-	m_obj{ std::move(obj) }, 
-	m_device(m_obj),
-	m_nameUpdater(make_ni_ptr(m_obj, &NiPSysModifier::name))
+node::Modifier::Modifier(const ni_ptr<NiPSysModifier>& obj) :
+	m_device(obj),
+	m_nameUpdater(make_ni_ptr(obj, &NiPSysModifier::name))
 {
-	assert(m_obj);
+	assert(obj);
 
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_Modifier);
 	setColour(COL_TITLE_ACTIVE, TitleCol_ModifierActive);
 
-	m_obj->order.addListener(m_nameUpdater);
-	m_nameUpdater.onSet(m_obj->order.get());
+	obj->order.addListener(m_nameUpdater);
+	m_nameUpdater.onSet(obj->order.get());
 
 	m_targetField = newField<NextModField>(NEXT_MODIFIER, *this, m_device);
 	m_nextField = newField<TargetField>(TARGET, *this, m_device);
@@ -41,12 +40,6 @@ node::Modifier::Modifier(ni_ptr<NiPSysModifier>&& obj) :
 
 node::Modifier::~Modifier()
 {
-}
-
-nif::NiPSysModifier& node::Modifier::object()
-{
-	assert(m_obj);
-	return *m_obj;
 }
 
 void node::Modifier::addUnknownController(ni_ptr<nif::NiPSysModifierCtlr>&& ctlr)

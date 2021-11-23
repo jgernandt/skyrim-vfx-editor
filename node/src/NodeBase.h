@@ -70,8 +70,6 @@ namespace node
 		virtual void accept(gui::Visitor& v) override;
 		virtual void onClose() override;
 
-		virtual nif::NiObject& object() = 0;
-
 		gui::Connector* addConnector(const std::string& label, ConnectorType type, std::unique_ptr<gui::Connector>&& obj);
 
 		//Fields systems is undergoing major revision. May be removed altogether.

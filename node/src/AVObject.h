@@ -26,11 +26,10 @@ namespace node
 	class ObjectNET : public NodeBase
 	{
 	protected:
-		ObjectNET(ni_ptr<NiObjectNET>&& obj);
+		ObjectNET();
 
 	public:
 		virtual ~ObjectNET() = default;
-		virtual NiObjectNET& object() override;
 
 	public:
 		constexpr static const char* OBJECT = "References";
@@ -55,13 +54,13 @@ namespace node
 		class NameField final : public Field
 		{
 		public:
-			NameField(const std::string& name, ObjectNET& node);
+			NameField(const std::string& name, NodeBase& node, ni_ptr<Property<std::string>>&& name2);
 		};
 
 		class ExtraDataField final : public Field
 		{
 		public:
-			ExtraDataField(const std::string& name, ObjectNET& node);
+			ExtraDataField(const std::string& name, NodeBase& node, ni_ptr<Set<NiExtraData>>&& extraData);
 
 		private:
 			Receiver<void> m_rvr;
@@ -69,8 +68,6 @@ namespace node
 		};
 
 	protected:
-		const ni_ptr<NiObjectNET> m_obj;
-
 		std::unique_ptr<Field> m_name;
 		std::unique_ptr<Field> m_extraData;
 		std::unique_ptr<Field> m_references;
@@ -79,11 +76,10 @@ namespace node
 	class AVObject : public ObjectNET
 	{
 	protected:
-		AVObject(ni_ptr<NiAVObject>&& obj);
+		AVObject(const ni_ptr<NiAVObject>& obj);
 
 	public:
 		virtual ~AVObject() = default;
-		virtual NiAVObject& object() override;
 
 	public:
 		constexpr static const char* PARENT = "Parent";
@@ -99,7 +95,7 @@ namespace node
 			public PropertyListener<rotation_t>, public DummyClass1, public DummyClass2
 		{
 		public:
-			RotationAdapter(ni_ptr<Property<math::Rotation>>&& backend);
+			RotationAdapter(const ni_ptr<NiAVObject>& obj);
 			~RotationAdapter();
 
 			//Recalculate our stored value
@@ -115,7 +111,7 @@ namespace node
 
 			void updateUI(gui::Composite* root);
 
-			const ni_ptr<Property<math::Rotation>> m_backend;
+			ni_ptr<Property<math::Rotation>> m_backend;
 			gui::Composite* m_guiRoot{ nullptr };
 			math::Rotation::euler_type m_current;
 			bool m_intrinsic{ false };
@@ -127,7 +123,7 @@ namespace node
 		class ParentField final : public Field
 		{
 		public:
-			ParentField(const std::string& name, AVObject& node);
+			ParentField(const std::string& name, NodeBase& node, const ni_ptr<NiAVObject>& object);
 
 		private:
 			SetReceiver<NiAVObject> m_rvr;
@@ -137,7 +133,7 @@ namespace node
 		class TransformField final : public Field
 		{
 		public:
-			TransformField(const std::string& name, AVObject& node);
+			TransformField(const std::string& name, AVObject& node, ni_ptr<Transform>&& transform);
 		};
 
 		RotationAdapter m_rotAdapter;

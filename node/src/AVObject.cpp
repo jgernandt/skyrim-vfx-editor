@@ -23,37 +23,33 @@
 
 using namespace nif;
 
-node::ObjectNET::NameField::NameField(const std::string& name, ObjectNET& node) : Field(name)
+node::ObjectNET::NameField::NameField(const std::string& name, NodeBase& node, ni_ptr<Property<std::string>>&& name2) : 
+	Field(name)
 {
-	widget = node.newChild<StringInput>(make_ni_ptr(node.m_obj, &NiObjectNET::name));
+	widget = node.newChild<StringInput>(name2);
 }
 
-node::ObjectNET::ExtraDataField::ExtraDataField(const std::string& name, ObjectNET& node) : 
-	Field(name), m_sdr(node.object().extraData)
+node::ObjectNET::ExtraDataField::ExtraDataField(const std::string& name, NodeBase& node, ni_ptr<Set<NiExtraData>>&& extraData) :
+	Field(name), 
+	m_sdr(*extraData)//old format
 {
 	connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::MultiConnector>(m_sdr, m_rvr));
 }
 
-node::ObjectNET::ObjectNET(ni_ptr<nif::NiObjectNET>&& obj) : m_obj{ std::move(obj) }
+node::ObjectNET::ObjectNET()
 {
-	assert(m_obj);
-}
-
-nif::NiObjectNET& node::ObjectNET::object()
-{
-	assert(m_obj);
-	return *m_obj;
 }
 
 
-node::AVObject::ParentField::ParentField(const std::string& name, AVObject& node) :
-	Field(name), m_rvr(std::static_pointer_cast<nif::NiAVObject>(node.m_obj))
+node::AVObject::ParentField::ParentField(const std::string& name, NodeBase& node, const ni_ptr<NiAVObject>& object) :
+	Field(name), m_rvr(object)
 {
 	connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sdr, m_rvr));
 }
 
 
-node::AVObject::TransformField::TransformField(const std::string& name, AVObject& node) : Field(name)
+node::AVObject::TransformField::TransformField(const std::string& name, AVObject& node, ni_ptr<Transform>&& transform) :
+	Field(name)
 {
 	//Future project: add connector to a controller
 
@@ -63,7 +59,7 @@ node::AVObject::TransformField::TransformField(const std::string& name, AVObject
 	//Translation
 	popup->addChild(std::make_unique<gui::Text>("Translation"));
 	std::array<std::string, 3> labels{ "X", "Y", "Z" };
-	auto t = std::make_unique<DragInput<nif::translation_t, 3>>(make_ni_ptr(node.m_obj, &node.object().transform.translation), labels);
+	auto t = std::make_unique<DragInput<nif::translation_t, 3>>(make_ni_ptr(transform, &Transform::translation), labels);
 	t->setSensitivity(0.1f);
 	popup->addChild(std::move(t));
 	
@@ -73,7 +69,7 @@ node::AVObject::TransformField::TransformField(const std::string& name, AVObject
 	
 	//Scale
 	popup->addChild(std::make_unique<gui::Text>(" "));
-	auto s = std::make_unique<DragFloat>(make_ni_ptr(node.m_obj, &node.object().transform.scale), "Scale");
+	auto s = std::make_unique<DragFloat>(make_ni_ptr(transform, &Transform::scale), "Scale");
 	s->setSensitivity(0.01f);
 	s->setLowerLimit(0.0f);
 	s->setUpperLimit(std::numeric_limits<float>::max());
@@ -88,16 +84,8 @@ node::AVObject::TransformField::TransformField(const std::string& name, AVObject
 }
 
 
-node::AVObject::AVObject(ni_ptr<nif::NiAVObject>&& obj) :
-	ObjectNET(std::move(obj)),
-	m_rotAdapter(make_ni_ptr(m_obj, &object().transform.rotation))
+node::AVObject::AVObject(const ni_ptr<NiAVObject>& obj) : m_rotAdapter(obj)
 {
-}
-
-nif::NiAVObject& node::AVObject::object()
-{
-	assert(m_obj);
-	return *static_cast<nif::NiAVObject*>(m_obj.get());
 }
 
 
@@ -146,10 +134,10 @@ struct util::property_traits<node::AVObject::DummyClass2*>
 	}
 };
 
-node::AVObject::RotationAdapter::RotationAdapter(ni_ptr<Property<math::Rotation>>&& backend) :
-	m_backend{ backend }
+node::AVObject::RotationAdapter::RotationAdapter(const ni_ptr<NiAVObject>& obj)
 {
-	assert(m_backend);
+	assert(obj);
+	m_backend = make_ni_ptr(obj, &obj->transform.rotation);
 	m_backend->addListener(*this);
 	onSet(m_backend->get());
 }
@@ -299,8 +287,8 @@ void node::AVObject::RotationAdapter::updateUI(gui::Composite* root)
 }
 
 
-node::DummyAVObject::DummyAVObject(ni_ptr<nif::NiAVObject>&& obj) :
-	AVObject(std::move(obj))
+node::DummyAVObject::DummyAVObject(ni_ptr<NiAVObject>&& obj) :
+	AVObject(obj)
 {
 	setColour(COL_TITLE, TitleCol_Geom);
 	setColour(COL_TITLE_ACTIVE, TitleCol_GeomActive);
@@ -309,9 +297,9 @@ node::DummyAVObject::DummyAVObject(ni_ptr<nif::NiAVObject>&& obj) :
 	setClosable(true);
 	setTitle("AVObject");
 
-	m_name = newField<NameField>(NAME, *this);
-	m_parent = newField<ParentField>(PARENT, *this);
-	m_transform = newField<TransformField>(TRANSFORM, *this);
+	m_name = newField<NameField>(NAME, *this, make_ni_ptr<Property<std::string>, NiObjectNET>(obj, &NiObjectNET::name));
+	m_parent = newField<ParentField>(PARENT, *this, obj);
+	m_transform = newField<TransformField>(TRANSFORM, *this, make_ni_ptr(obj, &NiAVObject::transform));
 }
 
 node::DummyAVObject::~DummyAVObject()

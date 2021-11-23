@@ -28,7 +28,7 @@ namespace node
 	public:
 		ParticleSystem(File& file);
 		ParticleSystem(File& file,
-			ni_ptr<NiParticleSystem>&& obj,
+			ni_ptr<NiParticleSystem>&& psys,
 			ni_ptr<NiPSysData>&& data,
 			ni_ptr<NiAlphaProperty>&& alpha,
 			ni_ptr<NiPSysUpdateCtlr>&& ctlr,
@@ -37,8 +37,6 @@ namespace node
 			ni_ptr<NiPSysBoundUpdateModifier>&& bum);
 
 		~ParticleSystem();
-
-		virtual NiParticleSystem& object() override;
 
 		Property<SubtextureCount>& subtexCount() { return *m_subtexCount; }
 
@@ -55,9 +53,6 @@ namespace node
 		class MaxCountField;
 		class ShaderField;
 		class ModifiersField;
-
-		ni_ptr<NiPSysData> m_data;
-		ni_ptr<NiAlphaProperty> m_alpha;
 
 		PropertySyncer<SubtextureCount, std::vector<SubtextureOffset>> m_subtexLsnr;
 		ni_ptr<Property<SubtextureCount>> m_subtexCount;
