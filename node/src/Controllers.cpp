@@ -18,7 +18,6 @@
 
 #include "pch.h"
 #include "Controllers.h"
-#include "DeviceImpl.h"
 #include "widget_types.h"
 #include "KeyEditor.h"
 
@@ -33,12 +32,38 @@ constexpr float DEFAULT_PHASE = 0.0f;
 constexpr float DEFAULT_STARTTIME = 0.0f;
 constexpr float DEFAULT_STOPTIME = 1.0f;
 
+using namespace nif;
+
+template<typename T, T Width, T Offset>
+struct BitSetWrapper
+{
+	constexpr static T MASK = ~(~T(0) << Width) << Offset;
+	ni_ptr<FlagSet<T>> ptr;
+};
+
+template<typename T, T Width, T Offset>
+struct util::property_traits<BitSetWrapper<T, Width, Offset>>
+{
+	using property_type = BitSetWrapper<T, Width, Offset>;
+	using value_type = T;
+	using get_type = T;
+
+	static T get(const BitSetWrapper<T, Width, Offset>& p)
+	{
+		return (p.ptr->raised() & p.MASK) >> Offset;
+	}
+	static void set(BitSetWrapper<T, Width, Offset>& p, T val)
+	{
+		p.ptr->clear(~(val << Offset) & p.MASK);
+		p.ptr->raise((val << Offset) & p.MASK);
+	}
+};
 
 class node::FloatController::TargetField : public node::Field
 {
 public:
 	TargetField(const std::string& name, FloatController& node) :
-		Field(name), m_ifc(node), m_rcvr(node.object()), m_sndr(m_ifc)
+		Field(name), m_ifc(node), m_rcvr(node.m_iplr), m_sndr(m_ifc)
 	{
 		//This is technically an upwards connector, but feels somehow better to have it downwards.
 		//Go for consistency or intuitivity?
@@ -50,17 +75,17 @@ private:
 	public:
 		Controller(FloatController& node) : m_node{ node } {}
 
-		virtual IObservable<IProperty<unsigned short>>& flags() override { return m_node.flags(); }
-		virtual IObservable<IProperty<float>>& frequency() override { return m_node.frequency(); }
-		virtual IObservable<IProperty<float>>& phase() override { return m_node.phase(); }
-		virtual IObservable<IProperty<float>>& startTime() override { return m_node.startTime(); }
-		virtual IObservable<IProperty<float>>& stopTime() override { return m_node.stopTime(); }
+		virtual FlagSet<ControllerFlags>& flags() override { return m_node.flags(); }
+		virtual Property<float>& frequency() override { return m_node.frequency(); }
+		virtual Property<float>& phase() override { return m_node.phase(); }
+		virtual Property<float>& startTime() override { return m_node.startTime(); }
+		virtual Property<float>& stopTime() override { return m_node.stopTime(); }
 
 	private:
 		FloatController& m_node;
 	};
 	Controller m_ifc;
-	AssignableReceiver<nif::NiInterpolator> m_rcvr;
+	AssignableReceiver<NiInterpolator> m_rcvr;
 	Sender<IController<float>> m_sndr;
 };
 
@@ -69,30 +94,29 @@ node::FloatController::FloatController(nif::File& file) :
 {
 }
 
-node::FloatController::FloatController(nif::File& file,
-	ni_ptr<nif::NiFloatInterpolator>&& iplr,
-	ni_ptr<nif::NiFloatData>&& data,
-	const nif::NiTimeController* ctlr) :
-	m_frequency{ std::make_shared<LocalProperty<float>>() },
-	m_phase{ std::make_shared<LocalProperty<float>>() },
-	m_startTime{ std::make_shared<LocalProperty<float>>() },
-	m_stopTime{ std::make_shared<LocalProperty<float>>() },
+node::FloatController::FloatController(File& file,
+	ni_ptr<NiFloatInterpolator>&& iplr,
+	ni_ptr<NiFloatData>&& data,
+	const NiTimeController* ctlr) :
 	m_iplr{ std::move(iplr) },
-	m_data{ std::move(data) }
+	m_data{ std::move(data) },
+	//Our controller is a dummy object that will never be exported or assigned to another field,
+	//hence we can bypass file. Still, this is a little fishy.
+	m_ctlr{ std::make_shared<NiTimeController>() }
 {
 	if (ctlr) {
-		m_flags.set(ctlr->flags().get());
-		m_frequency->set(ctlr->frequency().get());
-		m_phase->set(ctlr->phase().get());
-		m_startTime->set(ctlr->startTime().get());
-		m_stopTime->set(ctlr->stopTime().get());
+		m_ctlr->flags.raise(ctlr->flags.raised());
+		m_ctlr->frequency.set(ctlr->frequency.get());
+		m_ctlr->phase.set(ctlr->phase.get());
+		m_ctlr->startTime.set(ctlr->startTime.get());
+		m_ctlr->stopTime.set(ctlr->stopTime.get());
 	}
 	else {
-		m_flags.set(DEFAULT_FLAGS);
-		m_frequency->set(DEFAULT_FREQUENCY);
-		m_phase->set(DEFAULT_PHASE);
-		m_startTime->set(DEFAULT_STARTTIME);
-		m_stopTime->set(DEFAULT_STOPTIME);
+		m_ctlr->flags.raise(DEFAULT_FLAGS);
+		m_ctlr->frequency.set(DEFAULT_FREQUENCY);
+		m_ctlr->phase.set(DEFAULT_PHASE);
+		m_ctlr->startTime.set(DEFAULT_STARTTIME);
+		m_ctlr->stopTime.set(DEFAULT_STOPTIME);
 	}
 
 	setClosable(true);
@@ -109,27 +133,38 @@ node::FloatController::FloatController(nif::File& file,
 
 	if (!m_data) {
 		//We don't necessarily need a data block. Should we always have one regardless?
-		m_data = file.create<nif::NiFloatData>();
+		m_data = file.create<NiFloatData>();
 		if (!m_data)
 			throw std::runtime_error("Failed to create NiFloatData");
-		m_data->keyType().set(nif::KeyType::LINEAR);
-		m_data->iplnData().keys().set({ { startTime().get(), 0.0f }, { stopTime().get(), 0.0f } });
-		m_iplr->data().assign(m_data.get());
+
+		m_data->keyType.set(KEY_LINEAR);
+
+		m_data->keys.push_back();
+		m_data->keys.back().time.set(m_ctlr->startTime.get());
+		m_data->keys.back().value.set(0.0f);
+
+		m_data->keys.push_back();
+		m_data->keys.back().time.set(m_ctlr->stopTime.get());
+		m_data->keys.back().value.set(0.0f);
+
+		m_iplr->data.assign(m_data);
 	}
 
 	m_target = newField<TargetField>(TARGET, *this);
 
-	using selector_type = gui::Selector<unsigned short, IProperty<unsigned short>>;
-	newChild<selector_type>(m_flags.cycleType(), std::string(),
+	using selector_type = gui::Selector<ControllerFlags, BitSetWrapper<ControllerFlags, 2, 1>>;
+	newChild<selector_type>(
+		BitSetWrapper<ControllerFlags, 2, 1>{ make_ni_ptr(m_ctlr, &NiTimeController::flags) }, 
+		std::string(),
 		selector_type::ItemList{ { 0, "Repeat" }, { 1, "Reverse" }, { 2, "Clamp" } });
 
-	auto fr = newChild<DragFloat>(*m_frequency, "Frequency");
+	auto fr = newChild<DragFloat>(make_ni_ptr(m_ctlr, &NiTimeController::frequency), "Frequency");
 	fr->setSensitivity(0.01f);
 	fr->setLowerLimit(0.0f);
 	fr->setAlwaysClamp(true);
 	fr->setNumberFormat("%.2f");
 
-	auto ph = newChild<DragFloat>(*m_phase, "Phase");
+	auto ph = newChild<DragFloat>(make_ni_ptr(m_ctlr, &NiTimeController::phase), "Phase");
 	ph->setSensitivity(0.01f);
 	ph->setNumberFormat("%.2f");
 
@@ -142,11 +177,6 @@ node::FloatController::FloatController(nif::File& file,
 node::FloatController::~FloatController()
 {
 	disconnect();
-	//If we clear, NodeBase will try to disconnect destroyed connectors.
-	//If we don't, children that reference our local properties will survive us.
-	//They won't touch them during destruction, so it's fine. 
-	//Regardless, this is a vulnerability that should be fixed.
-	//clearChildren();
 }
 
 nif::NiFloatInterpolator& node::FloatController::object()
@@ -158,9 +188,10 @@ nif::NiFloatInterpolator& node::FloatController::object()
 void node::FloatController::openKeyEditor()
 {
 	auto c = std::make_unique<FloatKeyEditor>(
-		nif::make_field_ptr(m_data, &m_data->keyType()), 
-		nif::make_field_ptr(m_data, &m_data->iplnData()),
-		m_startTime, m_stopTime);
+		make_ni_ptr(m_data, &NiFloatData::keyType),
+		make_ni_ptr(m_data, &NiFloatData::keys),
+		make_ni_ptr(m_ctlr, &NiTimeController::startTime),
+		make_ni_ptr(m_ctlr, &NiTimeController::stopTime));
 	c->open();
 	asyncInvoke<gui::AddChild>(std::move(c), this, false);
 }

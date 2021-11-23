@@ -21,33 +21,46 @@
 #include "style.h"
 #include "widget_types.h"
 
+using namespace nif;
+
 constexpr float VAR_FRACTION = -0.5f;
-constexpr unsigned short DEFAULT_FLAGS = 72;
+constexpr ControllerFlags DEFAULT_FLAGS = 72;
 constexpr float DEFAULT_FREQUENCY = 1.0f;
 constexpr float DEFAULT_PHASE = 0.0f;
 constexpr float DEFAULT_STARTTIME = 0.0f;
 constexpr float DEFAULT_STOPTIME = 1.0f;
 
-class node::Emitter::BirthRateField final : public Field
+constexpr ColRGBA DEFAULT_VCOLOUR = COL_WHITE;
+constexpr math::degf DEFAULT_ELEVATION = math::degf{ 0.0f };
+
+
+class node::Emitter::BirthRateField final : 
+	public Field, public AssignableListener<NiInterpolator>
 {
 public:
-	BirthRateField(const std::string& name, Emitter& node, std::shared_ptr<nif::NiFloatInterpolator>&& iplr) :
+	BirthRateField(
+		const std::string& name, 
+		NodeBase& node, 
+		ni_ptr<NiPSysEmitterCtlr>&& ctlr,
+		ni_ptr<NiFloatInterpolator>&& iplr) 
+		:
 		Field(name), 
-		m_ctlr{ node.controller() }, 
+		m_ctlr{ std::move(ctlr) },
 		m_iplr{ std::move(iplr) }, 
-		m_ifc(node.controller().interpolator()),
-		m_rcvr(node.controller()),
-		m_sndr(m_ifc)
+		m_rcvr(m_ctlr),
+		m_sndr(m_ctlr->interpolator)//old structure, should use shared_ptr
 	{
-		if (m_ctlr.interpolator().isAssigned(nullptr))
-			m_ctlr.interpolator().assign(m_iplr.get());
+		assert(m_ctlr);//too late!
+
+		if (!m_ctlr->interpolator.assigned())
+			m_ctlr->interpolator.assign(m_iplr);
 
 		connector = node.addConnector(std::string(), ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
 
 		//Switch widget off when connected
 		auto sw = node.newChild<gui::Switch>(std::bind(&gui::Connector::isConnected, connector));
 
-		auto br = sw->newChild<DragFloat>(m_iplr->value(), name);
+		auto br = sw->newChild<DragFloat>(make_ni_ptr(m_iplr, &NiFloatInterpolator::value), name);
 		br->setSensitivity(1.0f);
 		br->setLogarithmic();
 		br->setLowerLimit(0.0f);
@@ -58,32 +71,24 @@ public:
 		widget = sw;
 	}
 
-private:
-	//We need to wrap m_ctlr->interpolator(), since we want to override assign(nullptr)
-	class Assignable final : public IObservable<IAssignable<nif::NiInterpolator>>
+	virtual void onAssign(NiInterpolator* obj) override
 	{
-	public:
-		Assignable(IObservable<IAssignable<nif::NiInterpolator>>& ifc) :
-			m_ifc{ ifc } {}
+		//Assign our default iplr when null is assigned
+		if (!obj)
+			m_ctlr->interpolator.assign(m_iplr);
+	}
 
-		virtual void assign(nif::NiInterpolator* iplr) override { m_ifc.assign(iplr ? iplr : m_default); }
-		virtual bool isAssigned(nif::NiInterpolator* iplr) const override { return m_ifc.isAssigned(iplr); }
-		virtual void addListener(nif::AssignableListener<nif::NiInterpolator>& l) override { m_ifc.addListener(l); }
-		virtual void removeListener(nif::AssignableListener<nif::NiInterpolator>& l) override { m_ifc.removeListener(l); }
-
-		IObservable<IAssignable<nif::NiInterpolator>>& m_ifc;
-		nif::NiFloatInterpolator* m_default{ nullptr };
-	};
+private:
 	//This will be universally useful, so we'll move this definition later
 	class ControllerReceiver final : public Receiver<IController<float>>
 	{
 	public:
-		ControllerReceiver(nif::NiTimeController& ctlr) :
-			m_lFlags(ctlr.flags()),
-			m_lFrequency(ctlr.frequency()),
-			m_lPhase(ctlr.phase()),
-			m_lStartTime(ctlr.startTime()),
-			m_lStopTime(ctlr.stopTime()) 
+		ControllerReceiver(const ni_ptr<NiTimeController>& ctlr) :
+			m_lFlags(make_ni_ptr(ctlr, &NiTimeController::flags)),
+			m_lFrequency( make_ni_ptr(ctlr, &NiTimeController::frequency) ),
+			m_lPhase(make_ni_ptr(ctlr, &NiTimeController::phase)),
+			m_lStartTime(make_ni_ptr(ctlr, &NiTimeController::startTime)),
+			m_lStopTime(make_ni_ptr(ctlr, &NiTimeController::stopTime))
 		{}
 
 		virtual void onConnect(IController<float>& ifc) override
@@ -95,7 +100,7 @@ private:
 			ifc.stopTime().addListener(m_lStopTime);
 
 			//we need to set the current values
-			m_lFlags.onSet(ifc.flags().get());
+			m_lFlags.onRaise(ifc.flags().raised());
 			m_lFrequency.onSet(ifc.frequency().get());
 			m_lPhase.onSet(ifc.phase().get());
 			m_lStartTime.onSet(ifc.startTime().get());
@@ -110,7 +115,7 @@ private:
 			ifc.stopTime().removeListener(m_lStopTime);
 
 			//we need to restore defaults
-			m_lFlags.onSet(DEFAULT_FLAGS);
+			m_lFlags.onRaise(DEFAULT_FLAGS);
 			m_lFrequency.onSet(DEFAULT_FREQUENCY);
 			m_lPhase.onSet(DEFAULT_PHASE);
 			m_lStartTime.onSet(DEFAULT_STARTTIME);
@@ -118,30 +123,34 @@ private:
 		}
 
 	private:
-		SetterListener<unsigned short> m_lFlags;
-		SetterListener<float> m_lFrequency;
-		SetterListener<float> m_lPhase;
-		SetterListener<float> m_lStartTime;
-		SetterListener<float> m_lStopTime;
+		FieldSyncer<FlagSet<ControllerFlags>> m_lFlags;
+		FieldSyncer<Property<float>> m_lFrequency;
+		FieldSyncer<Property<float>> m_lPhase;
+		FieldSyncer<Property<float>> m_lStartTime;
+		FieldSyncer<Property<float>> m_lStopTime;
 	};
+	
+	ni_ptr<NiPSysEmitterCtlr> m_ctlr;
+	ni_ptr<NiFloatInterpolator> m_iplr;
 
-	nif::NiPSysEmitterCtlr& m_ctlr;
-	std::shared_ptr<nif::NiFloatInterpolator> m_iplr;
-
-	Assignable m_ifc;
 	ControllerReceiver m_rcvr;
-	Sender<IAssignable<nif::NiInterpolator>> m_sndr;
-
+	Sender<Assignable<NiInterpolator>> m_sndr;
 };
 
 class node::Emitter::LifeSpanField final : public Field
 {
 public:
-	LifeSpanField(const std::string& name, Emitter& node) : Field(name)
+	LifeSpanField(
+		const std::string& name, 
+		NodeBase& node, 
+		ni_ptr<Property<float>>&& lifeSpan, 
+		ni_ptr<Property<float>>&& lifeSpanVar) 
+		: 
+		Field(name)
 	{
 		gui::Item* item = node.newChild<gui::Item>();
-		auto main = item->newChild<DragFloat>(node.object().lifeSpan(), u8"Life span");
-		auto var = item->newChild<DragFloat>(node.object().lifeSpanVar(), u8"±");
+		auto main = item->newChild<DragFloat>(lifeSpan, "Life span");
+		auto var = item->newChild<DragFloat>(lifeSpanVar, u8"±");
 		main->setSensitivity(0.05f);
 		main->setLowerLimit(0.0f);
 		main->setAlwaysClamp();
@@ -157,11 +166,17 @@ public:
 class node::Emitter::SizeField final : public Field
 {
 public:
-	SizeField(const std::string& name, Emitter& node) : Field(name)
+	SizeField(
+		const std::string& name,
+		NodeBase& node,
+		ni_ptr<Property<float>>&& size,
+		ni_ptr<Property<float>>&& sizeVar)
+		:
+		Field(name)
 	{
 		gui::Item* item = node.newChild<gui::Item>();
-		auto main = item->newChild<DragFloat>(node.object().size(), name);
-		auto var = item->newChild<DragFloat>(node.object().sizeVar(), u8"±");
+		auto main = item->newChild<DragFloat>(size, name);
+		auto var = item->newChild<DragFloat>(sizeVar, u8"±");
 		main->setSensitivity(0.1f);
 		main->setLowerLimit(0.0f);
 		main->setAlwaysClamp();
@@ -177,20 +192,27 @@ public:
 class node::Emitter::ColourField final : public Field
 {
 public:
-	ColourField(const std::string& name, Emitter& node) : Field(name)
+	ColourField(const std::string& name, NodeBase& node, ni_ptr<Property<ColRGBA>>&& col) : 
+		Field(name)
 	{
-		widget = node.newChild<ColourInput>(node.object().colour(), "Vertex colour");
+		widget = node.newChild<ColourInput>(col, "Vertex colour");
 	}
 };
 
 class node::Emitter::SpeedField final : public Field
 {
 public:
-	SpeedField(const std::string& name, Emitter& node) : Field(name)
+	SpeedField(
+		const std::string& name,
+		NodeBase& node,
+		ni_ptr<Property<float>>&& speed,
+		ni_ptr<Property<float>>&& speedVar)
+		:
+		Field(name)
 	{
 		gui::Item* item = node.newChild<gui::Item>();
-		auto main = item->newChild<DragFloat>(node.object().speed(), "Magnitude");
-		auto var = item->newChild<DragFloat>(node.object().speedVar(), u8"±");
+		auto main = item->newChild<DragFloat>(speed, "Magnitude");
+		auto var = item->newChild<DragFloat>(speedVar, u8"±");
 		main->setSensitivity(0.1f);
 		main->setLowerLimit(0.0f);
 		main->setAlwaysClamp();
@@ -206,12 +228,18 @@ public:
 class node::Emitter::AzimuthField final : public Field
 {
 public:
-	AzimuthField(const std::string& name, Emitter& node) : Field(name)
+	AzimuthField(
+		const std::string& name,
+		NodeBase& node,
+		ni_ptr<Property<math::degf>>&& azimuth,
+		ni_ptr<Property<math::degf>>&& azimuthVar)
+		:
+		Field(name)
 	{
 		//Angle around z, counter-clockwise from x
 		gui::Item* item = node.newChild<gui::Item>();
-		auto main = item->newChild<DragFloat>(node.object().azimuth(), name);
-		auto var = item->newChild<DragFloat>(node.object().azimuthVar(), u8"±");
+		auto main = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, NodeConverter>>(azimuth, name);
+		auto var = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, NodeConverter>>(azimuthVar, u8"±");
 		main->setSensitivity(0.5f);
 		main->setLowerLimit(0.0f);
 		main->setUpperLimit(360.0f);
@@ -232,12 +260,18 @@ public:
 class node::Emitter::ElevationField final : public Field
 {
 public:
-	ElevationField(const std::string& name, Emitter& node) : Field(name)
+	ElevationField(
+		const std::string& name,
+		NodeBase& node,
+		ni_ptr<Property<math::degf>>&& elevation,
+		ni_ptr<Property<math::degf>>&& elevationVar)
+		:
+		Field(name)
 	{
 		//Angle around z, counter-clockwise from x
 		gui::Item* item = node.newChild<gui::Item>();
-		auto main = item->newChild<DragFloat>(node.object().elevation(), name);
-		auto var = item->newChild<DragFloat>(node.object().elevationVar(), u8"±");
+		auto main = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, NodeConverter>>(elevation, name);
+		auto var = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, NodeConverter>>(elevationVar, u8"±");
 		main->setSensitivity(0.5f);
 		main->setLowerLimit(-90.0f);
 		main->setUpperLimit(90.0f);
@@ -262,25 +296,25 @@ node::Emitter::Emitter(nif::File& file,
 	ni_ptr<nif::NiFloatInterpolator>&& iplr,
 	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
 	Modifier(std::move(obj)),
-	m_ctlr{ std::move(ctlr) },
+	//ctlr goes to BirthRateField
 	//iplr goes to BirthRateField
 	m_visIplr{ std::move(vis_iplr) }
 {
-	if (!m_ctlr) {
-		m_ctlr = file.create<nif::NiPSysEmitterCtlr>();
-		if (!m_ctlr)
+	if (ctlr) {
+		ctlr = file.create<nif::NiPSysEmitterCtlr>();
+		if (ctlr)
 			throw std::runtime_error("Failed to create NiPSysEmitterCtlr");
 
-		m_ctlr->flags().set(DEFAULT_FLAGS);
-		m_ctlr->frequency().set(DEFAULT_FREQUENCY);
-		m_ctlr->phase().set(DEFAULT_PHASE);
-		m_ctlr->startTime().set(DEFAULT_STARTTIME);
-		m_ctlr->stopTime().set(DEFAULT_STOPTIME);
+		ctlr->flags.raise(DEFAULT_FLAGS);
+		ctlr->frequency.set(DEFAULT_FREQUENCY);
+		ctlr->phase.set(DEFAULT_PHASE);
+		ctlr->startTime.set(DEFAULT_STARTTIME);
+		ctlr->stopTime.set(DEFAULT_STOPTIME);
 	}
 
-	m_device.addController(m_ctlr);
-	object().colour().addListener(*this);//add colour requirement dynamically
-	onSet(object().colour().get());
+	m_device.addController(ctlr);
+	object().colour.addListener(*this);//add colour requirement dynamically
+	onSet(object().colour.get());
 	m_device.addRequirement(Requirement::LIFETIME);
 	m_device.addRequirement(Requirement::MOVEMENT);
 
@@ -294,10 +328,10 @@ node::Emitter::Emitter(nif::File& file,
 		m_visIplr = file.create<nif::NiBoolInterpolator>();
 		if (!m_visIplr)
 			throw std::runtime_error("Failed to create NiBoolInterpolator");
-		m_visIplr->value().set(true);
+		m_visIplr->value.set(true);
 	}
-	if (m_ctlr->visIplr().isAssigned(nullptr))
-		m_ctlr->visIplr().assign(m_visIplr.get());
+	if (!ctlr->visIplr.assigned())
+		ctlr->visIplr.assign(m_visIplr);
 
 	setColour(COL_TITLE, TitleCol_Modifier);
 	setColour(COL_TITLE_ACTIVE, TitleCol_ModifierActive);
@@ -305,38 +339,44 @@ node::Emitter::Emitter(nif::File& file,
 
 	newChild<gui::Separator>();
 
-	m_birthRateField = newField<BirthRateField>(BIRTH_RATE, *this, std::move(iplr));
-	m_lifeSpanField = newField<LifeSpanField>(LIFE_SPAN, *this);
+	m_birthRateField = newField<BirthRateField>(BIRTH_RATE, *this, std::move(ctlr), std::move(iplr));
+	m_lifeSpanField = newField<LifeSpanField>(LIFE_SPAN, *this, 
+		make_ni_ptr(std::static_pointer_cast<NiPSysEmitter>(m_obj), &NiPSysEmitter::lifeSpan),
+		make_ni_ptr(std::static_pointer_cast<NiPSysEmitter>(m_obj), &NiPSysEmitter::lifeSpanVar));
 
 	newChild<gui::Separator>();
 
-	m_sizeField = newField<SizeField>(SIZE, *this);
-	m_colField = newField<ColourField>(COLOUR, *this);
+	m_sizeField = newField<SizeField>(SIZE, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysEmitter>(m_obj), &NiPSysEmitter::lifeSpan),
+		make_ni_ptr(std::static_pointer_cast<NiPSysEmitter>(m_obj), &NiPSysEmitter::lifeSpanVar));
+
+	m_colField = newField<ColourField>(COLOUR, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysEmitter>(m_obj), &NiPSysEmitter::colour));
 
 	newChild<gui::Separator>();
 
 	newChild<gui::Text>("Velocity");
-	m_speedField = newField<SpeedField>(SPEED, *this);
-	m_azimField = newField<AzimuthField>(AZIMUTH, *this);
-	m_elevField = newField<ElevationField>(ELEVATION, *this);
+	m_speedField = newField<SpeedField>(SPEED, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysEmitter>(m_obj), &NiPSysEmitter::speed),
+		make_ni_ptr(std::static_pointer_cast<NiPSysEmitter>(m_obj), &NiPSysEmitter::speedVar));
+
+	m_azimField = newField<AzimuthField>(AZIMUTH, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysEmitter>(m_obj), &NiPSysEmitter::azimuth),
+		make_ni_ptr(std::static_pointer_cast<NiPSysEmitter>(m_obj), &NiPSysEmitter::azimuthVar));
+
+	m_elevField = newField<ElevationField>(ELEVATION, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysEmitter>(m_obj), &NiPSysEmitter::elevation),
+		make_ni_ptr(std::static_pointer_cast<NiPSysEmitter>(m_obj), &NiPSysEmitter::elevationVar));
 }
 
 node::Emitter::~Emitter()
 {
-	if (controller().visIplr().isAssigned(m_visIplr.get()))
-		controller().visIplr().assign(nullptr);
 }
 
 nif::NiPSysEmitter& node::Emitter::object()
 {
 	assert(m_obj);
 	return *static_cast<nif::NiPSysEmitter*>(m_obj.get());
-}
-
-nif::NiPSysEmitterCtlr& node::Emitter::controller()
-{
-	assert(m_ctlr);
-	return *m_ctlr;
 }
 
 
@@ -360,7 +400,8 @@ node::VolumeEmitter::VolumeEmitter(nif::File& file,
 	Emitter(file, std::move(obj), std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	newChild<gui::Separator>();
-	m_emitterObjField = newField<EmitterObjectField>(EMITTER_OBJECT, *this);
+	m_emitterObjField = newField<EmitterObjectField>(EMITTER_OBJECT, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysVolumeEmitter>(m_obj), &NiPSysVolumeEmitter::emitterObject));
 }
 
 nif::NiPSysVolumeEmitter& node::VolumeEmitter::object()
@@ -369,13 +410,16 @@ nif::NiPSysVolumeEmitter& node::VolumeEmitter::object()
 	return *static_cast<nif::NiPSysVolumeEmitter*>(m_obj.get());
 }
 
-node::VolumeEmitter::EmitterObjectField::EmitterObjectField(const std::string& name, VolumeEmitter& node) :
-	Field(name), m_sdr(node.object().emitterObject())
+node::VolumeEmitter::EmitterObjectField::EmitterObjectField(
+	const std::string& name, NodeBase& node, ni_ptr<Assignable<NiNode>>&& emitterObject) :
+	Field(name), 
+	m_sdr(*emitterObject)//old format, should use the pointer
 {
 	connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sdr, m_rvr));
 }
 
-node::VolumeEmitter::EmitterMetricField::EmitterMetricField(const std::string& name, VolumeEmitter& node, IProperty<float>& prop) :
+node::VolumeEmitter::EmitterMetricField::EmitterMetricField(
+	const std::string& name, NodeBase& node, ni_ptr<Property<float>>&& prop) :
 	Field(name)
 {
 	auto w = node.newChild<DragFloat>(prop, name);
@@ -388,8 +432,8 @@ node::VolumeEmitter::EmitterMetricField::EmitterMetricField(const std::string& n
 node::BoxEmitter::BoxEmitter(nif::File& file) :
 	BoxEmitter(file, file.create<nif::NiPSysBoxEmitter>())
 {
-	object().colour().set(nif::COL_WHITE);
-	object().elevation().set(0.0f);
+	object().colour.set(DEFAULT_VCOLOUR);
+	object().elevation.set(DEFAULT_ELEVATION);
 }
 
 node::BoxEmitter::BoxEmitter(nif::File& file,
@@ -402,9 +446,12 @@ node::BoxEmitter::BoxEmitter(nif::File& file,
 	setTitle("Box emitter");
 	setSize({ WIDTH, HEIGHT });
 
-	m_widthField = newField<EmitterMetricField>(BOX_WIDTH, *this, object().width());
-	m_heightField = newField<EmitterMetricField>(BOX_HEIGHT, *this, object().height());
-	m_depthField = newField<EmitterMetricField>(BOX_DEPTH, *this, object().depth());
+	m_widthField = newField<EmitterMetricField>(BOX_WIDTH, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysBoxEmitter>(m_obj), &NiPSysBoxEmitter::width));
+	m_heightField = newField<EmitterMetricField>(BOX_HEIGHT, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysBoxEmitter>(m_obj), &NiPSysBoxEmitter::height));
+	m_depthField = newField<EmitterMetricField>(BOX_DEPTH, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysBoxEmitter>(m_obj), &NiPSysBoxEmitter::depth));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
@@ -428,8 +475,8 @@ nif::NiPSysBoxEmitter& node::BoxEmitter::object()
 node::CylinderEmitter::CylinderEmitter(nif::File& file) :
 	CylinderEmitter(file, file.create<nif::NiPSysCylinderEmitter>())
 {
-	object().colour().set(nif::COL_WHITE);
-	object().elevation().set(0.0f);
+	object().colour.set(DEFAULT_VCOLOUR);
+	object().elevation.set(DEFAULT_ELEVATION);
 }
 
 node::CylinderEmitter::CylinderEmitter(nif::File& file,
@@ -442,8 +489,10 @@ node::CylinderEmitter::CylinderEmitter(nif::File& file,
 	setTitle("Cylinder emitter");
 	setSize({ WIDTH, HEIGHT });
 
-	m_radiusField = newField<EmitterMetricField>(CYL_RADIUS, *this, object().radius());
-	m_lengthField = newField<EmitterMetricField>(CYL_LENGTH, *this, object().height());
+	m_radiusField = newField<EmitterMetricField>(CYL_RADIUS, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysCylinderEmitter>(m_obj), &NiPSysCylinderEmitter::radius));
+	m_lengthField = newField<EmitterMetricField>(CYL_LENGTH, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysCylinderEmitter>(m_obj), &NiPSysCylinderEmitter::length));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
@@ -466,8 +515,8 @@ nif::NiPSysCylinderEmitter& node::CylinderEmitter::object()
 node::SphereEmitter::SphereEmitter(nif::File& file) :
 	SphereEmitter(file, file.create<nif::NiPSysSphereEmitter>())
 {
-	object().colour().set(nif::COL_WHITE);
-	object().elevation().set(0.0f);
+	object().colour.set(DEFAULT_VCOLOUR);
+	object().elevation.set(DEFAULT_ELEVATION);
 }
 
 node::SphereEmitter::SphereEmitter(nif::File& file,
@@ -480,7 +529,8 @@ node::SphereEmitter::SphereEmitter(nif::File& file,
 	setTitle("Sphere emitter");
 	setSize({ WIDTH, HEIGHT });
 
-	m_radiusField = newField<EmitterMetricField>(SPH_RADIUS, *this, object().radius());
+	m_radiusField = newField<EmitterMetricField>(SPH_RADIUS, *this,
+		make_ni_ptr(std::static_pointer_cast<NiPSysBoxEmitter>(m_obj), &NiPSysBoxEmitter::width));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });

@@ -21,17 +21,19 @@
 #include "style.h"
 #include "widget_types.h"
 
-node::Modifier::Modifier(ni_ptr<nif::NiPSysModifier>&& obj) :
+node::Modifier::Modifier(ni_ptr<NiPSysModifier>&& obj) :
 	m_obj{ std::move(obj) }, 
 	m_device(m_obj),
-	m_nameUpdater(nif::make_field_ptr(m_obj, &m_obj->name()))
+	m_nameUpdater(make_ni_ptr(m_obj, &NiPSysModifier::name))
 {
+	assert(m_obj);
+
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_Modifier);
 	setColour(COL_TITLE_ACTIVE, TitleCol_ModifierActive);
 
-	m_obj->order().addListener(m_nameUpdater);
-	m_nameUpdater.onSet(m_obj->order().get());
+	m_obj->order.addListener(m_nameUpdater);
+	m_nameUpdater.onSet(m_obj->order.get());
 
 	m_targetField = newField<NextModField>(NEXT_MODIFIER, *this, m_device);
 	m_nextField = newField<TargetField>(TARGET, *this, m_device);
@@ -56,16 +58,17 @@ void node::Modifier::addUnknownController(ni_ptr<nif::NiPSysModifierCtlr>&& ctlr
 }
 
 
-node::Modifier::OrderUpdater::OrderUpdater(ni_ptr<IProperty<unsigned int>>&& order) :
+node::Modifier::OrderUpdater::OrderUpdater(ni_ptr<Property<unsigned int>>&& order) :
 	m_order{ std::move(order) }
 {
 	assert(m_order);
 }
 
 
-void node::Modifier::OrderUpdater::onInsert(size_t pos)
+void node::Modifier::OrderUpdater::onInsert(int pos)
 {
-	if (pos <= m_order->get()) {
+	assert(pos >= 0);
+	if ((unsigned int)pos <= m_order->get()) {
 		//we have been pushed back
 		size_t order = m_order->get() + 1;
 		m_order->set(order);
@@ -73,10 +76,11 @@ void node::Modifier::OrderUpdater::onInsert(size_t pos)
 	//else ignore
 }
 
-void node::Modifier::OrderUpdater::onErase(size_t pos)
+void node::Modifier::OrderUpdater::onErase(int pos)
 {
+	assert(pos >= 0);
 	//if pos == order, we were erased ourselves!
-	if (pos < m_order->get()) {
+	if ((unsigned int)pos < m_order->get()) {
 		//we have been pulled forward
 		size_t order = m_order->get() - 1;
 		m_order->set(order);
@@ -84,7 +88,7 @@ void node::Modifier::OrderUpdater::onErase(size_t pos)
 	//else ignore
 }
 
-node::Modifier::NameUpdater::NameUpdater(ni_ptr<IProperty<std::string>>&& name) :
+node::Modifier::NameUpdater::NameUpdater(ni_ptr<Property<std::string>>&& name) :
 	m_name{ std::move(name) }
 {
 	assert(m_name);
@@ -95,20 +99,18 @@ void node::Modifier::NameUpdater::onSet(const unsigned int& i)
 	m_name->set("Modifier:" + std::to_string(i));
 }
 
-node::Modifier::StringMatcher::StringMatcher(ni_ptr<IProperty<std::string>>&& target) :
+node::Modifier::StringMatcher::StringMatcher(ni_ptr<Property<std::string>>&& target) :
 	m_target{ std::move(target) }
 {
 	assert(m_target);
 }
 
-node::Modifier::Device::Device(const ni_ptr<nif::NiPSysModifier>& obj) :
+node::Modifier::Device::Device(const ni_ptr<NiPSysModifier>& obj) :
 	m_mod{ obj },
-	m_orderUpdater(nif::make_field_ptr(m_mod, &m_mod->order()))
+	m_orderUpdater(make_ni_ptr(m_mod, &NiPSysModifier::order))
 {
-	//a little late for this, but will matter if we improve make_field_ptr to use pointer to member
 	assert(m_mod);
-
-	m_mod->active().set(true);//should be controllable somehow
+	m_mod->active.set(true);//should be controllable somehow
 }
 
 void node::Modifier::Device::onConnect(IModifiable& ifc)
@@ -116,20 +118,18 @@ void node::Modifier::Device::onConnect(IModifiable& ifc)
 	assert(!m_ifc);
 	m_ifc = &ifc;
 
-	size_t order = ifc.modifiers().insert(-1, *m_mod);
+	int order = ifc.modifiers().insert(ifc.modifiers().size(), m_mod);
 
 	ifc.modifiers().addListener(m_orderUpdater);//update order if sequence changes
-	m_mod->order().set(order);//do we still need this?
+	m_mod->order.set(order);//do we still need this?
 
 	for (auto&& item : m_ctlrs) {
 		assert(item.first);
-		ifc.controllers().insert(-1, *item.first);
+		ifc.controllers().insert(ifc.controllers().size(), item.first);
 	}
 
-	for (auto&& req : m_reqs) {
-		if (req.second > 0)
-			ifc.requirements().add(req.first);
-	}
+	for (auto&& req : m_reqs)
+		ifc.requirements()[req.first] += req.second;
 
 	//pass on last
 	SequentialDevice::onConnect(ifc);
@@ -142,14 +142,12 @@ void node::Modifier::Device::onDisconnect(IModifiable& ifc)
 	//pass on first
 	SequentialDevice::onDisconnect(ifc);
 
-	for (auto&& req : m_reqs) {
-		if (req.second > 0)
-			ifc.requirements().remove(req.first);
-	}
+	for (auto&& req : m_reqs)
+		ifc.requirements()[req.first] -= req.second;
 
 	for (auto&& item : m_ctlrs) {
 		assert(item.first);
-		if (size_t pos = ifc.controllers().find(*item.first); pos != -1)
+		if (int pos = ifc.controllers().find(item.first.get()); pos >= 0)
 			ifc.controllers().erase(pos);
 	}
 
@@ -157,15 +155,15 @@ void node::Modifier::Device::onDisconnect(IModifiable& ifc)
 
 	//It would be safer to search for our position, 
 	//but unless we messed something up we shouldn't need to
-	assert(ifc.modifiers().find(*m_mod) == m_mod->order().get());
-	ifc.modifiers().erase(m_mod->order().get());
+	assert(ifc.modifiers().find(m_mod.get()) == m_mod->order.get());
+	ifc.modifiers().erase(m_mod->order.get());
 
-	m_mod->order().set(-1);
+	m_mod->order.set(-1);
 
 	m_ifc = nullptr;
 }
 
-void node::Modifier::Device::addController(const ni_ptr<nif::NiPSysModifierCtlr>& ctlr)
+void node::Modifier::Device::addController(const ni_ptr<NiPSysModifierCtlr>& ctlr)
 {
 	//Add the controller to our list and register for it to receive name changes from NiPSysModifier.
 	//If we are connected, add the controller to our target.
@@ -173,11 +171,11 @@ void node::Modifier::Device::addController(const ni_ptr<nif::NiPSysModifierCtlr>
 		auto up = [&ctlr](const ControllerPair& item) { return item.first == ctlr; };
 		if (std::find_if(m_ctlrs.begin(), m_ctlrs.end(), up) == m_ctlrs.end()) {
 			m_ctlrs.push_back(
-				{ ctlr, std::make_unique<StringMatcher>(nif::make_field_ptr(ctlr, &ctlr->modifierName())) });
-			m_mod->name().addListener(*m_ctlrs.back().second);
-			m_ctlrs.back().second->onSet(m_mod->name().get());
+				{ ctlr, std::make_unique<StringMatcher>(make_ni_ptr(ctlr, &NiPSysModifierCtlr::modifierName)) });
+			m_mod->name.addListener(*m_ctlrs.back().second);
+			m_ctlrs.back().second->onSet(m_mod->name.get());
 			if (m_ifc)
-				m_ifc->controllers().insert(-1, *ctlr);
+				m_ifc->controllers().insert(m_ifc->controllers().size(), ctlr);
 		}
 	}
 }
@@ -189,10 +187,10 @@ void node::Modifier::Device::removeController(nif::NiPSysModifierCtlr* ctlr)
 		auto up = [ctlr](const ControllerPair& item) { return item.first.get() == ctlr; };
 		if (auto it = std::find_if(m_ctlrs.begin(), m_ctlrs.end(), up); it != m_ctlrs.end()) {
 			if (m_ifc) {
-				if (size_t pos = m_ifc->controllers().find(*ctlr))
+				if (size_t pos = m_ifc->controllers().find(ctlr))
 					m_ifc->controllers().erase(pos);
 			}
-			m_mod->name().removeListener(*it->second);
+			m_mod->name.removeListener(*it->second);
 			m_ctlrs.erase(it);
 		}
 	}
@@ -200,17 +198,16 @@ void node::Modifier::Device::removeController(nif::NiPSysModifierCtlr* ctlr)
 
 void node::Modifier::Device::addRequirement(Requirement req)
 {
-	int count = ++m_reqs[req];//inserts int() at req if the entry does not yet exist
-	if (count == 1 && m_ifc)
-		m_ifc->requirements().add(req);
+	m_reqs[req]++;//inserts int() at req if the entry does not yet exist
+	if (m_ifc)
+		m_ifc->requirements()[req]++;
 }
 
 void node::Modifier::Device::removeRequirement(Requirement req)
 {
-	int count = --m_reqs[req];
-	assert(count >= 0);//or we messed something up!
-	if (count == 0 && m_ifc)
-		m_ifc->requirements().remove(req);
+	m_reqs[req]--;
+	if (m_ifc)
+		m_ifc->requirements()[req]--;
 }
 
 

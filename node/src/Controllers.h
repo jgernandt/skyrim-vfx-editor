@@ -18,10 +18,11 @@
 
 #pragma once
 #include "NodeBase.h"
-#include "NiController.h"
-#include "node_concepts.h"
 
-//This might be universally useful
+/*
+//This might be universally useful.
+//Update: Might *have* been useful. I don't know if it translates to the new nif system.
+
 template<typename T, typename FieldType, int Offset, int Width>
 class BitsetProperty final : public IProperty<T>
 {
@@ -45,26 +46,30 @@ private:
 
 	IProperty<FieldType>& m_bitfield;
 };
+*/
 
 namespace node
 {
+	using namespace nif;
+
 	class FloatController final : public NodeBase
 	{
 	public:
-		FloatController(nif::File& file);
-		FloatController(nif::File& file, 
-			ni_ptr<nif::NiFloatInterpolator>&& iplr, 
-			ni_ptr<nif::NiFloatData>&& data,
-			const nif::NiTimeController* ctlr);
+		FloatController(File& file);
+		FloatController(File& file, 
+			ni_ptr<NiFloatInterpolator>&& iplr, 
+			ni_ptr<NiFloatData>&& data,
+			const NiTimeController* ctlr);
 		~FloatController();
 
-		virtual nif::NiFloatInterpolator& object() override;
+		virtual NiFloatInterpolator& object() override;
 
-		OProperty<unsigned short>& flags() { return m_flags; }
-		OProperty<float>& frequency() { return *m_frequency; }
-		OProperty<float>& phase() { return *m_phase; }
-		OProperty<float>& startTime() { return *m_startTime; }
-		OProperty<float>& stopTime() { return *m_stopTime; }
+		FlagSet<ControllerFlags>& flags() { return m_ctlr->flags; }
+		const FlagSet<ControllerFlags>& flags() const { return m_ctlr->flags; }
+		Property<float>& frequency() { return m_ctlr->frequency; }
+		Property<float>& phase() { return m_ctlr->phase; }
+		Property<float>& startTime() { return m_ctlr->startTime; }
+		Property<float>& stopTime() { return m_ctlr->stopTime; }
 
 	private:
 		void openKeyEditor();
@@ -76,38 +81,14 @@ namespace node
 		constexpr static float HEIGHT = 160.0f;
 
 	private:
-		//Or should this be baseline nif?
-		class FlagsProperty final : public LocalProperty<unsigned short>
-		{
-		public:
-			FlagsProperty() : 
-				m_animType(*this), m_cycleType(*this), m_active(*this), m_playBackwards(*this) 
-			{}
+		//Managed objects
+		//These should all be const, but that doesn't work with our current creation procedure.
+		ni_ptr<NiFloatInterpolator> m_iplr;
+		ni_ptr<NiFloatData> m_data;
+		const ni_ptr<NiTimeController> m_ctlr;//dummy controller
 
-			IProperty<bool>& animType() { return m_animType; }
-			IProperty<unsigned short>& cycleType() { return m_cycleType; }
-			IProperty<bool>& active() { return m_active; }
-			IProperty<bool>& playBackwards() { return m_playBackwards; }
-
-		private:
-			BitsetProperty<bool, unsigned short, 0, 1> m_animType;
-			BitsetProperty<unsigned short, unsigned short, 1, 2> m_cycleType;
-			BitsetProperty<bool, unsigned short, 3, 1> m_active;
-			BitsetProperty<bool, unsigned short, 4, 1> m_playBackwards;
-			//BitsetProperty<bool, unsigned short, 5, 1> m_managerControlled;
-			//BitsetProperty<bool, unsigned short, 6, 1> m_unknown;
-		};
-		FlagsProperty m_flags;
-		std::shared_ptr<LocalProperty<float>> m_frequency;
-		std::shared_ptr<LocalProperty<float>> m_phase;
-		std::shared_ptr<LocalProperty<float>> m_startTime;
-		std::shared_ptr<LocalProperty<float>> m_stopTime;
-
-		ni_ptr<nif::NiFloatInterpolator> m_iplr;
-		ni_ptr<nif::NiFloatData> m_data;
-
+		//bleh
 		class TargetField;
-
 		std::unique_ptr<Field> m_target;
 	};
 }

@@ -18,28 +18,26 @@
 
 #pragma once
 #include "Modifier.h"
-#include "NiPSysEmitter.h"
 
 namespace node
 {
+	using namespace nif;
+
 	class Emitter : 
 		public Modifier, 
-		public nif::PropertyListener<nif::ColRGBA>
+		public PropertyListener<ColRGBA>
 	{
 	protected:
-		Emitter(nif::File& file, 
-			ni_ptr<nif::NiPSysEmitter>&& obj,
-			ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-			ni_ptr<nif::NiFloatInterpolator>&& iplr,
-			ni_ptr<nif::NiBoolInterpolator>&& vis_iplr);
+		Emitter(File& file, 
+			ni_ptr<NiPSysEmitter>&& obj,
+			ni_ptr<NiPSysEmitterCtlr>&& ctlr,
+			ni_ptr<NiFloatInterpolator>&& iplr,
+			ni_ptr<NiBoolInterpolator>&& vis_iplr);
 
 	public:
 		virtual ~Emitter();
 
-		virtual nif::NiPSysEmitter& object() override;
-		nif::NiPSysEmitterCtlr& controller();
-		//nif::NiFloatInterpolator& brIplr();//our default interpolator
-		//nif::NiBoolInterpolator& visIplr();//our default interpolator
+		virtual NiPSysEmitter& object() override;
 
 		virtual void onSet(const nif::ColRGBA& col) override;
 
@@ -61,10 +59,8 @@ namespace node
 		class AzimuthField;
 		class ElevationField;
 
-		ni_ptr<nif::NiPSysEmitterCtlr> m_ctlr;
+		ni_ptr<NiBoolInterpolator> m_visIplr;
 
-		//until we have a field to manage this:
-		ni_ptr<nif::NiBoolInterpolator> m_visIplr;
 		bool m_colActive{ false };
 
 		std::unique_ptr<Field> m_birthRateField;
@@ -79,15 +75,15 @@ namespace node
 	class VolumeEmitter : public Emitter
 	{
 	protected:
-		VolumeEmitter(nif::File& file, 
-			ni_ptr<nif::NiPSysVolumeEmitter>&& obj,
-			ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-			ni_ptr<nif::NiFloatInterpolator>&& iplr,
-			ni_ptr<nif::NiBoolInterpolator>&& vis_iplr);
+		VolumeEmitter(File& file, 
+			ni_ptr<NiPSysVolumeEmitter>&& obj,
+			ni_ptr<NiPSysEmitterCtlr>&& ctlr,
+			ni_ptr<NiFloatInterpolator>&& iplr,
+			ni_ptr<NiBoolInterpolator>&& vis_iplr);
 
 	public:
 		virtual ~VolumeEmitter() = default;
-		virtual nif::NiPSysVolumeEmitter& object() override;
+		virtual NiPSysVolumeEmitter& object() override;
 
 	public:
 		constexpr static const char* EMITTER_OBJECT = "Emitter object";
@@ -96,16 +92,18 @@ namespace node
 		class EmitterObjectField final : public Field
 		{
 		public:
-			EmitterObjectField(const std::string& name, VolumeEmitter& node);
+			EmitterObjectField(const std::string& name, NodeBase& node, 
+				ni_ptr<Assignable<NiNode>>&& emitterObject);
 
 		private:
 			Receiver<void> m_rvr;
-			Sender<IAssignable<nif::NiNode>> m_sdr;
+			Sender<Assignable<NiNode>> m_sdr;
 		};
 		class EmitterMetricField final : public Field
 		{
 		public:
-			EmitterMetricField(const std::string& name, VolumeEmitter& node, IProperty<float>& prop);
+			EmitterMetricField(const std::string& name, NodeBase& node, 
+				ni_ptr<Property<float>>&& prop);
 		};
 
 		std::unique_ptr<Field> m_emitterObjField;
@@ -114,16 +112,16 @@ namespace node
 	class BoxEmitter final : public VolumeEmitter
 	{
 	public:
-		BoxEmitter(nif::File& file);
+		BoxEmitter(File& file);
 
-		BoxEmitter(nif::File& file,
-			ni_ptr<nif::NiPSysBoxEmitter>&& obj,
-			ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr = ni_ptr<nif::NiPSysEmitterCtlr>(),
-			ni_ptr<nif::NiFloatInterpolator>&& iplr = ni_ptr<nif::NiFloatInterpolator>(),
-			ni_ptr<nif::NiBoolInterpolator>&& vis_iplr = ni_ptr<nif::NiBoolInterpolator>());
+		BoxEmitter(File& file,
+			ni_ptr<NiPSysBoxEmitter>&& obj,
+			ni_ptr<NiPSysEmitterCtlr>&& ctlr = ni_ptr<NiPSysEmitterCtlr>(),
+			ni_ptr<NiFloatInterpolator>&& iplr = ni_ptr<NiFloatInterpolator>(),
+			ni_ptr<NiBoolInterpolator>&& vis_iplr = ni_ptr<NiBoolInterpolator>());
 		~BoxEmitter();
 
-		virtual nif::NiPSysBoxEmitter& object() override;
+		virtual NiPSysBoxEmitter& object() override;
 
 	public:
 		constexpr static const char* BOX_WIDTH = "Width (X)";
@@ -142,16 +140,16 @@ namespace node
 	class CylinderEmitter final : public VolumeEmitter
 	{
 	public:
-		CylinderEmitter(nif::File& file);
-		CylinderEmitter(nif::File& file, 
-			ni_ptr<nif::NiPSysCylinderEmitter>&& obj,
-			ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr = ni_ptr<nif::NiPSysEmitterCtlr>(),
-			ni_ptr<nif::NiFloatInterpolator>&& iplr = ni_ptr<nif::NiFloatInterpolator>(),
-			ni_ptr<nif::NiBoolInterpolator>&& vis_iplr = ni_ptr<nif::NiBoolInterpolator>());
+		CylinderEmitter(File& file);
+		CylinderEmitter(File& file, 
+			ni_ptr<NiPSysCylinderEmitter>&& obj,
+			ni_ptr<NiPSysEmitterCtlr>&& ctlr = ni_ptr<NiPSysEmitterCtlr>(),
+			ni_ptr<NiFloatInterpolator>&& iplr = ni_ptr<NiFloatInterpolator>(),
+			ni_ptr<NiBoolInterpolator>&& vis_iplr = ni_ptr<NiBoolInterpolator>());
 		~CylinderEmitter();
 
 	public:
-		virtual nif::NiPSysCylinderEmitter& object() override;
+		virtual NiPSysCylinderEmitter& object() override;
 
 	public:
 		constexpr static const char* CYL_RADIUS = "Radius (XY)";
@@ -168,16 +166,16 @@ namespace node
 	class SphereEmitter final : public VolumeEmitter
 	{
 	public:
-		SphereEmitter(nif::File& file);
-		SphereEmitter(nif::File& file,
-			ni_ptr<nif::NiPSysSphereEmitter>&& obj,
-			ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr = ni_ptr<nif::NiPSysEmitterCtlr>(),
-			ni_ptr<nif::NiFloatInterpolator>&& iplr = ni_ptr<nif::NiFloatInterpolator>(),
-			ni_ptr<nif::NiBoolInterpolator>&& vis_iplr = ni_ptr<nif::NiBoolInterpolator>());
+		SphereEmitter(File& file);
+		SphereEmitter(File& file,
+			ni_ptr<NiPSysSphereEmitter>&& obj,
+			ni_ptr<NiPSysEmitterCtlr>&& ctlr = ni_ptr<NiPSysEmitterCtlr>(),
+			ni_ptr<NiFloatInterpolator>&& iplr = ni_ptr<NiFloatInterpolator>(),
+			ni_ptr<NiBoolInterpolator>&& vis_iplr = ni_ptr<NiBoolInterpolator>());
 		~SphereEmitter();
 
 	public:
-		virtual nif::NiPSysSphereEmitter& object() override;
+		virtual NiPSysSphereEmitter& object() override;
 
 	public:
 		constexpr static const char* SPH_RADIUS = "Radius";

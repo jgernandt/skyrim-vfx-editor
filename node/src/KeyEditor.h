@@ -7,15 +7,17 @@
 
 namespace node
 {
+	using namespace nif;
+
 	class FloatKeyEditor final : 
 		public gui::Popup, public nif::PropertyListener<nif::KeyType>, public gui::MouseHandler
 	{
 	public:
 		FloatKeyEditor(
-			std::shared_ptr<OProperty<nif::KeyType>>&& keyType,
-			std::shared_ptr<nif::InterpolationData<float>>&& keys,
-			std::shared_ptr<OProperty<float>>&& tStart,
-			std::shared_ptr<OProperty<float>>&& tStop);
+			ni_ptr<Property<KeyType>>&& keyType,
+			ni_ptr<List<Key<float>>>&& keys,
+			ni_ptr<Property<float>>&& tStart,
+			ni_ptr<Property<float>>&& tStop);
 
 		~FloatKeyEditor();
 
@@ -78,49 +80,45 @@ namespace node
 			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(0.0f, 0.0f); }
 		};
 		class LinearInterpolant final : 
-			public Interpolant, public nif::VectorPropertyListener<nif::Key<float>>
+			public Interpolant, public ListListener<Key<float>>
 		{
 		public:
 			class LinearHandle;
 		public:
-			LinearInterpolant(std::shared_ptr<OVector<nif::Key<float>>>&& keys);
+			LinearInterpolant(ni_ptr<List<Key<float>>>&& keys);
 			~LinearInterpolant();
 
 			virtual void frame(gui::FrameDrawer& fd) override;
 
 			virtual gui::Floats<2> getBounds() const override;
 
-			virtual void onSet(int i, const nif::Key<float>& key) override;
 			//add handle
 			virtual void onInsert(int i) override {}
 			//remove handle
 			virtual void onErase(int i) override {}
 
 		private:
-			std::shared_ptr<OVector<nif::Key<float>>> m_keys;
+			ni_ptr<List<Key<float>>> m_keys;
 			//unless we add a way to iterate through the property (good idea?), 
 			//we should store a copy:
-			std::vector<nif::Key<float>> m_data;
+			std::vector<Key<float>> m_data;
 		};
 		class QuadraticInterpolant final :
-			public Interpolant, public nif::VectorPropertyListener<nif::Key<float>>
+			public Interpolant, public ListListener<Key<float>>
 		{
 		public:
-			QuadraticInterpolant(std::shared_ptr<OVector<nif::Key<float>>>&& keys,
-				std::shared_ptr<OVector<nif::Tangent<float>>>&& tans) {}
+			QuadraticInterpolant(ni_ptr<List<Key<float>>>&& keys) {}
 
 			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(0.0f, 0.0f); }
 
-			//update our interpolation of [i-1, i] and [i, i+1]
-			virtual void onSet(int i, const nif::Key<float>& key) override {}
 			//add handle
 			virtual void onInsert(int i) override {}
 			//remove handle
 			virtual void onErase(int i) override {}
 		};
 
-		std::shared_ptr<OProperty<nif::KeyType>> m_keyType;
-		std::shared_ptr<nif::InterpolationData<float>> m_keys;
+		ni_ptr<Property<nif::KeyType>> m_keyType;
+		ni_ptr<List<Key<float>>> m_keys;
 
 		gui::Plot* m_plot{ nullptr };
 		Interpolant* m_curve{ nullptr };
