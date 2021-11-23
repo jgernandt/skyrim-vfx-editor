@@ -41,7 +41,7 @@ namespace node
 		class ObjectField final : public Field
 		{
 		public:
-			ObjectField(const std::string& name, ObjectNET& node, T& obj) : 
+			ObjectField(const std::string& name, ObjectNET& node, const ni_ptr<T>& obj) : 
 				Field(name), m_rvr(obj)
 			{
 				connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::MultiConnector>(m_sdr, m_rvr));
