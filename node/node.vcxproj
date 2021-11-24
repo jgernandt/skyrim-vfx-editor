@@ -22,7 +22,6 @@
     <ClInclude Include="src\AVObject.h" />
     <ClInclude Include="src\Constructor.h" />
     <ClInclude Include="src\Controllers.h" />
-    <ClInclude Include="src\Controls.h" />
     <ClInclude Include="src\node_conversions.h" />
     <ClInclude Include="src\node_devices.h" />
     <ClInclude Include="src\Emitters.h" />
@@ -55,7 +54,6 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="src\Controllers.cpp" />
-    <ClCompile Include="src\Controls.cpp" />
     <ClCompile Include="src\Emitters.cpp" />
     <ClCompile Include="src\ExtraData.cpp" />
     <ClCompile Include="src\GravityModifier.cpp" />
