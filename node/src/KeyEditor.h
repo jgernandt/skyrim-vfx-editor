@@ -10,7 +10,7 @@ namespace node
 	using namespace nif;
 
 	class FloatKeyEditor final : 
-		public gui::Popup, public nif::PropertyListener<nif::KeyType>, public gui::MouseHandler
+		public gui::Popup, public nif::PropertyListener<KeyType>, public gui::MouseHandler
 	{
 	public:
 		FloatKeyEditor(
@@ -23,7 +23,7 @@ namespace node
 
 		virtual void onClose() override;
 
-		virtual void onSet(const nif::KeyType& type) override;
+		virtual void onSet(const KeyType& type) override;
 
 		virtual bool onMouseDown(gui::Mouse::Button button) override;
 		virtual bool onMouseUp(gui::Mouse::Button button) override;
@@ -85,7 +85,7 @@ namespace node
 		public:
 			class LinearHandle;
 		public:
-			LinearInterpolant(ni_ptr<List<Key<float>>>&& keys);
+			LinearInterpolant(const ni_ptr<List<Key<float>>>& keys);
 			~LinearInterpolant();
 
 			virtual void frame(gui::FrameDrawer& fd) override;
@@ -98,16 +98,13 @@ namespace node
 			virtual void onErase(int i) override {}
 
 		private:
-			ni_ptr<List<Key<float>>> m_keys;
-			//unless we add a way to iterate through the property (good idea?), 
-			//we should store a copy:
-			std::vector<Key<float>> m_data;
+			const ni_ptr<List<Key<float>>> m_keys;
 		};
 		class QuadraticInterpolant final :
 			public Interpolant, public ListListener<Key<float>>
 		{
 		public:
-			QuadraticInterpolant(ni_ptr<List<Key<float>>>&& keys) {}
+			QuadraticInterpolant(const ni_ptr<List<Key<float>>>& keys) {}
 
 			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(0.0f, 0.0f); }
 
@@ -117,8 +114,8 @@ namespace node
 			virtual void onErase(int i) override {}
 		};
 
-		ni_ptr<Property<nif::KeyType>> m_keyType;
-		ni_ptr<List<Key<float>>> m_keys;
+		const ni_ptr<Property<KeyType>> m_keyType;
+		const ni_ptr<List<Key<float>>> m_keys;
 
 		gui::Plot* m_plot{ nullptr };
 		Interpolant* m_curve{ nullptr };
