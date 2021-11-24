@@ -113,8 +113,10 @@ public:
 	virtual void addModifier(const ni_ptr<NiPSysModifier>& mod) override 
 	{
 		//Insert before position mod (end - 2)
-		if (mod)
+		if (mod) {
 			m_psys->modifiers.insert(m_psys->modifiers.size() - 2, mod);
+			mod->target.assign(m_psys);
+		}
 	}
 	virtual void removeModifier(NiPSysModifier* mod) override 
 	{
@@ -122,6 +124,7 @@ public:
 			if (int pos = m_psys->modifiers.find(mod); pos >= 0) {
 				m_psys->modifiers.erase(pos);
 				mod->order.set(-1);
+				mod->target.assign(nullptr);
 			}
 		}
 	}
@@ -129,14 +132,18 @@ public:
 	virtual void addController(const ni_ptr<NiTimeController>& ctlr) override 
 	{
 		//Insert before update ctlr (end - 1)
-		if (ctlr)
+		if (ctlr) {
 			m_psys->controllers.insert(m_psys->controllers.size() - 1, ctlr);
+			ctlr->target.assign(m_psys);
+		}
 	}
 	virtual void removeController(NiTimeController* ctlr) override
 	{
 		if (ctlr) {
-			if (int pos = m_psys->controllers.find(ctlr); pos >= 0)
+			if (int pos = m_psys->controllers.find(ctlr); pos >= 0) {
 				m_psys->controllers.erase(pos);
+				ctlr->target.assign(nullptr);
+			}
 		}
 	}
 
