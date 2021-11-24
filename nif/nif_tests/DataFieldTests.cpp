@@ -104,7 +104,7 @@ namespace fields
 		{
 			struct Listener : FlagSetListener<unsigned int>
 			{
-				virtual void onSet(unsigned int flags) override
+				virtual void onRaise(unsigned int flags) override
 				{
 					m_set = flags;
 				}
