@@ -65,7 +65,7 @@ bool nif::WriteSyncer<nif::NiParticleSystem>::operator()(const NiParticleSystem&
 
 	native->ClearModifiers();
 	for (auto&& mod : object.modifiers)
-		native->AddModifier(file.getNative<NiPSysModifier>(mod));
+		native->AddModifier(file.getNative<NiPSysModifier>(mod.get()));
 
 	native->SetShaderProperty(file.getNative<BSShaderProperty>(object.shaderProperty.assigned().get()));
 	native->SetAlphaProperty(file.getNative<NiAlphaProperty>(object.alphaProperty.assigned().get()));

@@ -67,8 +67,8 @@ namespace nif
 			const_iterator(typename ctnr_type::iterator const& it) : m_it{ it } {}
 			const_iterator(const const_iterator& other) : m_it{ other.m_it } {}
 
-			T* operator*() const noexcept { return m_it->first; }
-			T* operator->() const noexcept { return m_it->first; }
+			std::shared_ptr<T>& operator*() const noexcept { return m_it->second; }
+			std::shared_ptr<T>& operator->() const noexcept { return m_it->second; }
 
 			const_iterator& operator++() noexcept { ++m_it; return *this; }
 			const_iterator operator++(int) noexcept
@@ -90,8 +90,8 @@ namespace nif
 			iterator(typename ctnr_type::iterator const& it) : const_iterator{ it } {}
 			iterator(const iterator& other) : const_iterator{ other } {}
 
-			T* operator*() noexcept { return this->m_it->first; }
-			T* operator->() noexcept { return this->m_it->first; }
+			std::shared_ptr<T>& operator*() noexcept { return this->m_it->second; }
+			std::shared_ptr<T>& operator->() noexcept { return this->m_it->second; }
 
 			iterator& operator++() noexcept { const_iterator::operator++(); return *this; }
 			iterator operator++(int) noexcept

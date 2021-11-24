@@ -54,97 +54,19 @@ namespace nif
 		Sequence() = default;
 		~Sequence() { clear(); }
 
-		class const_iterator
-		{
-		public:
-			//We are keeping an (non-const) iterator, to simplify code reuse.
-			//This should be fine, since we control what it may be used for anyway.
-			const_iterator(typename ctnr_type::iterator const& it) : m_it{ it } {}
-			const_iterator(const const_iterator& other) : m_it{ other.m_it } {}
-
-			T* operator*() const noexcept { return m_it->get(); }
-			T* operator->() const noexcept { return m_it->get(); }
-
-			const_iterator& operator++() noexcept { ++m_it; return *this; }
-			const_iterator operator++(int) noexcept
-			{
-				const_iterator tmp = *this;
-				operator++();
-				return tmp;
-			}
-
-			friend bool operator==(const const_iterator& lhs, const const_iterator& rhs) noexcept { return lhs.m_it == rhs.m_it; }
-			friend bool operator!=(const const_iterator& lhs, const const_iterator& rhs) noexcept { return !(lhs == rhs); }
-
-		protected:
-			typename ctnr_type::iterator m_it;
-		};
-		class iterator : public const_iterator
-		{
-		public:
-			iterator(typename ctnr_type::iterator const& it) : const_iterator{ it } {}
-			iterator(const iterator& other) : const_iterator{ other } {}
-
-			T* operator*() noexcept { return this->m_it->get(); }
-			T* operator->() noexcept { return this->m_it->get(); }
-
-			iterator& operator++() noexcept { const_iterator::operator++(); return *this; }
-			iterator operator++(int) noexcept
-			{
-				iterator tmp = *this;
-				const_iterator::operator++();
-				return tmp;
-			}
-		};
+		using const_iterator = typename ctnr_type::const_iterator;
+		using iterator = typename ctnr_type::iterator;
 		iterator begin() { return m_ctnr.begin(); }
-		const_iterator begin() const { return const_cast<Sequence<T>&>(*this).begin(); }
+		const_iterator begin() const { return m_ctnr.begin(); }
 		iterator end() { return m_ctnr.end(); }
-		const_iterator end() const { return const_cast<Sequence<T>&>(*this).end(); }
+		const_iterator end() const { return m_ctnr.end(); }
 
-		class const_reverse_iterator
-		{
-		public:
-			const_reverse_iterator(typename ctnr_type::reverse_iterator const& it) : m_it{ it } {}
-			const_reverse_iterator(const const_reverse_iterator& other) : m_it{ other.m_it } {}
-
-			T* operator*() const noexcept { return m_it->get(); }
-			T* operator->() const noexcept { return m_it->get(); }
-
-			const_reverse_iterator& operator++() noexcept { ++m_it; return *this; }
-			const_reverse_iterator operator++(int) noexcept
-			{
-				const_reverse_iterator tmp = *this;
-				operator++();
-				return tmp;
-			}
-
-			friend bool operator==(const const_reverse_iterator& lhs, const const_reverse_iterator& rhs) noexcept { return lhs.m_it == rhs.m_it; }
-			friend bool operator!=(const const_reverse_iterator& lhs, const const_reverse_iterator& rhs) noexcept { return !(lhs == rhs); }
-
-		protected:
-			typename ctnr_type::reverse_iterator m_it;
-		};
-		class reverse_iterator : public const_reverse_iterator
-		{
-		public:
-			reverse_iterator(typename ctnr_type::reverse_iterator const& it) : const_reverse_iterator{ it } {}
-			reverse_iterator(const reverse_iterator& other) : const_iterator{ other } {}
-
-			T* operator*() noexcept { return this->m_it->get(); }
-			T* operator->() noexcept { return this->m_it->get(); }
-
-			reverse_iterator& operator++() noexcept { const_reverse_iterator::operator++(); return *this; }
-			reverse_iterator operator++(int) noexcept
-			{
-				reverse_iterator tmp = *this;
-				const_reverse_iterator::operator++();
-				return tmp;
-			}
-		};
+		using const_reverse_iterator = typename ctnr_type::const_reverse_iterator;
+		using reverse_iterator = typename ctnr_type::reverse_iterator;
 		reverse_iterator rbegin() { return m_ctnr.rbegin(); }
-		const_reverse_iterator rbegin() const { return const_cast<Sequence<T>&>(*this).rbegin(); }
+		const_reverse_iterator rbegin() const { return m_ctnr.rbegin(); }
 		reverse_iterator rend() { return m_ctnr.rend(); }
-		const_reverse_iterator rend() const { return const_cast<Sequence<T>&>(*this).rend(); }
+		const_reverse_iterator rend() const { return m_ctnr.rend(); }
 
 		T* at(int i) const
 		{ 

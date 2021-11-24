@@ -23,7 +23,7 @@ namespace common
 		//Sequence should be traversed from first to last
 		for (auto&& item : seq) {
 			Assert::IsTrue(it != end);
-			Assert::IsTrue(*it == item);
+			Assert::IsTrue(*it == item.get());
 			++it;
 		}
 	}
