@@ -103,16 +103,15 @@ namespace nif
 	
 	struct NiTimeController : NiTraversable<NiTimeController, NiObject>
 	{
-		//these should only be readable? Separate type, or just const Assignable?
-		//How to keep them updated, though?
-		//Readable<NiTimeController>& nextCtlr;
-		//Readable<NiObjectNET>& target;
+		//Leave this out? It makes less sense to us.
+		//Assignable<NiTimeController> nextCtlr;
 
 		FlagSet<ControllerFlags> flags;
 		Property<float> frequency;
 		Property<float> phase;
 		Property<float> startTime;
 		Property<float> stopTime;
+		Assignable<NiObjectNET> target;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }

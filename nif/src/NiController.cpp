@@ -150,6 +150,7 @@ void nif::ReadSyncer<nif::NiTimeController>::operator()(NiTimeController& object
 	object.phase.set(native->GetPhase());
 	object.startTime.set(native->GetStartTime());
 	object.stopTime.set(native->GetStopTime());
+	object.target.assign(file.get<NiObjectNET>(native->GetTarget()));
 }
 
 void nif::WriteSyncer<nif::NiTimeController>::operator()(const NiTimeController& object, Niflib::NiTimeController* native, const File& file)
@@ -160,6 +161,8 @@ void nif::WriteSyncer<nif::NiTimeController>::operator()(const NiTimeController&
 	native->SetPhase(object.phase.get());
 	native->SetStartTime(object.startTime.get());
 	native->SetStopTime(object.stopTime.get());
+	//We might not want to touch this, since Niflib sets it automatically.
+	native->SetTarget(file.getNative<NiObjectNET>(object.target.assigned().get()));
 }
 
 

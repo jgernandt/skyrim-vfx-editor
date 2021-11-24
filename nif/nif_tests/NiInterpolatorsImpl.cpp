@@ -166,6 +166,7 @@ void common::EquivalenceTester<NiTimeController>::operator()(const NiTimeControl
 	Assert::IsTrue(object.phase.get() == native->GetPhase());
 	Assert::IsTrue(object.startTime.get() == native->GetStartTime());
 	Assert::IsTrue(object.stopTime.get() == native->GetStopTime());
+	Assert::IsTrue(object.target.assigned() == file.get<NiObjectNET>(native->GetTarget()));
 }
 
 void common::Randomiser<NiTimeController>::operator()(NiTimeController& object, File& file, std::mt19937& rng)
@@ -175,15 +176,20 @@ void common::Randomiser<NiTimeController>::operator()(NiTimeController& object, 
 	randomiseProperty(object.phase, rng);
 	randomiseProperty(object.startTime, rng);
 	randomiseProperty(object.stopTime, rng);
+	object.target.assign(file.create<NiObjectNET>());
 }
 
-void common::Randomiser<NiTimeController>::operator()(const NiTimeController&, Niflib::NiTimeController* native, File&, std::mt19937& rng)
+void common::Randomiser<NiTimeController>::operator()(const NiTimeController&, Niflib::NiTimeController* native, File& file, std::mt19937& rng)
 {
 	native->SetFlags(randi<unsigned short>(rng));
 	native->SetFrequency(randf<float>(rng));
 	native->SetPhase(randf<float>(rng));
 	native->SetStartTime(randf<float>(rng));
 	native->SetStopTime(randf<float>(rng));
+	//weak ref
+	Niflib::Ref<Niflib::NiAVObject> target = new Niflib::NiAVObject;
+	file.getNative<NiNode>(file.getRoot().get())->AddChild(target);
+	native->SetTarget(target);
 }
 
 
