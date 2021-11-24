@@ -76,82 +76,52 @@ node::Editor::Editor(const gui::Floats<2>& size)
 	m_size = size;
 }
 
-//temporary fix, we'll find a nicer way later
-class RootFinder final : public gui::DescendingVisitor
-{
-public:
-	virtual void visit(gui::Composite& c) override
-	{
-		if (dynamic_cast<gui::Window*>(&c)) {
-			if (node::Root* r = dynamic_cast<node::Root*>(&c))
-				result = r;
-		}
-		else
-			DescendingVisitor::visit(c);
-	}
-
-	node::Root* result{ nullptr };
-};
-
 node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &file }
 {
 	m_size = size;
 
-	std::unique_ptr<Constructor> c;//assign an object of the right version (there is only one so far)
+	try {
+		auto root = file.getRoot();
+		if (!root)
+			throw std::runtime_error("File has no valid root");
 
-	if (file.getVersion() == nif::File::Version::SKYRIM || file.getVersion() == nif::File::Version::SKYRIM_SE)
-		c = std::make_unique<Constructor>(file);
+		m_rootName = make_ni_ptr(std::static_pointer_cast<NiObjectNET>(root), &NiObjectNET::name);
 
-	if (c) {
-		try {
-			auto workArea = newChild<NodeRoot>(file);
+		auto workArea = newChild<NodeRoot>(file);
 
-			//Nodes
-			c->makeRoot();
-			c->extractNodes(*workArea);
+		//Nodes
+		Constructor c(file);
+		root->receive(c);
 
-			for (auto&& warning : c->warnings())
-				newChild<gui::MessageBox>("Warning", std::move(warning));
+		c.extractNodes(*workArea);
 
-			//Context menu
-			auto panel = newChild<gui::Panel>();
-			auto context = std::make_unique<gui::Popup>();
-			context->addChild(workArea->createAddMenu());
-			panel->setContextMenu(std::move(context));
+		for (auto&& warning : c.warnings())
+			newChild<gui::MessageBox>("Warning", std::move(warning));
 
-			//Main menu additions
-			//Strange to add to main menu from here, no? Strictly speaking, we don't even know that there is a main menu.
-			auto main = std::make_unique<gui::MainMenu>("Add");
-			main->addChild(workArea->createAddMenu());
-			addChild(std::move(main));
+		//Context menu
+		auto panel = newChild<gui::Panel>();
+		auto context = std::make_unique<gui::Popup>();
+		context->addChild(workArea->createAddMenu());
+		panel->setContextMenu(std::move(context));
 
-			//for (auto&& child : workArea->getChildren()) {
-			//	if (Root* root = dynamic_cast<Root*>(child.get()))
-			//		m_rootNode = root;
-			//}
-			RootFinder rf;
-			workArea->accept(rf);
-			m_rootNode = rf.result;
+		//Main menu additions
+		//Strange to add to main menu from here, no? Strictly speaking, we don't even know that there is a main menu.
+		auto main = std::make_unique<gui::MainMenu>("Add");
+		main->addChild(workArea->createAddMenu());
+		addChild(std::move(main));
 
-			if (m_rootNode) {
-				//Transform the work area to some nice initial position
-				gui::Floats<2> pos = m_rootNode->getTranslation();
-				workArea->setTranslation({ (m_size[0] - Root::WIDTH) / 8.0f - pos[0], (m_size[1] - Root::HEIGHT) / 2.0f - pos[1] });
-			}
-		}
-		catch (const std::exception& e) {
-			clearChildren();
-			m_rootNode = nullptr;
-			auto workArea = newChild<NodeRoot>(file);
-			newChild<gui::MessageBox>("Error", e.what());
-
-			//Now we have the appearance we should have, but no way to add nodes. It wouldn't make sense to. 
-			//better to force the user to open another file.
-			//Still, I can't shake the feeling that this whole setup is a bit stupid.
-		}
+		//Transform the work area to some nice initial position (assuming the Root is at (0, 0))
+		workArea->setTranslation({ (m_size[0] - Root::WIDTH) / 8.0f, (m_size[1] - Root::HEIGHT) / 2.0f });
 	}
-	else {
-		newChild<gui::MessageBox>("Error", "File version not supported");
+	catch (const std::exception& e) {
+		clearChildren();
+		m_rootName.reset();
+		auto workArea = newChild<NodeRoot>(file);
+		newChild<gui::MessageBox>("Error", e.what());
+
+		//Now we have the appearance we should have, but no way to add nodes. It wouldn't make sense to. 
+		//better to force the user to open another file.
+		//Still, I can't shake the feeling that this whole setup is a bit stupid.
 	}
 
 	//Main menu additions
@@ -172,8 +142,8 @@ void node::Editor::frame(gui::FrameDrawer& fd)
 
 void node::Editor::setProjectName(const std::string& name)
 {
-	if (m_rootNode)
-		m_rootNode->object().name().set(name);
+	if (m_rootName)
+		m_rootName->set(name);
 }
 
 std::unique_ptr<gui::IComponent> node::Editor::NodeRoot::createAddMenu()

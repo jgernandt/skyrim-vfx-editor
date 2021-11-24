@@ -21,13 +21,52 @@
 #include <list>
 #include <map>
 #include <vector>
-#include "nif_types.h"
+#include "nif.h"
 #include "ConnectionHandler.h"
 #include "nodes.h"
 
 namespace node
 {
-	class Constructor
+	class Constructor : public nif::HorizontalTraverser<Constructor>
+	{
+	public:
+		Constructor(nif::File& file) : m_file{ file } {}//throw if unsupprtoed version
+
+		template<typename T>
+		void invoke(T& obj) 
+		{
+			Connector<T>{}.down(obj);//makes sense to keep this apart from Factory?
+			if (m_objectMap.find(&obj) == m_objectMap.end()) {
+				Factory<T>{}.up(obj);
+				Forwarder<T>{}.down(obj, *this);
+			}
+		}
+
+		std::vector<std::string>& warnings() { return m_warnings; }
+
+		//should transfer ownership of our nodes to target and resolve our connections
+		//(the caller is responsible for making sure target is a valid receiver)
+		void extractNodes(gui::ConnectionHandler& target) {}
+
+	private:
+		template<typename T> friend class Connector;
+		template<typename T> friend class Factory;
+
+		struct Connection
+		{
+			nif::NiObject* object1;
+			nif::NiObject* object2;
+			std::string field1;
+			std::string field2;
+		};
+		nif::File& m_file;
+		std::vector<std::unique_ptr<NodeBase>> m_nodes;
+		std::map<nif::NiObject*, int> m_objectMap;//maps processed objects to an index in m_nodes (-1 if none)
+		std::vector<std::string> m_warnings;
+		std::list<Connection> m_connections;
+	};
+
+	/*class Constructor
 	{
 	public:
 		Constructor(nif::File& file) : m_file{ file } {}
@@ -84,5 +123,5 @@ namespace node
 		//For clone operations
 		constexpr static unsigned int s_version = 0x14020007;
 		constexpr static unsigned int s_userVersion = 12;
-	};
+	};*/
 }

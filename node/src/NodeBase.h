@@ -119,4 +119,27 @@ namespace node
 		RightController m_rightCtlr;
 		std::map<std::string, Field*> m_fields;
 	};
+
+	//Called when loading a file to identify connections between nodes
+	template<typename T>
+	class Connector : public VerticalTraverser<T, Connector>
+	{
+	public:
+		bool operator() (T&) { return true; }
+	};
+
+	//Call when loading a file to create a new node of the appropriate type
+	template<typename T>
+	class Factory : public VerticalTraverser<T, Factory>
+	{
+	public:
+		bool operator() (T&) { return true; }
+
+		//Should also be used to create nodes in the Editor?
+		//Specialisations should implement one or more create overloads
+		//std::unique_ptr<NodeBase> create();
+
+		//Node addable by the user must implement the overload
+		//std::unique_ptr<NodeBase> create(nif::File&);
+	};
 }

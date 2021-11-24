@@ -24,7 +24,7 @@
 
 namespace node
 {
-	class Root;
+	using namespace nif;
 
 	class Editor final :
 		public gui::Composite
@@ -53,7 +53,7 @@ namespace node
 		};
 
 		nif::File* m_file{ nullptr };
-		Root* m_rootNode{ nullptr };
+		ni_ptr<Property<std::string>> m_rootName;
 	};
 }
 
