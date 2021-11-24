@@ -22,14 +22,19 @@
 
 constexpr float VAR_FRACTION = -0.5f;
 
-class node::RotationModifier::AngleField final : public node::Field
+using namespace nif;
+using namespace node;
+
+class AngleField final : public node::Field
 {
 public:
-	AngleField(const std::string& name, node::RotationModifier& node) : Field(name)
+	AngleField(const std::string& name, NodeBase& node, 
+		ni_ptr<Property<math::degf>>&& angle, ni_ptr<Property<math::degf>>&& angleVar) : 
+		Field(name)
 	{
 		gui::Item* item = node.newChild<gui::Item>();
-		auto main = item->newChild<DragFloat>(node.object().angle(), name);
-		auto var = item->newChild<DragFloat>(node.object().angleVar(), u8"±");
+		auto main = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, Converter>>(angle, name);
+		auto var = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, Converter>>(angleVar, u8"±");
 		main->setSensitivity(0.5f);
 		main->setLowerLimit(-180.0f);
 		main->setUpperLimit(180.0f);
@@ -44,14 +49,16 @@ public:
 	}
 };
 
-class node::RotationModifier::SpeedField final : public node::Field
+class SpeedField final : public node::Field
 {
 public:
-	SpeedField(const std::string& name, node::RotationModifier& node) : Field(name)
+	SpeedField(const std::string& name, NodeBase& node,
+		ni_ptr<Property<math::degf>>&& speed, ni_ptr<Property<math::degf>>&& speedVar) :
+		Field(name)
 	{
 		gui::Item* item = node.newChild<gui::Item>();
-		auto main = item->newChild<DragFloat>(node.object().speed(), u8"Speed");
-		auto var = item->newChild<DragFloat>(node.object().speedVar(), u8"±");
+		auto main = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, Converter>>(speed, name);
+		auto var = item->newChild<gui::DragInput<float, 1, ni_ptr<Property<math::degf>>, Converter>>(speedVar, u8"±");
 		main->setSensitivity(0.5f);
 		main->setNumberFormat(u8"%.0f°");
 		var->setSensitivity(0.5f);
@@ -63,25 +70,31 @@ public:
 	}
 };
 
-node::RotationModifier::RotationModifier(nif::File& file) :
-	RotationModifier(file.create<nif::NiPSysRotationModifier>())
+node::RotationModifier::RotationModifier(File& file) :
+	RotationModifier(file.create<NiPSysRotationModifier>())
 {
-	object().active().set(true);
+	//object().active().set(true);
 }
 
-node::RotationModifier::RotationModifier(ni_ptr<nif::NiPSysRotationModifier>&& obj) :
-	Modifier(std::move(obj))
+node::RotationModifier::RotationModifier(ni_ptr<NiPSysRotationModifier>&& obj) :
+	Modifier(obj)
 {
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Rotation modifier");
 
-	m_device.addRequirement(Requirement::ROTATION);
+	m_device.addRequirement(ModRequirement::ROTATION);
 
 	newChild<gui::Separator>();
 
-	m_angleField = newField<AngleField>(ANGLE, *this);
-	m_speedField = newField<SpeedField>(SPEED, *this);
-	newChild<Checkbox>(object().randomSign(), "Random direction");
+	m_angleField = newField<AngleField>(ANGLE, *this,
+		make_ni_ptr(obj, &NiPSysRotationModifier::angle),
+		make_ni_ptr(obj, &NiPSysRotationModifier::angleVar));
+
+	m_speedField = newField<SpeedField>(SPEED, *this,
+		make_ni_ptr(obj, &NiPSysRotationModifier::speed),
+		make_ni_ptr(obj, &NiPSysRotationModifier::speedVar));
+
+	newChild<Checkbox>(make_ni_ptr(obj, &NiPSysRotationModifier::randomSign), "Random direction");
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
@@ -91,10 +104,4 @@ node::RotationModifier::RotationModifier(ni_ptr<nif::NiPSysRotationModifier>&& o
 node::RotationModifier::~RotationModifier()
 {
 	disconnect();
-}
-
-nif::NiPSysRotationModifier& node::RotationModifier::object()
-{
-	assert(m_obj);
-	return *static_cast<nif::NiPSysRotationModifier*>(m_obj.get());
 }

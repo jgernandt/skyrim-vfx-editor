@@ -22,25 +22,36 @@
 
 #include "SplineInterpolant.h"
 
+using namespace nif;
+using namespace node;
+
 //We will fill out the scale values with time values and keep the resulting vector of points locally.
 //We then add one widget to control the points and one to add/remove points, both of which pass their actions back to us.
 //Not the most efficient design, since we're copying a whole new vector (back and forth) when changing one point.
 //We'd need some sort of iterator or random access property to make it better. No big deal, though.
-class node::ScaleModifier::ScaleField final : public Field, public nif::PropertyListener<std::vector<float>>
+class ScaleField final : 
+	public Field, public PropertyListener<std::vector<float>>, public gui::MouseHandler
 {
+	ni_ptr<Property<std::vector<float>>> m_scales;
+	std::vector<gui::Floats<2>> m_data;
+	gui::PlotArea* m_area{ nullptr };
+
 public:
-	ScaleField(const std::string& name, ScaleModifier& node) : Field(name), m_prop{ node.object().scales() }
+	ScaleField(const std::string& name, NodeBase& node, ni_ptr<Property<std::vector<float>>>&& scales) : 
+		Field(name), m_scales{ std::move(scales) }
 	{
+		assert(m_scales);
+
 		node.newChild<gui::Separator>();
 		node.newChild<gui::Text>("Scale");
 
 		auto plot = node.newChild<gui::Plot>();
+		m_area = &plot->getPlotArea();
 
-		m_inputHandler = std::make_unique<PlotAreaInput>(plot->getPlotArea());
-		plot->getPlotArea().setMouseHandler(m_inputHandler.get());
+		plot->getPlotArea().setMouseHandler(this);
 
 		plot->getPlotArea().addCurve(std::make_unique<gui::SimpleCurve>(m_data));
-		plot->getPlotArea().getAxes().addChild(std::make_unique<Controls>(m_data, node.object().scales()));
+		plot->getPlotArea().getAxes().addChild(std::make_unique<Controls>(m_data, *m_scales));
 		std::vector<gui::CustomXLabels::AxisLabel> labels{ { "Birth", 0.0f, 0.0f }, { "Death", 1.0f, 1.0f } };
 		plot->setXLabels(std::make_unique<gui::CustomXLabels>(plot->getPlotArea().getAxes(), std::move(labels)));
 		//plot->setLimits({ 0.0f, 1.0f, 0.0f, 1.0f });
@@ -48,11 +59,11 @@ public:
 		//segments +-
 		auto item = node.newChild<gui::Item>(std::make_unique<gui::RightAlign>());
 		item->newChild<gui::Text>("Segments");
-		item->newChild<RemoveButton>(node.object().scales());
-		item->newChild<AddButton>(node.object().scales());
+		item->newChild<RemoveButton>(*m_scales);
+		item->newChild<AddButton>(*m_scales);
 		
-		node.object().scales().addListener(*this);
-		onSet(node.object().scales().get());
+		m_scales->addListener(*this);
+		onSet(m_scales->get());
 	}
 
 	virtual void onSet(const std::vector<float>& v) override
@@ -69,28 +80,26 @@ public:
 			m_data.clear();
 	}
 
-private:
-	class PlotAreaInput final : public gui::MouseHandler
+	virtual bool onMouseWheel(float delta) override
 	{
-	public:
-		PlotAreaInput(gui::PlotArea& area) : m_area{ area } {}
+		assert(m_area);
+		gui::Floats<2> ylims = m_area->getYLimits();
+		ylims[1] = std::max(ylims[1] - delta, 1.0f);
+		m_area->setYLimits(ylims);
 
-		virtual bool onMouseWheel(float delta) override
-		{
-			gui::Floats<2> ylims = m_area.getYLimits();
-			ylims[1] = std::max(ylims[1] - delta, 1.0f);
-			m_area.setYLimits(ylims);
+		return true;
+	}
 
-			return true;
-		}
-
-	private:
-		gui::PlotArea& m_area;
-	};
+private:
 	class EditPoint final : public gui::ICommand
 	{
+		Property<std::vector<float>>& m_trgt;
+		size_t m_index;
+		float m_from;
+		float m_to;
+
 	public:
-		EditPoint(IProperty<std::vector<float>>& trgt, size_t i, float to, float from) :
+		EditPoint(Property<std::vector<float>>& trgt, size_t i, float to, float from) :
 			m_trgt{ trgt }, m_index{ i }, m_from{ from }, m_to{ to } {}
 
 		virtual void execute() override 
@@ -108,17 +117,16 @@ private:
 			}
 		}
 		virtual bool reversible() const override { return m_from != m_to; }
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
-		size_t m_index;
-		float m_from;
-		float m_to;
 	};
+
 	class AddSegment final : public gui::ICommand
 	{
+		Property<std::vector<float>>& m_trgt;
+		std::vector<float> m_old;
+		std::vector<float> m_new;
+
 	public:
-		AddSegment(IProperty<std::vector<float>>& trgt) : m_trgt{ trgt } {}
+		AddSegment(Property<std::vector<float>>& trgt) : m_trgt{ trgt } {}
 
 		virtual void execute() override 
 		{
@@ -162,16 +170,16 @@ private:
 			m_trgt.set(m_old);
 		}
 		virtual bool reversible() const override { return true; }
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
-		std::vector<float> m_old;
-		std::vector<float> m_new;
 	};
+
 	class RemoveSegment final : public gui::ICommand
 	{
+		Property<std::vector<float>>& m_trgt;
+		std::vector<float> m_old;
+		std::vector<float> m_new;
+
 	public:
-		RemoveSegment(IProperty<std::vector<float>>& trgt) : m_trgt{ trgt } {}
+		RemoveSegment(Property<std::vector<float>>& trgt) : m_trgt{ trgt } {}
 
 		virtual void execute() override 
 		{
@@ -202,17 +210,15 @@ private:
 			m_trgt.set(m_old);
 		}
 		virtual bool reversible() const override { return m_old.size() > 2; }
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
-		std::vector<float> m_old;
-		std::vector<float> m_new;
 	};
 
 	class Controls : public gui::SimpleHandles
 	{
+		Property<std::vector<float>>& m_trgt;
+		float m_tmp{ 0.0f };
+
 	public:
-		Controls(const std::vector<gui::Floats<2>>& data, IProperty<std::vector<float>>& trgt) :
+		Controls(const std::vector<gui::Floats<2>>& data, Property<std::vector<float>>& trgt) :
 			SimpleHandles(data), m_trgt{ trgt } {}
 
 		virtual void onClick(size_t i, gui::Mouse::Button button) override
@@ -235,56 +241,47 @@ private:
 				//m_tmp = 0.0f; //doesn't really matter
 			}
 		}
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
-		float m_tmp{ 0.0f };
 	};
 
 	class AddButton final : public gui::Button
 	{
+		Property<std::vector<float>>& m_trgt;
+
 	public:
-		AddButton(IProperty<std::vector<float>>& target) : Button("+"), m_trgt{ target }
+		AddButton(Property<std::vector<float>>& target) : Button("+"), m_trgt{ target }
 		{
 			setSize({ gui::getDefaultHeight(), gui::getDefaultHeight() });
 		}
 		virtual void onActivate() override { asyncInvoke<AddSegment>(m_trgt); }
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
 	};
 
 	class RemoveButton final : public gui::Button
 	{
+		Property<std::vector<float>>& m_trgt;
+
 	public:
-		RemoveButton(IProperty<std::vector<float>>& target) : Button("-"), m_trgt{ target }
+		RemoveButton(Property<std::vector<float>>& target) : Button("-"), m_trgt{ target }
 		{
 			setSize({ gui::getDefaultHeight(), gui::getDefaultHeight() });
 		}
 		virtual void onActivate() override { asyncInvoke<RemoveSegment>(m_trgt); }
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
 	};
-
-	IProperty<std::vector<float>>& m_prop;
-	std::vector<gui::Floats<2>> m_data;
-	std::unique_ptr<PlotAreaInput> m_inputHandler;
 };
 
-node::ScaleModifier::ScaleModifier(nif::File& file) :
-	ScaleModifier(file.create<nif::BSPSysScaleModifier>())
+node::ScaleModifier::ScaleModifier(File& file) :
+	ScaleModifier(file.create<BSPSysScaleModifier>())
 {
-	object().scales().set({ 0.0f, 1.0f });
+	//object().scales().set({ 0.0f, 1.0f });
 }
 
-node::ScaleModifier::ScaleModifier(ni_ptr<nif::BSPSysScaleModifier>&& obj) :
-	Modifier(std::move(obj))
+node::ScaleModifier::ScaleModifier(ni_ptr<BSPSysScaleModifier>&& obj) :
+	Modifier(obj)
 {
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Scale modifier");
 
-	m_scaleField = newField<ScaleField>("Scale", *this);
+	m_scaleField = newField<ScaleField>("Scale", *this,
+		make_ni_ptr(obj, &BSPSysScaleModifier::scales));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
@@ -294,10 +291,4 @@ node::ScaleModifier::ScaleModifier(ni_ptr<nif::BSPSysScaleModifier>&& obj) :
 node::ScaleModifier::~ScaleModifier()
 {
 	disconnect();
-}
-
-nif::BSPSysScaleModifier& node::ScaleModifier::object()
-{
-	assert(m_obj);
-	return *static_cast<nif::BSPSysScaleModifier*>(m_obj.get());
 }

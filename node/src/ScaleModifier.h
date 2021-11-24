@@ -21,21 +21,20 @@
 
 namespace node
 {
+	using namespace nif;
+
 	class ScaleModifier final : public Modifier
 	{
 	public:
-		ScaleModifier(nif::File& file);
-		ScaleModifier(ni_ptr<nif::BSPSysScaleModifier>&& obj);
+		ScaleModifier(File& file);
+		ScaleModifier(ni_ptr<BSPSysScaleModifier>&& obj);
 		~ScaleModifier();
-
-		virtual nif::BSPSysScaleModifier& object() override;
 
 	public:
 		constexpr static float WIDTH = 200.0f;
 		constexpr static float HEIGHT = 320.0f;
 
 	private:
-		class ScaleField;
 		std::unique_ptr<Field> m_scaleField;
 	};
 }

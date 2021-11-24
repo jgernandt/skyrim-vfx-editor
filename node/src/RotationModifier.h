@@ -21,16 +21,16 @@
 
 namespace node
 {
+	using namespace nif;
+
 	class RotationModifier final : public Modifier
 	{
 	public:
-		RotationModifier(nif::File& file);
-		RotationModifier(ni_ptr<nif::NiPSysRotationModifier>&& obj);
+		RotationModifier(File& file);
+		RotationModifier(ni_ptr<NiPSysRotationModifier>&& obj);
 		~RotationModifier();
 
 	public:
-		virtual nif::NiPSysRotationModifier& object() override;
-
 		constexpr static const char* ANGLE = "Initial";
 		constexpr static const char* SPEED = "Speed";
 
@@ -38,9 +38,6 @@ namespace node
 		constexpr static float HEIGHT = 160.0f;
 
 	private:
-		class AngleField;
-		class SpeedField;
-
 		std::unique_ptr<Field> m_angleField;
 		std::unique_ptr<Field> m_speedField;
 	};

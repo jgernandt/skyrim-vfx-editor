@@ -21,44 +21,37 @@
 
 namespace node
 {
+	using namespace nif;
+
 	class GravityModifier : public Modifier
 	{
 	public:
 		virtual ~GravityModifier() = default;
 	protected:
-		GravityModifier(ni_ptr<nif::NiPSysGravityModifier>&& obj);
+		GravityModifier(const ni_ptr<NiPSysGravityModifier>& obj);
 
 	public:
-		virtual nif::NiPSysGravityModifier& object() override;
 
 	public:
 		constexpr static const char* GRAVITY_OBJECT = "Field object";
-		//constexpr static const char* FORCE_TYPE = "Symmetry";
 		constexpr static const char* STRENGTH = "Strength";
 		constexpr static const char* DECAY = "Decay";
 		constexpr static const char* TURBULENCE = "Turbulence";
 		constexpr static const char* TURBULENCE_SCALE = "Turbulence scale";
 
 	private:
-		class GravityObjectField;
-		class DecayField;
-		class StrengthField;
-		class TurbulenceField;
-		class TurbulenceScaleField;
-
 		std::unique_ptr<Field> m_objectField;
 		std::unique_ptr<Field> m_strengthField;
 		std::unique_ptr<Field> m_decayField;
 		std::unique_ptr<Field> m_turbField;
 		std::unique_ptr<Field> m_turbScaleField;
-
 	};
 
 	class PlanarForceField final : public GravityModifier
 	{
 	public:
-		PlanarForceField(nif::File& file);
-		PlanarForceField(ni_ptr<nif::NiPSysGravityModifier>&& obj);
+		PlanarForceField(File& file);
+		PlanarForceField(ni_ptr<NiPSysGravityModifier>&& obj);
 		~PlanarForceField();
 
 		constexpr static const char* GRAVITY_AXIS = "Direction";
@@ -68,17 +61,14 @@ namespace node
 		constexpr static float HEIGHT = 280.0f;
 
 	private:
-		class GravityAxisField;
-		//class WorldAlignedField;
-
 		std::unique_ptr<Field> m_axisField;
 	};
 
 	class SphericalForceField final : public GravityModifier
 	{
 	public:
-		SphericalForceField(nif::File& file);
-		SphericalForceField(ni_ptr<nif::NiPSysGravityModifier>&& obj);
+		SphericalForceField(File& file);
+		SphericalForceField(ni_ptr<NiPSysGravityModifier>&& obj);
 		~SphericalForceField();
 
 		constexpr static float WIDTH = 150.0f;

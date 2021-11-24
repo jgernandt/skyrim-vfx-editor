@@ -21,21 +21,20 @@
 
 namespace node
 {
+	using namespace nif;
+
 	class SimpleColourModifier final : public Modifier
 	{
 	public:
-		SimpleColourModifier(nif::File& file);
-		SimpleColourModifier(ni_ptr<nif::BSPSysSimpleColorModifier>&& obj);
+		SimpleColourModifier(File& file);
+		SimpleColourModifier(ni_ptr<BSPSysSimpleColorModifier>&& obj);
 		~SimpleColourModifier();
-
-		virtual nif::BSPSysSimpleColorModifier& object() override;
 
 	public:
 		constexpr static float WIDTH = 175.0f;
 		constexpr static float HEIGHT = 170.0f;
 
 	private:
-		class ColourField;
 		std::unique_ptr<Field> m_colField;
 	};
 }
