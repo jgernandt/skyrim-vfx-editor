@@ -7,6 +7,7 @@
 #define EIGEN_MPL2_ONLY
 #include "Eigen\Dense"
 
-#include "nif_backend.h"
+#include "nif.h"
+#include "nodes.h"
 
 #endif //PCH_H

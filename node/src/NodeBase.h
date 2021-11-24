@@ -125,21 +125,32 @@ namespace node
 	class Connector : public VerticalTraverser<T, Connector>
 	{
 	public:
-		bool operator() (T&) { return true; }
+		template<typename ConstructorType>
+		bool operator() (T&, ConstructorType&) { return true; }
 	};
 
-	//Call when loading a file to create a new node of the appropriate type
+	//Called when loading a file to create a new node of the appropriate type
 	template<typename T>
 	class Factory : public VerticalTraverser<T, Factory>
 	{
 	public:
-		bool operator() (T&) { return true; }
+		template<typename ConstructorType>
+		bool operator() (T&, ConstructorType&) { return true; }
+	};
+	template<typename T>
+	class RootFactory : public VerticalTraverser<T, RootFactory>
+	{
+	public:
+		template<typename ConstructorType>
+		bool operator() (T&, ConstructorType&) { return true; }
+	};
 
-		//Should also be used to create nodes in the Editor?
-		//Specialisations should implement one or more create overloads
-		//std::unique_ptr<NodeBase> create();
-
-		//Node addable by the user must implement the overload
-		//std::unique_ptr<NodeBase> create(nif::File&);
+	//Called when loading a file to forward to subnodes
+	template<typename T>
+	class Forwarder : public VerticalTraverser<T, Forwarder>
+	{
+	public:
+		template<typename ConstructorType>
+		bool operator() (T&, ConstructorType&) { return true; }
 	};
 }

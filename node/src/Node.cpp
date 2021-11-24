@@ -21,6 +21,9 @@
 #include "style.h"
 #include "widget_types.h"
 
+using namespace nif;
+using namespace node;
+
 class node::NodeShared::ChildField : public Field
 {
 	Receiver<void> m_rvr;

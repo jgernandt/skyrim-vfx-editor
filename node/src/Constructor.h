@@ -27,43 +27,60 @@
 
 namespace node
 {
-	class Constructor : public nif::HorizontalTraverser<Constructor>
+	using namespace nif;
+
+	struct ConnectionInfo
+	{
+		NiObject* object1;
+		NiObject* object2;
+		std::string field1;
+		std::string field2;
+
+		//possibly:
+		int order{ -1 };//for modifiers
+		int target{ -1 };//for controllers
+	};
+
+	class Constructor : public HorizontalTraverser<Constructor>
 	{
 	public:
-		Constructor(nif::File& file) : m_file{ file } {}//throw if unsupprtoed version
+		Constructor(File& file) : m_file{ file } {}//throw if unsupprtoed version
 
-		template<typename T>
-		void invoke(T& obj) 
-		{
-			Connector<T>{}.down(obj);//makes sense to keep this apart from Factory?
-			if (m_objectMap.find(&obj) == m_objectMap.end()) {
-				Factory<T>{}.up(obj);
-				Forwarder<T>{}.down(obj, *this);
-			}
-		}
+		template<typename T> void invoke(T& obj);
 
 		std::vector<std::string>& warnings() { return m_warnings; }
 
 		//should transfer ownership of our nodes to target and resolve our connections
 		//(the caller is responsible for making sure target is a valid receiver)
-		void extractNodes(gui::ConnectionHandler& target) {}
+		void extractNodes(gui::ConnectionHandler& target);
 
 	private:
 		template<typename T> friend class Connector;
 		template<typename T> friend class Factory;
+		template<typename T> friend class Forwarder;
 
-		struct Connection
-		{
-			nif::NiObject* object1;
-			nif::NiObject* object2;
-			std::string field1;
-			std::string field2;
-		};
-		nif::File& m_file;
+		void addConnection(const node::ConnectionInfo& info) { m_connections.push_back(info); }
+
+		void addNode(NiObject* obj, std::unique_ptr<NodeBase>&& node);
+
+		void pushObject(const ni_ptr<NiObject>& obj) { m_objectStack.push_back(obj); }
+		void popObject() { m_objectStack.pop_back(); }
+		ni_ptr<NiObject> getObject() const;
+
+		File& getFile() { return m_file; }
+
+		File& m_file;
+		std::vector<ConnectionInfo> m_connections;
 		std::vector<std::unique_ptr<NodeBase>> m_nodes;
-		std::map<nif::NiObject*, int> m_objectMap;//maps processed objects to an index in m_nodes (-1 if none)
+		std::map<NiObject*, int> m_objectMap;//maps processed objects to an index in m_nodes (-1 if none)
+
+		//Traverse stack
+		std::vector<ni_ptr<NiObject>> m_objectStack;
+
+		//Traverse history
+		std::set<NiObject*> m_traversed;
+
 		std::vector<std::string> m_warnings;
-		std::list<Connection> m_connections;
 	};
 
 	/*class Constructor

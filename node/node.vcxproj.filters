@@ -102,6 +102,15 @@
     <ClInclude Include="src\node_conversions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Node_internal.h">
+      <Filter>Header Files\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Node_internal.h">
+      <Filter>Header Files\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nodes_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">
@@ -164,5 +173,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+    <None Include="src\Constructor.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

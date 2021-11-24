@@ -18,34 +18,9 @@
 
 #include "pch.h"
 #include "Constructor.h"
-#include "nodes.h"
 #include "Positioner.h"
 
-//We need to know about the nif backend, which is somewhat stupid, but the alternatives seem unreasonably complicated.
-//Update: I think we can avoid it now that File knows of all created interfaces.
-#include "nif_backend.h"
-
-void node::Constructor::makeRoot()
-{
-	Niflib::NiNode* root = nullptr;
-	if (auto rootPtr = m_file.getRoot())
-		root = &rootPtr->getNative();
-
-	if (!root) {
-		throw std::runtime_error("File has no root");
-	}
-	else {
-		//Leave room for the root node (maybe vanity, but I'd prefer it to be first)
-		m_nodes.resize(1);
-		EP_process(static_cast<Niflib::NiAVObject*>(root));
-		for (auto&& ctlr : static_cast<Niflib::NiObjectNET*>(root)->GetControllers()) {
-			if (Niflib::DynamicCast<Niflib::NiControllerManager>(ctlr)) {
-				m_warnings.push_back("This file contains behaviour-controlled animations. This functionality is not yet supported, and any edit to this file may break it.");
-				break;
-			}
-		}
-	}
-}
+using namespace nif;
 
 void node::Constructor::extractNodes(gui::ConnectionHandler& target)
 {
@@ -131,6 +106,42 @@ void node::Constructor::extractNodes(gui::ConnectionHandler& target)
 		pair.second->setConnectionState(pair.first, true);
 	}
 
+}
+
+void node::Constructor::addNode(NiObject* obj, std::unique_ptr<NodeBase>&& node)
+{
+	assert(obj && node);
+	m_objectMap.insert({ obj, m_nodes.size() });
+	m_nodes.push_back(std::move(node));
+}
+
+ni_ptr<NiObject> node::Constructor::getObject() const
+{
+	return !m_objectStack.empty() ? m_objectStack.back() : ni_ptr<NiObject>();
+}
+
+
+/*
+void node::Constructor::makeRoot()
+{
+	Niflib::NiNode* root = nullptr;
+	if (auto rootPtr = m_file.getRoot())
+		root = &rootPtr->getNative();
+
+	if (!root) {
+		throw std::runtime_error("File has no root");
+	}
+	else {
+		//Leave room for the root node (maybe vanity, but I'd prefer it to be first)
+		m_nodes.resize(1);
+		EP_process(static_cast<Niflib::NiAVObject*>(root));
+		for (auto&& ctlr : static_cast<Niflib::NiObjectNET*>(root)->GetControllers()) {
+			if (Niflib::DynamicCast<Niflib::NiControllerManager>(ctlr)) {
+				m_warnings.push_back("This file contains behaviour-controlled animations. This functionality is not yet supported, and any edit to this file may break it.");
+				break;
+			}
+		}
+	}
 }
 
 void node::Constructor::EP_process(nif::native::NiAVObject* obj)
@@ -687,3 +698,4 @@ void node::Constructor::EP_process(nif::native::NiInterpolator* obj, const nif::
 		}
 	}
 }
+*/

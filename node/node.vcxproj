@@ -19,9 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Node_internal.h" />
     <ClInclude Include="src\AVObject.h" />
     <ClInclude Include="src\Constructor.h" />
     <ClInclude Include="src\Controllers.h" />
+    <ClInclude Include="src\nodes_internal.h" />
     <ClInclude Include="src\node_conversions.h" />
     <ClInclude Include="src\node_devices.h" />
     <ClInclude Include="src\Emitters.h" />
@@ -34,6 +36,7 @@
     <ClInclude Include="src\Editor.h" />
     <ClInclude Include="src\nodes.h" />
     <ClInclude Include="src\node_concepts.h" />
+    <ClInclude Include="src\Node_internal.h" />
     <ClInclude Include="src\ParticleSystem.h" />
     <ClInclude Include="src\Positioner.h" />
     <ClInclude Include="src\RotationModifier.h" />
@@ -52,6 +55,14 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\Controllers.cpp" />
     <ClCompile Include="src\Emitters.cpp" />
@@ -78,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+    <None Include="src\Constructor.inl" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\gui\gui.vcxproj">
