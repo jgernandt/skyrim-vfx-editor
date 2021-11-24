@@ -23,7 +23,7 @@ const size_t nif::NiParticleSystem::TYPE = std::hash<std::string>{}("NiParticleS
 const size_t nif::NiPSysData::TYPE = std::hash<std::string>{}("NiPSysData");
 
 
-void nif::Forwarder<nif::NiParticleSystem>::operator()(NiParticleSystem& object, NiTraverser& traverser)
+bool nif::Forwarder<nif::NiParticleSystem>::operator()(NiParticleSystem& object, NiTraverser& traverser)
 {
 	if (auto&& obj = object.data.assigned())
 		obj->receive(traverser);
@@ -38,9 +38,11 @@ void nif::Forwarder<nif::NiParticleSystem>::operator()(NiParticleSystem& object,
 
 	if (auto&& obj = object.alphaProperty.assigned())
 		obj->receive(traverser);
+
+	return true;
 }
 
-void nif::ReadSyncer<nif::NiParticleSystem>::operator()(NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file)
+bool nif::ReadSyncer<nif::NiParticleSystem>::operator()(NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file)
 {
 	assert(native);
 	object.data.assign(file.get<NiPSysData>(native->GetData()));
@@ -52,9 +54,11 @@ void nif::ReadSyncer<nif::NiParticleSystem>::operator()(NiParticleSystem& object
 	object.shaderProperty.assign(file.get<BSShaderProperty>(native->GetShaderProperty()));
 	object.alphaProperty.assign(file.get<NiAlphaProperty>(native->GetAlphaProperty()));
 	object.worldSpace.set(native->GetWorldSpace());
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiParticleSystem>::operator()(const NiParticleSystem& object, Niflib::NiParticleSystem* native, const File& file)
+bool nif::WriteSyncer<nif::NiParticleSystem>::operator()(const NiParticleSystem& object, Niflib::NiParticleSystem* native, const File& file)
 {
 	assert(native);
 	native->SetData(file.getNative<NiPSysData>(object.data.assigned().get()));
@@ -66,9 +70,11 @@ void nif::WriteSyncer<nif::NiParticleSystem>::operator()(const NiParticleSystem&
 	native->SetShaderProperty(file.getNative<BSShaderProperty>(object.shaderProperty.assigned().get()));
 	native->SetAlphaProperty(file.getNative<NiAlphaProperty>(object.alphaProperty.assigned().get()));
 	native->SetWorldSpace(object.worldSpace.get());
+
+	return true;
 }
 
-void nif::ReadSyncer<nif::NiPSysData>::operator()(NiPSysData& object, const Niflib::NiPSysData* native, File& file)
+bool nif::ReadSyncer<nif::NiPSysData>::operator()(NiPSysData& object, const Niflib::NiPSysData* native, File& file)
 {
 	assert(native);
 	object.maxCount.set(native->GetBSMaxVertices());
@@ -82,9 +88,11 @@ void nif::ReadSyncer<nif::NiPSysData>::operator()(NiPSysData& object, const Nifl
 	object.hasColour.set(native->GetHasVertexColors());
 	object.hasRotationAngles.set(native->GetHasRotationAngles());
 	object.hasRotationSpeeds.set(native->GetHasRotationSpeeds());
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiPSysData>::operator()(const NiPSysData& object, Niflib::NiPSysData* native, const File& file)
+bool nif::WriteSyncer<nif::NiPSysData>::operator()(const NiPSysData& object, Niflib::NiPSysData* native, const File& file)
 {
 	assert(native);
 	native->SetBSMaxVertices(object.maxCount.get());
@@ -98,22 +106,6 @@ void nif::WriteSyncer<nif::NiPSysData>::operator()(const NiPSysData& object, Nif
 	native->SetHasVertexColors(object.hasColour.get());
 	native->SetHasRotationAngles(object.hasRotationAngles.get());
 	native->SetHasRotationSpeeds(object.hasRotationSpeeds.get());
-}
 
-/*
-These defaults should be set by Nodes now
-nif::NiParticleSystem::NiParticleSystem() : NiParticleSystem(new Niflib::NiParticleSystem)
-{
-	static int count = 0;
-	getNative().SetName("ParticleSystem" + std::to_string(++count));
-	getNative().SetFlags(14U);
-	getNative().GetVertexDescriptor().bitfield = 0x840200004000051;//BS use this for psys'
-	//Corresponding to this:
-	//getNative().GetVertexDescriptor().SetVertexDataSize(1);
-	//getNative().GetVertexDescriptor().SetDynamicVertexSize(5);
-	//getNative().GetVertexDescriptor().SetColorOffset(4);
-	//getNative().GetVertexDescriptor().SetVertexAttributes(Niflib::VF_UVS | Niflib::VF_FULL_PRECISION);
-	//getNative().GetVertexDescriptor().SetUnknown02(8);//unclear if this does anything
+	return true;
 }
-
-*/

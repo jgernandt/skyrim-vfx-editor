@@ -10,11 +10,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiPSysModifier> : VerticalTraverser<NiPSysModifier, ReadSyncer>
 	{
-		void operator() (NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file);
+		bool operator() (NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file);
 	};
 	template<> struct WriteSyncer<NiPSysModifier> : VerticalTraverser<NiPSysModifier, WriteSyncer>
 	{
-		void operator() (const NiPSysModifier& object, Niflib::NiPSysModifier* native, const File& file);
+		bool operator() (const NiPSysModifier& object, Niflib::NiPSysModifier* native, const File& file);
 	};
 
 	//NiPSysAgeDeathModifier
@@ -31,11 +31,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiPSysGravityModifier> : VerticalTraverser<NiPSysGravityModifier, ReadSyncer>
 	{
-		void operator() (NiPSysGravityModifier& object, const Niflib::NiPSysGravityModifier* native, File& file);
+		bool operator() (NiPSysGravityModifier& object, const Niflib::NiPSysGravityModifier* native, File& file);
 	};
 	template<> struct WriteSyncer<NiPSysGravityModifier> : VerticalTraverser<NiPSysGravityModifier, WriteSyncer>
 	{
-		void operator() (const NiPSysGravityModifier& object, Niflib::NiPSysGravityModifier* native, const File& file);
+		bool operator() (const NiPSysGravityModifier& object, Niflib::NiPSysGravityModifier* native, const File& file);
 	};
 
 	//NiPSysPositionModifier
@@ -48,11 +48,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiPSysRotationModifier> : VerticalTraverser<NiPSysRotationModifier, ReadSyncer>
 	{
-		void operator() (NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file);
+		bool operator() (NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file);
 	};
 	template<> struct WriteSyncer<NiPSysRotationModifier> : VerticalTraverser<NiPSysRotationModifier, WriteSyncer>
 	{
-		void operator() (const NiPSysRotationModifier& object, Niflib::NiPSysRotationModifier* native, const File& file);
+		bool operator() (const NiPSysRotationModifier& object, Niflib::NiPSysRotationModifier* native, const File& file);
 	};
 
 	//BSPSysScaleModifier
@@ -61,11 +61,11 @@ namespace nif
 
 	template<> struct ReadSyncer<BSPSysScaleModifier> : VerticalTraverser<BSPSysScaleModifier, ReadSyncer>
 	{
-		void operator() (BSPSysScaleModifier& object, const Niflib::BSPSysScaleModifier* native, File& file);
+		bool operator() (BSPSysScaleModifier& object, const Niflib::BSPSysScaleModifier* native, File& file);
 	};
 	template<> struct WriteSyncer<BSPSysScaleModifier> : VerticalTraverser<BSPSysScaleModifier, WriteSyncer>
 	{
-		void operator() (const BSPSysScaleModifier& object, Niflib::BSPSysScaleModifier* native, const File& file);
+		bool operator() (const BSPSysScaleModifier& object, Niflib::BSPSysScaleModifier* native, const File& file);
 	};
 
 	//BSPSysSimpleColorModifier
@@ -74,10 +74,10 @@ namespace nif
 
 	template<> struct ReadSyncer<BSPSysSimpleColorModifier> : VerticalTraverser<BSPSysSimpleColorModifier, ReadSyncer>
 	{
-		void operator() (BSPSysSimpleColorModifier& object, const Niflib::BSPSysSimpleColorModifier* native, File& file);
+		bool operator() (BSPSysSimpleColorModifier& object, const Niflib::BSPSysSimpleColorModifier* native, File& file);
 	};
 	template<> struct WriteSyncer<BSPSysSimpleColorModifier> : VerticalTraverser<BSPSysSimpleColorModifier, WriteSyncer>
 	{
-		void operator() (const BSPSysSimpleColorModifier& object, Niflib::BSPSysSimpleColorModifier* native, const File& file);
+		bool operator() (const BSPSysSimpleColorModifier& object, Niflib::BSPSysSimpleColorModifier* native, const File& file);
 	};
 }

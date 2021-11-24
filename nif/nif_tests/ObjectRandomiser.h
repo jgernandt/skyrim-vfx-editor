@@ -159,198 +159,198 @@ namespace common
 	{
 		//Randomise object
 		template<typename GeneratorType>
-		void operator() (T& object, File& file, GeneratorType& rng) {}
+		bool operator() (T& object, File& file, GeneratorType& rng) { return true; }
 		//Randomise native
 		template<typename GeneratorType>
-		void operator() (const T& dummy, typename type_map<T>::type* native, File& file, GeneratorType& rng) {}
+		bool operator() (const T& dummy, typename type_map<T>::type* native, File& file, GeneratorType& rng) { return true; }
 	};
 
 	template<>
 	struct Randomiser<NiObjectNET> : VerticalTraverser<NiObjectNET, Randomiser>
 	{
-		void operator() (NiObjectNET& object, File& file, std::mt19937& rng);
-		void operator() (const NiObjectNET&, Niflib::NiObjectNET* native, File& file, std::mt19937& rng);
+		bool operator() (NiObjectNET& object, File& file, std::mt19937& rng);
+		bool operator() (const NiObjectNET&, Niflib::NiObjectNET* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiAVObject> : VerticalTraverser<NiAVObject, Randomiser>
 	{
-		void operator() (NiAVObject& object, File& file, std::mt19937& rng);
-		void operator() (const NiAVObject&, Niflib::NiAVObject* native, File& file, std::mt19937& rng);
+		bool operator() (NiAVObject& object, File& file, std::mt19937& rng);
+		bool operator() (const NiAVObject&, Niflib::NiAVObject* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiNode> : VerticalTraverser<NiNode, Randomiser>
 	{
-		void operator() (NiNode& object, File& file, std::mt19937& rng);
-		void operator() (const NiNode&, Niflib::NiNode* native, File& file, std::mt19937& rng);
+		bool operator() (NiNode& object, File& file, std::mt19937& rng);
+		bool operator() (const NiNode&, Niflib::NiNode* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiAlphaProperty> : VerticalTraverser<NiAlphaProperty, Randomiser>
 	{
-		void operator() (NiAlphaProperty& object, File& file, std::mt19937& rng);
-		void operator() (const NiAlphaProperty&, Niflib::NiAlphaProperty* native, File& file, std::mt19937& rng);
+		bool operator() (NiAlphaProperty& object, File& file, std::mt19937& rng);
+		bool operator() (const NiAlphaProperty&, Niflib::NiAlphaProperty* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<BSEffectShaderProperty> : VerticalTraverser<BSEffectShaderProperty, Randomiser>
 	{
-		void operator() (BSEffectShaderProperty& object, File& file, std::mt19937& rng);
-		void operator() (const BSEffectShaderProperty&, Niflib::BSEffectShaderProperty* native, File& file, std::mt19937& rng);
+		bool operator() (BSEffectShaderProperty& object, File& file, std::mt19937& rng);
+		bool operator() (const BSEffectShaderProperty&, Niflib::BSEffectShaderProperty* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiBoolData> : VerticalTraverser<NiBoolData, Randomiser>
 	{
-		void operator() (NiBoolData& object, File& file, std::mt19937& rng);
-		void operator() (const NiBoolData&, Niflib::NiBoolData* native, File& file, std::mt19937& rng);
+		bool operator() (NiBoolData& object, File& file, std::mt19937& rng);
+		bool operator() (const NiBoolData&, Niflib::NiBoolData* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiFloatData> : VerticalTraverser<NiFloatData, Randomiser>
 	{
-		void operator() (NiFloatData& object, File& file, std::mt19937& rng);
-		void operator() (const NiFloatData&, Niflib::NiFloatData* native, File& file, std::mt19937& rng);
+		bool operator() (NiFloatData& object, File& file, std::mt19937& rng);
+		bool operator() (const NiFloatData&, Niflib::NiFloatData* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, Randomiser>
 	{
-		void operator() (NiBoolInterpolator& object, File& file, std::mt19937& rng);
-		void operator() (const NiBoolInterpolator&, Niflib::NiBoolInterpolator* native, File& file, std::mt19937& rng);
+		bool operator() (NiBoolInterpolator& object, File& file, std::mt19937& rng);
+		bool operator() (const NiBoolInterpolator&, Niflib::NiBoolInterpolator* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, Randomiser>
 	{
-		void operator() (NiFloatInterpolator& object, File& file, std::mt19937& rng);
-		void operator() (const NiFloatInterpolator&, Niflib::NiFloatInterpolator* native, File& file, std::mt19937& rng);
+		bool operator() (NiFloatInterpolator& object, File& file, std::mt19937& rng);
+		bool operator() (const NiFloatInterpolator&, Niflib::NiFloatInterpolator* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiTimeController> : VerticalTraverser<NiTimeController, Randomiser>
 	{
-		void operator() (NiTimeController& object, File& file, std::mt19937& rng);
-		void operator() (const NiTimeController&, Niflib::NiTimeController* native, File& file, std::mt19937& rng);
+		bool operator() (NiTimeController& object, File& file, std::mt19937& rng);
+		bool operator() (const NiTimeController&, Niflib::NiTimeController* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, Randomiser>
 	{
-		void operator() (NiSingleInterpController& object, File& file, std::mt19937& rng);
-		void operator() (const NiSingleInterpController&, Niflib::NiSingleInterpController* native, File& file, std::mt19937& rng);
+		bool operator() (NiSingleInterpController& object, File& file, std::mt19937& rng);
+		bool operator() (const NiSingleInterpController&, Niflib::NiSingleInterpController* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiParticleSystem> : VerticalTraverser<NiParticleSystem, Randomiser>
 	{
-		void operator() (NiParticleSystem& object, File& file, std::mt19937& rng);
-		void operator() (const NiParticleSystem&, Niflib::NiParticleSystem* native, File& file, std::mt19937& rng);
+		bool operator() (NiParticleSystem& object, File& file, std::mt19937& rng);
+		bool operator() (const NiParticleSystem&, Niflib::NiParticleSystem* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiPSysData> : VerticalTraverser<NiPSysData, Randomiser>
 	{
-		void operator() (NiPSysData& object, File& file, std::mt19937& rng);
-		void operator() (const NiPSysData&, Niflib::NiPSysData* native, File& file, std::mt19937& rng);
+		bool operator() (NiPSysData& object, File& file, std::mt19937& rng);
+		bool operator() (const NiPSysData&, Niflib::NiPSysData* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiPSysModifier> : VerticalTraverser<NiPSysModifier, Randomiser>
 	{
-		void operator() (NiPSysModifier& object, File& file, std::mt19937& rng);
-		void operator() (const NiPSysModifier&, Niflib::NiPSysModifier* native, File& file, std::mt19937& rng);
+		bool operator() (NiPSysModifier& object, File& file, std::mt19937& rng);
+		bool operator() (const NiPSysModifier&, Niflib::NiPSysModifier* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiPSysGravityModifier> : VerticalTraverser<NiPSysGravityModifier, Randomiser>
 	{
-		void operator() (NiPSysGravityModifier& object, File& file, std::mt19937& rng);
-		void operator() (const NiPSysGravityModifier&, Niflib::NiPSysGravityModifier* native, File& file, std::mt19937& rng);
+		bool operator() (NiPSysGravityModifier& object, File& file, std::mt19937& rng);
+		bool operator() (const NiPSysGravityModifier&, Niflib::NiPSysGravityModifier* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiPSysRotationModifier> : VerticalTraverser<NiPSysRotationModifier, Randomiser>
 	{
-		void operator() (NiPSysRotationModifier& object, File& file, std::mt19937& rng);
-		void operator() (const NiPSysRotationModifier&, Niflib::NiPSysRotationModifier* native, File& file, std::mt19937& rng);
+		bool operator() (NiPSysRotationModifier& object, File& file, std::mt19937& rng);
+		bool operator() (const NiPSysRotationModifier&, Niflib::NiPSysRotationModifier* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<BSPSysScaleModifier> : VerticalTraverser<BSPSysScaleModifier, Randomiser>
 	{
-		void operator() (BSPSysScaleModifier& object, File& file, std::mt19937& rng);
-		void operator() (const BSPSysScaleModifier&, Niflib::BSPSysScaleModifier* native, File& file, std::mt19937& rng);
+		bool operator() (BSPSysScaleModifier& object, File& file, std::mt19937& rng);
+		bool operator() (const BSPSysScaleModifier&, Niflib::BSPSysScaleModifier* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<BSPSysSimpleColorModifier> : VerticalTraverser<BSPSysSimpleColorModifier, Randomiser>
 	{
-		void operator() (BSPSysSimpleColorModifier& object, File& file, std::mt19937& rng);
-		void operator() (const BSPSysSimpleColorModifier&, Niflib::BSPSysSimpleColorModifier* native, File& file, std::mt19937& rng);
+		bool operator() (BSPSysSimpleColorModifier& object, File& file, std::mt19937& rng);
+		bool operator() (const BSPSysSimpleColorModifier&, Niflib::BSPSysSimpleColorModifier* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiPSysEmitter> : VerticalTraverser<NiPSysEmitter, Randomiser>
 	{
-		void operator() (NiPSysEmitter& object, File& file, std::mt19937& rng);
-		void operator() (const NiPSysEmitter&, Niflib::NiPSysEmitter* native, File& file, std::mt19937& rng);
+		bool operator() (NiPSysEmitter& object, File& file, std::mt19937& rng);
+		bool operator() (const NiPSysEmitter&, Niflib::NiPSysEmitter* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiPSysVolumeEmitter> : VerticalTraverser<NiPSysVolumeEmitter, Randomiser>
 	{
-		void operator() (NiPSysVolumeEmitter& object, File& file, std::mt19937& rng);
-		void operator() (const NiPSysVolumeEmitter&, Niflib::NiPSysVolumeEmitter* native, File& file, std::mt19937& rng);
+		bool operator() (NiPSysVolumeEmitter& object, File& file, std::mt19937& rng);
+		bool operator() (const NiPSysVolumeEmitter&, Niflib::NiPSysVolumeEmitter* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiPSysBoxEmitter> : VerticalTraverser<NiPSysBoxEmitter, Randomiser>
 	{
-		void operator() (NiPSysBoxEmitter& object, File& file, std::mt19937& rng);
-		void operator() (const NiPSysBoxEmitter&, Niflib::NiPSysBoxEmitter* native, File& file, std::mt19937& rng);
+		bool operator() (NiPSysBoxEmitter& object, File& file, std::mt19937& rng);
+		bool operator() (const NiPSysBoxEmitter&, Niflib::NiPSysBoxEmitter* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiPSysCylinderEmitter> : VerticalTraverser<NiPSysCylinderEmitter, Randomiser>
 	{
-		void operator() (NiPSysCylinderEmitter& object, File& file, std::mt19937& rng);
-		void operator() (const NiPSysCylinderEmitter&, Niflib::NiPSysCylinderEmitter* native, File& file, std::mt19937& rng);
+		bool operator() (NiPSysCylinderEmitter& object, File& file, std::mt19937& rng);
+		bool operator() (const NiPSysCylinderEmitter&, Niflib::NiPSysCylinderEmitter* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiPSysSphereEmitter> : VerticalTraverser<NiPSysSphereEmitter, Randomiser>
 	{
-		void operator() (NiPSysSphereEmitter& object, File& file, std::mt19937& rng);
-		void operator() (const NiPSysSphereEmitter&, Niflib::NiPSysSphereEmitter* native, File& file, std::mt19937& rng);
+		bool operator() (NiPSysSphereEmitter& object, File& file, std::mt19937& rng);
+		bool operator() (const NiPSysSphereEmitter&, Niflib::NiPSysSphereEmitter* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiPSysModifierCtlr> : VerticalTraverser<NiPSysModifierCtlr, Randomiser>
 	{
-		void operator() (NiPSysModifierCtlr& object, File& file, std::mt19937& rng);
-		void operator() (const NiPSysModifierCtlr&, Niflib::NiPSysModifierCtlr* native, File& file, std::mt19937& rng);
+		bool operator() (NiPSysModifierCtlr& object, File& file, std::mt19937& rng);
+		bool operator() (const NiPSysModifierCtlr&, Niflib::NiPSysModifierCtlr* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, Randomiser>
 	{
-		void operator() (NiPSysEmitterCtlr& object, File& file, std::mt19937& rng);
-		void operator() (const NiPSysEmitterCtlr&, Niflib::NiPSysEmitterCtlr* native, File& file, std::mt19937& rng);
+		bool operator() (NiPSysEmitterCtlr& object, File& file, std::mt19937& rng);
+		bool operator() (const NiPSysEmitterCtlr&, Niflib::NiPSysEmitterCtlr* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiExtraData> : VerticalTraverser<NiExtraData, Randomiser>
 	{
-		void operator() (NiExtraData& object, File& file, std::mt19937& rng);
-		void operator() (const NiExtraData&, Niflib::NiExtraData* native, File& file, std::mt19937& rng);
+		bool operator() (NiExtraData& object, File& file, std::mt19937& rng);
+		bool operator() (const NiExtraData&, Niflib::NiExtraData* native, File& file, std::mt19937& rng);
 	};
 
 	template<>
 	struct Randomiser<NiStringExtraData> : VerticalTraverser<NiStringExtraData, Randomiser>
 	{
-		void operator() (NiStringExtraData& object, File& file, std::mt19937& rng);
-		void operator() (const NiStringExtraData&, Niflib::NiStringExtraData* native, File& file, std::mt19937& rng);
+		bool operator() (NiStringExtraData& object, File& file, std::mt19937& rng);
+		bool operator() (const NiStringExtraData&, Niflib::NiStringExtraData* native, File& file, std::mt19937& rng);
 	};
 }

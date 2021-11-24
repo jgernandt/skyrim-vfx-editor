@@ -34,7 +34,7 @@ namespace nif
 	};
 	template<> struct Forwarder<NiParticleSystem> : VerticalTraverser<NiParticleSystem, Forwarder>
 	{
-		void operator() (NiParticleSystem& object, NiTraverser& traverser);
+		bool operator() (NiParticleSystem& object, NiTraverser& traverser);
 	};
 
 	struct NiPSysData : NiTraversable<NiPSysData, NiObject>

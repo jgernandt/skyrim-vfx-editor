@@ -42,7 +42,7 @@ nif::NiObject::~NiObject()
 }
 
 
-void nif::Forwarder<nif::NiObjectNET>::operator()(NiObjectNET& object, NiTraverser& traverser)
+bool nif::Forwarder<nif::NiObjectNET>::operator()(NiObjectNET& object, NiTraverser& traverser)
 {
 	for (auto&& data : object.extraData) {
 		assert(data);
@@ -53,9 +53,11 @@ void nif::Forwarder<nif::NiObjectNET>::operator()(NiObjectNET& object, NiTravers
 		assert(controller);
 		controller->receive(traverser);
 	}
+
+	return true;
 }
 
-void nif::ReadSyncer<nif::NiObjectNET>::operator()(NiObjectNET& object, const Niflib::NiObjectNET* native, File& file)
+bool nif::ReadSyncer<nif::NiObjectNET>::operator()(NiObjectNET& object, const Niflib::NiObjectNET* native, File& file)
 {
 	assert(native);
 
@@ -68,9 +70,11 @@ void nif::ReadSyncer<nif::NiObjectNET>::operator()(NiObjectNET& object, const Ni
 	object.controllers.clear();
 	for (auto&& ctlr : native->GetControllers())
 		object.controllers.insert(object.controllers.size(), file.get<NiTimeController>(ctlr));
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiObjectNET>::operator()(const NiObjectNET& object, Niflib::NiObjectNET* native, const File& file)
+bool nif::WriteSyncer<nif::NiObjectNET>::operator()(const NiObjectNET& object, Niflib::NiObjectNET* native, const File& file)
 {
 	assert(native);
 
@@ -84,9 +88,11 @@ void nif::WriteSyncer<nif::NiObjectNET>::operator()(const NiObjectNET& object, N
 	native->ClearControllers();
 	for (auto rit = object.controllers.rbegin(); rit != object.controllers.rend(); ++rit)
 		native->AddController(file.getNative<NiTimeController>(*rit));
+
+	return true;
 }
 
-void nif::ReadSyncer<nif::NiAVObject>::operator()(NiAVObject& object, const Niflib::NiAVObject* native, File& file)
+bool nif::ReadSyncer<nif::NiAVObject>::operator()(NiAVObject& object, const Niflib::NiAVObject* native, File& file)
 {
 	assert(native);
 
@@ -95,9 +101,11 @@ void nif::ReadSyncer<nif::NiAVObject>::operator()(NiAVObject& object, const Nifl
 	object.transform.translation.set(nif_type_conversion<translation_t>::from(native->GetLocalTranslation()));
 	object.transform.rotation.set(nif_type_conversion<rotation_t>::from(native->GetLocalRotation()));
 	object.transform.scale.set(native->GetLocalScale());
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiAVObject>::operator()(const NiAVObject& object, Niflib::NiAVObject* native, const File& file)
+bool nif::WriteSyncer<nif::NiAVObject>::operator()(const NiAVObject& object, Niflib::NiAVObject* native, const File& file)
 {
 	assert(native);
 
@@ -105,5 +113,7 @@ void nif::WriteSyncer<nif::NiAVObject>::operator()(const NiAVObject& object, Nif
 	native->SetLocalTranslation(nif_type_conversion<Niflib::Vector3>::from(object.transform.translation.get()));
 	native->SetLocalRotation(nif_type_conversion<Niflib::Matrix33>::from(object.transform.rotation.get()));
 	native->SetLocalScale(object.transform.scale.get());
+
+	return true;
 }
 

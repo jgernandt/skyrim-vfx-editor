@@ -32,26 +32,30 @@ const size_t nif::NiPSysUpdateCtlr::TYPE = std::hash<std::string>{}("NiPSysUpdat
 
 using namespace math;
 
-void nif::ReadSyncer<nif::NiPSysModifier>::operator()(NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file)
+bool nif::ReadSyncer<nif::NiPSysModifier>::operator()(NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file)
 {
 	assert(native);
 	object.name.set(native->GetName());
 	object.order.set(native->GetOrder());
 	object.target.assign(file.get<NiParticleSystem>(native->GetTarget()));
 	object.active.set(native->GetActive());
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiPSysModifier>::operator()(const NiPSysModifier& object, Niflib::NiPSysModifier* native, const File& file)
+bool nif::WriteSyncer<nif::NiPSysModifier>::operator()(const NiPSysModifier& object, Niflib::NiPSysModifier* native, const File& file)
 {
 	assert(native);
 	native->SetName(object.name.get());
 	native->SetOrder(object.order.get());
 	native->SetTarget(file.getNative<NiParticleSystem>(object.target.assigned().get()));
 	native->SetActive(object.active.get());
+
+	return true;
 }
 
 
-void nif::ReadSyncer<nif::NiPSysGravityModifier>::operator()(NiPSysGravityModifier& object, const Niflib::NiPSysGravityModifier* native, File& file)
+bool nif::ReadSyncer<nif::NiPSysGravityModifier>::operator()(NiPSysGravityModifier& object, const Niflib::NiPSysGravityModifier* native, File& file)
 {
 	assert(native);
 	object.gravityObject.assign(file.get<NiNode>(native->GetGravityObject()));
@@ -62,9 +66,11 @@ void nif::ReadSyncer<nif::NiPSysGravityModifier>::operator()(NiPSysGravityModifi
 	object.turbulence.set(native->GetTurbulence());
 	object.turbulenceScale.set(native->GetTurbulenceScale());
 	object.worldAligned.set(native->GetWorldAligned());
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiPSysGravityModifier>::operator()(const NiPSysGravityModifier& object, Niflib::NiPSysGravityModifier* native, const File& file)
+bool nif::WriteSyncer<nif::NiPSysGravityModifier>::operator()(const NiPSysGravityModifier& object, Niflib::NiPSysGravityModifier* native, const File& file)
 {
 	assert(native);
 	native->SetGravityObject(file.getNative<NiNode>(object.gravityObject.assigned().get()));
@@ -75,10 +81,12 @@ void nif::WriteSyncer<nif::NiPSysGravityModifier>::operator()(const NiPSysGravit
 	native->SetTurbulence(object.turbulence.get());
 	native->SetTurbulenceScale(object.turbulenceScale.get());
 	native->SetWorldAligned(object.worldAligned.get());
+
+	return true;
 }
 
 
-void nif::ReadSyncer<nif::NiPSysRotationModifier>::operator()(NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file)
+bool nif::ReadSyncer<nif::NiPSysRotationModifier>::operator()(NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file)
 {
 	assert(native);
 	object.speed.set(static_cast<radf>(native->GetRotationSpeed()));
@@ -86,9 +94,11 @@ void nif::ReadSyncer<nif::NiPSysRotationModifier>::operator()(NiPSysRotationModi
 	object.angle.set(static_cast<radf>(native->GetRotationAngle()));
 	object.angleVar.set(static_cast<radf>(native->GetRotationAngleVar()));
 	object.randomSign.set(native->GetRandomSpeedSign());
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiPSysRotationModifier>::operator()(const NiPSysRotationModifier& object, Niflib::NiPSysRotationModifier* native, const File& file)
+bool nif::WriteSyncer<nif::NiPSysRotationModifier>::operator()(const NiPSysRotationModifier& object, Niflib::NiPSysRotationModifier* native, const File& file)
 {
 	assert(native);
 	native->SetRotationSpeed(static_cast<radf>(object.speed.get()).value);
@@ -96,23 +106,29 @@ void nif::WriteSyncer<nif::NiPSysRotationModifier>::operator()(const NiPSysRotat
 	native->SetRotationAngle(static_cast<radf>(object.angle.get()).value);
 	native->SetRotationAngleVar(static_cast<radf>(object.angleVar.get()).value);
 	native->SetRandomSpeedSign(object.randomSign.get());
+
+	return true;
 }
 
 
-void nif::ReadSyncer<nif::BSPSysScaleModifier>::operator()(BSPSysScaleModifier& object, const Niflib::BSPSysScaleModifier* native, File& file)
+bool nif::ReadSyncer<nif::BSPSysScaleModifier>::operator()(BSPSysScaleModifier& object, const Niflib::BSPSysScaleModifier* native, File& file)
 {
 	assert(native);
 	object.scales.set(native->GetScales());
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::BSPSysScaleModifier>::operator()(const BSPSysScaleModifier& object, Niflib::BSPSysScaleModifier* native, const File& file)
+bool nif::WriteSyncer<nif::BSPSysScaleModifier>::operator()(const BSPSysScaleModifier& object, Niflib::BSPSysScaleModifier* native, const File& file)
 {
 	assert(native);
 	native->SetScales(object.scales.get());
+
+	return true;
 }
 
 
-void nif::ReadSyncer<nif::BSPSysSimpleColorModifier>::operator()(BSPSysSimpleColorModifier& object, const Niflib::BSPSysSimpleColorModifier* native, File& file)
+bool nif::ReadSyncer<nif::BSPSysSimpleColorModifier>::operator()(BSPSysSimpleColorModifier& object, const Niflib::BSPSysSimpleColorModifier* native, File& file)
 {
 	assert(native);
 	object.col1.value.set(nif_type_conversion<ColRGBA>::from(native->GetColor(0)));
@@ -126,9 +142,11 @@ void nif::ReadSyncer<nif::BSPSysSimpleColorModifier>::operator()(BSPSysSimpleCol
 
 	object.col3.value.set(nif_type_conversion<ColRGBA>::from(native->GetColor(2)));
 	object.col3.RGBbegin.set(native->GetColor3Begin());
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::BSPSysSimpleColorModifier>::operator()(const BSPSysSimpleColorModifier& object, Niflib::BSPSysSimpleColorModifier* native, const File& file)
+bool nif::WriteSyncer<nif::BSPSysSimpleColorModifier>::operator()(const BSPSysSimpleColorModifier& object, Niflib::BSPSysSimpleColorModifier* native, const File& file)
 {
 	assert(native);
 	native->SetColor(0, nif_type_conversion<Niflib::Color4>::from(object.col1.value.get()));
@@ -142,4 +160,6 @@ void nif::WriteSyncer<nif::BSPSysSimpleColorModifier>::operator()(const BSPSysSi
 
 	native->SetColor(2, nif_type_conversion<Niflib::Color4>::from(object.col3.value.get()));
 	native->SetColor3Begin(object.col3.RGBbegin.get());
+
+	return true;
 }

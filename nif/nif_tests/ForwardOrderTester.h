@@ -44,54 +44,54 @@ namespace common
 	template<typename T>
 	struct ForwardOrderTester : nif::VerticalTraverser<T, ForwardOrderTester>
 	{
-		void operator() (const T& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end) {}
+		bool operator() (const T& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end) { return true; }
 	};
 
 	template<>
 	struct ForwardOrderTester<NiObject> : nif::VerticalTraverser<NiObject, ForwardOrderTester>
 	{
-		void operator() (const NiObject& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
+		bool operator() (const NiObject& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
 	};
 
 	template<>
 	struct ForwardOrderTester<NiObjectNET> : nif::VerticalTraverser<NiObjectNET, ForwardOrderTester>
 	{
-		void operator() (const NiObjectNET& object, std::vector<nif::NiObject*>::iterator& it, const std::vector<nif::NiObject*>::iterator end);
+		bool operator() (const NiObjectNET& object, std::vector<nif::NiObject*>::iterator& it, const std::vector<nif::NiObject*>::iterator end);
 	};
 
 	template<>
 	struct ForwardOrderTester<NiNode> : nif::VerticalTraverser<NiNode, ForwardOrderTester>
 	{
-		void operator() (const NiNode& object, std::vector<nif::NiObject*>::iterator& it, const std::vector<nif::NiObject*>::iterator end);
+		bool operator() (const NiNode& object, std::vector<nif::NiObject*>::iterator& it, const std::vector<nif::NiObject*>::iterator end);
 	};
 
 	template<>
 	struct ForwardOrderTester<NiBoolInterpolator> : nif::VerticalTraverser<NiBoolInterpolator, ForwardOrderTester>
 	{
-		void operator() (const NiBoolInterpolator& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
+		bool operator() (const NiBoolInterpolator& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
 	};
 
 	template<>
 	struct ForwardOrderTester<NiFloatInterpolator> : nif::VerticalTraverser<NiFloatInterpolator, ForwardOrderTester>
 	{
-		void operator() (const NiFloatInterpolator& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
+		bool operator() (const NiFloatInterpolator& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
 	};
 
 	template<>
 	struct ForwardOrderTester<NiSingleInterpController> : nif::VerticalTraverser<NiSingleInterpController, ForwardOrderTester>
 	{
-		void operator() (const NiSingleInterpController& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
+		bool operator() (const NiSingleInterpController& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
 	};
 
 	template<>
 	struct ForwardOrderTester<NiParticleSystem> : nif::VerticalTraverser<NiParticleSystem, ForwardOrderTester>
 	{
-		void operator() (const NiParticleSystem& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
+		bool operator() (const NiParticleSystem& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
 	};
 
 	template<>
 	struct ForwardOrderTester<NiPSysEmitterCtlr> : nif::VerticalTraverser<NiPSysEmitterCtlr, ForwardOrderTester>
 	{
-		void operator() (const NiPSysEmitterCtlr& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
+		bool operator() (const NiPSysEmitterCtlr& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
 	};
 }

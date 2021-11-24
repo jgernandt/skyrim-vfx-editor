@@ -7,7 +7,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace math;
 using namespace nif;
 
-void common::EquivalenceTester<nif::NiAVObject>::operator()(const NiAVObject& object, const Niflib::NiAVObject* native, File& file)
+bool common::EquivalenceTester<nif::NiAVObject>::operator()(const NiAVObject& object, const Niflib::NiAVObject* native, File& file)
 {
 	Assert::IsTrue(object.flags.raised() == native->GetFlags());
 	Assert::IsTrue(object.transform.translation.get() == nif_type_conversion<translation_t>::from(native->GetLocalTranslation()));
@@ -20,9 +20,11 @@ void common::EquivalenceTester<nif::NiAVObject>::operator()(const NiAVObject& ob
 	Assert::AreEqual(q1.v[2], q1.v[2], 1.0e-5f);
 
 	Assert::IsTrue(object.transform.scale.get() == native->GetLocalScale());
+
+	return true;
 }
 
-void common::Randomiser<NiAVObject>::operator()(NiAVObject& object, File& file, std::mt19937& rng)
+bool common::Randomiser<NiAVObject>::operator()(NiAVObject& object, File& file, std::mt19937& rng)
 {
 	//flags is 32 bit, but it was 16 in Niflib's days. I can't be bothered to fix that right now.
 	randomiseFlags(object.flags, rng, { 0, std::numeric_limits<unsigned short>::max() });
@@ -39,9 +41,11 @@ void common::Randomiser<NiAVObject>::operator()(NiAVObject& object, File& file, 
 	object.transform.rotation.set(rot);
 
 	randomiseProperty(object.transform.scale, rng);
+
+	return true;
 }
 
-void common::Randomiser<NiAVObject>::operator()(const NiAVObject&, Niflib::NiAVObject* native, File&, std::mt19937& rng)
+bool common::Randomiser<NiAVObject>::operator()(const NiAVObject&, Niflib::NiAVObject* native, File&, std::mt19937& rng)
 {
 	native->SetFlags(randi<unsigned short>(rng));
 
@@ -58,4 +62,6 @@ void common::Randomiser<NiAVObject>::operator()(const NiAVObject&, Niflib::NiAVO
 	native->SetLocalRotation(nif_type_conversion<Niflib::Matrix33>::from(rot));
 
 	native->SetLocalScale(F(rng));
+
+	return true;
 }

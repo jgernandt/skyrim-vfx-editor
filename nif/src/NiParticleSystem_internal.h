@@ -10,11 +10,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiParticleSystem> : VerticalTraverser<NiParticleSystem, ReadSyncer>
 	{
-		void operator() (NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file);
+		bool operator() (NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file);
 	};
 	template<> struct WriteSyncer<NiParticleSystem> : VerticalTraverser<NiParticleSystem, WriteSyncer>
 	{
-		void operator() (const NiParticleSystem& object, Niflib::NiParticleSystem* native, const File& file);
+		bool operator() (const NiParticleSystem& object, Niflib::NiParticleSystem* native, const File& file);
 	};
 
 	//NiPSysData
@@ -22,10 +22,10 @@ namespace nif
 	template<> struct type_map<NiPSysData> { using type = Niflib::NiPSysData; };
 	template<> struct ReadSyncer<NiPSysData> : VerticalTraverser<NiPSysData, ReadSyncer>
 	{
-		void operator() (NiPSysData& object, const Niflib::NiPSysData* native, File& file);
+		bool operator() (NiPSysData& object, const Niflib::NiPSysData* native, File& file);
 	};
 	template<> struct WriteSyncer<NiPSysData> : VerticalTraverser<NiPSysData, WriteSyncer>
 	{
-		void operator() (const NiPSysData& object, Niflib::NiPSysData* native, const File& file);
+		bool operator() (const NiPSysData& object, Niflib::NiPSysData* native, const File& file);
 	};
 }

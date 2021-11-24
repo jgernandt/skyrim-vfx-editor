@@ -8,16 +8,18 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
 
-void common::ForwardOrderTester<NiObject>::operator()(const NiObject& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
+bool common::ForwardOrderTester<NiObject>::operator()(const NiObject& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
 {
 	//Check for self traversal
 	Assert::IsTrue(it != end);
 	Assert::IsTrue(*it == &object);
 	++it;
+
+	return true;
 }
 
 
-void common::EquivalenceTester<NiObjectNET>::operator()(const NiObjectNET& object, const Niflib::NiObjectNET* native, File& file)
+bool common::EquivalenceTester<NiObjectNET>::operator()(const NiObjectNET& object, const Niflib::NiObjectNET* native, File& file)
 {
 	Assert::IsTrue(native->GetName() == object.name.get());
 
@@ -31,22 +33,28 @@ void common::EquivalenceTester<NiObjectNET>::operator()(const NiObjectNET& objec
 	int i = 0;
 	for (auto&& controller : controllers)
 		Assert::IsTrue(controller == file.getNative<NiTimeController>(object.controllers.at(i++)));
+
+	return true;
 }
 
-void common::ForwardOrderTester<NiObjectNET>::operator()(const NiObjectNET& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
+bool common::ForwardOrderTester<NiObjectNET>::operator()(const NiObjectNET& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
 {
 	fwdSet(object.extraData, it, end);
 	fwdSequence(object.controllers, it, end);
+
+	return true;
 }
 
-void common::Randomiser<NiObjectNET>::operator()(NiObjectNET& object, File& file, std::mt19937& rng)
+bool common::Randomiser<NiObjectNET>::operator()(NiObjectNET& object, File& file, std::mt19937& rng)
 {
 	randomiseProperty(object.name, rng);
 	randomiseSet(object.extraData, file, rng);
 	randomiseSequence(object.controllers, file, rng);
+
+	return true;
 }
 
-void common::Randomiser<NiObjectNET>::operator()(const NiObjectNET&, Niflib::NiObjectNET* native, File&, std::mt19937& rng)
+bool common::Randomiser<NiObjectNET>::operator()(const NiObjectNET&, Niflib::NiObjectNET* native, File&, std::mt19937& rng)
 {
 	native->SetName(rands(rng));
 
@@ -57,4 +65,6 @@ void common::Randomiser<NiObjectNET>::operator()(const NiObjectNET&, Niflib::NiO
 	native->ClearControllers();
 	for (auto&& obj : randomObjVector<NiTimeController>(rng))
 		native->AddController(obj);
+
+	return true;
 }

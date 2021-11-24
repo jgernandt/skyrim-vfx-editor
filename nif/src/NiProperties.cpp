@@ -24,7 +24,7 @@ const size_t nif::NiAlphaProperty::TYPE = std::hash<std::string>{}("NiAlphaPrope
 const size_t nif::BSShaderProperty::TYPE = std::hash<std::string>{}("BSShaderProperty");
 const size_t nif::BSEffectShaderProperty::TYPE = std::hash<std::string>{}("BSEffectShaderProperty");
 
-void nif::ReadSyncer<nif::NiAlphaProperty>::operator() (NiAlphaProperty& object, const Niflib::NiAlphaProperty* native, File& file)
+bool nif::ReadSyncer<nif::NiAlphaProperty>::operator() (NiAlphaProperty& object, const Niflib::NiAlphaProperty* native, File& file)
 {
 	assert(native);
 	object.mode.set(static_cast<AlphaMode>(native->GetFlags() & 0x201));
@@ -33,9 +33,11 @@ void nif::ReadSyncer<nif::NiAlphaProperty>::operator() (NiAlphaProperty& object,
 	object.testFcn.set(static_cast<TestFunction>(native->GetTestFunc()));
 	object.threshold.set(native->GetTestThreshold());
 	object.noSorting.set(native->GetTriangleSortMode());
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiAlphaProperty>::operator() (const NiAlphaProperty& object, Niflib::NiAlphaProperty* native, const File& file)
+bool nif::WriteSyncer<nif::NiAlphaProperty>::operator() (const NiAlphaProperty& object, Niflib::NiAlphaProperty* native, const File& file)
 {
 	assert(native);
 	native->SetFlags(static_cast<unsigned short>(object.mode.get()));
@@ -44,9 +46,11 @@ void nif::WriteSyncer<nif::NiAlphaProperty>::operator() (const NiAlphaProperty& 
 	native->SetTestFunc(static_cast<Niflib::NiAlphaProperty::TestFunc>(object.testFcn.get()));
 	native->SetTestThreshold(object.threshold.get());
 	native->SetTriangleSortMode(object.noSorting.get());
+
+	return true;
 }
 
-void nif::ReadSyncer<nif::BSEffectShaderProperty>::operator()(BSEffectShaderProperty& object, const Niflib::BSEffectShaderProperty* native, File& file)
+bool nif::ReadSyncer<nif::BSEffectShaderProperty>::operator()(BSEffectShaderProperty& object, const Niflib::BSEffectShaderProperty* native, File& file)
 {
 	assert(native);
 	object.emissiveCol.set(nif_type_conversion<ColRGBA>::from(native->GetEmissiveColor()));
@@ -57,9 +61,11 @@ void nif::ReadSyncer<nif::BSEffectShaderProperty>::operator()(BSEffectShaderProp
 	object.shaderFlags1.raise(nif_type_conversion<ShaderFlags>::from(native->GetShaderFlags1()));
 	object.shaderFlags2.clear();
 	object.shaderFlags2.raise(nif_type_conversion<ShaderFlags>::from(native->GetShaderFlags2()));
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::BSEffectShaderProperty>::operator()(const BSEffectShaderProperty& object, Niflib::BSEffectShaderProperty* native, const File& file)
+bool nif::WriteSyncer<nif::BSEffectShaderProperty>::operator()(const BSEffectShaderProperty& object, Niflib::BSEffectShaderProperty* native, const File& file)
 {
 	assert(native);
 	native->SetEmissiveColor(nif_type_conversion<Niflib::Color4>::from(object.emissiveCol.get()));
@@ -68,4 +74,6 @@ void nif::WriteSyncer<nif::BSEffectShaderProperty>::operator()(const BSEffectSha
 	native->SetGreyscaleTexture(object.greyscaleTex.get());
 	native->SetShaderFlags1(nif_type_conversion<Niflib::SkyrimShaderPropertyFlags1>::from(object.shaderFlags1.raised()));
 	native->SetShaderFlags2(nif_type_conversion<Niflib::SkyrimShaderPropertyFlags2>::from(object.shaderFlags2.raised()));
+
+	return true;
 }

@@ -8,7 +8,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace math;
 using namespace nif;
 
-void common::EquivalenceTester<NiParticleSystem>::operator()(const NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file)
+bool common::EquivalenceTester<NiParticleSystem>::operator()(const NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file)
 {
 	Assert::IsTrue(object.data.assigned() == file.get<NiPSysData>(native->GetData()).get());
 
@@ -20,27 +20,33 @@ void common::EquivalenceTester<NiParticleSystem>::operator()(const NiParticleSys
 	Assert::IsTrue(object.shaderProperty.assigned() == file.get<BSShaderProperty>(native->GetShaderProperty()).get());
 	Assert::IsTrue(object.alphaProperty.assigned() == file.get<NiAlphaProperty>(native->GetAlphaProperty()).get());
 	Assert::IsTrue(object.worldSpace.get() == native->GetWorldSpace());
+
+	return true;
 }
 
-void common::ForwardOrderTester<NiParticleSystem>::operator()(
+bool common::ForwardOrderTester<NiParticleSystem>::operator()(
 	const NiParticleSystem& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
 {
 	fwdAssignable(object.data, it, end);
 	fwdSequence(object.modifiers, it, end);
 	fwdAssignable(object.shaderProperty, it, end);
 	fwdAssignable(object.alphaProperty, it, end);
+
+	return true;
 }
 
-void common::Randomiser<NiParticleSystem>::operator()(NiParticleSystem& object, File& file, std::mt19937& rng)
+bool common::Randomiser<NiParticleSystem>::operator()(NiParticleSystem& object, File& file, std::mt19937& rng)
 {
 	object.data.assign(file.create<NiPSysData>());
 	randomiseSequence(object.modifiers, file, rng);
 	object.shaderProperty.assign(file.create<BSShaderProperty>());
 	object.alphaProperty.assign(file.create<NiAlphaProperty>());
 	object.worldSpace.set(randi<int>(rng, { 0, 1 }));
+
+	return true;
 }
 
-void common::Randomiser<NiParticleSystem>::operator()(const NiParticleSystem&, Niflib::NiParticleSystem* native, File&, std::mt19937& rng)
+bool common::Randomiser<NiParticleSystem>::operator()(const NiParticleSystem&, Niflib::NiParticleSystem* native, File&, std::mt19937& rng)
 {
 	native->SetData(new Niflib::NiPSysData);
 
@@ -51,10 +57,12 @@ void common::Randomiser<NiParticleSystem>::operator()(const NiParticleSystem&, N
 	native->SetShaderProperty(new Niflib::BSShaderProperty);
 	native->SetAlphaProperty(new Niflib::NiAlphaProperty);
 	native->SetWorldSpace(randi<int>(rng, { 0, 1 }));
+
+	return true;
 }
 
 
-void common::EquivalenceTester<NiPSysData>::operator()(const NiPSysData& object, const Niflib::NiPSysData* native, File& file)
+bool common::EquivalenceTester<NiPSysData>::operator()(const NiPSysData& object, const Niflib::NiPSysData* native, File& file)
 {
 	Assert::IsTrue(object.maxCount.get() == native->GetBSMaxVertices());
 
@@ -67,43 +75,53 @@ void common::EquivalenceTester<NiPSysData>::operator()(const NiPSysData& object,
 	Assert::IsTrue(object.hasColour.get() == native->GetHasVertexColors());
 	Assert::IsTrue(object.hasRotationAngles.get() == native->GetHasRotationAngles());
 	Assert::IsTrue(object.hasRotationSpeeds.get() == native->GetHasRotationSpeeds());
+
+	return true;
 }
 
-void common::Randomiser<NiPSysData>::operator()(NiPSysData& object, File& file, std::mt19937& rng)
+bool common::Randomiser<NiPSysData>::operator()(NiPSysData& object, File& file, std::mt19937& rng)
 {
 	object.maxCount.set(randi<unsigned short>(rng));
 	object.subtexOffsets.set(randfv<SubtextureOffset>(rng));
 	object.hasColour.set(randi<int>(rng, { 0, 1 }));
 	object.hasRotationAngles.set(randi<int>(rng, { 0, 1 }));
 	object.hasRotationSpeeds.set(randi<int>(rng, { 0, 1 }));
+
+	return true;
 }
 
-void common::Randomiser<NiPSysData>::operator()(const NiPSysData&, Niflib::NiPSysData* native, File&, std::mt19937& rng)
+bool common::Randomiser<NiPSysData>::operator()(const NiPSysData&, Niflib::NiPSysData* native, File&, std::mt19937& rng)
 {
 	native->SetBSMaxVertices(randi<unsigned short>(rng));
 	native->GetSubtextureOffsets() = randfv<Niflib::Vector4>(rng);
 	native->SetHasVertexColors(randi<int>(rng, { 0, 1 }));
 	native->SetHasRotationAngles(randi<int>(rng, { 0, 1 }));
 	native->SetHasRotationSpeeds(randi<int>(rng, { 0, 1 }));
+
+	return true;
 }
 
-void common::EquivalenceTester<NiPSysModifier>::operator()(const NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file)
+bool common::EquivalenceTester<NiPSysModifier>::operator()(const NiPSysModifier& object, const Niflib::NiPSysModifier* native, File& file)
 {
 	Assert::IsTrue(object.name.get() == native->GetName());
 	Assert::IsTrue(object.order.get() == native->GetOrder());
 	Assert::IsTrue(object.target.assigned() == file.get<NiParticleSystem>(native->GetTarget()));
 	Assert::IsTrue(object.active.get() == native->GetActive());
+
+	return true;
 }
 
-void common::Randomiser<NiPSysModifier>::operator()(NiPSysModifier& object, File& file, std::mt19937& rng)
+bool common::Randomiser<NiPSysModifier>::operator()(NiPSysModifier& object, File& file, std::mt19937& rng)
 {
 	randomiseProperty(object.name, rng);
 	randomiseProperty(object.order, rng);
 	object.target.assign(file.create<NiParticleSystem>());
 	object.active.set(randi<int>(rng, { 0, 1 }));
+
+	return true;
 }
 
-void common::Randomiser<NiPSysModifier>::operator()(const NiPSysModifier&, Niflib::NiPSysModifier* native, File& file, std::mt19937& rng)
+bool common::Randomiser<NiPSysModifier>::operator()(const NiPSysModifier&, Niflib::NiPSysModifier* native, File& file, std::mt19937& rng)
 {
 	native->SetName(rands(rng));
 	native->SetOrder(randi<unsigned int>(rng));
@@ -114,10 +132,12 @@ void common::Randomiser<NiPSysModifier>::operator()(const NiPSysModifier&, Nifli
 	native->SetTarget(target);
 
 	native->SetActive(randi<int>(rng, { 0, 1 }));
+
+	return true;
 }
 
 
-void common::EquivalenceTester<NiPSysGravityModifier>::operator()(const NiPSysGravityModifier& object, const Niflib::NiPSysGravityModifier* native, File& file)
+bool common::EquivalenceTester<NiPSysGravityModifier>::operator()(const NiPSysGravityModifier& object, const Niflib::NiPSysGravityModifier* native, File& file)
 {
 	Assert::IsTrue(object.gravityObject.assigned() == file.get<NiNode>(native->GetGravityObject()).get());
 	Assert::IsTrue(object.gravityAxis.get() == nif_type_conversion<Floats<3>>::from(native->GetGravityAxis()));
@@ -127,9 +147,11 @@ void common::EquivalenceTester<NiPSysGravityModifier>::operator()(const NiPSysGr
 	Assert::IsTrue(object.turbulence.get() == native->GetTurbulence());
 	Assert::IsTrue(object.turbulenceScale.get() == native->GetTurbulenceScale());
 	Assert::IsTrue(object.worldAligned.get() == native->GetWorldAligned());
+
+	return true;
 }
 
-void common::Randomiser<NiPSysGravityModifier>::operator()(NiPSysGravityModifier& object, File& file, std::mt19937& rng)
+bool common::Randomiser<NiPSysGravityModifier>::operator()(NiPSysGravityModifier& object, File& file, std::mt19937& rng)
 {
 	object.gravityObject.assign(file.create<NiNode>());
 	randomiseProperty(object.gravityAxis, rng);
@@ -139,9 +161,11 @@ void common::Randomiser<NiPSysGravityModifier>::operator()(NiPSysGravityModifier
 	randomiseProperty(object.turbulence, rng);
 	randomiseProperty(object.turbulenceScale, rng);
 	randomiseProperty(object.worldAligned, rng);
+
+	return true;
 }
 
-void common::Randomiser<NiPSysGravityModifier>::operator()(const NiPSysGravityModifier&, Niflib::NiPSysGravityModifier* native, File& file, std::mt19937& rng)
+bool common::Randomiser<NiPSysGravityModifier>::operator()(const NiPSysGravityModifier&, Niflib::NiPSysGravityModifier* native, File& file, std::mt19937& rng)
 {
 	//weak ref
 	Niflib::Ref<Niflib::NiNode> gravObj = new Niflib::NiNode;
@@ -155,70 +179,90 @@ void common::Randomiser<NiPSysGravityModifier>::operator()(const NiPSysGravityMo
 	native->SetTurbulence(randf<float>(rng));
 	native->SetTurbulenceScale(randf<float>(rng));
 	native->SetWorldAligned(randb(rng));
+
+	return true;
 }
 
 
-void common::EquivalenceTester<NiPSysRotationModifier>::operator()(const NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file)
+bool common::EquivalenceTester<NiPSysRotationModifier>::operator()(const NiPSysRotationModifier& object, const Niflib::NiPSysRotationModifier* native, File& file)
 {
 	Assert::AreEqual(radf(object.speed.get()).value, native->GetRotationSpeed(), native->GetRotationSpeed() * 1.0e-5f);
 	Assert::AreEqual(radf(object.speedVar.get()).value, native->GetRotationSpeedVar(), native->GetRotationSpeedVar() * 1.0e-5f);
 	Assert::AreEqual(radf(object.angle.get()).value, native->GetRotationAngle(), native->GetRotationSpeedVar() * 1.0e-5f);
 	Assert::AreEqual(radf(object.angleVar.get()).value, native->GetRotationAngleVar(), native->GetRotationSpeedVar() * 1.0e-5f);
 	Assert::IsTrue(object.randomSign.get() == native->GetRandomSpeedSign());
+
+	return true;
 }
 
-void common::Randomiser<NiPSysRotationModifier>::operator()(NiPSysRotationModifier& object, File& file, std::mt19937& rng)
+bool common::Randomiser<NiPSysRotationModifier>::operator()(NiPSysRotationModifier& object, File& file, std::mt19937& rng)
 {
 	object.speed.set(degf(randf<float>(rng, { -1000.0f, 1000.0f })));
 	object.speedVar.set(degf(randf<float>(rng, { 0.0f, 1000.0f })));
 	object.angle.set(degf(randf<float>(rng, { -180.0f, 180.0f })));
 	object.angleVar.set(degf(randf<float>(rng, { 0.0f, 180.0f })));
 	randomiseProperty(object.randomSign, rng);
+
+	return true;
 }
 
-void common::Randomiser<NiPSysRotationModifier>::operator()(const NiPSysRotationModifier&, Niflib::NiPSysRotationModifier* native, File& file, std::mt19937& rng)
+bool common::Randomiser<NiPSysRotationModifier>::operator()(const NiPSysRotationModifier&, Niflib::NiPSysRotationModifier* native, File& file, std::mt19937& rng)
 {
 	native->SetRotationSpeed(randf<float>(rng));
 	native->SetRotationSpeedVar(randf<float>(rng));
 	native->SetRotationAngle(randf<float>(rng));
 	native->SetRotationAngleVar(randf<float>(rng));
 	native->SetRandomSpeedSign(randb(rng));
+
+	return true;
 }
 
 
-void common::EquivalenceTester<NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file)
+bool common::EquivalenceTester<NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file)
 {
 	Assert::IsTrue(object.modifierName.get() == native->GetModifierName());
+
+	return true;
 }
 
-void common::Randomiser<NiPSysModifierCtlr>::operator()(NiPSysModifierCtlr& object, File& file, std::mt19937& rng)
+bool common::Randomiser<NiPSysModifierCtlr>::operator()(NiPSysModifierCtlr& object, File& file, std::mt19937& rng)
 {
 	object.modifierName.set(rands(rng));
+
+	return true;
 }
 
-void common::Randomiser<NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr&, Niflib::NiPSysModifierCtlr* native, File& file, std::mt19937& rng)
+bool common::Randomiser<NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr&, Niflib::NiPSysModifierCtlr* native, File& file, std::mt19937& rng)
 {
 	native->SetModifierName(rands(rng));
+
+	return true;
 }
 
 
-void common::EquivalenceTester<BSPSysScaleModifier>::operator()(const BSPSysScaleModifier& object, const Niflib::BSPSysScaleModifier* native, File& file)
+bool common::EquivalenceTester<BSPSysScaleModifier>::operator()(const BSPSysScaleModifier& object, const Niflib::BSPSysScaleModifier* native, File& file)
 {
 	Assert::IsTrue(object.scales.get() == native->GetScales());
+
+	return true;
 }
 
-void common::Randomiser<BSPSysScaleModifier>::operator()(BSPSysScaleModifier& object, File& file, std::mt19937& rng)
+bool common::Randomiser<BSPSysScaleModifier>::operator()(BSPSysScaleModifier& object, File& file, std::mt19937& rng)
 {
 	object.scales.set(randfv<float>(rng));
+
+	return true;
 }
 
-void common::Randomiser<BSPSysScaleModifier>::operator()(const BSPSysScaleModifier&, Niflib::BSPSysScaleModifier* native, File& file, std::mt19937& rng)
+bool common::Randomiser<BSPSysScaleModifier>::operator()(const BSPSysScaleModifier&, Niflib::BSPSysScaleModifier* native, File& file, std::mt19937& rng)
 {
 	native->SetScales(randfv<float>(rng));
+
+	return true;
 }
 
 
-void common::EquivalenceTester<BSPSysSimpleColorModifier>::operator()(const BSPSysSimpleColorModifier& object, const Niflib::BSPSysSimpleColorModifier* native, File& file)
+bool common::EquivalenceTester<BSPSysSimpleColorModifier>::operator()(const BSPSysSimpleColorModifier& object, const Niflib::BSPSysSimpleColorModifier* native, File& file)
 {
 	Assert::IsTrue(object.col1.value.get() == nif_type_conversion<ColRGBA>::from(native->GetColor(0)));
 	Assert::IsTrue(object.col1.RGBend.get() == native->GetColor1End());
@@ -231,9 +275,11 @@ void common::EquivalenceTester<BSPSysSimpleColorModifier>::operator()(const BSPS
 
 	Assert::IsTrue(object.col3.value.get() == nif_type_conversion<ColRGBA>::from(native->GetColor(2)));
 	Assert::IsTrue(object.col3.RGBbegin.get() == native->GetColor3Begin());
+
+	return true;
 }
 
-void common::Randomiser<BSPSysSimpleColorModifier>::operator()(BSPSysSimpleColorModifier& object, File& file, std::mt19937& rng)
+bool common::Randomiser<BSPSysSimpleColorModifier>::operator()(BSPSysSimpleColorModifier& object, File& file, std::mt19937& rng)
 {
 	randomiseProperty(object.col1.value, rng);
 	randomiseProperty(object.col1.RGBend, rng);
@@ -246,9 +292,11 @@ void common::Randomiser<BSPSysSimpleColorModifier>::operator()(BSPSysSimpleColor
 
 	randomiseProperty(object.col3.value, rng);
 	randomiseProperty(object.col3.RGBbegin, rng);
+
+	return true;
 }
 
-void common::Randomiser<BSPSysSimpleColorModifier>::operator()(const BSPSysSimpleColorModifier&, Niflib::BSPSysSimpleColorModifier* native, File& file, std::mt19937& rng)
+bool common::Randomiser<BSPSysSimpleColorModifier>::operator()(const BSPSysSimpleColorModifier&, Niflib::BSPSysSimpleColorModifier* native, File& file, std::mt19937& rng)
 {
 	native->SetColor(0, randf<Niflib::Color4>(rng));
 	native->SetColor1End(randf<float>(rng));
@@ -261,4 +309,6 @@ void common::Randomiser<BSPSysSimpleColorModifier>::operator()(const BSPSysSimpl
 
 	native->SetColor(2, randf<Niflib::Color4>(rng));
 	native->SetColor3Begin(randf<float>(rng));
+
+	return true;
 }

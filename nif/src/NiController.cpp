@@ -31,7 +31,7 @@ const size_t nif::NiTimeController::TYPE = std::hash<std::string>{}("NiTimeContr
 const size_t nif::NiSingleInterpController::TYPE = std::hash<std::string>{}("NiSingleInterpController");
 
 
-void nif::ReadSyncer<nif::NiBoolData>::operator()(NiBoolData& object, const Niflib::NiBoolData* native, File& file)
+bool nif::ReadSyncer<nif::NiBoolData>::operator()(NiBoolData& object, const Niflib::NiBoolData* native, File& file)
 {
 	assert(native);
 
@@ -48,9 +48,10 @@ void nif::ReadSyncer<nif::NiBoolData>::operator()(NiBoolData& object, const Nifl
 		object.keys.back().bias.set(key.bias);
 		object.keys.back().continuity.set(key.continuity);
 	}
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiBoolData>::operator()(const NiBoolData& object, Niflib::NiBoolData* native, const File& file)
+bool nif::WriteSyncer<nif::NiBoolData>::operator()(const NiBoolData& object, Niflib::NiBoolData* native, const File& file)
 {
 	assert(native);
 
@@ -62,10 +63,11 @@ void nif::WriteSyncer<nif::NiBoolData>::operator()(const NiBoolData& object, Nif
 		keys.push_back({ key.time.get(), key.value.get(), key.fwdTan.get(),
 			key.bwdTan.get(), key.tension.get(), key.bias.get(), key.continuity.get() });
 	}
+	return true;
 }
 
 
-void nif::ReadSyncer<nif::NiFloatData>::operator()(NiFloatData& object, const Niflib::NiFloatData* native, File& file)
+bool nif::ReadSyncer<nif::NiFloatData>::operator()(NiFloatData& object, const Niflib::NiFloatData* native, File& file)
 {
 	assert(native);
 
@@ -82,9 +84,10 @@ void nif::ReadSyncer<nif::NiFloatData>::operator()(NiFloatData& object, const Ni
 		object.keys.back().bias.set(key.bias);
 		object.keys.back().continuity.set(key.continuity);
 	}
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiFloatData>::operator()(const NiFloatData& object, Niflib::NiFloatData* native, const File& file)
+bool nif::WriteSyncer<nif::NiFloatData>::operator()(const NiFloatData& object, Niflib::NiFloatData* native, const File& file)
 {
 	assert(native);
 
@@ -96,52 +99,59 @@ void nif::WriteSyncer<nif::NiFloatData>::operator()(const NiFloatData& object, N
 		keys.push_back({ key.time.get(), key.value.get(), key.fwdTan.get(),
 			key.bwdTan.get(), key.tension.get(), key.bias.get(), key.continuity.get() });
 	}
+	return true;
 }
 
 
-void nif::Forwarder<nif::NiBoolInterpolator>::operator()(NiBoolInterpolator& object, NiTraverser& traverser)
+bool nif::Forwarder<nif::NiBoolInterpolator>::operator()(NiBoolInterpolator& object, NiTraverser& traverser)
 {
 	if (auto&& data = object.data.assigned())
 		data->receive(traverser);
+	return true;
 }
 
-void nif::ReadSyncer<nif::NiBoolInterpolator>::operator()(NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file)
+bool nif::ReadSyncer<nif::NiBoolInterpolator>::operator()(NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file)
 {
 	assert(native);
 	object.value.set(native->GetBoolValue());
 	object.data.assign(file.get<NiBoolData>(native->GetData()));
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiBoolInterpolator>::operator()(const NiBoolInterpolator& object, Niflib::NiBoolInterpolator* native, const File& file)
+bool nif::WriteSyncer<nif::NiBoolInterpolator>::operator()(const NiBoolInterpolator& object, Niflib::NiBoolInterpolator* native, const File& file)
 {
 	assert(native);
 	native->SetBoolValue(object.value.get());
 	native->SetData(file.getNative<NiBoolData>(object.data.assigned().get()));
+	return true;
 }
 
 
-void nif::Forwarder<nif::NiFloatInterpolator>::operator()(NiFloatInterpolator& object, NiTraverser& traverser)
+bool nif::Forwarder<nif::NiFloatInterpolator>::operator()(NiFloatInterpolator& object, NiTraverser& traverser)
 {
 	if (auto&& data = object.data.assigned())
 		data->receive(traverser);
+	return true;
 }
 
-void nif::ReadSyncer<nif::NiFloatInterpolator>::operator()(NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file)
+bool nif::ReadSyncer<nif::NiFloatInterpolator>::operator()(NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file)
 {
 	assert(native);
 	object.value.set(native->GetFloatValue());
 	object.data.assign(file.get<NiFloatData>(native->GetData()));
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiFloatInterpolator>::operator()(const NiFloatInterpolator& object, Niflib::NiFloatInterpolator* native, const File& file)
+bool nif::WriteSyncer<nif::NiFloatInterpolator>::operator()(const NiFloatInterpolator& object, Niflib::NiFloatInterpolator* native, const File& file)
 {
 	assert(native);
 	native->SetFloatValue(object.value.get());
 	native->SetData(file.getNative<NiFloatData>(object.data.assigned().get()));
+	return true;
 }
 
 
-void nif::ReadSyncer<nif::NiTimeController>::operator()(NiTimeController& object, const Niflib::NiTimeController* native, File& file)
+bool nif::ReadSyncer<nif::NiTimeController>::operator()(NiTimeController& object, const Niflib::NiTimeController* native, File& file)
 {
 	assert(native);
 	object.flags.clear();
@@ -151,9 +161,10 @@ void nif::ReadSyncer<nif::NiTimeController>::operator()(NiTimeController& object
 	object.startTime.set(native->GetStartTime());
 	object.stopTime.set(native->GetStopTime());
 	object.target.assign(file.get<NiObjectNET>(native->GetTarget()));
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiTimeController>::operator()(const NiTimeController& object, Niflib::NiTimeController* native, const File& file)
+bool nif::WriteSyncer<nif::NiTimeController>::operator()(const NiTimeController& object, Niflib::NiTimeController* native, const File& file)
 {
 	assert(native);
 	native->SetFlags(static_cast<unsigned short>(object.flags.raised()));
@@ -163,55 +174,64 @@ void nif::WriteSyncer<nif::NiTimeController>::operator()(const NiTimeController&
 	native->SetStopTime(object.stopTime.get());
 	//We might not want to touch this, since Niflib sets it automatically.
 	native->SetTarget(file.getNative<NiObjectNET>(object.target.assigned().get()));
+	return true;
 }
 
 
-void nif::Forwarder<nif::NiSingleInterpController>::operator()(NiSingleInterpController& object, NiTraverser& traverser)
+bool nif::Forwarder<nif::NiSingleInterpController>::operator()(NiSingleInterpController& object, NiTraverser& traverser)
 {
 	if (auto&& iplr = object.interpolator.assigned())
 		iplr->receive(traverser);
+	return true;
 }
 
-void nif::ReadSyncer<nif::NiSingleInterpController>::operator()(NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file)
+bool nif::ReadSyncer<nif::NiSingleInterpController>::operator()(NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file)
 {
 	assert(native);
 	object.interpolator.assign(file.get<NiInterpolator>(native->GetInterpolator()));
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiSingleInterpController>::operator()(const NiSingleInterpController& object, Niflib::NiSingleInterpController* native, const File& file)
+bool nif::WriteSyncer<nif::NiSingleInterpController>::operator()(const NiSingleInterpController& object, Niflib::NiSingleInterpController* native, const File& file)
 {
 	assert(native);
 	native->SetInterpolator(file.getNative<NiInterpolator>(object.interpolator.assigned().get()));
+	return true;
 }
 
 
-void nif::ReadSyncer<nif::NiPSysModifierCtlr>::operator()(NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file)
+bool nif::ReadSyncer<nif::NiPSysModifierCtlr>::operator()(NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file)
 {
 	assert(native);
 	object.modifierName.set(native->GetModifierName());
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr& object, Niflib::NiPSysModifierCtlr* native, const File& file)
+bool nif::WriteSyncer<nif::NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr& object, Niflib::NiPSysModifierCtlr* native, const File& file)
 {
 	assert(native);
 	native->SetModifierName(object.modifierName.get());
+	return true;
 }
 
 
-void nif::Forwarder<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, NiTraverser& traverser)
+bool nif::Forwarder<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, NiTraverser& traverser)
 {
 	if (auto&& obj = object.visIplr.assigned())
 		obj->receive(traverser);
+	return true;
 }
 
-void nif::ReadSyncer<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file)
+bool nif::ReadSyncer<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file)
 {
 	assert(native);
 	object.visIplr.assign(file.get<NiInterpolator>(native->GetVisibilityInterpolator()));
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& object, Niflib::NiPSysEmitterCtlr* native, const File& file)
+bool nif::WriteSyncer<nif::NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& object, Niflib::NiPSysEmitterCtlr* native, const File& file)
 {
 	assert(native);
 	native->SetVisibilityInterpolator(file.getNative<NiInterpolator>(object.visIplr.assigned().get()));
+	return true;
 }

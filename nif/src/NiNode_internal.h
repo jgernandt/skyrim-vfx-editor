@@ -10,11 +10,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiNode> : VerticalTraverser<NiNode, ReadSyncer>
 	{
-		void operator() (NiNode& object, const Niflib::NiNode* native, File& file);
+		bool operator() (NiNode& object, const Niflib::NiNode* native, File& file);
 	};
 	template<> struct WriteSyncer<NiNode> : VerticalTraverser<NiNode, WriteSyncer>
 	{
-		void operator() (const NiNode& object, Niflib::NiNode* native, const File& file);
+		bool operator() (const NiNode& object, Niflib::NiNode* native, const File& file);
 	};
 
 	//BSFadeNode

@@ -67,7 +67,7 @@ namespace nif
 	};
 	template<> struct Forwarder<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, Forwarder>
 	{
-		void operator() (NiBoolInterpolator& object, NiTraverser& traverser);
+		bool operator() (NiBoolInterpolator& object, NiTraverser& traverser);
 	};
 
 	struct NiFloatInterpolator : NiTraversable<NiFloatInterpolator, NiInterpolator>
@@ -80,7 +80,7 @@ namespace nif
 	};
 	template<> struct Forwarder<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, Forwarder>
 	{
-		void operator() (NiFloatInterpolator& object, NiTraverser& traverser);
+		bool operator() (NiFloatInterpolator& object, NiTraverser& traverser);
 	};
 
 	struct NiBlendInterpolator : NiTraversable<NiBlendInterpolator, NiInterpolator> 
@@ -126,7 +126,7 @@ namespace nif
 	};
 	template<> struct Forwarder<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, Forwarder>
 	{
-		void operator() (NiSingleInterpController& object, NiTraverser& traverser);
+		bool operator() (NiSingleInterpController& object, NiTraverser& traverser);
 	};
 
 	struct NiPSysModifierCtlr : NiTraversable<NiPSysModifierCtlr, NiSingleInterpController>
@@ -152,6 +152,6 @@ namespace nif
 	};
 	template<> struct Forwarder<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, Forwarder>
 	{
-		void operator() (NiPSysEmitterCtlr& object, NiTraverser& traverser);
+		bool operator() (NiPSysEmitterCtlr& object, NiTraverser& traverser);
 	};
 }

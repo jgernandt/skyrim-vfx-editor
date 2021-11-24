@@ -107,9 +107,10 @@ namespace objects
 	template<typename T>
 	struct VerticalTestTraverser : nif::VerticalTraverser<T, VerticalTestTraverser>
 	{
-		void operator() (T&, std::vector<nif::ni_type>& types)
+		bool operator() (T&, std::vector<nif::ni_type>& types)
 		{
 			types.push_back(T::TYPE);
+			return true;
 		}
 	};
 

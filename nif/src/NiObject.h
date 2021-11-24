@@ -37,7 +37,7 @@ namespace nif
 	template<typename T>
 	struct Forwarder : VerticalTraverser<T, Forwarder>
 	{
-		void operator() (T& object, NiTraverser& traverser) {}
+		bool operator() (T& object, NiTraverser& traverser) { return true; }
 	};
 
 	using ni_type = size_t;
@@ -62,14 +62,14 @@ namespace nif
 	struct VerticalTraverser<NiObject, TraverserType>
 	{
 		template<typename... Args>
-		void down(NiObject& object, Args&&... args)
+		bool down(NiObject& object, Args&&... args)
 		{
-			static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
+			return static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
 		}
 		template<typename... Args>
-		void up(NiObject& object, Args&&... args)
+		bool up(NiObject& object, Args&&... args)
 		{
-			static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
+			return static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
 		}
 	};
 
@@ -86,7 +86,7 @@ namespace nif
 
 	template<> struct Forwarder<NiObjectNET> : VerticalTraverser<NiObjectNET, Forwarder>
 	{
-		void operator() (NiObjectNET& object, NiTraverser& traverser);
+		bool operator() (NiObjectNET& object, NiTraverser& traverser);
 	};
 
 

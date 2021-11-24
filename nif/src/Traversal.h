@@ -101,38 +101,45 @@ namespace nif
 	};
 
 	//TraverserType<T> should inherit VerticalTraverser<T, TraverserType> and 
-	//implement an operator() overload with T& as first parameter
+	//implement an operator() that returns bool and takes T& as first parameter.
+	//True return from this operator indicates continue traversal.
 	template<typename T, template<typename> typename TraverserType>
 	struct VerticalTraverser : TraverserType<typename T::base_type>
 	{
-		//return bool to indicate continue/break traversal?
-
 		//Traverse from the base type and down to T
 		template<typename... Args>
-		void down(T& object, Args&&... args)
+		bool down(T& object, Args&&... args)
 		{
-			TraverserType<typename T::base_type>::down(object, std::forward<Args>(args)...);
-			static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...);
+			if (TraverserType<typename T::base_type>::down(object, std::forward<Args>(args)...))
+				return static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...);
+			else
+				return false;
 		}
 		template<typename... Args>
-		void down(const T& object, Args&&... args)
+		bool down(const T& object, Args&&... args)
 		{
-			TraverserType<typename T::base_type>::down(object, std::forward<Args>(args)...);
-			static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...);
+			if (TraverserType<typename T::base_type>::down(object, std::forward<Args>(args)...))
+				return static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...);
+			else
+				return false;
 		}
 
 		//Traverse from T and up to the base type
 		template<typename... Args>
-		void up(T& object, Args&&... args)
+		bool up(T& object, Args&&... args)
 		{
-			static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...);
-			TraverserType<typename T::base_type>::up(object, std::forward<Args>(args)...);
+			if (static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...))
+				return TraverserType<typename T::base_type>::up(object, std::forward<Args>(args)...);
+			else
+				return false;
 		}
 		template<typename... Args>
-		void up(const T& object, Args&&... args)
+		bool up(const T& object, Args&&... args)
 		{
-			static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...);
-			TraverserType<typename T::base_type>::up(object, std::forward<Args>(args)...);
+			if (static_cast<TraverserType<T>&>(*this)(object, std::forward<Args>(args)...))
+				return TraverserType<typename T::base_type>::up(object, std::forward<Args>(args)...);
+			else
+				return false;
 		}
 	};
 

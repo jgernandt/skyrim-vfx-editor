@@ -10,11 +10,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiPSysEmitter> : VerticalTraverser<NiPSysEmitter, ReadSyncer>
 	{
-		void operator() (NiPSysEmitter& object, const Niflib::NiPSysEmitter* native, File& file);
+		bool operator() (NiPSysEmitter& object, const Niflib::NiPSysEmitter* native, File& file);
 	};
 	template<> struct WriteSyncer<NiPSysEmitter> : VerticalTraverser<NiPSysEmitter, WriteSyncer>
 	{
-		void operator() (const NiPSysEmitter& object, Niflib::NiPSysEmitter* native, const File& file);
+		bool operator() (const NiPSysEmitter& object, Niflib::NiPSysEmitter* native, const File& file);
 	};
 
 	//NiPSysVolumeEmitter
@@ -23,11 +23,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiPSysVolumeEmitter> : VerticalTraverser<NiPSysVolumeEmitter, ReadSyncer>
 	{
-		void operator() (NiPSysVolumeEmitter& object, const Niflib::NiPSysVolumeEmitter* native, File& file);
+		bool operator() (NiPSysVolumeEmitter& object, const Niflib::NiPSysVolumeEmitter* native, File& file);
 	};
 	template<> struct WriteSyncer<NiPSysVolumeEmitter> : VerticalTraverser<NiPSysVolumeEmitter, WriteSyncer>
 	{
-		void operator() (const NiPSysVolumeEmitter& object, Niflib::NiPSysVolumeEmitter* native, const File& file);
+		bool operator() (const NiPSysVolumeEmitter& object, Niflib::NiPSysVolumeEmitter* native, const File& file);
 	};
 
 	//NiPSysBoxEmitter
@@ -36,11 +36,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiPSysBoxEmitter> : VerticalTraverser<NiPSysBoxEmitter, ReadSyncer>
 	{
-		void operator() (NiPSysBoxEmitter& object, const Niflib::NiPSysBoxEmitter* native, File& file);
+		bool operator() (NiPSysBoxEmitter& object, const Niflib::NiPSysBoxEmitter* native, File& file);
 	};
 	template<> struct WriteSyncer<NiPSysBoxEmitter> : VerticalTraverser<NiPSysBoxEmitter, WriteSyncer>
 	{
-		void operator() (const NiPSysBoxEmitter& object, Niflib::NiPSysBoxEmitter* native, const File& file);
+		bool operator() (const NiPSysBoxEmitter& object, Niflib::NiPSysBoxEmitter* native, const File& file);
 	};
 
 	//NiPSysCylinderEmitter
@@ -49,11 +49,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiPSysCylinderEmitter> : VerticalTraverser<NiPSysCylinderEmitter, ReadSyncer>
 	{
-		void operator() (NiPSysCylinderEmitter& object, const Niflib::NiPSysCylinderEmitter* native, File& file);
+		bool operator() (NiPSysCylinderEmitter& object, const Niflib::NiPSysCylinderEmitter* native, File& file);
 	};
 	template<> struct WriteSyncer<NiPSysCylinderEmitter> : VerticalTraverser<NiPSysCylinderEmitter, WriteSyncer>
 	{
-		void operator() (const NiPSysCylinderEmitter& object, Niflib::NiPSysCylinderEmitter* native, const File& file);
+		bool operator() (const NiPSysCylinderEmitter& object, Niflib::NiPSysCylinderEmitter* native, const File& file);
 	};
 
 	//NiPSysSphereEmitter
@@ -62,10 +62,10 @@ namespace nif
 
 	template<> struct ReadSyncer<NiPSysSphereEmitter> : VerticalTraverser<NiPSysSphereEmitter, ReadSyncer>
 	{
-		void operator() (NiPSysSphereEmitter& object, const Niflib::NiPSysSphereEmitter* native, File& file);
+		bool operator() (NiPSysSphereEmitter& object, const Niflib::NiPSysSphereEmitter* native, File& file);
 	};
 	template<> struct WriteSyncer<NiPSysSphereEmitter> : VerticalTraverser<NiPSysSphereEmitter, WriteSyncer>
 	{
-		void operator() (const NiPSysSphereEmitter& object, Niflib::NiPSysSphereEmitter* native, const File& file);
+		bool operator() (const NiPSysSphereEmitter& object, Niflib::NiPSysSphereEmitter* native, const File& file);
 	};
 }

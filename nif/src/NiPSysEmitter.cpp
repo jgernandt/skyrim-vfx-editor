@@ -28,7 +28,7 @@ const size_t nif::NiPSysEmitterCtlr::TYPE = std::hash<std::string>{}("NiPSysEmit
 
 using namespace math;
 
-void nif::ReadSyncer<nif::NiPSysEmitter>::operator()(NiPSysEmitter& object, const Niflib::NiPSysEmitter* native, File& file)
+bool nif::ReadSyncer<nif::NiPSysEmitter>::operator()(NiPSysEmitter& object, const Niflib::NiPSysEmitter* native, File& file)
 {
 	assert(native);
 	object.colour.set(nif_type_conversion<ColRGBA>::from(native->GetInitialColor()));
@@ -42,9 +42,11 @@ void nif::ReadSyncer<nif::NiPSysEmitter>::operator()(NiPSysEmitter& object, cons
 	object.azimuthVar.set(radf(native->GetPlanarAngleVar()));
 	object.elevation.set(radf(0.5f * pi<float> - native->GetDeclination()));
 	object.elevationVar.set(radf(native->GetDeclinationVar()));
+
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiPSysEmitter>::operator()(const NiPSysEmitter& object, Niflib::NiPSysEmitter* native, const File& file)
+bool nif::WriteSyncer<nif::NiPSysEmitter>::operator()(const NiPSysEmitter& object, Niflib::NiPSysEmitter* native, const File& file)
 {
 	assert(native);
 	native->SetInitialColor(nif_type_conversion<Niflib::Color4>::from(object.colour.get()));
@@ -58,62 +60,72 @@ void nif::WriteSyncer<nif::NiPSysEmitter>::operator()(const NiPSysEmitter& objec
 	native->SetPlanarAngleVar(static_cast<radf>(object.azimuthVar.get()).value);
 	native->SetDeclination(static_cast<radf>(degf(90.0f) - object.elevation.get()).value);
 	native->SetDeclinationVar(static_cast<radf>(object.elevationVar.get()).value);
+
+	return true;
 }
 
 
-void nif::ReadSyncer<nif::NiPSysVolumeEmitter>::operator()(NiPSysVolumeEmitter& object, const Niflib::NiPSysVolumeEmitter* native, File& file)
+bool nif::ReadSyncer<nif::NiPSysVolumeEmitter>::operator()(NiPSysVolumeEmitter& object, const Niflib::NiPSysVolumeEmitter* native, File& file)
 {
 	assert(native);
 	object.emitterObject.assign(file.get<NiNode>(native->GetEmitterObject()));
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiPSysVolumeEmitter>::operator()(const NiPSysVolumeEmitter& object, Niflib::NiPSysVolumeEmitter* native, const File& file)
+bool nif::WriteSyncer<nif::NiPSysVolumeEmitter>::operator()(const NiPSysVolumeEmitter& object, Niflib::NiPSysVolumeEmitter* native, const File& file)
 {
 	assert(native);
 	native->SetEmitterObject(file.getNative<NiNode>(object.emitterObject.assigned().get()));
+	return true;
 }
 
 
-void nif::ReadSyncer<nif::NiPSysBoxEmitter>::operator()(NiPSysBoxEmitter& object, const Niflib::NiPSysBoxEmitter* native, File& file)
+bool nif::ReadSyncer<nif::NiPSysBoxEmitter>::operator()(NiPSysBoxEmitter& object, const Niflib::NiPSysBoxEmitter* native, File& file)
 {
 	assert(native);
 	object.width.set(native->GetWidth());
 	object.height.set(native->GetHeight());
 	object.depth.set(native->GetDepth());
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiPSysBoxEmitter>::operator()(const NiPSysBoxEmitter& object, Niflib::NiPSysBoxEmitter* native, const File& file)
+bool nif::WriteSyncer<nif::NiPSysBoxEmitter>::operator()(const NiPSysBoxEmitter& object, Niflib::NiPSysBoxEmitter* native, const File& file)
 {
 	assert(native);
 	native->SetWidth(object.width.get());
 	native->SetHeight(object.height.get());
 	native->SetDepth(object.depth.get());
+	return true;
 }
 
 
-void nif::ReadSyncer<nif::NiPSysCylinderEmitter>::operator()(NiPSysCylinderEmitter& object, const Niflib::NiPSysCylinderEmitter* native, File& file)
+bool nif::ReadSyncer<nif::NiPSysCylinderEmitter>::operator()(NiPSysCylinderEmitter& object, const Niflib::NiPSysCylinderEmitter* native, File& file)
 {
 	assert(native);
 	object.radius.set(native->GetRadius());
 	object.length.set(native->GetHeight());
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiPSysCylinderEmitter>::operator()(const NiPSysCylinderEmitter& object, Niflib::NiPSysCylinderEmitter* native, const File& file)
+bool nif::WriteSyncer<nif::NiPSysCylinderEmitter>::operator()(const NiPSysCylinderEmitter& object, Niflib::NiPSysCylinderEmitter* native, const File& file)
 {
 	assert(native);
 	native->SetRadius(object.radius.get());
 	native->SetHeight(object.length.get());
+	return true;
 }
 
 
-void nif::ReadSyncer<nif::NiPSysSphereEmitter>::operator()(NiPSysSphereEmitter& object, const Niflib::NiPSysSphereEmitter* native, File& file)
+bool nif::ReadSyncer<nif::NiPSysSphereEmitter>::operator()(NiPSysSphereEmitter& object, const Niflib::NiPSysSphereEmitter* native, File& file)
 {
 	assert(native);
 	object.radius.set(native->GetRadius());
+	return true;
 }
 
-void nif::WriteSyncer<nif::NiPSysSphereEmitter>::operator()(const NiPSysSphereEmitter& object, Niflib::NiPSysSphereEmitter* native, const File& file)
+bool nif::WriteSyncer<nif::NiPSysSphereEmitter>::operator()(const NiPSysSphereEmitter& object, Niflib::NiPSysSphereEmitter* native, const File& file)
 {
 	assert(native);
 	native->SetRadius(object.radius.get());
+	return true;
 }

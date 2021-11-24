@@ -9,11 +9,11 @@ namespace nif
 	template<> struct type_map<NiBoolData> { using type = Niflib::NiBoolData; };
 	template<> struct ReadSyncer<NiBoolData> : VerticalTraverser<NiBoolData, ReadSyncer>
 	{
-		void operator() (NiBoolData& object, const Niflib::NiBoolData* native, File& file);
+		bool operator() (NiBoolData& object, const Niflib::NiBoolData* native, File& file);
 	};
 	template<> struct WriteSyncer<NiBoolData> : VerticalTraverser<NiBoolData, WriteSyncer>
 	{
-		void operator() (const NiBoolData& object, Niflib::NiBoolData* native, const File& file);
+		bool operator() (const NiBoolData& object, Niflib::NiBoolData* native, const File& file);
 	};
 
 	//NiFloatData
@@ -21,11 +21,11 @@ namespace nif
 	template<> struct type_map<NiFloatData> { using type = Niflib::NiFloatData; };
 	template<> struct ReadSyncer<NiFloatData> : VerticalTraverser<NiFloatData, ReadSyncer>
 	{
-		void operator() (NiFloatData& object, const Niflib::NiFloatData* native, File& file);
+		bool operator() (NiFloatData& object, const Niflib::NiFloatData* native, File& file);
 	};
 	template<> struct WriteSyncer<NiFloatData> : VerticalTraverser<NiFloatData, WriteSyncer>
 	{
-		void operator() (const NiFloatData& object, Niflib::NiFloatData* native, const File& file);
+		bool operator() (const NiFloatData& object, Niflib::NiFloatData* native, const File& file);
 	};
 
 	//NiInterpolator
@@ -38,11 +38,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, ReadSyncer>
 	{
-		void operator() (NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file);
+		bool operator() (NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file);
 	};
 	template<> struct WriteSyncer<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, WriteSyncer>
 	{
-		void operator() (const NiBoolInterpolator& object, Niflib::NiBoolInterpolator* native, const File& file);
+		bool operator() (const NiBoolInterpolator& object, Niflib::NiBoolInterpolator* native, const File& file);
 	};
 
 	//NiFloatInterpolator
@@ -51,11 +51,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, ReadSyncer>
 	{
-		void operator() (NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file);
+		bool operator() (NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file);
 	};
 	template<> struct WriteSyncer<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, WriteSyncer>
 	{
-		void operator() (const NiFloatInterpolator& object, Niflib::NiFloatInterpolator* native, const File& file);
+		bool operator() (const NiFloatInterpolator& object, Niflib::NiFloatInterpolator* native, const File& file);
 	};
 
 	//NiBlendInterpolator
@@ -76,11 +76,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiTimeController> : VerticalTraverser<NiTimeController, ReadSyncer>
 	{
-		void operator() (NiTimeController& object, const Niflib::NiTimeController* native, File& file);
+		bool operator() (NiTimeController& object, const Niflib::NiTimeController* native, File& file);
 	};
 	template<> struct WriteSyncer<NiTimeController> : VerticalTraverser<NiTimeController, WriteSyncer>
 	{
-		void operator() (const NiTimeController& object, Niflib::NiTimeController* native, const File& file);
+		bool operator() (const NiTimeController& object, Niflib::NiTimeController* native, const File& file);
 	};
 
 	//NiSingleInterpController
@@ -89,11 +89,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, ReadSyncer>
 	{
-		void operator() (NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file);
+		bool operator() (NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file);
 	};
 	template<> struct WriteSyncer<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, WriteSyncer>
 	{
-		void operator() (const NiSingleInterpController& object, Niflib::NiSingleInterpController* native, const File& file);
+		bool operator() (const NiSingleInterpController& object, Niflib::NiSingleInterpController* native, const File& file);
 	};
 
 	//NiPSysModifierCtlr
@@ -102,11 +102,11 @@ namespace nif
 
 	template<> struct ReadSyncer<NiPSysModifierCtlr> : VerticalTraverser<NiPSysModifierCtlr, ReadSyncer>
 	{
-		void operator() (NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file);
+		bool operator() (NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file);
 	};
 	template<> struct WriteSyncer<NiPSysModifierCtlr> : VerticalTraverser<NiPSysModifierCtlr, WriteSyncer>
 	{
-		void operator() (const NiPSysModifierCtlr& object, Niflib::NiPSysModifierCtlr* native, const File& file);
+		bool operator() (const NiPSysModifierCtlr& object, Niflib::NiPSysModifierCtlr* native, const File& file);
 	};
 
 	//NiPSysUpdateCtlr
@@ -119,10 +119,10 @@ namespace nif
 
 	template<> struct ReadSyncer<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, ReadSyncer>
 	{
-		void operator() (NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file);
+		bool operator() (NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file);
 	};
 	template<> struct WriteSyncer<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, WriteSyncer>
 	{
-		void operator() (const NiPSysEmitterCtlr& object, Niflib::NiPSysEmitterCtlr* native, const File& file);
+		bool operator() (const NiPSysEmitterCtlr& object, Niflib::NiPSysEmitterCtlr* native, const File& file);
 	};
 }

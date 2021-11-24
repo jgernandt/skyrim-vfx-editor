@@ -30,7 +30,7 @@ namespace nif
 	};
 	template<> struct Forwarder<NiNode> : VerticalTraverser<NiNode, Forwarder>
 	{
-		void operator() (NiNode& object, NiTraverser& traverser);
+		bool operator() (NiNode& object, NiTraverser& traverser);
 	};
 
 	struct BSFadeNode : NiTraversable<BSFadeNode, NiNode> 
