@@ -109,6 +109,7 @@ private:
 			ifc.stopTime().removeListener(m_lStopTime);
 
 			//we need to restore defaults
+			m_lFlags.onClear(~DEFAULT_CTLR_FLAGS);
 			m_lFlags.onRaise(DEFAULT_CTLR_FLAGS);
 			m_lFrequency.onSet(DEFAULT_FREQUENCY);
 			m_lPhase.onSet(DEFAULT_PHASE);
