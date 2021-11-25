@@ -118,9 +118,13 @@ namespace node
 	class Default
 	{
 	public:
-		std::unique_ptr<T> create(nif::File& file) 
+		std::unique_ptr<T> create(nif::File& file, 
+			const ni_ptr<typename T::default_object>& obj = ni_ptr<typename T::default_object>())
 		{ 
-			return std::make_unique<T>(file.create<typename T::default_object>());
+			if (obj)
+				return std::make_unique<T>(obj);
+			else
+				return std::make_unique<T>(file.create<typename T::default_object>());
 		}
 	};
 
