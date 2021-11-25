@@ -32,7 +32,7 @@ bool common::EquivalenceTester<NiObjectNET>::operator()(const NiObjectNET& objec
 	Assert::IsTrue(controllers.size() == object.controllers.size());
 	int i = 0;
 	for (auto&& controller : controllers)
-		Assert::IsTrue(controller == file.getNative<NiTimeController>(object.controllers.at(i++)));
+		Assert::IsTrue(controller == file.getNative<NiTimeController>(object.controllers.at(i++).get()));
 
 	return true;
 }

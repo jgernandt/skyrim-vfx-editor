@@ -68,10 +68,10 @@ namespace nif
 		reverse_iterator rend() { return m_ctnr.rend(); }
 		const_reverse_iterator rend() const { return m_ctnr.rend(); }
 
-		T* at(int i) const
+		const std::shared_ptr<T>& at(int i) const
 		{ 
 			assert(i >= 0 && (size_t)i < m_ctnr.size());
-			return m_ctnr[i].get(); 
+			return m_ctnr[i]; 
 		}
 
 		//TODO: use iterators instead of ints
