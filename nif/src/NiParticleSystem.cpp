@@ -71,6 +71,15 @@ bool nif::WriteSyncer<nif::NiParticleSystem>::operator()(const NiParticleSystem&
 	native->SetAlphaProperty(file.getNative<NiAlphaProperty>(object.alphaProperty.assigned().get()));
 	native->SetWorldSpace(object.worldSpace.get());
 
+	//Ideally, this would be done at construction of the native. We never change it.
+	native->GetVertexDescriptor().bitfield = 0x840200004000051;//BS use this for psys'
+	//Corresponding to this:
+	//getNative().GetVertexDescriptor().SetVertexDataSize(1);
+	//getNative().GetVertexDescriptor().SetDynamicVertexSize(5);
+	//getNative().GetVertexDescriptor().SetColorOffset(4);
+	//getNative().GetVertexDescriptor().SetVertexAttributes(Niflib::VF_UVS | Niflib::VF_FULL_PRECISION);
+	//getNative().GetVertexDescriptor().SetUnknown02(8);//unclear if this does anything
+
 	return true;
 }
 
