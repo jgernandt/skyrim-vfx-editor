@@ -17,16 +17,16 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "Editor.h"
-#include "Constructor.h"
+
 #include "CallWrapper.h"
 
-#include "widget_types.h"
-#include "nodes_internal.h"
 #include "CompositionActions.h"
 
-#include <fstream>
-#include <sstream>
+#include "nodes_internal.h"
+#include "Editor.h"
+#include "Constructor.h"
+#include "Constructor.inl"
+#include "widget_types.h"
 
 constexpr const char* DOC_FILE_NAME = "block types.txt";
 
