@@ -1,15 +1,11 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "CommonTests.h"
-#include "Mocks.h"
-#include "nodes.h"
-#include "ModifierRequirements.h"
+#include "nodes_internal.h"
 
-#include "Constructor.h"
-
-namespace nif
+namespace conversions
 {
-	TEST_CLASS(Converters)
+	TEST_CLASS(TextureAtlasLayout)
 	{
 	public:
 		std::mt19937 m_engine;
@@ -24,129 +20,218 @@ namespace nif
 					i--;
 					continue;
 				}
-				auto offsets = nif::nif_type_conversion<std::vector<nif::SubtextureOffset>>::from(cnt);
+				auto offsets = node_conversion<std::vector<nif::SubtextureOffset>>::from(cnt);
 				Assert::IsTrue(cnt[0] * cnt[1] == offsets.size());
-				Assert::IsTrue(nif::nif_type_conversion<nif::SubtextureCount>::from(offsets) == cnt);
+				Assert::IsTrue(node_conversion<nif::SubtextureCount>::from(offsets) == cnt);
 			}
 
 			//Special cases
-			Assert::IsTrue(nif::nif_type_conversion<std::vector<nif::SubtextureOffset>>::from(
+			Assert::IsTrue(node_conversion<std::vector<nif::SubtextureOffset>>::from(
 				nif::SubtextureCount{ 1, 1 }).empty());
-			Assert::IsTrue(nif::nif_type_conversion<nif::SubtextureCount>::from(
+			Assert::IsTrue(node_conversion<nif::SubtextureCount>::from(
 				std::vector<nif::SubtextureOffset>()) == nif::SubtextureCount{ 1, 1 });
 
-			Assert::IsTrue(nif::nif_type_conversion<std::vector<nif::SubtextureOffset>>::from(
+			Assert::IsTrue(node_conversion<std::vector<nif::SubtextureOffset>>::from(
 				nif::SubtextureCount{ 0, 0 }).empty());
 			std::uniform_real_distribution<float> Df;
 			std::vector<nif::SubtextureOffset> irregular{
 				{ Df(m_engine), Df(m_engine), Df(m_engine), Df(m_engine) },
 				{ Df(m_engine), Df(m_engine), Df(m_engine), Df(m_engine) } };
-			Assert::IsTrue(nif::nif_type_conversion<nif::SubtextureCount>::from(irregular) == nif::SubtextureCount{ 0, 0 });
+			Assert::IsTrue(node_conversion<nif::SubtextureCount>::from(irregular) == nif::SubtextureCount{ 0, 0 });
 		}
 	};
+}
 
-	TEST_CLASS(NiPSysDataTests)
-	{
-		File file{ File::Version::SKYRIM_SE };
-		std::mt19937 m_engine;
+namespace connectors
+{
+	using namespace nif;
+	using namespace node;
 
-		TEST_METHOD(MaxCount)
-		{
-			auto obj = file.create<NiPSysData>();
-			Assert::IsNotNull(obj.get());
-
-			PropertyTest<unsigned short>(obj->maxCount(), m_engine);
-		}
-
-		TEST_METHOD(SubtexOffsets)
-		{
-			auto obj = file.create<NiPSysData>();
-			Assert::IsNotNull(obj.get());
-
-			std::uniform_int_distribution<size_t> Di(1, 10);
-			std::uniform_real_distribution<float> Df;
-
-			for (int i = 0; i < 3; i++) {
-				//populate a vector of random size
-				std::vector<nif::SubtextureOffset> offsets(Di(m_engine));
-				for (auto&& offset : offsets)
-					offset = { Df(m_engine), Df(m_engine), Df(m_engine), Df(m_engine) };
-
-				obj->subtexOffsets().set(offsets);
-
-				Assert::IsTrue(obj->subtexOffsets().get() == offsets);
-			}
-		}
-
-		TEST_METHOD(HasColour)
-		{
-			auto obj = file.create<NiPSysData>();
-			Assert::IsNotNull(obj.get());
-
-			PropertyTest<bool>(obj->hasColour(), m_engine);
-		}
-
-		TEST_METHOD(HasRotation)
-		{
-			auto obj = file.create<NiPSysData>();
-			Assert::IsNotNull(obj.get());
-
-			PropertyTest<bool>(obj->hasRotationAngles(), m_engine);
-			PropertyTest<bool>(obj->hasRotationSpeeds(), m_engine);
-		}
-	};
-
-	TEST_CLASS(NiParticleSystemTests)
+	TEST_CLASS(ParticleSystemTests)
 	{
 	public:
-		File file{ File::Version::SKYRIM_SE };
-		std::mt19937 m_engine;
-
-		TEST_METHOD(Data)
+		TEST_METHOD(Shader)
 		{
+			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiParticleSystem>();
-			Assert::IsNotNull(obj.get());
-
-			AssignableTest<NiPSysData>(obj->data(), std::bind(&File::create<NiPSysData>, &file));
+			AssignableSenderTest(Default<ParticleSystem>{}.create(file, ni_ptr<NiParticleSystem>(obj)), obj->shaderProperty, ParticleSystem::SHADER, false);
 		}
 
+		//Modifiers should send Modifiable, single connector.
+		//Split into smaller tests! We're testing *everything* here.
 		TEST_METHOD(Modifiers)
 		{
+			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiParticleSystem>();
-			Assert::IsNotNull(obj.get());
+			auto data = file.create<NiPSysData>();
+			auto adm = file.create<NiPSysAgeDeathModifier>();
+			auto bum = file.create<NiPSysBoundUpdateModifier>();
+			auto pm = file.create<NiPSysPositionModifier>();
+			auto puc = file.create<NiPSysUpdateCtlr>();
 
-			SequenceTest<NiPSysModifier>(obj->modifiers(), std::bind(&File::create<NiPSysRotationModifier>, &file));
+			ConnectorTester tester(Default<ParticleSystem>{}.create(file, ni_ptr<NiParticleSystem>(obj), 
+				ni_ptr<NiPSysData>(data), nullptr, ni_ptr<NiPSysAgeDeathModifier>(adm), ni_ptr<NiPSysBoundUpdateModifier>(bum), 
+				ni_ptr<NiPSysPositionModifier>(pm), ni_ptr<NiPSysUpdateCtlr>(puc)));
+			tester.tryConnect<IModifiable, void>(ParticleSystem::MODIFIERS, false, nullptr);
+			IModifiable* ifc = tester.tryConnect<IModifiable, void>(ParticleSystem::MODIFIERS, false, nullptr);
+
+			Assert::IsNotNull(ifc);
+
+			//Test the effect of interacting with the interface
+
+			//Adding a modifier should place it in the native sequence, in increasing order.
+			//Target and order should be set.
+			//Static modifiers should not move.
+			Assert::IsTrue(obj->modifiers.find(adm.get()) == 0);
+			Assert::IsTrue(adm->order.get() == 0);
+			Assert::IsTrue(adm->name.get() == "Modifier:0");
+			Assert::IsTrue(obj->modifiers.find(pm.get()) == 1);
+			Assert::IsTrue(pm->order.get() == 1);
+			Assert::IsTrue(pm->name.get() == "Modifier:1");
+			Assert::IsTrue(obj->modifiers.find(bum.get()) == 2);
+			Assert::IsTrue(bum->order.get() == 2);
+			Assert::IsTrue(bum->name.get() == "Modifier:2");
+
+			//Add a mod
+			auto mod1 = file.create<NiPSysRotationModifier>();
+			Assert::IsNotNull(mod1.get());
+			ifc->addModifier(mod1);
+			int order1 = obj->modifiers.find(mod1.get());
+			Assert::IsTrue(order1 >= 0 && order1 == mod1->order.get());
+			Assert::IsTrue(mod1->target.assigned() == obj);
+
+			Assert::IsTrue(obj->modifiers.find(adm.get()) == 0);
+			Assert::IsTrue(adm->order.get() == 0);
+			Assert::IsTrue(adm->name.get() == "Modifier:0");
+			Assert::IsTrue(adm->target.assigned() == obj);
+			Assert::IsTrue(obj->modifiers.find(pm.get()) == 2);
+			Assert::IsTrue(pm->order.get() == 2);
+			Assert::IsTrue(pm->name.get() == "Modifier:2");
+			Assert::IsTrue(pm->target.assigned() == obj);
+			Assert::IsTrue(obj->modifiers.find(bum.get()) == 3);
+			Assert::IsTrue(bum->order.get() == 3);
+			Assert::IsTrue(bum->name.get() == "Modifier:3");
+			Assert::IsTrue(bum->target.assigned() == obj);
+
+			//Add another
+			auto mod2 = file.create<nif::NiPSysRotationModifier>();
+			Assert::IsNotNull(mod2.get());
+			ifc->addModifier(mod2);
+			int order2 = obj->modifiers.find(mod2.get());
+			Assert::IsTrue(order1 == obj->modifiers.find(mod1.get()));
+			Assert::IsTrue(order2 >= 0 && order2 == mod2->order.get());
+			Assert::IsTrue(order2 == order1 + 1);
+			Assert::IsTrue(mod2->target.assigned() == obj);
+
+			Assert::IsTrue(obj->modifiers.find(adm.get()) == 0);
+			Assert::IsTrue(adm->order.get() == 0);
+			Assert::IsTrue(adm->name.get() == "Modifier:0");
+			Assert::IsTrue(obj->modifiers.find(pm.get()) == 3);
+			Assert::IsTrue(pm->order.get() == 3);
+			Assert::IsTrue(pm->name.get() == "Modifier:3");
+			Assert::IsTrue(obj->modifiers.find(bum.get()) == 4);
+			Assert::IsTrue(bum->order.get() == 4);
+			Assert::IsTrue(bum->name.get() == "Modifier:4");
+
+			//Removing must also affect the native sequence, and set target and order.
+			ifc->removeModifier(mod1.get());
+			Assert::IsTrue(obj->modifiers.find(mod1.get()) == -1);
+			Assert::IsTrue(!mod1->target.assigned());
+			Assert::IsTrue(mod1->order.get() == -1);
+
+			Assert::IsTrue(obj->modifiers.find(adm.get()) == 0);
+			Assert::IsTrue(adm->order.get() == 0);
+			Assert::IsTrue(adm->name.get() == "Modifier:0");
+			Assert::IsTrue(obj->modifiers.find(pm.get()) == 2);
+			Assert::IsTrue(pm->order.get() == 2);
+			Assert::IsTrue(pm->name.get() == "Modifier:2");
+			Assert::IsTrue(obj->modifiers.find(bum.get()) == 3);
+			Assert::IsTrue(bum->order.get() == 3);
+			Assert::IsTrue(bum->name.get() == "Modifier:3");
+
+			ifc->removeModifier(mod2.get());
+			Assert::IsTrue(obj->modifiers.find(mod2.get()) == -1);
+			Assert::IsTrue(!mod2->target.assigned());
+			Assert::IsTrue(mod2->order.get() == -1);
+
+			Assert::IsTrue(obj->modifiers.find(adm.get()) == 0);
+			Assert::IsTrue(adm->order.get() == 0);
+			Assert::IsTrue(adm->name.get() == "Modifier:0");
+			Assert::IsTrue(obj->modifiers.find(pm.get()) == 1);
+			Assert::IsTrue(pm->order.get() == 1);
+			Assert::IsTrue(pm->name.get() == "Modifier:1");
+			Assert::IsTrue(obj->modifiers.find(bum.get()) == 2);
+			Assert::IsTrue(bum->order.get() == 2);
+			Assert::IsTrue(bum->name.get() == "Modifier:2");
+
+			//Similary with controllers
+			Assert::IsTrue(obj->controllers.find(puc.get()) == 0);
+			Assert::IsTrue(puc->target.assigned() == obj);
+
+			auto ctlr1 = file.create<nif::NiPSysEmitterCtlr>();
+			Assert::IsNotNull(ctlr1.get());
+			ifc->addController(ctlr1);
+			Assert::IsTrue(obj->controllers.find(ctlr1.get()) >= 0);
+			Assert::IsTrue(ctlr1->target.assigned() == obj);
+
+			Assert::IsTrue(obj->controllers.find(puc.get()) == 1);
+
+			auto ctlr2 = file.create<nif::NiPSysEmitterCtlr>();
+			Assert::IsNotNull(ctlr2.get());
+			ifc->addController(ctlr2);
+			Assert::IsTrue(obj->controllers.find(ctlr2.get()) >= 0);
+			Assert::IsTrue(obj->controllers.find(ctlr2.get()) == obj->controllers.find(ctlr1.get()) + 1);
+
+			Assert::IsTrue(obj->controllers.find(puc.get()) == 2);
+
+			ifc->removeController(ctlr1.get());
+			Assert::IsTrue(obj->controllers.find(ctlr1.get()) == -1);
+			Assert::IsTrue(!ctlr1->target.assigned());
+
+			Assert::IsTrue(obj->controllers.find(puc.get()) == 1);
+
+			ifc->removeController(ctlr2.get());
+			Assert::IsTrue(obj->controllers.find(ctlr2.get()) == -1);
+			Assert::IsTrue(!ctlr2->target.assigned());
+
+			Assert::IsTrue(obj->controllers.find(puc.get()) == 0);
+
+			//Adding a requirement should set the appropriate flag
+			Assert::IsFalse(data->hasColour.get());
+
+			ifc->addRequirement(ModRequirement::COLOUR);
+			Assert::IsTrue(data->hasColour.get());
+			ifc->addRequirement(ModRequirement::COLOUR);
+			Assert::IsTrue(data->hasColour.get());
+			ifc->removeRequirement(ModRequirement::COLOUR);
+			Assert::IsTrue(data->hasColour.get());
+			ifc->removeRequirement(ModRequirement::COLOUR);
+			Assert::IsFalse(data->hasColour.get());
+
+			Assert::IsFalse(data->hasRotationAngles.get());
+			Assert::IsFalse(data->hasRotationSpeeds.get());
+
+			ifc->addRequirement(ModRequirement::ROTATION);
+			Assert::IsTrue(data->hasRotationAngles.get());
+			Assert::IsTrue(data->hasRotationSpeeds.get());
+			ifc->addRequirement(ModRequirement::ROTATION);
+			Assert::IsTrue(data->hasRotationAngles.get());
+			Assert::IsTrue(data->hasRotationSpeeds.get());
+
+			ifc->removeRequirement(ModRequirement::ROTATION);
+			Assert::IsTrue(data->hasRotationAngles.get());
+			Assert::IsTrue(data->hasRotationSpeeds.get());
+			ifc->removeRequirement(ModRequirement::ROTATION);
+			Assert::IsFalse(data->hasRotationAngles.get());
+			Assert::IsFalse(data->hasRotationSpeeds.get());
 		}
-
-		TEST_METHOD(ShaderProperty)
-		{
-			auto obj = file.create<NiParticleSystem>();
-			Assert::IsNotNull(obj.get());
-
-			AssignableTest<BSEffectShaderProperty>(obj->shaderProperty(), std::bind(&File::create<BSEffectShaderProperty>, &file));
-		}
-
-		TEST_METHOD(AlphaProperty)
-		{
-			auto obj = file.create<NiParticleSystem>();
-			Assert::IsNotNull(obj.get());
-
-			AssignableTest<NiAlphaProperty>(obj->alphaProperty(), std::bind(&File::create<NiAlphaProperty>, &file));
-		}
-
-		TEST_METHOD(WorldSpace)
-		{
-			auto obj = file.create<NiParticleSystem>();
-			Assert::IsNotNull(obj.get());
-
-			PropertyTest<bool>(obj->worldSpace(), m_engine);
-		}
-
 	};
 }
 
 namespace node
 {
+	using namespace nif;
+
 	TEST_CLASS(ParticleSystemTests)
 	{
 	public:
@@ -156,272 +241,19 @@ namespace node
 		TEST_METHOD(TextureAtlasLayout)
 		{
 			nif::File file{ nif::File::Version::SKYRIM_SE };
-			ParticleSystem node(file);
+			auto data = file.create<NiPSysData>();
+			auto node = Default<ParticleSystem>{}.create(file, nullptr, ni_ptr<NiPSysData>(data));
 
-			Assert::IsTrue(node.subtexCount().get() == nif::SubtextureCount{ 1, 1 });
+			Assert::IsTrue(node->subtexCount().get() == SubtextureCount{ 1, 1 });
 
-			nif::SubtextureCount cnt{ 3, 5 };
-			node.subtexCount().set(cnt);
-			Assert::IsTrue(node.subtexCount().get() == cnt);
+			SubtextureCount cnt{ 3, 5 };
+			node->subtexCount().set(cnt);
+			Assert::IsTrue(node->subtexCount().get() == cnt);
 
-			Assert::IsTrue(nif::nif_type_conversion<nif::SubtextureCount>::from(node.data().subtexOffsets().get()) == cnt);
+			Assert::IsTrue(node_conversion<SubtextureCount>::from(data->subtexOffsets.get()) == cnt);
 		}
 
-		//We're moving the subtexture count to ParticleSystem, so should now only send Assignable<BSEffectShaderProperty> (single)
-		TEST_METHOD(Shader)
-		{
-			nif::File file{ nif::File::Version::SKYRIM_SE };
-
-			auto node = std::make_unique<ParticleSystem>(file);
-			auto& ass = node->object().shaderProperty();
-			AssignableSenderTest(ParticleSystem::SHADER, false, std::move(node), ass, 
-				std::bind(&nif::File::create<nif::BSEffectShaderProperty>, &file));
-		}
-
-		//Modifiers should send Modifiable, single connector
-		TEST_METHOD(Modifiers)
-		{
-			nif::File file{ nif::File::Version::SKYRIM_SE };
-
-			ConnectorTester tester(std::make_unique<ParticleSystem>(file));
-			tester.tryConnect<IModifiable, void>(ParticleSystem::MODIFIERS, false, nullptr);
-			IModifiable* ifc = tester.tryConnect<IModifiable, void>(ParticleSystem::MODIFIERS, false, nullptr);
-
-			Assert::IsNotNull(ifc);
-
-			//Test the effect of interacting with the interface
-
-			//Inserting a modifier should place it in the native sequence. 
-			//Not necessarily in the indicated position, but order of subsequent insertions must be respected.
-			auto mod1 = file.create<nif::NiPSysRotationModifier>();
-			Assert::IsNotNull(mod1.get());
-			ifc->modifiers().insert(-1, *mod1);
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod1) != -1);
-
-			auto mod2 = file.create<nif::NiPSysRotationModifier>();
-			Assert::IsNotNull(mod2.get());
-			ifc->modifiers().insert(-1, *mod2);
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod2) != -1);
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod2) > tester.getNode()->object().modifiers().find(*mod1));
-
-			auto mod3 = file.create<nif::NiPSysRotationModifier>();
-			Assert::IsNotNull(mod3.get());
-			ifc->modifiers().insert(0, *mod3);
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod3) != -1);
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod3) < tester.getNode()->object().modifiers().find(*mod1));
-
-			//Searching for a modifier through the interface must yield its order in the native sequence
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod1) == ifc->modifiers().find(*mod1));
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod2) == ifc->modifiers().find(*mod2));
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod3) == ifc->modifiers().find(*mod3));
-
-			//Erasing must also affect the native sequence
-			ifc->modifiers().erase(ifc->modifiers().find(*mod1));
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod1) == -1);
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod2) != -1);
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod3) != -1);
-			ifc->modifiers().erase(ifc->modifiers().find(*mod2));
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod2) == -1);
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod3) != -1);
-			ifc->modifiers().erase(ifc->modifiers().find(*mod3));
-			Assert::IsTrue(tester.getNode()->object().modifiers().find(*mod3) == -1);
-
-			//Similary with controllers
-			auto ctlr1 = file.create<nif::NiPSysEmitterCtlr>();
-			Assert::IsNotNull(ctlr1.get());
-			ifc->controllers().insert(-1, *ctlr1);
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr1) != -1);
-
-			auto ctlr2 = file.create<nif::NiPSysEmitterCtlr>();
-			Assert::IsNotNull(ctlr2.get());
-			ifc->controllers().insert(-1, *ctlr2);
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr2) != -1);
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr2) > tester.getNode()->object().controllers().find(*ctlr1));
-
-			auto ctlr3 = file.create<nif::NiPSysEmitterCtlr>();
-			Assert::IsNotNull(ctlr3.get());
-			ifc->controllers().insert(0, *ctlr3);
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr3) != -1);
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr3) < tester.getNode()->object().controllers().find(*ctlr1));
-
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr1) == ifc->controllers().find(*ctlr1));
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr2) == ifc->controllers().find(*ctlr2));
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr3) == ifc->controllers().find(*ctlr3));
-
-			ifc->controllers().erase(ifc->controllers().find(*ctlr1));
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr1) == -1);
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr2) != -1);
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr3) != -1);
-			ifc->controllers().erase(ifc->controllers().find(*ctlr2));
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr2) == -1);
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr3) != -1);
-			ifc->controllers().erase(ifc->controllers().find(*ctlr3));
-			Assert::IsTrue(tester.getNode()->object().controllers().find(*ctlr3) == -1);
-
-			//Requirements may have to be tested with specific modifiers individually?
-			Modifier::Requirement reqs[]{
-				Modifier::Requirement::COLOUR,
-				Modifier::Requirement::LIFETIME,
-				Modifier::Requirement::MOVEMENT,
-				Modifier::Requirement::ROTATION };
-
-			Assert::IsTrue(ifc->requirements().has(Modifier::Requirement::UPDATE));//should always be set
-
-			//The bool properties are simple to test
-			if (ifc->requirements().has(Modifier::Requirement::COLOUR))
-				ifc->requirements().remove(Modifier::Requirement::COLOUR);
-			Assert::IsFalse(tester.getNode()->data().hasColour().get());
-
-			ifc->requirements().add(Modifier::Requirement::COLOUR);
-			Assert::IsTrue(tester.getNode()->data().hasColour().get());
-
-			ifc->requirements().add(Modifier::Requirement::COLOUR);
-			ifc->requirements().remove(Modifier::Requirement::COLOUR);
-			Assert::IsTrue(tester.getNode()->data().hasColour().get());
-
-			ifc->requirements().remove(Modifier::Requirement::COLOUR);
-			Assert::IsFalse(tester.getNode()->data().hasColour().get());
-
-
-			if (ifc->requirements().has(Modifier::Requirement::ROTATION))
-				ifc->requirements().remove(Modifier::Requirement::ROTATION);
-			Assert::IsFalse(tester.getNode()->data().hasRotationAngles().get());
-			Assert::IsFalse(tester.getNode()->data().hasRotationSpeeds().get());
-
-			ifc->requirements().add(Modifier::Requirement::ROTATION);
-			Assert::IsTrue(tester.getNode()->data().hasRotationAngles().get());
-			Assert::IsTrue(tester.getNode()->data().hasRotationSpeeds().get());
-
-			ifc->requirements().add(Modifier::Requirement::ROTATION);
-			ifc->requirements().remove(Modifier::Requirement::ROTATION);
-			Assert::IsTrue(tester.getNode()->data().hasRotationAngles().get());
-			Assert::IsTrue(tester.getNode()->data().hasRotationSpeeds().get());
-
-			ifc->requirements().remove(Modifier::Requirement::ROTATION);
-			Assert::IsFalse(tester.getNode()->data().hasRotationAngles().get());
-			Assert::IsFalse(tester.getNode()->data().hasRotationSpeeds().get());
-
-		}
-
-		//The modifiers are a little more difficult. We want to test that the requirement managers keep 
-		//their modifiers in the right position and that they have the right name and target.
-		TEST_METHOD(ModifierRequirements2)
-		{
-			nif::File file{ nif::File::Version::SKYRIM_SE };
-
-			auto obj = file.create<nif::NiParticleSystem>();
-			Assert::IsNotNull(obj.get());
-			auto data = file.create<nif::NiPSysData>();
-			Assert::IsNotNull(data.get());
-
-			ReservableSequence<nif::NiPSysModifier> mods(obj->modifiers());
-			ReservableSequence<nif::NiTimeController> ctlrs(obj->controllers());
-
-			UpdateRequirement upd(file.create<nif::NiPSysBoundUpdateModifier>(), file.create<nif::NiPSysUpdateCtlr>(), mods, ctlrs);
-			upd.incr();
-
-			//Modifier should be assigned to the right target
-			Assert::IsTrue(upd.modifier().target().isAssigned(obj.get()));
-
-			//Bound update modifier + update controller should always be last
-			Assert::IsTrue(obj->modifiers().find(upd.modifier()) == 0);
-			Assert::IsTrue(obj->controllers().find(upd.controller()) == 0);
-			//And name should match position
-			Assert::IsTrue(upd.modifier().name().get() == "Modifier:0");
-
-			//Insert a mod+ctlr at the end
-			auto mod1 = file.create<nif::NiPSysBoxEmitter>();
-			Assert::IsNotNull(mod1.get());
-			auto ctlr1 = file.create<nif::NiPSysEmitterCtlr>();
-			Assert::IsNotNull(ctlr1.get());
-			mods.insert(-1, *mod1);
-			ctlrs.insert(-1, *ctlr1);
-
-			//Position and name of update mod should have changed
-			Assert::IsTrue(obj->modifiers().find(upd.modifier()) == 1);
-			Assert::IsTrue(obj->controllers().find(upd.controller()) == 1);
-			Assert::IsTrue(upd.modifier().name().get() == "Modifier:1");
-
-			//Add a movement requirement
-			MovementRequirement mov(file.create<nif::NiPSysPositionModifier>(), mods);
-			mov.incr();
-			Assert::IsTrue(mov.modifier().target().isAssigned(obj.get()));
-
-			Assert::IsTrue(obj->modifiers().find(upd.modifier()) == 2);
-			Assert::IsTrue(obj->modifiers().find(mov.modifier()) == 1);
-
-			Assert::IsTrue(upd.modifier().name().get() == "Modifier:2");
-			Assert::IsTrue(mov.modifier().name().get() == "Modifier:1");
-
-			//Insert another mod at the end
-			auto mod2 = file.create<nif::NiPSysRotationModifier>();
-			Assert::IsNotNull(mod2.get());
-			mods.insert(-1, *mod2);
-
-			//Position mod should be second last, update last
-			Assert::IsTrue(obj->modifiers().find(upd.modifier()) == 3);
-			Assert::IsTrue(obj->modifiers().find(mov.modifier()) == 2);
-			Assert::IsTrue(upd.modifier().name().get() == "Modifier:3");
-			Assert::IsTrue(mov.modifier().name().get() == "Modifier:2");
-
-			//Add a lifetime requirement
-			LifetimeRequirement liv(file.create<nif::NiPSysAgeDeathModifier>(), mods);
-			liv.incr();
-			Assert::IsTrue(liv.modifier().target().isAssigned(obj.get()));
-
-			//It should insert at the beginning
-			Assert::IsTrue(obj->modifiers().find(liv.modifier()) == 0);
-			Assert::IsTrue(liv.modifier().name().get() == "Modifier:0");
-			//And the others should hear it
-			Assert::IsTrue(upd.modifier().name().get() == "Modifier:4");
-			Assert::IsTrue(mov.modifier().name().get() == "Modifier:3");
-
-			//Insert a mod at the beginning
-			auto mod3 = file.create<nif::NiPSysRotationModifier>();
-			Assert::IsNotNull(mod3.get());
-			mods.insert(0, *mod3);
-
-			//and verify positions and names
-			Assert::IsTrue(obj->modifiers().find(upd.modifier()) == 5);
-			Assert::IsTrue(obj->modifiers().find(mov.modifier()) == 4);
-			Assert::IsTrue(obj->modifiers().find(liv.modifier()) == 0);
-			Assert::IsTrue(upd.modifier().name().get() == "Modifier:5");
-			Assert::IsTrue(mov.modifier().name().get() == "Modifier:4");
-			Assert::IsTrue(liv.modifier().name().get() == "Modifier:0");
-
-			//Remove a mod and make sure no one does anything odd
-			mods.erase(2);
-			Assert::IsTrue(obj->modifiers().find(upd.modifier()) == 4);
-			Assert::IsTrue(obj->modifiers().find(mov.modifier()) == 3);
-			Assert::IsTrue(obj->modifiers().find(liv.modifier()) == 0);
-			Assert::IsTrue(upd.modifier().name().get() == "Modifier:4");
-			Assert::IsTrue(mov.modifier().name().get() == "Modifier:3");
-			Assert::IsTrue(liv.modifier().name().get() == "Modifier:0");
-
-			//Remove the lifetime requirement
-			liv.decr();
-			Assert::IsFalse(liv.modifier().target().isAssigned(obj.get()));
-
-			Assert::IsTrue(obj->modifiers().find(upd.modifier()) == 3);
-			Assert::IsTrue(obj->modifiers().find(mov.modifier()) == 2);
-			Assert::IsTrue(obj->modifiers().find(liv.modifier()) == -1);
-			Assert::IsTrue(upd.modifier().name().get() == "Modifier:3");
-			Assert::IsTrue(mov.modifier().name().get() == "Modifier:2");
-
-			//Remove the position requirement
-			mov.decr();
-			Assert::IsFalse(mov.modifier().target().isAssigned(obj.get()));
-
-			Assert::IsTrue(obj->modifiers().find(upd.modifier()) == 2);
-			Assert::IsTrue(obj->modifiers().find(mov.modifier()) == -1);
-			Assert::IsTrue(upd.modifier().name().get() == "Modifier:2");
-
-			//Remove the update requirement
-			upd.decr();
-			Assert::IsFalse(upd.modifier().target().isAssigned(obj.get()));
-			Assert::IsTrue(obj->modifiers().find(upd.modifier()) == -1);
-		}
-
+		/* These should be tests of Default, not Constructor
 		TEST_METHOD(Load_regular)
 		{
 			nif::File file{ nif::File::Version::SKYRIM_SE };
@@ -624,5 +456,6 @@ namespace node
 			//Was a warning generated? We expect not, but maybe we should?
 			Assert::IsFalse(!c.warnings().empty());
 		}
+		*/
 	};
 }

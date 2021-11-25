@@ -69,7 +69,7 @@ public:
 		m_bumName{ make_ni_ptr<Property<std::string>, NiPSysModifier>(bum, &NiPSysModifier::name) }
 	{
 		assert(m_psys && m_data);
-		//The sequence should have been cleared
+		//The sequence should have been cleared (will this work?)
 		assert(m_psys->modifiers.size() == 0);
 
 		//We are updating the order of modifiers
@@ -77,23 +77,36 @@ public:
 
 		assert(adm);
 		adm->order.addListener(m_admName);
-		adm->order.set(0);
+		if (adm->order.get() != 0)
+			adm->order.set(0);
+		else
+			m_admName.onSet(0);
+		adm->target.assign(m_psys);
 		m_psys->modifiers.insert(0, std::move(adm));
 
 		assert(pm);
 		pm->order.addListener(m_pmName);
-		pm->order.set(1);
+		if (pm->order.get() != 1)
+			pm->order.set(1);
+		else
+			m_pmName.onSet(1);
+		pm->target.assign(m_psys);
 		m_psys->modifiers.insert(1, std::move(pm));
 
 		assert(bum);
 		bum->order.addListener(m_bumName);
-		bum->order.set(2);
+		if (bum->order.get() != 2)
+			bum->order.set(2);
+		else
+			m_bumName.onSet(2);
+		bum->target.assign(m_psys);
 		m_psys->modifiers.insert(2, std::move(bum));
 
 		//Should we require controllers to also be cleared?
 		//Should we move the update controller to last? Do we care?
 		if (int pos = m_psys->controllers.find(puc.get()); pos >= 0)
 			m_psys->controllers.erase(pos);
+		puc->target.assign(m_psys);
 		m_psys->controllers.insert(m_psys->controllers.size(), std::move(puc));
 
 		connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
@@ -107,6 +120,7 @@ public:
 			pm->order.removeListener(m_pmName);
 		if (auto bum = m_bum.lock())
 			bum->order.removeListener(m_bumName);
+		m_psys->modifiers.removeListener(*this);
 	}
 
 	virtual void addModifier(const ni_ptr<NiPSysModifier>& mod) override 
@@ -294,5 +308,6 @@ node::ParticleSystem::ParticleSystem(
 
 node::ParticleSystem::~ParticleSystem()
 {
+	m_subtexCount->removeListener(m_subtexLsnr);
 	disconnect();
 }
