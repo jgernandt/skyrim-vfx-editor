@@ -40,8 +40,8 @@ class node::ParticleSystem::ModifiersField final :
 	const std::weak_ptr<NiPSysBoundUpdateModifier> m_bum;
 
 	Modifier::NameUpdater m_admName;
-	Modifier::NameUpdater m_pmName;
 	Modifier::NameUpdater m_bumName;
+	Modifier::NameUpdater m_pmName;
 
 	int m_colReqs{ 0 };
 	int m_rotReqs{ 0 };
@@ -65,49 +65,46 @@ public:
 		m_pm{ pm },
 		m_bum{ bum },
 		m_admName{ make_ni_ptr<Property<std::string>, NiPSysModifier>(adm, &NiPSysModifier::name) },
-		m_pmName{ make_ni_ptr<Property<std::string>, NiPSysModifier>(pm, &NiPSysModifier::name) },
-		m_bumName{ make_ni_ptr<Property<std::string>, NiPSysModifier>(bum, &NiPSysModifier::name) }
+		m_bumName{ make_ni_ptr<Property<std::string>, NiPSysModifier>(bum, &NiPSysModifier::name) },
+		m_pmName{ make_ni_ptr<Property<std::string>, NiPSysModifier>(pm, &NiPSysModifier::name) }
 	{
-		assert(m_psys && m_data);
-		//The sequence should have been cleared (will this work?)
-		assert(m_psys->modifiers.size() == 0);
+		assert(m_psys && m_data && adm && bum && pm);
 
-		//We are updating the order of modifiers
+		//Simplest way to assure the right position is to always erase first
+		if (int i = m_psys->modifiers.find(adm.get()); i >= 0)
+			m_psys->modifiers.erase(i);
+		adm->order.set(-1);
+
+		if (int i = m_psys->modifiers.find(bum.get()); i >= 0)
+			m_psys->modifiers.erase(i);
+		bum->order.set(-1);
+
+		if (int i = m_psys->modifiers.find(pm.get()); i >= 0)
+			m_psys->modifiers.erase(i);
+		pm->order.set(-1);
+
+		if (int i = m_psys->controllers.find(puc.get()); i >= 0)
+			m_psys->controllers.erase(i);
+
+		//We are updating the order of modifiers...
 		m_psys->modifiers.addListener(*this);
 
-		assert(adm);
+		//...and the names of static mods
 		adm->order.addListener(m_admName);
-		if (adm->order.get() != 0)
-			adm->order.set(0);
-		else
-			m_admName.onSet(0);
-		adm->target.assign(m_psys);
-		m_psys->modifiers.insert(0, adm);
-
-		assert(pm);
-		pm->order.addListener(m_pmName);
-		if (pm->order.get() != 1)
-			pm->order.set(1);
-		else
-			m_pmName.onSet(1);
-		pm->target.assign(m_psys);
-		m_psys->modifiers.insert(1, pm);
-
-		assert(bum);
 		bum->order.addListener(m_bumName);
-		if (bum->order.get() != 2)
-			bum->order.set(2);
-		else
-			m_bumName.onSet(2);
-		bum->target.assign(m_psys);
-		m_psys->modifiers.insert(2, bum);
+		pm->order.addListener(m_pmName);
 
-		//Should we require controllers to also be cleared?
-		//Should we move the update controller to last? Do we care?
-		if (int pos = m_psys->controllers.find(puc.get()); pos >= 0)
-			m_psys->controllers.erase(pos);
-		puc->target.assign(m_psys);
+		m_psys->modifiers.insert(0, adm);
+		adm->target.assign(m_psys);
+
+		m_psys->modifiers.insert(m_psys->modifiers.size(), pm);
+		pm->target.assign(m_psys);
+
+		m_psys->modifiers.insert(m_psys->modifiers.size(), bum);
+		bum->target.assign(m_psys);
+
 		m_psys->controllers.insert(m_psys->controllers.size(), puc);
+		puc->target.assign(m_psys);
 
 		connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
 	}

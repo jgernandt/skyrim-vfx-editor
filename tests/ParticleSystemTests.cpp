@@ -50,11 +50,164 @@ namespace connectors
 	TEST_CLASS(ParticleSystemTests)
 	{
 	public:
+		
+	};
+}
+
+namespace nodes
+{
+	using namespace nif;
+
+	TEST_CLASS(ParticleSystem)
+	{
+	public:
+		std::mt19937 m_engine;
+
+		//Editing the texure atlas layout widget should set subtexture offsets in the PSysData
+		TEST_METHOD(TextureAtlasLayout)
+		{
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+			auto data = file.create<NiPSysData>();
+			auto node = node::Default<node::ParticleSystem>{}.create(file, nullptr, data);
+
+			Assert::IsTrue(node->subtexCount().get() == SubtextureCount{ 1, 1 });
+
+			SubtextureCount cnt{ 3, 5 };
+			node->subtexCount().set(cnt);
+			Assert::IsTrue(node->subtexCount().get() == cnt);
+
+			Assert::IsTrue(node_conversion<SubtextureCount>::from(data->subtexOffsets.get()) == cnt);
+		}
+
+		
+		TEST_METHOD(Default_complete)
+		{
+			//Set up a particle system the way we will make them
+			File file{ File::Version::SKYRIM_SE };
+			auto psys = file.create<NiParticleSystem>();
+			auto data = file.create<NiPSysData>();
+			auto alpha = file.create<NiAlphaProperty>();
+			auto mod0 = file.create<NiPSysAgeDeathModifier>();
+			auto mod1 = file.create<NiPSysGravityModifier>();
+			auto mod2 = file.create<NiPSysRotationModifier>();
+			auto mod3 = file.create<NiPSysPositionModifier>();
+			auto mod4 = file.create<NiPSysBoundUpdateModifier>();
+			auto ctlr = file.create<NiTimeController>();
+			auto puc = file.create<NiPSysUpdateCtlr>();
+
+			psys->data.assign(data);
+			psys->alphaProperty.assign(alpha);
+
+			ni_ptr<NiPSysModifier> mods[5]{ mod0, mod1, mod2, mod3, mod4 };
+			for (int i = 0; i < 5; i++) {
+				psys->modifiers.insert(psys->modifiers.size(), mods[i]);
+				mods[i]->target.assign(psys);
+				mods[i]->order.set(i);
+				mods[i]->name.set(std::string("Modifier:") + std::to_string(i));
+			}
+			ni_ptr<NiTimeController> ctlrs[2]{ ctlr, puc };
+			for (int i = 0; i < 2; i++) {
+				psys->controllers.insert(psys->controllers.size(), ctlrs[i]);
+				ctlrs[i]->target.assign(psys);
+			}
+
+			//Construct a node from it
+			auto node = node::Default<node::ParticleSystem>{}.create(file, psys, data, alpha, mod0, mod4, mod3, puc);
+
+			//Make sure we didn't break it
+			Assert::IsTrue(psys->data.assigned() == data);
+			Assert::IsTrue(psys->alphaProperty.assigned() == alpha);
+
+			for (int i = 0; i < 5; i++) {
+				Assert::IsTrue(psys->modifiers.at(i) == mods[i]);
+				Assert::IsTrue(mods[i]->order.get() == i);
+				Assert::IsTrue(mods[i]->name.get() == std::string("Modifier:") + std::to_string(i));
+			}
+			for (int i = 0; i < 2; i++)
+				Assert::IsTrue(psys->controllers.at(i) == ctlrs[i]);
+		}
+
+		//Existing psys with modifiers in unexpected order
+		TEST_METHOD(Default_disorder)
+		{
+			//Set up a particle system with modifiers in the wrong order
+			File file{ File::Version::SKYRIM_SE };
+			auto psys = file.create<NiParticleSystem>();
+			auto mod0 = file.create<NiPSysGravityModifier>();
+			auto mod1 = file.create<NiPSysBoundUpdateModifier>();
+			auto mod2 = file.create<NiPSysPositionModifier>();
+			auto mod3 = file.create<NiPSysRotationModifier>();
+			auto mod4 = file.create<NiPSysAgeDeathModifier>();
+
+			//We expect that Factory will have sorted the modifiers in order
+			ni_ptr<NiPSysModifier> mods[5]{ mod0, mod1, mod2, mod3, mod4 };
+			for (int i = 0; i < 5; i++) {
+				psys->modifiers.insert(psys->modifiers.size(), mods[i]);
+				mods[i]->order.set(i);
+				mods[i]->target.assign(psys);
+			}
+
+			//Construct a node from it
+			auto node = node::Default<node::ParticleSystem>{}.create(file, psys, nullptr, nullptr, mod4, mod1, mod2);
+
+			//Make sure it has been reordered
+			ni_ptr<NiPSysModifier> expected[5]{ mod4, mod0, mod3, mod2, mod1 };
+			std::string names[5]{ "Modifier:0", "", "", "Modifier:3", "Modifier:4" };
+			for (int i = 0; i < 5; i++) {
+				Assert::IsTrue(psys->modifiers.at(i) == expected[i]);
+				Assert::IsTrue(expected[i]->order.get() == i);
+				Assert::IsTrue(expected[i]->name.get() == names[i]);
+			}
+		}
+
+		//Existing psys with critical components missing
+		TEST_METHOD(Default_incomplete)
+		{
+			File file{ File::Version::SKYRIM_SE };
+			auto psys = file.create<NiParticleSystem>();
+			auto mod0 = file.create<NiPSysGravityModifier>();
+			auto mod1 = file.create<NiPSysRotationModifier>();
+			auto ctlr = file.create<NiTimeController>();
+
+			psys->controllers.insert(0, ctlr);
+
+			//We expect that Factory will have sorted the modifiers in order
+			ni_ptr<NiPSysModifier> mods[2]{ mod0, mod1 };
+			for (int i = 0; i < 2; i++) {
+				psys->modifiers.insert(psys->modifiers.size(), mods[i]);
+				mods[i]->order.set(i);
+			}
+
+			//Construct a node from it
+			auto node = node::Default<node::ParticleSystem>{}.create(file, psys);
+
+			//Make sure it has been completed
+			Assert::IsTrue(psys->data.assigned() != nullptr);
+			Assert::IsTrue(psys->alphaProperty.assigned() != nullptr);
+
+			Assert::IsTrue(psys->modifiers.size() == 5);
+
+			Assert::IsTrue(psys->modifiers.at(0)->type() == NiPSysAgeDeathModifier::TYPE);
+			Assert::IsTrue(psys->modifiers.at(0)->order.get() == 0);
+			Assert::IsTrue(psys->modifiers.at(0)->name.get() == "Modifier:0");
+
+			Assert::IsTrue(psys->modifiers.at(3)->type() == NiPSysPositionModifier::TYPE);
+			Assert::IsTrue(psys->modifiers.at(3)->order.get() == 3);
+			Assert::IsTrue(psys->modifiers.at(3)->name.get() == "Modifier:3");
+
+			Assert::IsTrue(psys->modifiers.at(4)->type() == NiPSysBoundUpdateModifier::TYPE);
+			Assert::IsTrue(psys->modifiers.at(4)->order.get() == 4);
+			Assert::IsTrue(psys->modifiers.at(4)->name.get() == "Modifier:4");
+
+			Assert::IsTrue(psys->controllers.size() == 2);
+			Assert::IsTrue(psys->controllers.at(1)->type() == NiPSysUpdateCtlr::TYPE);
+		}
+
 		TEST_METHOD(Shader)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiParticleSystem>();
-			AssignableSenderTest(Default<ParticleSystem>{}.create(file, ni_ptr<NiParticleSystem>(obj)), obj->shaderProperty, ParticleSystem::SHADER, false);
+			AssignableSenderTest(node::Default<node::ParticleSystem>{}.create(file, obj), obj->shaderProperty, node::ParticleSystem::SHADER, false);
 		}
 
 		//Modifiers should send Modifiable, single connector.
@@ -69,11 +222,9 @@ namespace connectors
 			auto pm = file.create<NiPSysPositionModifier>();
 			auto puc = file.create<NiPSysUpdateCtlr>();
 
-			ConnectorTester tester(Default<ParticleSystem>{}.create(file, ni_ptr<NiParticleSystem>(obj), 
-				ni_ptr<NiPSysData>(data), nullptr, ni_ptr<NiPSysAgeDeathModifier>(adm), ni_ptr<NiPSysBoundUpdateModifier>(bum), 
-				ni_ptr<NiPSysPositionModifier>(pm), ni_ptr<NiPSysUpdateCtlr>(puc)));
-			tester.tryConnect<IModifiable, void>(ParticleSystem::MODIFIERS, false, nullptr);
-			IModifiable* ifc = tester.tryConnect<IModifiable, void>(ParticleSystem::MODIFIERS, false, nullptr);
+			ConnectorTester tester(node::Default<node::ParticleSystem>{}.create(file, obj, data, nullptr, adm, bum, pm, puc));
+			tester.tryConnect<node::IModifiable, void>(node::ParticleSystem::MODIFIERS, false, nullptr);
+			node::IModifiable* ifc = tester.tryConnect<node::IModifiable, void>(node::ParticleSystem::MODIFIERS, false, nullptr);
 
 			Assert::IsNotNull(ifc);
 
@@ -114,7 +265,7 @@ namespace connectors
 			Assert::IsTrue(bum->target.assigned() == obj);
 
 			//Add another
-			auto mod2 = file.create<nif::NiPSysRotationModifier>();
+			auto mod2 = file.create<NiPSysRotationModifier>();
 			Assert::IsNotNull(mod2.get());
 			ifc->addModifier(mod2);
 			int order2 = obj->modifiers.find(mod2.get());
@@ -199,263 +350,31 @@ namespace connectors
 			//Adding a requirement should set the appropriate flag
 			Assert::IsFalse(data->hasColour.get());
 
-			ifc->addRequirement(ModRequirement::COLOUR);
+			ifc->addRequirement(node::ModRequirement::COLOUR);
 			Assert::IsTrue(data->hasColour.get());
-			ifc->addRequirement(ModRequirement::COLOUR);
+			ifc->addRequirement(node::ModRequirement::COLOUR);
 			Assert::IsTrue(data->hasColour.get());
-			ifc->removeRequirement(ModRequirement::COLOUR);
+			ifc->removeRequirement(node::ModRequirement::COLOUR);
 			Assert::IsTrue(data->hasColour.get());
-			ifc->removeRequirement(ModRequirement::COLOUR);
+			ifc->removeRequirement(node::ModRequirement::COLOUR);
 			Assert::IsFalse(data->hasColour.get());
 
 			Assert::IsFalse(data->hasRotationAngles.get());
 			Assert::IsFalse(data->hasRotationSpeeds.get());
 
-			ifc->addRequirement(ModRequirement::ROTATION);
+			ifc->addRequirement(node::ModRequirement::ROTATION);
 			Assert::IsTrue(data->hasRotationAngles.get());
 			Assert::IsTrue(data->hasRotationSpeeds.get());
-			ifc->addRequirement(ModRequirement::ROTATION);
+			ifc->addRequirement(node::ModRequirement::ROTATION);
 			Assert::IsTrue(data->hasRotationAngles.get());
 			Assert::IsTrue(data->hasRotationSpeeds.get());
 
-			ifc->removeRequirement(ModRequirement::ROTATION);
+			ifc->removeRequirement(node::ModRequirement::ROTATION);
 			Assert::IsTrue(data->hasRotationAngles.get());
 			Assert::IsTrue(data->hasRotationSpeeds.get());
-			ifc->removeRequirement(ModRequirement::ROTATION);
+			ifc->removeRequirement(node::ModRequirement::ROTATION);
 			Assert::IsFalse(data->hasRotationAngles.get());
 			Assert::IsFalse(data->hasRotationSpeeds.get());
 		}
-	};
-}
-
-namespace node
-{
-	using namespace nif;
-
-	TEST_CLASS(ParticleSystemTests)
-	{
-	public:
-		std::mt19937 m_engine;
-
-		//Editing the texure atlas layout widget should set subtexture offsets in the PSysData
-		TEST_METHOD(TextureAtlasLayout)
-		{
-			nif::File file{ nif::File::Version::SKYRIM_SE };
-			auto data = file.create<NiPSysData>();
-			auto node = Default<ParticleSystem>{}.create(file, nullptr, ni_ptr<NiPSysData>(data));
-
-			Assert::IsTrue(node->subtexCount().get() == SubtextureCount{ 1, 1 });
-
-			SubtextureCount cnt{ 3, 5 };
-			node->subtexCount().set(cnt);
-			Assert::IsTrue(node->subtexCount().get() == cnt);
-
-			Assert::IsTrue(node_conversion<SubtextureCount>::from(data->subtexOffsets.get()) == cnt);
-		}
-
-		/* These should be tests of Default, not Constructor
-		TEST_METHOD(Load_regular)
-		{
-			nif::File file{ nif::File::Version::SKYRIM_SE };
-
-			auto root = file.getRoot();
-			Assert::IsNotNull(root.get());
-
-			auto psys = file.create<nif::NiParticleSystem>();
-			Assert::IsNotNull(psys.get());
-			root->children().add(*psys);
-
-			auto data = file.create<nif::NiPSysData>();
-			Assert::IsNotNull(data.get());
-			psys->data().assign(data.get());
-
-			auto alpha = file.create<nif::NiAlphaProperty>();
-			Assert::IsNotNull(alpha.get());
-			psys->alphaProperty().assign(alpha.get());
-
-			auto ctlr = file.create<nif::NiPSysUpdateCtlr>();
-			Assert::IsNotNull(ctlr.get());
-			psys->controllers().insert(0, *ctlr);
-
-			auto mod0 = file.create<nif::NiPSysAgeDeathModifier>();
-			Assert::IsNotNull(mod0.get());
-			psys->modifiers().insert(-1, *mod0);
-
-			auto mod1 = file.create<nif::NiPSysPositionModifier>();
-			Assert::IsNotNull(mod1.get());
-			psys->modifiers().insert(-1, *mod1);
-
-			auto mod2 = file.create<nif::NiPSysBoundUpdateModifier>();
-			Assert::IsNotNull(mod2.get());
-			psys->modifiers().insert(-1, *mod2);
-
-			Constructor c(file);
-			c.makeRoot();
-
-			Assert::IsTrue(c.size() == 2);
-
-			//Were the correct nodes created?
-			Root* root_node = findNode<Root>(c.nodes(), *root);
-			ParticleSystem* psys_node = findNode<ParticleSystem>(c.nodes(), *psys);
-			Assert::IsNotNull(root_node);
-			Assert::IsNotNull(psys_node);
-
-			TestRoot nodeRoot;
-			c.extractNodes(nodeRoot);
-
-			//Were they connected?
-			Assert::IsTrue(areConnected(root_node->getField(Node::CHILDREN)->connector, psys_node->getField(ParticleSystem::PARENT)->connector));
-
-			//Are names and ordering as expected?
-			Assert::IsTrue(mod0->name().get() == "Modifier:0");
-			Assert::IsTrue(mod0->order().get() == 0);
-			Assert::IsTrue(mod1->name().get() == "Modifier:1");
-			Assert::IsTrue(mod1->order().get() == 1);
-			Assert::IsTrue(mod2->name().get() == "Modifier:2");
-			Assert::IsTrue(mod2->order().get() == 2);
-
-			//Did we mess up the backend?
-			Assert::IsTrue(psys_node->object().getNative().GetData() == &data->getNative());
-			Assert::IsTrue(psys_node->object().getNative().GetBSProperty(1) == &alpha->getNative());
-			Assert::IsTrue(psys_node->object().getNative().GetControllers().size() == 1);
-			Assert::IsTrue(psys_node->object().getNative().GetControllers().front() == &ctlr->getNative());
-			Assert::IsTrue(psys_node->object().getNative().GetModifiers().size() == 3);
-			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[0] == &mod0->getNative());
-			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[1] == &mod1->getNative());
-			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[2] == &mod2->getNative());
-
-			//Was a warning generated?
-			Assert::IsFalse(!c.warnings().empty());
-		}
-
-		//If critical components are missing, they should be added
-		TEST_METHOD(Load_incomplete)
-		{
-			nif::File file{ nif::File::Version::SKYRIM_SE };
-
-			auto root = file.getRoot();
-			Assert::IsNotNull(root.get());
-
-			auto psys = file.create<nif::NiParticleSystem>();
-			Assert::IsNotNull(psys.get());
-			root->children().add(*psys);
-
-			Constructor c(file);
-			c.makeRoot();
-
-			Assert::IsTrue(c.size() == 2);
-
-			//Were the correct nodes created?
-			Root* root_node = findNode<Root>(c.nodes(), *root);
-			ParticleSystem* psys_node = findNode<ParticleSystem>(c.nodes(), *psys);
-			Assert::IsNotNull(root_node);
-			Assert::IsNotNull(psys_node);
-
-			TestRoot nodeRoot;
-			c.extractNodes(nodeRoot);
-
-			//Were they connected?
-			Assert::IsTrue(areConnected(root_node->getField(Node::CHILDREN)->connector, psys_node->getField(ParticleSystem::PARENT)->connector));
-
-			//Are names and ordering as expected?
-			auto&& mods = psys_node->object().getNative().GetModifiers();
-			Assert::IsTrue(mods.size() == 3);
-			Niflib::NiPSysModifier* mod0 = mods[0];
-			Assert::IsTrue(mod0->IsSameType(Niflib::NiPSysAgeDeathModifier::TYPE));
-			Assert::IsTrue(mod0->GetName() == "Modifier:0");
-			Assert::IsTrue(mod0->GetOrder() == 0);
-
-			Niflib::NiPSysModifier* mod1 = mods[1];
-			Assert::IsTrue(mod1->IsSameType(Niflib::NiPSysPositionModifier::TYPE));
-			Assert::IsTrue(mod1->GetName() == "Modifier:1");
-			Assert::IsTrue(mod1->GetOrder() == 1);
-
-			Niflib::NiPSysModifier* mod2 = mods[2];
-			Assert::IsTrue(mod2->IsSameType(Niflib::NiPSysBoundUpdateModifier::TYPE));
-			Assert::IsTrue(mod2->GetName() == "Modifier:2");
-			Assert::IsTrue(mod2->GetOrder() == 2);
-
-			//Have the missing components been added?
-			Assert::IsTrue(psys_node->object().getNative().GetData() != nullptr);
-			Assert::IsTrue(psys_node->object().getNative().GetBSProperty(1) != nullptr);
-			Assert::IsTrue(psys_node->object().getNative().GetControllers().size() == 1);
-			Assert::IsTrue(psys_node->object().getNative().GetModifiers().size() == 3);//should have received AgeDeath, Position, BoundUpdate
-
-			//Was a warning generated?
-			Assert::IsTrue(!c.warnings().empty());
-		}
-
-		//If the critical components are in an unexpected order, they should silently be reordered
-		TEST_METHOD(Load_irregular)
-		{
-			nif::File file{ nif::File::Version::SKYRIM_SE };
-
-			auto root = file.getRoot();
-			Assert::IsNotNull(root.get());
-
-			auto psys = file.create<nif::NiParticleSystem>();
-			Assert::IsNotNull(psys.get());
-			root->children().add(*psys);
-
-			auto data = file.create<nif::NiPSysData>();
-			Assert::IsNotNull(data.get());
-			psys->data().assign(data.get());
-
-			auto alpha = file.create<nif::NiAlphaProperty>();
-			Assert::IsNotNull(alpha.get());
-			psys->alphaProperty().assign(alpha.get());
-
-			auto ctlr = file.create<nif::NiPSysUpdateCtlr>();
-			Assert::IsNotNull(ctlr.get());
-			psys->controllers().insert(0, *ctlr);
-
-			//Add the fundamental modifiers in an order we don't expect
-			auto mod1 = file.create<nif::NiPSysAgeDeathModifier>();
-			Assert::IsNotNull(mod1.get());
-			psys->modifiers().insert(0, *mod1);
-
-			auto mod2 = file.create<nif::NiPSysPositionModifier>();
-			Assert::IsNotNull(mod2.get());
-			psys->modifiers().insert(0, *mod2);
-
-			auto mod3 = file.create<nif::NiPSysBoundUpdateModifier>();
-			Assert::IsNotNull(mod3.get());
-			psys->modifiers().insert(0, *mod3);
-
-			Constructor c(file);
-			c.makeRoot();
-
-			Assert::IsTrue(c.size() == 2);
-
-			//Were the correct nodes created?
-			Root* root_node = findNode<Root>(c.nodes(), *root);
-			ParticleSystem* psys_node = findNode<ParticleSystem>(c.nodes(), *psys);
-			Assert::IsNotNull(root_node);
-			Assert::IsNotNull(psys_node);
-
-			TestRoot nodeRoot;
-			c.extractNodes(nodeRoot);
-
-			//Were they connected?
-			Assert::IsTrue(areConnected(root_node->getField(Node::CHILDREN)->connector, psys_node->getField(ParticleSystem::PARENT)->connector));
-
-			//Are names and ordering as expected?
-			Assert::IsTrue(mod1->name().get() == "Modifier:0");
-			Assert::IsTrue(mod1->order().get() == 0);
-			Assert::IsTrue(mod2->name().get() == "Modifier:1");
-			Assert::IsTrue(mod2->order().get() == 1);
-			Assert::IsTrue(mod3->name().get() == "Modifier:2");
-			Assert::IsTrue(mod3->order().get() == 2);
-
-			//Have the modifiers been reordered?
-			Assert::IsTrue(psys_node->object().getNative().GetModifiers().size() == 3);
-			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[0] == &mod1->getNative());
-			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[1] == &mod2->getNative());
-			Assert::IsTrue(psys_node->object().getNative().GetModifiers()[2] == &mod3->getNative());
-
-			//Was a warning generated? We expect not, but maybe we should?
-			Assert::IsFalse(!c.warnings().empty());
-		}
-		*/
 	};
 }
