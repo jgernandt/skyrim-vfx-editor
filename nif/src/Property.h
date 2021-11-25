@@ -63,7 +63,7 @@ namespace nif
 				m_value = std::move(val);
 				for (PropertyListener<T>* l : this->m_lsnrs) {
 					assert(l);
-					l->onSet(val);
+					l->onSet(m_value);
 				}
 			}
 			else
