@@ -54,19 +54,6 @@ namespace node
 				throw std::runtime_error("Failed to create NiBoolInterpolator");
 			visI->value.set(true);
 		}
-
-		ni_ptr<NiPSysEmitterCtlr> makeCtlr(File& file) 
-		{ 
-			return nullptr; 
-		}
-		ni_ptr<NiFloatInterpolator> makeIplr(File& file) 
-		{
-
-		}
-		ni_ptr<NiBoolInterpolator> makeVisI(File& file) 
-		{
-
-		}
 	};
 
 	template<>
@@ -74,8 +61,8 @@ namespace node
 	{
 	public:
 		std::unique_ptr<BoxEmitter> create(File& file,
-			ni_ptr<NiPSysBoxEmitter>&& obj = ni_ptr<NiPSysBoxEmitter>(),
-			ni_ptr<NiPSysEmitterCtlr>&& ctlr = ni_ptr<NiPSysEmitterCtlr>())
+			ni_ptr<NiPSysBoxEmitter> obj = ni_ptr<NiPSysBoxEmitter>(),
+			ni_ptr<NiPSysEmitterCtlr> ctlr = ni_ptr<NiPSysEmitterCtlr>())
 		{
 			ni_ptr<NiFloatInterpolator> iplr;
 			ni_ptr<NiBoolInterpolator> visIplr;
@@ -87,7 +74,7 @@ namespace node
 			}
 			getIplrs(file, ctlr, iplr, visIplr);
 
-			return std::make_unique<BoxEmitter>(std::move(obj), std::move(ctlr), std::move(iplr), std::move(visIplr));
+			return std::make_unique<BoxEmitter>(obj, ctlr, iplr, visIplr);
 		}
 
 		void setDefaults(NiPSysEmitter& obj) {
@@ -101,8 +88,8 @@ namespace node
 	{
 	public:
 		std::unique_ptr<CylinderEmitter> create(File& file,
-			ni_ptr<NiPSysCylinderEmitter>&& obj = ni_ptr<NiPSysCylinderEmitter>(),
-			ni_ptr<NiPSysEmitterCtlr>&& ctlr = ni_ptr<NiPSysEmitterCtlr>())
+			ni_ptr<NiPSysCylinderEmitter> obj = ni_ptr<NiPSysCylinderEmitter>(),
+			ni_ptr<NiPSysEmitterCtlr> ctlr = ni_ptr<NiPSysEmitterCtlr>())
 		{
 			ni_ptr<NiFloatInterpolator> iplr;
 			ni_ptr<NiBoolInterpolator> visIplr;
@@ -114,7 +101,7 @@ namespace node
 			}
 			getIplrs(file, ctlr, iplr, visIplr);
 
-			return std::make_unique<CylinderEmitter>(std::move(obj), std::move(ctlr), std::move(iplr), std::move(visIplr));
+			return std::make_unique<CylinderEmitter>(obj, ctlr, iplr, visIplr);
 		}
 	};
 
@@ -123,8 +110,8 @@ namespace node
 	{
 	public:
 		std::unique_ptr<SphereEmitter> create(File& file,
-			ni_ptr<NiPSysSphereEmitter>&& obj = ni_ptr<NiPSysSphereEmitter>(),
-			ni_ptr<NiPSysEmitterCtlr>&& ctlr = ni_ptr<NiPSysEmitterCtlr>())
+			ni_ptr<NiPSysSphereEmitter> obj = ni_ptr<NiPSysSphereEmitter>(),
+			ni_ptr<NiPSysEmitterCtlr> ctlr = ni_ptr<NiPSysEmitterCtlr>())
 		{
 			ni_ptr<NiFloatInterpolator> iplr;
 			ni_ptr<NiBoolInterpolator> visIplr;
@@ -136,7 +123,7 @@ namespace node
 			}
 			getIplrs(file, ctlr, iplr, visIplr);
 
-			return std::make_unique<SphereEmitter>(std::move(obj), std::move(ctlr), std::move(iplr), std::move(visIplr));
+			return std::make_unique<SphereEmitter>(obj, ctlr, iplr, visIplr);
 		}
 	};
 }

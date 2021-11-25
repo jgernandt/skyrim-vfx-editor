@@ -23,7 +23,7 @@ namespace node
 			obj->forceType.set(FORCE_PLANAR);
 			obj->gravityAxis.set({ 0.0f, 0.0f, 1.0f });
 
-			return std::make_unique<PlanarForceField>(std::move(obj));
+			return std::make_unique<PlanarForceField>(obj);
 		}
 	};
 
@@ -40,7 +40,7 @@ namespace node
 			obj->active.set(true);
 			obj->forceType.set(FORCE_SPHERICAL);
 
-			return std::make_unique<SphericalForceField>(std::move(obj));
+			return std::make_unique<SphericalForceField>(obj);
 		}
 	};
 
@@ -56,7 +56,7 @@ namespace node
 
 			obj->active.set(true);
 
-			return std::make_unique<RotationModifier>(std::move(obj));
+			return std::make_unique<RotationModifier>(obj);
 		}
 	};
 
@@ -73,7 +73,7 @@ namespace node
 			obj->active.set(true);
 			obj->scales.set({ 0.0f, 1.0f });
 
-			return std::make_unique<ScaleModifier>(std::move(obj));
+			return std::make_unique<ScaleModifier>(obj);
 		}
 	};
 
@@ -101,7 +101,7 @@ namespace node
 			obj->col2.Abegin.set(0.1f);
 			obj->col2.Aend.set(0.9f);
 
-			return std::make_unique<SimpleColourModifier>(std::move(obj));
+			return std::make_unique<SimpleColourModifier>(obj);
 		}
 	};
 }

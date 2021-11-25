@@ -30,9 +30,9 @@ namespace node
 	protected:
 		Emitter(
 			const ni_ptr<NiPSysEmitter>& obj,
-			ni_ptr<NiPSysEmitterCtlr>&& ctlr,
-			ni_ptr<NiFloatInterpolator>&& iplr,
-			ni_ptr<NiBoolInterpolator>&& vis_iplr);
+			const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+			const ni_ptr<NiFloatInterpolator>& iplr,
+			const ni_ptr<NiBoolInterpolator>& vis_iplr);
 
 	public:
 		virtual ~Emitter();
@@ -75,9 +75,9 @@ namespace node
 	protected:
 		VolumeEmitter(
 			const ni_ptr<NiPSysVolumeEmitter>& obj,
-			ni_ptr<NiPSysEmitterCtlr>&& ctlr,
-			ni_ptr<NiFloatInterpolator>&& iplr,
-			ni_ptr<NiBoolInterpolator>&& vis_iplr);
+			const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+			const ni_ptr<NiFloatInterpolator>& iplr,
+			const ni_ptr<NiBoolInterpolator>& vis_iplr);
 
 	public:
 		virtual ~VolumeEmitter() = default;
@@ -110,10 +110,10 @@ namespace node
 	{
 	public:
 		BoxEmitter(
-			ni_ptr<NiPSysBoxEmitter>&& obj,
-			ni_ptr<NiPSysEmitterCtlr>&& ctlr,
-			ni_ptr<NiFloatInterpolator>&& iplr,
-			ni_ptr<NiBoolInterpolator>&& vis_iplr);
+			const ni_ptr<NiPSysBoxEmitter>& obj,
+			const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+			const ni_ptr<NiFloatInterpolator>& iplr,
+			const ni_ptr<NiBoolInterpolator>& vis_iplr);
 		~BoxEmitter();
 
 	public:
@@ -134,10 +134,10 @@ namespace node
 	{
 	public:
 		CylinderEmitter(
-			ni_ptr<NiPSysCylinderEmitter>&& obj,
-			ni_ptr<NiPSysEmitterCtlr>&& ctlr,
-			ni_ptr<NiFloatInterpolator>&& iplr,
-			ni_ptr<NiBoolInterpolator>&& vis_iplr);
+			const ni_ptr<NiPSysCylinderEmitter>& obj,
+			const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+			const ni_ptr<NiFloatInterpolator>& iplr,
+			const ni_ptr<NiBoolInterpolator>& vis_iplr);
 		~CylinderEmitter();
 
 	public:
@@ -156,10 +156,10 @@ namespace node
 	{
 	public:
 		SphereEmitter(
-			ni_ptr<NiPSysSphereEmitter>&& obj,
-			ni_ptr<NiPSysEmitterCtlr>&& ctlr,
-			ni_ptr<NiFloatInterpolator>&& iplr,
-			ni_ptr<NiBoolInterpolator>&& vis_iplr);
+			const ni_ptr<NiPSysSphereEmitter>& obj,
+			const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+			const ni_ptr<NiFloatInterpolator>& iplr,
+			const ni_ptr<NiBoolInterpolator>& vis_iplr);
 		~SphereEmitter();
 
 	public:

@@ -144,7 +144,7 @@ namespace node
 	class DummyAVObject final : public AVObject
 	{
 	public:
-		DummyAVObject(ni_ptr<NiAVObject>&& obj);
+		DummyAVObject(const ni_ptr<NiAVObject>& obj);
 		~DummyAVObject();
 
 		constexpr static float WIDTH = 150.0f;

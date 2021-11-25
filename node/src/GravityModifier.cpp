@@ -126,7 +126,7 @@ public:
 };
 
 
-node::PlanarForceField::PlanarForceField(ni_ptr<NiPSysGravityModifier>&& obj) :
+node::PlanarForceField::PlanarForceField(const ni_ptr<NiPSysGravityModifier>& obj) :
 	GravityModifier(obj)
 {
 	setTitle("Planar force field");
@@ -150,7 +150,7 @@ node::PlanarForceField::~PlanarForceField()
 
 
 
-node::SphericalForceField::SphericalForceField(ni_ptr<NiPSysGravityModifier>&& obj) :
+node::SphericalForceField::SphericalForceField(const ni_ptr<NiPSysGravityModifier>& obj) :
 	GravityModifier(obj)
 {
 	setTitle("Spherical force field");

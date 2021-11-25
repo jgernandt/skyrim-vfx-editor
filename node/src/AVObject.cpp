@@ -287,7 +287,7 @@ void node::AVObject::RotationAdapter::updateUI(gui::Composite* root)
 }
 
 
-node::DummyAVObject::DummyAVObject(ni_ptr<NiAVObject>&& obj) :
+node::DummyAVObject::DummyAVObject(const ni_ptr<NiAVObject>& obj) :
 	AVObject(obj)
 {
 	setColour(COL_TITLE, TitleCol_Geom);

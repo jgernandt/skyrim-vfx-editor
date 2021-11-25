@@ -35,12 +35,12 @@ public:
 	BirthRateField(
 		const std::string& name, 
 		NodeBase& node, 
-		ni_ptr<NiPSysEmitterCtlr>&& ctlr,
-		ni_ptr<NiFloatInterpolator>&& iplr) 
+		const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+		const ni_ptr<NiFloatInterpolator>& iplr)
 		:
 		Field(name), 
-		m_ctlr{ std::move(ctlr) },
-		m_iplr{ std::move(iplr) }, 
+		m_ctlr{ ctlr },
+		m_iplr{ iplr }, 
 		m_rcvr(m_ctlr),
 		m_sndr(m_ctlr->interpolator)//old structure, should use shared_ptr
 	{
@@ -286,13 +286,13 @@ public:
 
 node::Emitter::Emitter(
 	const ni_ptr<NiPSysEmitter>& obj,
-	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	ni_ptr<nif::NiFloatInterpolator>&& iplr,
-	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
+	const ni_ptr<nif::NiPSysEmitterCtlr>& ctlr,
+	const ni_ptr<nif::NiFloatInterpolator>& iplr,
+	const ni_ptr<nif::NiBoolInterpolator>& vis_iplr) :
 	Modifier(obj),
 	//ctlr goes to BirthRateField
 	//iplr goes to BirthRateField
-	m_visIplr{ std::move(vis_iplr) }
+	m_visIplr{ vis_iplr }
 {
 	assert(obj);
 
@@ -309,7 +309,7 @@ node::Emitter::Emitter(
 
 	newChild<gui::Separator>();
 
-	m_birthRateField = newField<BirthRateField>(BIRTH_RATE, *this, std::move(ctlr), std::move(iplr));
+	m_birthRateField = newField<BirthRateField>(BIRTH_RATE, *this, ctlr, iplr);
 	m_lifeSpanField = newField<LifeSpanField>(LIFE_SPAN, *this, 
 		make_ni_ptr(obj, &NiPSysEmitter::lifeSpan),
 		make_ni_ptr(obj, &NiPSysEmitter::lifeSpanVar));
@@ -358,10 +358,10 @@ void node::Emitter::onSet(const nif::ColRGBA& col)
 
 node::VolumeEmitter::VolumeEmitter(
 	const ni_ptr<NiPSysVolumeEmitter>& obj,
-	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	ni_ptr<nif::NiFloatInterpolator>&& iplr,
-	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	Emitter(obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+	const ni_ptr<nif::NiPSysEmitterCtlr>& ctlr,
+	const ni_ptr<nif::NiFloatInterpolator>& iplr,
+	const ni_ptr<nif::NiBoolInterpolator>& vis_iplr) :
+	Emitter(obj, ctlr, iplr, vis_iplr)
 {
 	newChild<gui::Separator>();
 	m_emitterObjField = newField<EmitterObjectField>(EMITTER_OBJECT, *this,
@@ -388,11 +388,11 @@ node::VolumeEmitter::EmitterMetricField::EmitterMetricField(
 
 
 node::BoxEmitter::BoxEmitter(
-	ni_ptr<nif::NiPSysBoxEmitter>&& obj,
-	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	ni_ptr<nif::NiFloatInterpolator>&& iplr,
-	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	VolumeEmitter(obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+	const ni_ptr<NiPSysBoxEmitter>& obj,
+	const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+	const ni_ptr<NiFloatInterpolator>& iplr,
+	const ni_ptr<NiBoolInterpolator>& vis_iplr) :
+	VolumeEmitter(obj, ctlr, iplr, vis_iplr)
 {
 	setTitle("Box emitter");
 	setSize({ WIDTH, HEIGHT });
@@ -418,11 +418,11 @@ node::BoxEmitter::~BoxEmitter()
 
 
 node::CylinderEmitter::CylinderEmitter(
-	ni_ptr<nif::NiPSysCylinderEmitter>&& obj,
-	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	ni_ptr<nif::NiFloatInterpolator>&& iplr,
-	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	VolumeEmitter(obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+	const ni_ptr<NiPSysCylinderEmitter>& obj,
+	const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+	const ni_ptr<NiFloatInterpolator>& iplr,
+	const ni_ptr<NiBoolInterpolator>& vis_iplr) :
+	VolumeEmitter(obj, ctlr, iplr, vis_iplr)
 {
 	setTitle("Cylinder emitter");
 	setSize({ WIDTH, HEIGHT });
@@ -445,11 +445,11 @@ node::CylinderEmitter::~CylinderEmitter()
 
 
 node::SphereEmitter::SphereEmitter(
-	ni_ptr<nif::NiPSysSphereEmitter>&& obj,
-	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-	ni_ptr<nif::NiFloatInterpolator>&& iplr,
-	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	VolumeEmitter(obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+	const ni_ptr<NiPSysSphereEmitter>& obj,
+	const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+	const ni_ptr<NiFloatInterpolator>& iplr,
+	const ni_ptr<NiBoolInterpolator>& vis_iplr) :
+	VolumeEmitter(obj, ctlr, iplr, vis_iplr)
 {
 	setTitle("Sphere emitter");
 	setSize({ WIDTH, HEIGHT });
@@ -467,4 +467,3 @@ node::SphereEmitter::~SphereEmitter()
 {
 	disconnect();
 }
-

@@ -64,7 +64,7 @@ namespace node
 	public:
 		using default_object = NiStringExtraData;
 
-		StringData(ni_ptr<NiStringExtraData>&& obj);
+		StringData(const ni_ptr<NiStringExtraData>& obj);
 		~StringData();
 
 		constexpr static float WIDTH = 150.0f;
@@ -76,7 +76,7 @@ namespace node
 	public:
 		using default_object = NiStringExtraData;
 
-		WeaponTypeData(ni_ptr<NiStringExtraData>&& obj);
+		WeaponTypeData(const ni_ptr<NiStringExtraData>& obj);
 		~WeaponTypeData();
 
 		constexpr static const char* TYPE = "Type";
@@ -87,7 +87,7 @@ namespace node
 	class DummyExtraData final : public ExtraData
 	{
 	public:
-		DummyExtraData(ni_ptr<NiExtraData>&& obj);
+		DummyExtraData(const ni_ptr<NiExtraData>& obj);
 		~DummyExtraData();
 
 		constexpr static float WIDTH = 150.0f;

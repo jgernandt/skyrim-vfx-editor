@@ -18,8 +18,8 @@ namespace node
 	public:
 		std::unique_ptr<FloatController> create(
 			File& file, 
-			ni_ptr<NiFloatInterpolator>&& iplr = ni_ptr<NiFloatInterpolator>(),
-			ni_ptr<NiFloatData>&& data = ni_ptr<NiFloatData>(),
+			ni_ptr<NiFloatInterpolator> iplr = ni_ptr<NiFloatInterpolator>(),
+			ni_ptr<NiFloatData> data = ni_ptr<NiFloatData>(),
 			const NiTimeController* ctlr = nullptr)
 		{
 			if (!iplr) {
@@ -45,7 +45,7 @@ namespace node
 			}
 
 			//Let the node decide if it wants the data assigned or not
-			auto node = std::make_unique<FloatController>(std::move(iplr), std::move(data));
+			auto node = std::make_unique<FloatController>(iplr, data);
 
 			if (ctlr) {
 				node->flags().raise(ctlr->flags.raised());

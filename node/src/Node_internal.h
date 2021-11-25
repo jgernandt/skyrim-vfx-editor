@@ -18,7 +18,7 @@ namespace node
 				throw std::runtime_error("Failed to create NiNode");
 
 			setDefaults(*obj);
-			return std::make_unique<Node>(std::move(obj));
+			return std::make_unique<Node>(obj);
 		}
 		void setDefaults(NiNode& obj)
 		{

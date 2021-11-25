@@ -43,7 +43,7 @@ node::NodeShared::NodeShared(const ni_ptr<NiNode>& obj) : AVObject(obj)
 	setColour(COL_TITLE_ACTIVE, TitleCol_NodeActive);
 }
 
-node::Node::Node(ni_ptr<nif::NiNode>&& obj) : NodeShared(obj)
+node::Node::Node(const ni_ptr<nif::NiNode>& obj) : NodeShared(obj)
 {
 	setClosable(true);
 	setTitle("Node");
@@ -70,7 +70,7 @@ node::Node::~Node()
 }
 
 
-node::Root::Root(ni_ptr<nif::NiNode>&& obj) : NodeShared(obj)
+node::Root::Root(const ni_ptr<nif::NiNode>& obj) : NodeShared(obj)
 {
 	setTitle("Root");
 	setSize({ WIDTH, HEIGHT });

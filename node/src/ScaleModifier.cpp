@@ -268,7 +268,7 @@ private:
 	};
 };
 
-node::ScaleModifier::ScaleModifier(ni_ptr<BSPSysScaleModifier>&& obj) :
+node::ScaleModifier::ScaleModifier(const ni_ptr<BSPSysScaleModifier>& obj) :
 	Modifier(obj)
 {
 	setSize({ WIDTH, HEIGHT });

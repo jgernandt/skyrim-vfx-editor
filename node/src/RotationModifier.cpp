@@ -70,7 +70,7 @@ public:
 	}
 };
 
-node::RotationModifier::RotationModifier(ni_ptr<NiPSysRotationModifier>&& obj) :
+node::RotationModifier::RotationModifier(const ni_ptr<NiPSysRotationModifier>& obj) :
 	Modifier(obj)
 {
 	setSize({ WIDTH, HEIGHT });

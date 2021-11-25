@@ -42,7 +42,7 @@ node::StringDataShared::StringDataShared(const ni_ptr<NiStringExtraData>& obj) :
 {}
 
 
-node::StringData::StringData(ni_ptr<nif::NiStringExtraData>&& obj) :
+node::StringData::StringData(const ni_ptr<nif::NiStringExtraData>& obj) :
 	StringDataShared(obj)
 {
 	setTitle("String data");
@@ -63,7 +63,7 @@ node::StringData::~StringData()
 	disconnect();
 }
 
-node::WeaponTypeData::WeaponTypeData(ni_ptr<nif::NiStringExtraData>&& obj) :
+node::WeaponTypeData::WeaponTypeData(const ni_ptr<nif::NiStringExtraData>& obj) :
 	StringDataShared(obj)
 {
 	setTitle("Weapon type data");
@@ -92,7 +92,7 @@ node::WeaponTypeData::~WeaponTypeData()
 	disconnect();
 }
 
-node::DummyExtraData::DummyExtraData(ni_ptr<nif::NiExtraData>&& obj) :
+node::DummyExtraData::DummyExtraData(const ni_ptr<nif::NiExtraData>& obj) :
 	ExtraData(obj)
 {
 	assert(obj);

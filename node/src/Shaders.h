@@ -26,7 +26,7 @@ namespace node
 	class EffectShader : public NodeBase
 	{
 	public:
-		EffectShader(ni_ptr<BSEffectShaderProperty>&& obj);
+		EffectShader(const ni_ptr<BSEffectShaderProperty>& obj);
 		~EffectShader();
 
 	public:

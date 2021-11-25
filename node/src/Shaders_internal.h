@@ -21,7 +21,7 @@ namespace node
 			obj->emissiveCol.set(COL_WHITE);
 			obj->emissiveMult.set(1.0f);
 
-			return std::make_unique<EffectShader>(std::move(obj));
+			return std::make_unique<EffectShader>(obj);
 		}
 	};
 }

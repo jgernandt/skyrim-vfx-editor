@@ -83,11 +83,9 @@ private:
 	Sender<IController<float>> m_sndr;
 };
 
-node::FloatController::FloatController(
-	ni_ptr<NiFloatInterpolator>&& iplr,
-	ni_ptr<NiFloatData>&& data) :
-	m_iplr{ std::move(iplr) },
-	m_data{ std::move(data) },
+node::FloatController::FloatController(const ni_ptr<NiFloatInterpolator>& iplr, const ni_ptr<NiFloatData>& data) :
+	m_iplr{ iplr },
+	m_data{ data },
 	//Our controller is a dummy object that will never be exported or assigned to another field,
 	//hence we can bypass file. Still, this is a little fishy.
 	m_ctlr{ std::make_shared<NiTimeController>() }

@@ -16,7 +16,7 @@ namespace connectors
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiNode>();
-			SetSenderTest(std::make_unique<Node>(ni_ptr<NiNode>(obj)), obj->extraData, ObjectNET::EXTRA_DATA, true);
+			SetSenderTest(std::make_unique<Node>(obj), obj->extraData, ObjectNET::EXTRA_DATA, true);
 		}
 	};
 
@@ -28,7 +28,7 @@ namespace connectors
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiAVObject>();
-			SetReceiverTest(std::make_unique<DummyAVObject>(ni_ptr<NiAVObject>(obj)), *obj, AVObject::PARENT, false);
+			SetReceiverTest(std::make_unique<DummyAVObject>(obj), *obj, AVObject::PARENT, false);
 		}
 	};
 
@@ -40,14 +40,14 @@ namespace connectors
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiNode>();
-			AssignableReceiverTest(std::make_unique<Node>(ni_ptr<NiNode>(obj)), *obj, Node::OBJECT, true);
+			AssignableReceiverTest(std::make_unique<Node>(obj), *obj, Node::OBJECT, true);
 		}
 
 		TEST_METHOD(Children)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiNode>();
-			SetSenderTest(std::make_unique<Node>(ni_ptr<NiNode>(obj)), obj->children, Node::CHILDREN, true);
+			SetSenderTest(std::make_unique<Node>(obj), obj->children, Node::CHILDREN, true);
 		}
 
 		/* We should not need to test this independently anymore

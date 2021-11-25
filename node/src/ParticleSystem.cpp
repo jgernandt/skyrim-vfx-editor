@@ -52,10 +52,10 @@ public:
 		NodeBase& node,
 		const ni_ptr<NiParticleSystem>& psys,
 		const ni_ptr<NiPSysData>& data,
-		ni_ptr<NiPSysAgeDeathModifier>&& adm,
-		ni_ptr<NiPSysPositionModifier>&& pm,
-		ni_ptr<NiPSysBoundUpdateModifier>&& bum,
-		ni_ptr<NiPSysUpdateCtlr>&& puc)
+		const ni_ptr<NiPSysAgeDeathModifier>& adm,
+		const ni_ptr<NiPSysPositionModifier>& pm,
+		const ni_ptr<NiPSysBoundUpdateModifier>& bum,
+		const ni_ptr<NiPSysUpdateCtlr>& puc)
 		:
 		Field{ name },
 		m_sndr{ *this },
@@ -82,7 +82,7 @@ public:
 		else
 			m_admName.onSet(0);
 		adm->target.assign(m_psys);
-		m_psys->modifiers.insert(0, std::move(adm));
+		m_psys->modifiers.insert(0, adm);
 
 		assert(pm);
 		pm->order.addListener(m_pmName);
@@ -91,7 +91,7 @@ public:
 		else
 			m_pmName.onSet(1);
 		pm->target.assign(m_psys);
-		m_psys->modifiers.insert(1, std::move(pm));
+		m_psys->modifiers.insert(1, pm);
 
 		assert(bum);
 		bum->order.addListener(m_bumName);
@@ -100,14 +100,14 @@ public:
 		else
 			m_bumName.onSet(2);
 		bum->target.assign(m_psys);
-		m_psys->modifiers.insert(2, std::move(bum));
+		m_psys->modifiers.insert(2, bum);
 
 		//Should we require controllers to also be cleared?
 		//Should we move the update controller to last? Do we care?
 		if (int pos = m_psys->controllers.find(puc.get()); pos >= 0)
 			m_psys->controllers.erase(pos);
 		puc->target.assign(m_psys);
-		m_psys->controllers.insert(m_psys->controllers.size(), std::move(puc));
+		m_psys->controllers.insert(m_psys->controllers.size(), puc);
 
 		connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
 	}
@@ -234,13 +234,13 @@ private:
 
 
 node::ParticleSystem::ParticleSystem(
-	ni_ptr<NiParticleSystem>&& psys,
-	ni_ptr<NiPSysData>&& data,
-	ni_ptr<NiAlphaProperty>&& alpha,
-	ni_ptr<NiPSysAgeDeathModifier>&& adm,
-	ni_ptr<NiPSysBoundUpdateModifier>&& bum,
-	ni_ptr<NiPSysPositionModifier>&& pm,
-	ni_ptr<NiPSysUpdateCtlr>&& ctlr) :
+	const ni_ptr<NiParticleSystem>& psys,
+	const ni_ptr<NiPSysData>& data,
+	const ni_ptr<NiAlphaProperty>& alpha,
+	const ni_ptr<NiPSysAgeDeathModifier>& adm,
+	const ni_ptr<NiPSysBoundUpdateModifier>& bum,
+	const ni_ptr<NiPSysPositionModifier>& pm,
+	const ni_ptr<NiPSysUpdateCtlr>& ctlr) :
 	AVObject{ psys },
 	m_subtexLsnr{ make_ni_ptr(data, &NiPSysData::subtexOffsets) },
 	m_subtexCount{ std::make_shared<Property<SubtextureCount>>() }
@@ -295,10 +295,10 @@ node::ParticleSystem::ParticleSystem(
 		*this,
 		psys,
 		data,
-		std::move(adm),
-		std::move(pm),
-		std::move(bum),
-		std::move(ctlr));
+		adm,
+		pm,
+		bum,
+		ctlr);
 
 	//until we have some other way to determine connector position for loading placement
 	getField(PARENT)->connector->setTranslation({ 0.0f, 62.0f });

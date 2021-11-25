@@ -142,7 +142,7 @@ struct util::property_traits<PaletteTexField*>
 };
 
 
-node::EffectShader::EffectShader(ni_ptr<nif::BSEffectShaderProperty>&& obj)
+node::EffectShader::EffectShader(const ni_ptr<nif::BSEffectShaderProperty>& obj)
 {
 	assert(obj);
 

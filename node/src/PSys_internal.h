@@ -15,24 +15,23 @@ namespace node
 	{
 	public:
 		std::unique_ptr<ParticleSystem> create(File& file,
-			ni_ptr<NiParticleSystem>&& psys = ni_ptr<NiParticleSystem>(),
-			ni_ptr<NiPSysData>&& data = ni_ptr<NiPSysData>(),
-			ni_ptr<NiAlphaProperty>&& alpha = ni_ptr<NiAlphaProperty>(),
-			ni_ptr<NiPSysAgeDeathModifier>&& adm = ni_ptr<NiPSysAgeDeathModifier>(),
-			ni_ptr<NiPSysBoundUpdateModifier>&& bum = ni_ptr<NiPSysBoundUpdateModifier>(),
-			ni_ptr<NiPSysPositionModifier>&& pm = ni_ptr<NiPSysPositionModifier>(),
-			ni_ptr<NiPSysUpdateCtlr>&& ctlr = ni_ptr<NiPSysUpdateCtlr>())
+			ni_ptr<NiParticleSystem> psys = ni_ptr<NiParticleSystem>(),
+			ni_ptr<NiPSysData> data = ni_ptr<NiPSysData>(),
+			ni_ptr<NiAlphaProperty> alpha = ni_ptr<NiAlphaProperty>(),
+			ni_ptr<NiPSysAgeDeathModifier> adm = ni_ptr<NiPSysAgeDeathModifier>(),
+			ni_ptr<NiPSysBoundUpdateModifier> bum = ni_ptr<NiPSysBoundUpdateModifier>(),
+			ni_ptr<NiPSysPositionModifier> pm = ni_ptr<NiPSysPositionModifier>(),
+			ni_ptr<NiPSysUpdateCtlr> ctlr = ni_ptr<NiPSysUpdateCtlr>())
 		{
 			if (!psys) {
 				psys = file.create<NiParticleSystem>();
 				if (!psys)
 					throw std::runtime_error("Failed to create NiParticleSystem");
+
+				setDefaults(*psys);
+				static int n = 0;
+				psys->name.set(std::string("ParticleSystem") + std::to_string(++n));
 			}
-
-			setDefaults(*psys);
-
-			static int n = 0;
-			psys->name.set(std::string("ParticleSystem") + std::to_string(++n));
 
 			if (!data) {
 				data = file.create<nif::NiPSysData>();
@@ -90,8 +89,7 @@ namespace node
 				ctlr->stopTime.set(DEFAULT_STOPTIME);
 			}
 
-			return std::make_unique<ParticleSystem>(std::move(psys), std::move(data), 
-				std::move(alpha), std::move(adm), std::move(bum), std::move(pm), std::move(ctlr));
+			return std::make_unique<ParticleSystem>(psys, data, alpha, adm, bum, pm, ctlr);
 		}
 	};
 }

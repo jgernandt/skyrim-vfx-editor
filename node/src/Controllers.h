@@ -55,7 +55,7 @@ namespace node
 	class FloatController final : public NodeBase
 	{
 	public:
-		FloatController(ni_ptr<NiFloatInterpolator>&& iplr, ni_ptr<NiFloatData>&& data);
+		FloatController(const ni_ptr<NiFloatInterpolator>& iplr, const ni_ptr<NiFloatData>& data);
 		~FloatController();
 
 		FlagSet<ControllerFlags>& flags() { return m_ctlr->flags; }

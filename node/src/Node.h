@@ -43,7 +43,7 @@ namespace node
 	class Node final : public NodeShared
 	{
 	public:
-		Node(ni_ptr<NiNode>&& obj);
+		Node(const ni_ptr<NiNode>& obj);
 		~Node();
 
 		constexpr static float WIDTH = 150.0f;
@@ -53,7 +53,7 @@ namespace node
 	class Root final : public NodeShared
 	{
 	public:
-		Root(ni_ptr<NiNode>&& obj);
+		Root(const ni_ptr<NiNode>& obj);
 		~Root();
 
 		constexpr static float WIDTH = 150.0f;

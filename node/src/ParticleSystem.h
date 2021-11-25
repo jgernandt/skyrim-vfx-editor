@@ -27,13 +27,13 @@ namespace node
 	{
 	public:
 		ParticleSystem(
-			ni_ptr<NiParticleSystem>&& psys,
-			ni_ptr<NiPSysData>&& data,
-			ni_ptr<NiAlphaProperty>&& alpha,
-			ni_ptr<NiPSysAgeDeathModifier>&& adm,
-			ni_ptr<NiPSysBoundUpdateModifier>&& bum,
-			ni_ptr<NiPSysPositionModifier>&& pm,
-			ni_ptr<NiPSysUpdateCtlr>&& ctlr);
+			const ni_ptr<NiParticleSystem>& psys,
+			const ni_ptr<NiPSysData>& data,
+			const ni_ptr<NiAlphaProperty>& alpha,
+			const ni_ptr<NiPSysAgeDeathModifier>& adm,
+			const ni_ptr<NiPSysBoundUpdateModifier>& bum,
+			const ni_ptr<NiPSysPositionModifier>& pm,
+			const ni_ptr<NiPSysUpdateCtlr>& ctlr);
 
 		~ParticleSystem();
 

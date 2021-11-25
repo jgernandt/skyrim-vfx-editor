@@ -422,7 +422,7 @@ private:
 	Limiter<std::greater_equal<float>> m_a2EndGr;
 };
 
-node::SimpleColourModifier::SimpleColourModifier(ni_ptr<BSPSysSimpleColorModifier>&& obj) :
+node::SimpleColourModifier::SimpleColourModifier(const ni_ptr<BSPSysSimpleColorModifier>& obj) :
 	Modifier(obj)
 {
 	setSize({ WIDTH, HEIGHT });

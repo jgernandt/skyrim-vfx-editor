@@ -48,7 +48,7 @@ namespace node
 	class PlanarForceField final : public GravityModifier
 	{
 	public:
-		PlanarForceField(ni_ptr<NiPSysGravityModifier>&& obj);
+		PlanarForceField(const ni_ptr<NiPSysGravityModifier>& obj);
 		~PlanarForceField();
 
 		constexpr static const char* GRAVITY_AXIS = "Direction";
@@ -64,7 +64,7 @@ namespace node
 	class SphericalForceField final : public GravityModifier
 	{
 	public:
-		SphericalForceField(ni_ptr<NiPSysGravityModifier>&& obj);
+		SphericalForceField(const ni_ptr<NiPSysGravityModifier>& obj);
 		~SphericalForceField();
 
 		constexpr static float WIDTH = 150.0f;
