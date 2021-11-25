@@ -203,7 +203,7 @@ namespace nodes
 			Assert::IsTrue(psys->controllers.at(1)->type() == NiPSysUpdateCtlr::TYPE);
 		}
 
-		TEST_METHOD(Shader)
+		TEST_METHOD(Connector_Shader)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiParticleSystem>();
@@ -212,7 +212,7 @@ namespace nodes
 
 		//Modifiers should send Modifiable, single connector.
 		//Split into smaller tests! We're testing *everything* here.
-		TEST_METHOD(Modifiers)
+		TEST_METHOD(Connector_Modifiers)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiParticleSystem>();

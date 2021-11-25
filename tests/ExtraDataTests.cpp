@@ -1,58 +1,27 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "CommonTests.h"
-#include "Mocks.h"
-#include "nodes.h"
+#include "nodes_internal.h"
 
-#include "Constructor.h"
-
-namespace nif
+namespace nodes
 {
-	TEST_CLASS(ExtraDataTests)
-	{
-	public:
-		TEST_METHOD(Name)
-		{
-			File file{ File::Version::SKYRIM_SE };
-			std::shared_ptr<NiExtraData> obj = file.create<NiStringExtraData>();
-			Assert::IsNotNull(obj.get());
+	using namespace nif;
 
-			StringPropertyTest(obj->name());
-		}
-	};
-
-	TEST_CLASS(StringExtraDataTests)
+	TEST_CLASS(ExtraData)
 	{
 	public:
 
-		TEST_METHOD(Value)
-		{
-			File file{ File::Version::SKYRIM_SE };
-			auto obj = file.create<NiStringExtraData>();
-			Assert::IsNotNull(obj.get());
-
-			StringPropertyTest(obj->value());
-		}
-	};
-}
-
-
-namespace node
-{
-	TEST_CLASS(ExtraDataTests)
-	{
-	public:
-
-		//Target should receive ISet<NiExtraData> (multi)
+		//Target should receive Set<NiExtraData> (multi)
 		TEST_METHOD(Target)
 		{
-			nif::File file{ nif::File::Version::SKYRIM_SE };
-			std::unique_ptr<ExtraData> node = std::make_unique<StringData>(file);
-			nif::NiExtraData& obj = node->object();
-			SetReceiverTest(ExtraData::TARGET, true, std::move(node), obj);
+			File file{ File::Version::SKYRIM_SE };
+			auto obj = file.create<NiExtraData>();
+			SetReceiverTest(std::make_unique<node::DummyExtraData>(obj), *obj, node::ExtraData::TARGET, true);
 		}
 	};
 
+	/* Should be a specialisation of the creation test
+	* 
 	TEST_CLASS(StringExtraDataTests)
 	{
 	public:
@@ -141,4 +110,5 @@ namespace node
 			Assert::IsTrue(n1->getNative().GetExtraData().size() == 2);
 		}
 	};
+	*/
 }

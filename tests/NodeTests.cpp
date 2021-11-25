@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "nodes.h"
+#include "nodes_internal.h"
 #include "CommonTests.h"
 
 namespace nodes
@@ -11,7 +11,7 @@ namespace nodes
 	{
 	public:
 
-		TEST_METHOD(Extra_data)
+		TEST_METHOD(Connector_Extra_data)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiNode>();
@@ -23,7 +23,7 @@ namespace nodes
 	{
 	public:
 
-		TEST_METHOD(Parent)
+		TEST_METHOD(Connector_Parent)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiAVObject>();
@@ -35,14 +35,14 @@ namespace nodes
 	{
 	public:
 
-		TEST_METHOD(References)
+		TEST_METHOD(Connector_References)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiNode>();
 			AssignableReceiverTest(std::make_unique<node::Node>(obj), *obj, node::Node::OBJECT, true);
 		}
 
-		TEST_METHOD(Children)
+		TEST_METHOD(Connector_Children)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiNode>();
