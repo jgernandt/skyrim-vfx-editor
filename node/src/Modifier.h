@@ -36,7 +36,7 @@ namespace node
 	public:
 		virtual ~Modifier();
 
-		void addUnknownController(ni_ptr<NiPSysModifierCtlr>&& ctlr);
+		void addController(const ni_ptr<NiPSysModifierCtlr>& ctlr);
 
 	public:
 		constexpr static const char* TARGET = "Target";
@@ -114,9 +114,6 @@ namespace node
 		//Name should always match our order, to ensure local uniqueness
 		NameUpdater m_nameUpdater;
 
-		//We will manage any unknown controller
-		std::vector<ni_ptr<NiPSysModifierCtlr>> m_unknownCtlrs;
-
 		std::unique_ptr<Field> m_targetField;
 		std::unique_ptr<Field> m_nextField;
 	};
@@ -125,7 +122,9 @@ namespace node
 	class DummyModifier final : public Modifier
 	{
 	public:
-		DummyModifier(ni_ptr<NiPSysModifier>&& obj);
+		using default_object = NiPSysModifier;
+
+		DummyModifier(const ni_ptr<NiPSysModifier>& obj);
 		~DummyModifier();
 
 		constexpr static float WIDTH = 150.0f;

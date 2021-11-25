@@ -42,12 +42,10 @@ node::Modifier::~Modifier()
 {
 }
 
-void node::Modifier::addUnknownController(ni_ptr<nif::NiPSysModifierCtlr>&& ctlr)
+void node::Modifier::addController(const ni_ptr<nif::NiPSysModifierCtlr>& ctlr)
 {
-	if (ctlr) {
+	if (ctlr)
 		m_device.addController(ctlr);
-		m_unknownCtlrs.push_back(std::move(ctlr));
-	}
 }
 
 
@@ -168,7 +166,7 @@ node::Modifier::NextModField::NextModField(const std::string& name, Modifier& no
 }
 
 
-node::DummyModifier::DummyModifier(ni_ptr<nif::NiPSysModifier>&& obj) :
+node::DummyModifier::DummyModifier(const ni_ptr<nif::NiPSysModifier>& obj) :
 	Modifier(std::move(obj))
 {
 	setTitle("Unknown modifier");
