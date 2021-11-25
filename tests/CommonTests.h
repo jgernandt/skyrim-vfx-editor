@@ -2,9 +2,8 @@
 #include <random>
 #include "CppUnitTest.h"
 #include "ConnectionHandler.h"
-#include "DeviceImpl.h"
+#include "node_devices.h"
 #include "NodeBase.h"
-#include "Mocks.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -30,758 +29,6 @@ T* findNode(const std::vector<std::unique_ptr<node::NodeBase>>& nodes, const nif
 	}
 	return nullptr;
 }
-
-//Test that an Assignable can in fact be assigned to.
-//Requires a function object that produces objects of type T.
-template<typename T, typename FactoryType>
-void AssignableTest(IObservable<IAssignable<T>>& ass, FactoryType& factory)
-{
-	struct Listener : nif::AssignableListener<T>
-	{
-		virtual void onAssign(T* t) 
-		{
-			signalled = true;
-			assigned = t;
-		}
-
-		bool wasAssigned(T* t)
-		{
-			bool result = signalled && assigned == t;
-			signalled = false;
-			assigned = nullptr;
-			return result;
-		}
-
-	private:
-		bool signalled{ false };
-		T* assigned{ nullptr };
-	};
-
-	Listener l;
-	ass.addListener(l);
-
-	std::shared_ptr<T> o1 = factory();
-	Assert::IsNotNull(o1.get());
-	Assert::IsFalse(ass.isAssigned(o1.get()));
-
-	ass.assign(o1.get());
-	Assert::IsTrue(ass.isAssigned(o1.get()));
-	Assert::IsTrue(l.wasAssigned(o1.get()));
-
-	//Should we require that reassigning the same object does not call the listener?
-
-	std::shared_ptr<T> o2 = factory();
-	Assert::IsNotNull(o2.get());
-	Assert::IsFalse(ass.isAssigned(o2.get()));
-
-	ass.assign(o2.get());
-	Assert::IsFalse(ass.isAssigned(o1.get()));
-	Assert::IsTrue(ass.isAssigned(o2.get()));
-	Assert::IsTrue(l.wasAssigned(o2.get()));
-
-	ass.assign(nullptr);
-	Assert::IsFalse(ass.isAssigned(o2.get()));
-	Assert::IsTrue(l.wasAssigned(nullptr));
-
-	ass.removeListener(l);
-	ass.assign(o2.get());
-	Assert::IsFalse(l.wasAssigned(o2.get()));
-	ass.assign(nullptr);
-
-}
-
-//Test that flags can indeed be set and cleared without affecting one another
-template<typename T>
-void FlagTest(nif::FlagSet<T>& set, std::vector<T> flags)
-{
-	//Require that no flags are set (not really an error, but makes the test easier)
-	for (auto&& flag : flags)
-		Assert::IsFalse(set.isSet(flag));
-
-	//Raise each flag, check that no other flag is affected
-	for (auto it = flags.begin(); it != flags.end(); ++it) {
-		set.set(*it, true);
-		Assert::IsTrue(set.isSet(*it));
-
-		auto other = flags.begin();
-		for (; other != it; ++other) {
-			Assert::IsTrue(set.isSet(*other));
-		}
-		for (++other; other != flags.end(); ++other) {
-			Assert::IsFalse(set.isSet(*other));
-		}
-	}
-
-	//Clear each flag, check that no other flag is affected
-	for (auto it = flags.begin(); it != flags.end(); ++it) {
-		set.set(*it, false);
-		Assert::IsFalse(set.isSet(*it));
-
-		auto other = flags.begin();
-		for (; other != it; ++other) {
-			Assert::IsFalse(set.isSet(*other));
-		}
-		for (++other; other != flags.end(); ++other) {
-			Assert::IsTrue(set.isSet(*other));
-		}
-	}
-}
-
-//Test that a Property can in fact be read from and written to
-template<typename T, typename GeneratorType>
-void PropertyTest(
-	IObservable<IProperty<T>>& prop,
-	GeneratorType& g, 
-	typename util::array_traits<T>::element_type relTol = typename util::array_traits<T>::element_type(), 
-	bool positive = true, 
-	int n_tests = 3)
-{
-	using PropertyType = IObservable<IProperty<T>>;
-	using ElementType = typename util::array_traits<T>::element_type;
-
-	struct Listener : IListener<IProperty<T>>
-	{
-		virtual void onSet(const T& t) override
-		{
-			m_signalled = true;
-		}
-
-		bool wasSet()
-		{
-			//Only check if we were called, until I can be bothered to deal with the elementwise comparison with error tolerance
-			bool result = m_signalled;
-			m_signalled = false;
-			return result;
-		}
-
-	private:
-		bool m_signalled{ false };
-	};
-
-	Listener l;
-	prop.addListener(l);
-	//Assert::IsTrue(l.wasSet());//no longer expected!
-
-	if constexpr (std::is_same<ElementType, bool>::value) {
-
-		if (util::array_traits<T>::size == 1) {
-			//Just try setting both ways
-			bool start = prop.get();
-
-			prop.set(!start);
-			Assert::IsTrue((prop.get() == !start) == positive);
-			Assert::IsTrue(l.wasSet());
-
-			prop.set(start);
-			Assert::IsTrue((prop.get() == start) == positive);
-			Assert::IsTrue(l.wasSet());
-
-			//Resetting should not call listener
-			prop.set(start);
-			Assert::IsFalse(l.wasSet());
-		}
-		else {
-			//Try random values
-			std::uniform_int_distribution<int> D(0, 1);//bool not defined
-
-			for (int i = 0; i < n_tests; i++) {
-
-				//Populate a random T (can be an array type)
-				T exp;
-				for (size_t j = 0; j < util::array_traits<T>::size; j++)
-					util::array_traits<T>::at(exp, j) = static_cast<bool>(D(g));
-
-				prop.set(exp);
-
-				T act = prop.get();
-				//Compare elementwise
-				for (size_t j = 0; j < util::array_traits<T>::size; j++) {
-					ElementType act_j = util::array_traits<T>::at(act, j);
-					ElementType exp_j = util::array_traits<T>::at(exp, j);
-					Assert::IsTrue((act_j == exp_j) == positive);
-				}
-				Assert::IsTrue(l.wasSet());
-				//Resetting should not call listener
-				prop.set(exp);
-				Assert::IsFalse(l.wasSet());
-			}
-		}
-	}
-	else if constexpr (std::is_integral<ElementType>::value) {
-
-		//sample on [0, std::numeric_limits<ElementType>::max()]
-		std::uniform_int_distribution<ElementType> D;
-
-		for (int i = 0; i < n_tests; i++) {
-
-			//Populate a random T (can be an array type)
-			T exp;
-			for (size_t j = 0; j < util::array_traits<T>::size; j++)
-				util::array_traits<T>::at(exp, j) = D(g);
-
-			prop.set(exp);
-
-			//Compare elementwise
-			T act = prop.get();
-			for (size_t j = 0; j < util::array_traits<T>::size; j++) {
-				ElementType act_j = util::array_traits<T>::at(act, j);
-				ElementType exp_j = util::array_traits<T>::at(exp, j);
-				Assert::IsTrue((act_j == exp_j) == positive);
-			}
-			Assert::IsTrue(l.wasSet());
-			//Resetting should not call listener
-			prop.set(exp);
-			Assert::IsFalse(l.wasSet());
-		}
-	}
-	else if constexpr (std::is_floating_point<ElementType>::value) {
-
-		//sample on [0, 1)
-		std::uniform_real_distribution<ElementType> D;
-
-		for (int i = 0; i < n_tests; i++) {
-
-			//Populate a random T (can be an array type)
-			T exp;
-			for (size_t j = 0; j < util::array_traits<T>::size; j++)
-				util::array_traits<T>::at(exp, j) = D(g);
-
-			prop.set(exp);
-
-			//Compare elementwise
-			T act = prop.get();
-			for (size_t j = 0; j < util::array_traits<T>::size; j++) {
-				ElementType act_j = util::array_traits<T>::at(act, j);
-				ElementType exp_j = util::array_traits<T>::at(exp, j);
-				if (positive)
-					Assert::AreEqual(act_j, exp_j, exp_j * relTol);
-				else
-					Assert::AreNotEqual(act_j, exp_j, exp_j * relTol);
-			}
-			Assert::IsTrue(l.wasSet());
-			//Resetting should not call listener (unless the actual value was different due to rounding)
-			if (exp == act) {
-				prop.set(exp);
-				Assert::IsFalse(l.wasSet());
-			}
-		}
-	}
-	else {
-		static_assert(false, "PropertyTest not defined for this type");
-	}
-
-	prop.removeListener(l);
-}
-
-template<typename T>
-void enumPropertyTest(IObservable<IProperty<T>>& prop, std::vector<T>&& values)
-{
-	static_assert(std::is_enum<T>::value);
-
-	class Listener final : public nif::PropertyListener<T>
-	{
-	public:
-		Listener(IObservable<IProperty<T>>& prop) : m_prop{ prop } { m_prop.addListener(*this); }
-		~Listener() { m_prop.removeListener(*this); }
-
-		virtual void onSet(const T& t) override
-		{
-			m_signalled = true;
-			m_last = t;
-		}
-
-		bool wasSet(T t)
-		{
-			bool result = m_signalled && m_last == t;
-			m_signalled = false;
-			m_last = T();
-			return result;
-		}
-
-	private:
-		IObservable<IProperty<T>>& m_prop;
-		T m_last{ T() };
-		bool m_signalled{ false };
-	};
-
-	Listener l(prop);
-
-	for (T val : values) {
-		prop.set(val);
-		Assert::IsTrue(prop.get() == val);
-		Assert::IsTrue(l.wasSet(val));
-
-		//Resetting should not call listener
-		prop.set(val);
-		Assert::IsFalse(l.wasSet(val));
-	}
-}
-
-inline void StringPropertyTest(IObservable<IProperty<std::string>>& p)
-{
-	//Good enough, I guess
-	constexpr const char* test = "agoansegiersnnvksd";
-
-	p.set(test);
-	Assert::IsTrue(p.get() == test);
-
-	p.set(std::string());
-	Assert::IsTrue(p.get() == std::string());
-}
-
-//Test that a Sequence does in fact insert and erase elements in the proper order.
-//Requires a function object that produces shared_ptr to objects of type T.
-template<typename T, typename FactoryType>
-void SequenceTest(IObservable<ISequence<T>>& seq, const FactoryType& factory)
-{
-	struct Listener : nif::SequenceListener<T>
-	{
-		virtual void onInsert(size_t pos)
-		{
-			m_inserted = pos;
-		}
-		virtual void onErase(size_t pos)
-		{
-			m_erased = pos;
-		}
-
-		//Return the index of the last call (-1 as unsigned if no call was received)
-		size_t wasInserted()
-		{
-			size_t result = m_inserted;
-			m_inserted = -1;
-			return result;
-		}
-
-		size_t wasErased()
-		{
-			size_t result = m_erased;
-			m_erased = -1;
-			return result;
-		}
-
-	private:
-		size_t m_inserted{ std::numeric_limits<size_t>::max() };
-		size_t m_erased{ std::numeric_limits<size_t>::max() };
-	};
-
-	Listener l;
-	seq.addListener(l);
-
-	//Our indices below assumes this. We could make it work in general, if we need to.
-	Assert::IsTrue(seq.size() == 0);
-
-	std::shared_ptr<T> o1 = factory();
-	Assert::IsNotNull(o1.get());
-	Assert::IsTrue(seq.find(*o1) == -1);
-
-	Assert::IsTrue(seq.insert(-1, *o1) == 0);
-	Assert::IsTrue(seq.find(*o1) == 0);
-	Assert::IsTrue(seq.size() == 1);
-	Assert::IsTrue(l.wasInserted() == 0);
-	Assert::IsTrue(l.wasErased() == -1);
-
-	std::shared_ptr<T> o2 = factory();
-	Assert::IsNotNull(o2.get());
-	Assert::IsTrue(seq.find(*o2) == -1);
-
-	Assert::IsTrue(seq.insert(-1, *o2) == 1);
-	Assert::IsTrue(seq.find(*o1) == 0);
-	Assert::IsTrue(seq.find(*o2) == 1);
-	Assert::IsTrue(seq.size() == 2);
-	Assert::IsTrue(l.wasInserted() == 1);
-	Assert::IsTrue(l.wasErased() == -1);
-
-	std::shared_ptr<T> o3 = factory();
-	Assert::IsNotNull(o3.get());
-	Assert::IsTrue(seq.find(*o3) == -1);
-
-	Assert::IsTrue(seq.insert(1, *o3) == 1);
-	Assert::IsTrue(seq.find(*o1) == 0);
-	Assert::IsTrue(seq.find(*o2) == 2);
-	Assert::IsTrue(seq.find(*o3) == 1);
-	Assert::IsTrue(seq.size() == 3);
-	Assert::IsTrue(l.wasInserted() == 1);
-	Assert::IsTrue(l.wasErased() == -1);
-
-	Assert::IsTrue(seq.erase(0) == 0);
-	Assert::IsTrue(seq.find(*o1) == -1);
-	Assert::IsTrue(seq.find(*o2) == 1);
-	Assert::IsTrue(seq.find(*o3) == 0);
-	Assert::IsTrue(seq.size() == 2);
-	Assert::IsTrue(l.wasInserted() == -1);
-	Assert::IsTrue(l.wasErased() == 0);
-
-	Assert::IsTrue(seq.insert(10, *o1) == 2);
-	Assert::IsTrue(seq.find(*o1) == 2);
-	Assert::IsTrue(seq.find(*o2) == 1);
-	Assert::IsTrue(seq.find(*o3) == 0);
-	Assert::IsTrue(seq.size() == 3);
-	Assert::IsTrue(l.wasInserted() == 2);
-	Assert::IsTrue(l.wasErased() == -1);
-
-	//Reinserting is a no-op, even if the position is different from the current.
-	Assert::IsTrue(seq.insert(0, *o2) == 1);
-	Assert::IsTrue(seq.find(*o1) == 2);
-	Assert::IsTrue(seq.find(*o2) == 1);
-	Assert::IsTrue(seq.find(*o3) == 0);
-	Assert::IsTrue(seq.size() == 3);
-	Assert::IsTrue(l.wasInserted() == -1);
-	Assert::IsTrue(l.wasErased() == -1);
-
-	Assert::IsTrue(seq.erase(2) == -1);
-	Assert::IsTrue(seq.size() == 2);
-	Assert::IsTrue(seq.erase(1) == -1);
-	Assert::IsTrue(seq.size() == 1);
-	Assert::IsTrue(seq.erase(0) == -1);
-	Assert::IsTrue(seq.size() == 0);
-
-	seq.removeListener(l);
-}
-
-//Test that a Set does in fact add and remove objects passed to it.
-//Requires a function object that produces shared_ptr to objects of type T.
-template<typename T, typename FactoryType>
-void SetTest(IObservable<ISet<T>>& set, const FactoryType& factory)
-{
-	struct Listener : nif::SetListener<T>
-	{
-		virtual void onAdd(const T& t)
-		{
-			m_added = &t;
-		}
-		virtual void onRemove(const T& t)
-		{
-			m_removed = &t;
-		}
-
-		//Return the address of the last added/removed item, if any
-		const T* wasAdded()
-		{
-			const T* result = m_added;
-			m_added = nullptr;
-			return result;
-		}
-
-		const T* wasRemoved()
-		{
-			const T* result = m_removed;
-			m_removed = nullptr;
-			return result;
-		}
-
-	private:
-		const T* m_added{ nullptr };
-		const T* m_removed{ nullptr };
-	};
-
-	Listener l;
-	set.addListener(l);
-
-	size_t initialSize = set.size();
-
-	std::shared_ptr<T> o1 = factory();
-	Assert::IsNotNull(o1.get());
-	Assert::IsFalse(set.has(*o1));
-
-	set.add(*o1);
-	Assert::IsTrue(set.has(*o1));
-	Assert::IsTrue(set.size() == initialSize + 1);
-	Assert::IsTrue(l.wasAdded() == o1.get());
-	Assert::IsTrue(l.wasRemoved() == nullptr);
-
-	std::shared_ptr<T> o2 = factory();
-	Assert::IsFalse(set.has(*o2));
-
-	set.add(*o2);
-	Assert::IsTrue(set.has(*o1));
-	Assert::IsTrue(set.has(*o2));
-	Assert::IsTrue(set.size() == initialSize + 2);
-	Assert::IsTrue(l.wasAdded() == o2.get());
-	Assert::IsTrue(l.wasRemoved() == nullptr);
-
-	//Re-adding should do nothing
-	set.add(*o2);
-	Assert::IsTrue(set.has(*o1));
-	Assert::IsTrue(set.has(*o2));
-	Assert::IsTrue(set.size() == initialSize + 2);
-	Assert::IsTrue(l.wasAdded() == nullptr);
-	Assert::IsTrue(l.wasRemoved() == nullptr);
-
-	set.remove(*o1);
-	Assert::IsFalse(set.has(*o1));
-	Assert::IsTrue(set.has(*o2));
-	Assert::IsTrue(set.size() == initialSize + 1);
-	Assert::IsTrue(l.wasAdded() == nullptr);
-	Assert::IsTrue(l.wasRemoved() == o1.get());
-
-	//Re-removing should do nothing
-	set.remove(*o1);
-	Assert::IsFalse(set.has(*o1));
-	Assert::IsTrue(set.has(*o2));
-	Assert::IsTrue(set.size() == initialSize + 1);
-	Assert::IsTrue(l.wasAdded() == nullptr);
-	Assert::IsTrue(l.wasRemoved() == nullptr);
-
-	set.remove(*o2);
-	Assert::IsFalse(set.has(*o2));
-	Assert::IsTrue(set.size() == initialSize);
-	Assert::IsTrue(l.wasAdded() == nullptr);
-	Assert::IsTrue(l.wasRemoved() == o2.get());
-
-	set.removeListener(l);
-}
-
-
-//Test a vector property. Requires an overload of operator== for type T.
-//Requires a function object that generates T's for testing.
-template<typename T, typename GeneratorType>
-void VectorPropertyTest(IObservable<IVectorProperty<T>>& list, GeneratorType generator)
-{
-	class Listener : public nif::VectorPropertyListener<T>
-	{
-	public:
-		Listener(IObservable<IVectorProperty<T>>& list) : m_list{ list } { m_list.addListener(*this); }
-		~Listener() { m_list.removeListener(*this); }
-
-		virtual void onSet(int i, const T& t) override { m_lastI = i; m_lastT = t; }
-		virtual void onInsert(int i) override { m_lastInsert = i; }
-		virtual void onErase(int i) override { m_lastErase = i; }
-
-		//check if any value or a given value was set
-		bool wasSet()
-		{
-			bool result = m_lastI != -1;
-			m_lastT = T();
-			m_lastI = -1;
-			return result;
-		}
-		bool wasSet(int i, const T& t)
-		{
-			bool result = m_lastI == i && m_lastT == t;
-			m_lastT = T();
-			m_lastI = -1;
-			return result;
-		}
-		bool wasInserted(int i)
-		{
-			bool result = i == m_lastInsert;
-			m_lastInsert = -1;
-			return result;
-		}
-		bool wasErased(int i)
-		{
-			bool result = i == m_lastErase;
-			m_lastErase = -1;
-			return result;
-		}
-
-	private:
-		IObservable<IVectorProperty<T>>& m_list;
-		const std::vector<T>* m_lastCtnr{ nullptr };
-		T m_lastT{ T() };
-		int m_lastI{ -1 };
-		int m_lastInsert{ -1 };
-		int m_lastErase{ -1 };
-	};
-
-	/*class ElementListener final : public nif::PropertyListener<T>
-	{
-	public:
-		ElementListener() {}
-		~ElementListener() = default;
-		virtual void onSet(const T& t) override
-		{
-			m_signalled = true;
-			m_last = t;
-		}
-
-		//check if any value or a given value was set
-		bool wasSet()
-		{
-			bool result = m_signalled;
-			m_signalled = false;
-			m_last = T();
-			return result;
-		}
-		bool wasSet(T t)
-		{
-			bool result = m_signalled && m_last == t;
-			m_signalled = false;
-			m_last = T();
-			return result;
-		}
-
-	private:
-		T m_last{ T() };
-		bool m_signalled{ false };
-	};*/
-
-	constexpr int SIZE = 10;
-	constexpr int SIZE_LARGE = 13;
-	constexpr int SIZE_SMALL = 7;
-	list.set(std::vector<T>(SIZE));
-
-	Listener l(list);
-
-	//Generate a reference container
-	std::vector<T> container(SIZE);
-	for (T& element : container)
-		element = generator();
-
-	//create element properties
-	//std::vector<typename IVectorProperty<T>::element> elements;
-	//std::array<ElementListener, SIZE> lsnrs;
-
-	//elements.reserve(SIZE);
-	//for (int i = 0; i < SIZE; i++) {
-	//	elements.push_back(list.at(i));
-	//	elements[i].addListener(lsnrs[i]);
-	//	Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
-	//}
-
-	//get/set element
-	int i = 0;
-	for (T& element : container) {
-		list.set(i, element);
-		Assert::IsTrue(l.wasSet(i, element));
-		i++;
-	}
-
-	//Verify after setting every element, in case someone sets multiple
-	Assert::IsTrue(list.get() == container);
-	i = 0;
-	for (T& element : container) {
-		Assert::IsTrue(list.get(i) == element);
-		//Assert::IsTrue(elements[i].get() == element);
-
-		//Assert::IsTrue(lsnrs[i].wasSet(element));
-
-		i++;
-	}
-	//resetting should not call listeners
-	i = 0;
-	for (T& element : container) {
-		list.set(i, element);
-		Assert::IsFalse(l.wasSet());
-		//Assert::IsFalse(lsnrs[i].wasSet(element));
-		i++;
-	}
-
-	//set through element property (same procedure)
-	/*i = 0;
-	for (T& element : container) {
-		element = generator();
-		elements[i].set(element);
-		Assert::IsTrue(l.wasSet(i, element));
-		i++;
-	}
-
-	Assert::IsTrue(list.get() == container);
-	i = 0;
-	for (T& element : container) {
-		Assert::IsTrue(list.get(i) == element);
-		Assert::IsTrue(elements[i].get() == element);
-
-		Assert::IsTrue(lsnrs[i].wasSet(element));
-
-		i++;
-	}
-	//resetting should not call listeners
-	i = 0;
-	for (T& element : container) {
-		elements[i].set(element);
-		Assert::IsFalse(l.wasSet(i, element));
-		Assert::IsFalse(lsnrs[i].wasSet(element));
-		i++;
-	}*/
-
-	//insert/erase
-	//std::vector<IVectorProperty<T>::element> newElements;
-	//std::array<ElementListener, SIZE + 1> newLsnrs;
-
-	//newElements.reserve(SIZE + 1);
-	typename std::vector<T>::iterator it = container.begin();
-	for (int i = 0; i < SIZE + 1; i++) {
-		//generate a new element
-		T t = generator();
-
-		//insert in list and reference
-		int inserted = list.insert(i, t);
-		it = container.insert(it, t);
-
-		Assert::IsTrue(list.get() == container);
-		Assert::IsTrue(l.wasInserted(i));
-		Assert::IsTrue(inserted == i);
-
-		//newElements.push_back(list.at(inserted));
-		//newElements[i].addListener(newLsnrs[i]);
-		//Assert::IsTrue(newLsnrs[i].wasSet(newElements[i].get()));
-
-		//and erase
-		int next = list.erase(inserted);
-		it = container.erase(it);
-
-		Assert::IsTrue(list.get() == container);
-		Assert::IsTrue(l.wasErased(i));
-		Assert::IsTrue(next == i);
-
-		if (it != container.end())
-			++it;
-	}
-
-	//get/set larger container
-	container.resize(SIZE_LARGE);
-	for (T& element : container)
-		element = generator();
-
-	list.set(container);
-	Assert::IsTrue(list.get() == container);
-	Assert::IsTrue(l.wasSet());
-	Assert::IsTrue(l.wasInserted(SIZE_LARGE - 1));
-
-	//element listeners should have been called
-	//for (int i = 0; i < SIZE; i++)
-	//	Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
-
-	//resetting should not call listeners
-	list.set(container);
-	Assert::IsFalse(l.wasSet());
-	//for (int i = 0; i < SIZE; i++)
-	//	Assert::IsFalse(lsnrs[i].wasSet(list.get(i)));
-
-	//get/set smaller container
-	container.resize(SIZE_SMALL);
-	for (T& element : container)
-		element = generator();
-
-	list.set(container);
-	Assert::IsTrue(list.get() == container);
-	Assert::IsTrue(l.wasSet());
-	Assert::IsTrue(l.wasErased(SIZE_SMALL));
-
-	//element listeners that were not erased should have been called
-	/*for (int i = 0; i < SIZE_SMALL; i++)
-		Assert::IsTrue(lsnrs[i].wasSet(list.get(i)));
-
-	//erased elements should not have been called (test for any value here)
-	for (int i = SIZE_SMALL; i < SIZE; i++)
-		Assert::IsFalse(lsnrs[i].wasSet());
-	for (int i = 0; i < SIZE + 1; i++)
-		Assert::IsFalse(newLsnrs[i].wasSet());
-
-	//and setting through them should fail silently without calling anyone
-	T t = generator();
-	for (int i = 0; i < SIZE + 1; i++)
-		newElements[i].set(t);
-	Assert::IsTrue(list.get() == container);
-	for (int i = 0; i < SIZE_SMALL; i++)
-		Assert::IsFalse(lsnrs[i].wasSet(list.get(i)));
-	for (int i = 0; i < SIZE + 1; i++)
-		Assert::IsFalse(newLsnrs[i].wasSet());//test for any value here
-		*/
-}
-
 
 inline bool areConnected(gui::Connector* c1, gui::Connector* c2)
 {
@@ -930,99 +177,78 @@ private:
 	std::map<void*, gui::Connector*> m_connectors;
 };
 
-template<typename NodeType, typename AssType>
-void AssignableReceiverTest(const std::string& field, bool multi, std::unique_ptr<NodeType>&& node, AssType* exp)
+namespace connectors
 {
-	MockAssignable<AssType> target1;
-	MockAssignable<AssType> target2;
-	ConnectorTester<NodeType> tester(std::move(node));
+	using namespace nif;
 
-	tester.tryConnect<void, IAssignable<AssType>>(field, multi, &target1);
-	tester.tryConnect<void, IAssignable<AssType>>(field, multi, &target2);
+	//Test that the node's connector responds to a signal by assigning the expected object to the sender
+	template<typename NodeType, typename RefType>
+	void AssignableReceiverTest(std::unique_ptr<NodeType>&& node, RefType& expected, 
+		const std::string& connector, bool multi)
+	{
+		Assignable<RefType> target1;
+		Assignable<RefType> target2;
+		ConnectorTester<NodeType> tester(std::move(node));
 
-	Assert::IsTrue(target1.isAssigned(exp) == multi);
-	Assert::IsTrue(target2.isAssigned(exp));
+		tester.tryConnect<void, Assignable<RefType>>(connector, multi, &target1);
+		tester.tryConnect<void, Assignable<RefType>>(connector, multi, &target2);
 
-	if (multi) {
-		tester.disconnect<IAssignable<AssType>>(&target1);
-		Assert::IsFalse(target1.isAssigned(exp));
+		Assert::IsTrue((target1.assigned() == &expected) == multi);
+		Assert::IsTrue(target2.assigned() == &expected);
+
+		if (multi) {
+			tester.disconnect<Assignable<RefType>>(&target1);
+			Assert::IsFalse(target1.assigned() == &expected);
+		}
+
+		tester.disconnect<Assignable<RefType>>(&target2);
+		Assert::IsFalse(target2.assigned() == &expected);
 	}
 
-	tester.disconnect<IAssignable<AssType>>(&target2);
-	Assert::IsFalse(target2.isAssigned(exp));
-}
-
-template<typename NodeType, typename AssType, typename FactoryType>
-void AssignableSenderTest(const std::string& field, bool multi, std::unique_ptr<NodeType>&& node, IAssignable<AssType>& target, const FactoryType& factory)
-{
-	ConnectorTester<NodeType> tester(std::move(node));
-	tester.tryConnect<IAssignable<AssType>, void>(field, multi, nullptr);
-	auto ifc = tester.tryConnect<IAssignable<AssType>, void>(field, multi, nullptr);
-	Assert::IsNotNull(ifc);
-
-	std::shared_ptr<AssType> obj1 = factory();
-	ifc->assign(obj1.get());
-	Assert::IsTrue(target.isAssigned(obj1.get()));
-
-	std::shared_ptr<AssType> obj2 = factory();
-	ifc->assign(obj2.get());
-	Assert::IsFalse(target.isAssigned(obj1.get()));
-	Assert::IsTrue(target.isAssigned(obj2.get()));
-
-	ifc->assign(nullptr);
-	Assert::IsFalse(target.isAssigned(obj2.get()));
-}
-
-template<typename NodeType, typename SetType>
-void SetReceiverTest(const std::string& field, bool multi, std::unique_ptr<NodeType>&& node, SetType& exp)
-{
-	MockSet<SetType> target1;
-	MockSet<SetType> target2;
-	ConnectorTester<NodeType> tester(std::move(node));
-
-	tester.tryConnect<void, ISet<SetType>>(field, multi, &target1);
-	tester.tryConnect<void, ISet<SetType>>(field, multi, &target2);
-
-	Assert::IsTrue(target1.has(exp) == multi);
-	Assert::IsTrue(target2.has(exp));
-
-	if (multi) {
-		tester.disconnect<ISet<SetType>>(&target1);
-		Assert::IsFalse(target1.has(exp));
+	//Test that the node exposes the expected Assignable through the given connector
+	template<typename NodeType, typename RefType>
+	void AssignableSenderTest(std::unique_ptr<NodeType>&& node, Assignable<RefType>& expected, 
+		const std::string& connector, bool multi)
+	{
+		ConnectorTester<NodeType> tester(std::move(node));
+		tester.tryConnect<Assignable<RefType>, void>(connector, multi, nullptr);
+		auto ifc = tester.tryConnect<Assignable<RefType>, void>(connector, multi, nullptr);
+		Assert::IsTrue(ifc == &expected);
 	}
 
-	tester.disconnect<ISet<SetType>>(&target2);
-	Assert::IsFalse(target2.has(exp));
+	//Test that the node's connector responds to a signal by adding the expected object to the sender
+	template<typename NodeType, typename ElementType>
+	void SetReceiverTest(std::unique_ptr<NodeType>&& node, ElementType& expected, 
+		const std::string& connector, bool multi)
+	{
+		Set<ElementType> target1;
+		Set<ElementType> target2;
+		ConnectorTester<NodeType> tester(std::move(node));
+
+		tester.tryConnect<void, Set<ElementType>>(connector, multi, &target1);
+		tester.tryConnect<void, Set<ElementType>>(connector, multi, &target2);
+
+		Assert::IsTrue(target1.has(&expected) == multi);
+		Assert::IsTrue(target2.has(&expected));
+
+		if (multi) {
+			tester.disconnect<Set<ElementType>>(&target1);
+			Assert::IsFalse(target1.has(&expected));
+		}
+
+		tester.disconnect<Set<ElementType>>(&target2);
+		Assert::IsFalse(target2.has(&expected));
+	}
+
+	//Test that the node exposes the expected Set through the given connector
+	template<typename NodeType, typename ElementType>
+	void SetSenderTest(std::unique_ptr<NodeType>&& node, Set<ElementType>& expected,
+		const std::string& connector, bool multi)
+	{
+		ConnectorTester<NodeType> tester(std::move(node));
+		tester.tryConnect<Set<ElementType>, void>(connector, multi, nullptr);
+		auto ifc = tester.tryConnect<Set<ElementType>, void>(connector, multi, nullptr);
+		Assert::IsTrue(ifc == &expected);
+	}
 }
 
-template<typename NodeType, typename SetType, typename FactoryType>
-void SetSenderTest(
-	const std::string& field, 
-	bool multi, 
-	std::unique_ptr<NodeType>&& node, 
-	ISet<SetType>& target, 
-	const FactoryType& factory)
-{
-	ConnectorTester<NodeType> tester(std::move(node));
-	tester.tryConnect<ISet<SetType>, void>(field, multi, nullptr);
-	auto ifc = tester.tryConnect<ISet<SetType>, void>(field, multi, nullptr);
-	Assert::IsNotNull(ifc);
-
-	std::shared_ptr<SetType> obj1 = factory();
-	Assert::IsNotNull(obj1.get());
-	ifc->add(*obj1);
-	Assert::IsTrue(target.has(*obj1));
-
-	std::shared_ptr<SetType> obj2 = factory();
-	Assert::IsNotNull(obj2.get());
-	ifc->add(*obj2);
-	Assert::IsTrue(target.has(*obj1));
-	Assert::IsTrue(target.has(*obj2));
-
-	ifc->remove(*obj1);
-	Assert::IsFalse(target.has(*obj1));
-	Assert::IsTrue(target.has(*obj2));
-
-	ifc->remove(*obj2);
-	Assert::IsFalse(target.has(*obj2));
-}
