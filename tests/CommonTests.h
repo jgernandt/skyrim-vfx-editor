@@ -177,7 +177,7 @@ private:
 	std::map<void*, gui::Connector*> m_connectors;
 };
 
-namespace connectors
+namespace nodes
 {
 	using namespace nif;
 
