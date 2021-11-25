@@ -124,16 +124,17 @@ namespace nif
 
 		const Niflib::Type* type = native ? &native->GetType() : &type_map<T>::type::TYPE;
 
-		do {
+		while (type) {
 			if (auto it = s_typeRegistry.find(std::hash<const Niflib::Type*>{}(type)); it != s_typeRegistry.end()) {
 				fcn = it->second;
 				break;
 			}
-			else {
-				assert(type != &type_map<T>::type::TYPE);//or we failed to register this type
+
+			if (type == &type_map<T>::type::TYPE)
+				break;
+			else
 				type = type->base_type;
-			}
-		} while (type != &type_map<T>::type::TYPE);
+		}
 
 		assert(fcn);
 
