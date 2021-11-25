@@ -26,7 +26,6 @@ namespace node
 	class RotationModifier final : public Modifier
 	{
 	public:
-		RotationModifier(File& file);
 		RotationModifier(ni_ptr<NiPSysRotationModifier>&& obj);
 		~RotationModifier();
 

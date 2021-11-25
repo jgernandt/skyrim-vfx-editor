@@ -21,17 +21,11 @@
 #include "style.h"
 #include "widget_types.h"
 
+#include "Emitters_internal.h"
+
 using namespace nif;
 
 constexpr float VAR_FRACTION = -0.5f;
-constexpr ControllerFlags DEFAULT_FLAGS = 72;
-constexpr float DEFAULT_FREQUENCY = 1.0f;
-constexpr float DEFAULT_PHASE = 0.0f;
-constexpr float DEFAULT_STARTTIME = 0.0f;
-constexpr float DEFAULT_STOPTIME = 1.0f;
-
-constexpr ColRGBA DEFAULT_VCOLOUR = COL_WHITE;
-constexpr math::degf DEFAULT_ELEVATION = math::degf{ 0.0f };
 
 
 class node::Emitter::BirthRateField final : 
@@ -115,7 +109,7 @@ private:
 			ifc.stopTime().removeListener(m_lStopTime);
 
 			//we need to restore defaults
-			m_lFlags.onRaise(DEFAULT_FLAGS);
+			m_lFlags.onRaise(DEFAULT_CTLR_FLAGS);
 			m_lFrequency.onSet(DEFAULT_FREQUENCY);
 			m_lPhase.onSet(DEFAULT_PHASE);
 			m_lStartTime.onSet(DEFAULT_STARTTIME);
@@ -290,7 +284,7 @@ public:
 };
 
 
-node::Emitter::Emitter(nif::File& file, 
+node::Emitter::Emitter(
 	const ni_ptr<NiPSysEmitter>& obj,
 	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
 	ni_ptr<nif::NiFloatInterpolator>&& iplr,
@@ -302,34 +296,10 @@ node::Emitter::Emitter(nif::File& file,
 {
 	assert(obj);
 
-	if (ctlr) {
-		ctlr = file.create<nif::NiPSysEmitterCtlr>();
-		if (!ctlr)
-			throw std::runtime_error("Failed to create NiPSysEmitterCtlr");
-
-		ctlr->flags.raise(DEFAULT_FLAGS);
-		ctlr->frequency.set(DEFAULT_FREQUENCY);
-		ctlr->phase.set(DEFAULT_PHASE);
-		ctlr->startTime.set(DEFAULT_STARTTIME);
-		ctlr->stopTime.set(DEFAULT_STOPTIME);
-	}
-
 	m_device.addController(ctlr);
 	obj->colour.addListener(*this);//add colour requirement dynamically
 	onSet(obj->colour.get());
 
-	if (!iplr) {
-		iplr = file.create<nif::NiFloatInterpolator>();
-		if (!iplr)
-			throw std::runtime_error("Failed to create NiFloatInterpolator");
-	}
-
-	if (!m_visIplr) {
-		m_visIplr = file.create<nif::NiBoolInterpolator>();
-		if (!m_visIplr)
-			throw std::runtime_error("Failed to create NiBoolInterpolator");
-		m_visIplr->value.set(true);
-	}
 	if (!ctlr->visIplr.assigned())
 		ctlr->visIplr.assign(m_visIplr);
 
@@ -386,12 +356,12 @@ void node::Emitter::onSet(const nif::ColRGBA& col)
 }
 
 
-node::VolumeEmitter::VolumeEmitter(nif::File& file,
+node::VolumeEmitter::VolumeEmitter(
 	const ni_ptr<NiPSysVolumeEmitter>& obj,
 	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
 	ni_ptr<nif::NiFloatInterpolator>&& iplr,
 	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	Emitter(file, obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+	Emitter(obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	newChild<gui::Separator>();
 	m_emitterObjField = newField<EmitterObjectField>(EMITTER_OBJECT, *this,
@@ -417,21 +387,12 @@ node::VolumeEmitter::EmitterMetricField::EmitterMetricField(
 }
 
 
-node::BoxEmitter::BoxEmitter(nif::File& file) :
-	BoxEmitter(file, file.create<nif::NiPSysBoxEmitter>())
-{
-	//Might be nice to lift out all object creation and defaults to somewhere else?
-	//Require that all objects are created before creating the node?
-	//object().colour.set(DEFAULT_VCOLOUR);
-	//object().elevation.set(DEFAULT_ELEVATION);
-}
-
-node::BoxEmitter::BoxEmitter(nif::File& file,
+node::BoxEmitter::BoxEmitter(
 	ni_ptr<nif::NiPSysBoxEmitter>&& obj,
 	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
 	ni_ptr<nif::NiFloatInterpolator>&& iplr,
 	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	VolumeEmitter(file, obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+	VolumeEmitter(obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Box emitter");
 	setSize({ WIDTH, HEIGHT });
@@ -456,19 +417,12 @@ node::BoxEmitter::~BoxEmitter()
 }
 
 
-node::CylinderEmitter::CylinderEmitter(nif::File& file) :
-	CylinderEmitter(file, file.create<nif::NiPSysCylinderEmitter>())
-{
-	//object().colour.set(DEFAULT_VCOLOUR);
-	//object().elevation.set(DEFAULT_ELEVATION);
-}
-
-node::CylinderEmitter::CylinderEmitter(nif::File& file,
+node::CylinderEmitter::CylinderEmitter(
 	ni_ptr<nif::NiPSysCylinderEmitter>&& obj,
 	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
 	ni_ptr<nif::NiFloatInterpolator>&& iplr,
 	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	VolumeEmitter(file, obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+	VolumeEmitter(obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Cylinder emitter");
 	setSize({ WIDTH, HEIGHT });
@@ -490,19 +444,12 @@ node::CylinderEmitter::~CylinderEmitter()
 }
 
 
-node::SphereEmitter::SphereEmitter(nif::File& file) :
-	SphereEmitter(file, file.create<nif::NiPSysSphereEmitter>())
-{
-	//object().colour.set(DEFAULT_VCOLOUR);
-	//object().elevation.set(DEFAULT_ELEVATION);
-}
-
-node::SphereEmitter::SphereEmitter(nif::File& file,
+node::SphereEmitter::SphereEmitter(
 	ni_ptr<nif::NiPSysSphereEmitter>&& obj,
 	ni_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
 	ni_ptr<nif::NiFloatInterpolator>&& iplr,
 	ni_ptr<nif::NiBoolInterpolator>&& vis_iplr) :
-	VolumeEmitter(file, obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
+	VolumeEmitter(obj, std::move(ctlr), std::move(iplr), std::move(vis_iplr))
 {
 	setTitle("Sphere emitter");
 	setSize({ WIDTH, HEIGHT });

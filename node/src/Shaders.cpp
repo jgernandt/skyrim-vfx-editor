@@ -141,16 +141,6 @@ struct util::property_traits<PaletteTexField*>
 	static void set(PaletteTexField* p, std::array<bool, 2> data) { p->setFlags(data); }
 };
 
-node::EffectShader::EffectShader(File& file) : 
-	EffectShader(file.create<BSEffectShaderProperty>())
-{
-	//Again, is this where we want to set defaults?
-	// 
-	//object().shaderFlags1().set(nif::ShaderFlag1::ZBUFFER_TEST, true);
-	//object().shaderFlags2().set(nif::ShaderFlag2::VERTEX_COLOUR, true);
-	//object().emissiveCol().set(nif::COL_WHITE);
-	//object().emissiveMult().set(1.0f);
-}
 
 node::EffectShader::EffectShader(ni_ptr<nif::BSEffectShaderProperty>&& obj)
 {

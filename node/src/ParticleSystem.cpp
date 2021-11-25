@@ -25,7 +25,6 @@
 
 using namespace nif;
 
-constexpr unsigned short DEFAULT_MAX_COUNT = 100;
 
 class node::ParticleSystem::ModifiersField final :
 	public Field, public IModifiable, public SequenceListener<NiPSysModifier>
@@ -219,87 +218,22 @@ private:
 	Sender<Assignable<BSShaderProperty>> m_sender;
 };
 
-node::ParticleSystem::ParticleSystem(File& file) :
-	ParticleSystem(file,
-		file.create<NiParticleSystem>(), 
-		ni_ptr<NiPSysData>(),
-		ni_ptr<NiAlphaProperty>(),
-		ni_ptr<NiPSysUpdateCtlr>(),
-		ni_ptr<NiPSysAgeDeathModifier>(),
-		ni_ptr<NiPSysPositionModifier>(),
-		ni_ptr<NiPSysBoundUpdateModifier>())
-{
-	assert(m_subtexCount);
-	m_subtexCount->set({ 1, 1 });
-}
 
-node::ParticleSystem::ParticleSystem(File& file,
+node::ParticleSystem::ParticleSystem(
 	ni_ptr<NiParticleSystem>&& psys,
 	ni_ptr<NiPSysData>&& data,
 	ni_ptr<NiAlphaProperty>&& alpha,
-	ni_ptr<NiPSysUpdateCtlr>&& ctlr,
 	ni_ptr<NiPSysAgeDeathModifier>&& adm,
+	ni_ptr<NiPSysBoundUpdateModifier>&& bum,
 	ni_ptr<NiPSysPositionModifier>&& pm,
-	ni_ptr<NiPSysBoundUpdateModifier>&& bum) :
+	ni_ptr<NiPSysUpdateCtlr>&& ctlr) :
 	AVObject{ psys },
 	m_subtexLsnr{ make_ni_ptr(data, &NiPSysData::subtexOffsets) },
 	m_subtexCount{ std::make_shared<Property<SubtextureCount>>() }
 {
 	assert(psys);
 
-	if (!data) {
-		data = file.create<nif::NiPSysData>();
-		if (!data)
-			throw std::runtime_error("Failed to create NiPSysData");
-
-		assert(!psys->data.assigned());
-		psys->data.assign(data);
-		data->maxCount.set(DEFAULT_MAX_COUNT);
-	}
-
-	if (!alpha) {
-		alpha = file.create<nif::NiAlphaProperty>();
-		if (!alpha)
-			throw std::runtime_error("Failed to create NiAlphaProperty");
-
-		alpha->mode.set(AlphaMode::BLEND);
-		alpha->srcFcn.set(BlendFunction::SRC_ALPHA);
-		alpha->dstFcn.set(BlendFunction::ONE_MINUS_SRC_ALPHA);
-
-		assert(!psys->alphaProperty.assigned());
-		psys->alphaProperty.assign(alpha);
-	}
-
 	//Controllers and modifiers are all handled by our ModifiersField.
-	if (!ctlr) {
-		ctlr = file.create<nif::NiPSysUpdateCtlr>();
-		if (!ctlr)
-			throw std::runtime_error("Failed to create NiPSysUpdateCtlr");
-
-		ctlr->flags.raise(72);
-		ctlr->frequency.set(1.0f);
-		ctlr->phase.set(0.0f);
-		ctlr->startTime.set(0.0f);
-		ctlr->stopTime.set(1.0f);
-	}
-
-	if (!adm) {
-		adm = file.create<nif::NiPSysAgeDeathModifier>();
-		if (!adm)
-			throw std::runtime_error("Failed to create NiPSysAgeDeathModifier");
-	}
-
-	if (!pm) {
-		pm = file.create<nif::NiPSysPositionModifier>();
-		if (!pm)
-			throw std::runtime_error("Failed to create NiPSysPositionModifier");
-	}
-
-	if (!bum) {
-		bum = file.create<nif::NiPSysBoundUpdateModifier>();
-		if (!bum)
-			throw std::runtime_error("Failed to create NiPSysBoundUpdateModifier");
-	}
 
 	m_subtexCount->set(node_conversion<SubtextureCount>::from(data->subtexOffsets.get()));
 	m_subtexCount->addListener(m_subtexLsnr);

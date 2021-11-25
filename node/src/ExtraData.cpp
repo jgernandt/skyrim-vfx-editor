@@ -42,8 +42,6 @@ node::StringDataShared::StringDataShared(const ni_ptr<NiStringExtraData>& obj) :
 {}
 
 
-node::StringData::StringData(nif::File& file) : StringData(file.create<nif::NiStringExtraData>()) {}
-
 node::StringData::StringData(ni_ptr<nif::NiStringExtraData>&& obj) :
 	StringDataShared(obj)
 {
@@ -64,8 +62,6 @@ node::StringData::~StringData()
 {
 	disconnect();
 }
-
-node::WeaponTypeData::WeaponTypeData(nif::File& file) : WeaponTypeData(file.create<nif::NiStringExtraData>()) {}
 
 node::WeaponTypeData::WeaponTypeData(ni_ptr<nif::NiStringExtraData>&& obj) :
 	StringDataShared(obj)

@@ -55,11 +55,7 @@ namespace node
 	class FloatController final : public NodeBase
 	{
 	public:
-		FloatController(File& file);
-		FloatController(File& file, 
-			ni_ptr<NiFloatInterpolator>&& iplr, 
-			ni_ptr<NiFloatData>&& data,
-			const NiTimeController* ctlr);
+		FloatController(ni_ptr<NiFloatInterpolator>&& iplr, ni_ptr<NiFloatData>&& data);
 		~FloatController();
 
 		FlagSet<ControllerFlags>& flags() { return m_ctlr->flags; }
@@ -80,9 +76,8 @@ namespace node
 
 	private:
 		//Managed objects
-		//These should all be const, but that doesn't work with our current creation procedure.
-		ni_ptr<NiFloatInterpolator> m_iplr;
-		ni_ptr<NiFloatData> m_data;
+		const ni_ptr<NiFloatInterpolator> m_iplr;
+		const ni_ptr<NiFloatData> m_data;
 		const ni_ptr<NiTimeController> m_ctlr;//dummy controller
 
 		//bleh

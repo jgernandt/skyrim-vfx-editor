@@ -26,15 +26,14 @@ namespace node
 	class ParticleSystem final : public AVObject
 	{
 	public:
-		ParticleSystem(File& file);
-		ParticleSystem(File& file,
+		ParticleSystem(
 			ni_ptr<NiParticleSystem>&& psys,
 			ni_ptr<NiPSysData>&& data,
 			ni_ptr<NiAlphaProperty>&& alpha,
-			ni_ptr<NiPSysUpdateCtlr>&& ctlr,
 			ni_ptr<NiPSysAgeDeathModifier>&& adm,
+			ni_ptr<NiPSysBoundUpdateModifier>&& bum,
 			ni_ptr<NiPSysPositionModifier>&& pm,
-			ni_ptr<NiPSysBoundUpdateModifier>&& bum);
+			ni_ptr<NiPSysUpdateCtlr>&& ctlr);
 
 		~ParticleSystem();
 

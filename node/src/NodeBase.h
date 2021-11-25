@@ -17,7 +17,6 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include <exception>
 #include <map>
 
 #include "Connector.h"
@@ -51,23 +50,15 @@ namespace node
 
 	class NodeBase : public gui::Window
 	{
-	public:
-		class failed_construction final :
-			public std::exception
-		{
-		public:
-			failed_construction() : exception("Failed Node construction") {}
-		};
-
-	public:
+	protected:
 		NodeBase();
 		NodeBase(const NodeBase&) = delete;
 
+	public:
 		virtual ~NodeBase();
 
 		NodeBase& operator=(const NodeBase&) = delete;
 
-		virtual void accept(gui::Visitor& v) override;
 		virtual void onClose() override;
 
 		gui::Connector* addConnector(const std::string& label, ConnectorType type, std::unique_ptr<gui::Connector>&& obj);
@@ -118,6 +109,19 @@ namespace node
 		LeftController m_leftCtlr;
 		RightController m_rightCtlr;
 		std::map<std::string, Field*> m_fields;
+	};
+
+	//Used to create nodes, or parts of nodes, using default objects.
+	//Define the type default_object on any default-constructible node,
+	//or specialise the template.
+	template<typename T>
+	class Default
+	{
+	public:
+		std::unique_ptr<T> create(nif::File& file) 
+		{ 
+			return std::make_unique<T>(file.create<typename T::default_object>());
+		}
 	};
 
 	//Called when loading a file to identify connections between nodes

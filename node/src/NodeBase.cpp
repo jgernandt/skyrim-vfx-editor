@@ -91,11 +91,6 @@ node::NodeBase::~NodeBase()
 {
 }
 
-void node::NodeBase::accept(gui::Visitor& v)
-{
-	v.visit(*this);
-}
-
 void node::NodeBase::onClose()
 {
 	asyncInvoke<DestroyAction>(*this);

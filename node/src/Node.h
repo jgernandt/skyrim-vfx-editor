@@ -43,7 +43,6 @@ namespace node
 	class Node final : public NodeShared
 	{
 	public:
-		Node(File& file);
 		Node(ni_ptr<NiNode>&& obj);
 		~Node();
 
@@ -54,7 +53,6 @@ namespace node
 	class Root final : public NodeShared
 	{
 	public:
-		Root(File& file);
 		Root(ni_ptr<NiNode>&& obj);
 		~Root();
 

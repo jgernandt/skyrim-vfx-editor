@@ -70,12 +70,6 @@ public:
 	}
 };
 
-node::RotationModifier::RotationModifier(File& file) :
-	RotationModifier(file.create<NiPSysRotationModifier>())
-{
-	//object().active().set(true);
-}
-
 node::RotationModifier::RotationModifier(ni_ptr<NiPSysRotationModifier>&& obj) :
 	Modifier(obj)
 {

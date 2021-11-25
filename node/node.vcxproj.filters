@@ -25,6 +25,9 @@
     <Filter Include="Source Files\Nodes">
       <UniqueIdentifier>{d39648fd-2777-47f6-bd99-74e7acf75b5d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Nodes\internal">
+      <UniqueIdentifier>{d6506ecd-b0bf-48c0-b583-95593cf98310}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h">
@@ -102,14 +105,29 @@
     <ClInclude Include="src\node_conversions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Node_internal.h">
-      <Filter>Header Files\Nodes</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Node_internal.h">
-      <Filter>Header Files\Nodes</Filter>
-    </ClInclude>
     <ClInclude Include="src\nodes_internal.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Node_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AVObject_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Controllers_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Modifiers_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Emitters_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Shaders_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PSys_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

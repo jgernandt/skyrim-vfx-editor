@@ -1,9 +1,34 @@
 #pragma once
 #include "Node.h"
 #include "Constructor.h"
+#include "AVObject_internal.h"
 
 namespace node
 {
+	using namespace nif;
+
+	template<>
+	class Default<Node> : public Default<AVObject>
+	{
+	public:
+		std::unique_ptr<Node> create(File& file)
+		{
+			auto obj = file.create<NiNode>();
+			if (!obj)
+				throw std::runtime_error("Failed to create NiNode");
+
+			setDefaults(*obj);
+			return std::make_unique<Node>(std::move(obj));
+		}
+		void setDefaults(NiNode& obj)
+		{
+			Default<AVObject>::setDefaults(obj);
+
+			static int n = 0;
+			obj.name.set(std::string("Node") + std::to_string(++n));
+		}
+	};
+
 	template<>
 	class Connector<NiNode> : public VerticalTraverser<NiNode, Connector>
 	{

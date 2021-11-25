@@ -43,8 +43,6 @@ node::NodeShared::NodeShared(const ni_ptr<NiNode>& obj) : AVObject(obj)
 	setColour(COL_TITLE_ACTIVE, TitleCol_NodeActive);
 }
 
-node::Node::Node(nif::File& file) : Node(file.create<nif::NiNode>()) {}
-
 node::Node::Node(ni_ptr<nif::NiNode>&& obj) : NodeShared(obj)
 {
 	setClosable(true);
@@ -71,7 +69,6 @@ node::Node::~Node()
 	disconnect();
 }
 
-node::Root::Root(nif::File& file) : Root(file.create<nif::BSFadeNode>()) {}
 
 node::Root::Root(ni_ptr<nif::NiNode>&& obj) : NodeShared(obj)
 {

@@ -22,7 +22,7 @@
 #include "CallWrapper.h"
 
 #include "widget_types.h"
-#include "nodes.h"
+#include "nodes_internal.h"
 #include "CompositionActions.h"
 
 #include <fstream>
@@ -53,7 +53,7 @@ template<typename T>
 void node::Editor::NodeRoot::addNode()
 {
 	try {
-		auto node = std::make_unique<T>(m_file);
+		auto node = Default<T>{}.create(m_file);
 		//Position node at the cursor (constrained to our work area)
 		gui::Floats<2> pos = transformToLocal(*this, gui::Mouse::getPosition());
 		assert(getParent());

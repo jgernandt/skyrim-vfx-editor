@@ -25,14 +25,12 @@ namespace node
 
 	class GravityModifier : public Modifier
 	{
-	public:
-		virtual ~GravityModifier() = default;
 	protected:
 		GravityModifier(const ni_ptr<NiPSysGravityModifier>& obj);
 
 	public:
+		virtual ~GravityModifier() = default;
 
-	public:
 		constexpr static const char* GRAVITY_OBJECT = "Field object";
 		constexpr static const char* STRENGTH = "Strength";
 		constexpr static const char* DECAY = "Decay";
@@ -50,7 +48,6 @@ namespace node
 	class PlanarForceField final : public GravityModifier
 	{
 	public:
-		PlanarForceField(File& file);
 		PlanarForceField(ni_ptr<NiPSysGravityModifier>&& obj);
 		~PlanarForceField();
 
@@ -67,7 +64,6 @@ namespace node
 	class SphericalForceField final : public GravityModifier
 	{
 	public:
-		SphericalForceField(File& file);
 		SphericalForceField(ni_ptr<NiPSysGravityModifier>&& obj);
 		~SphericalForceField();
 

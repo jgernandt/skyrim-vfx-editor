@@ -26,7 +26,6 @@ namespace node
 	class ScaleModifier final : public Modifier
 	{
 	public:
-		ScaleModifier(File& file);
 		ScaleModifier(ni_ptr<BSPSysScaleModifier>&& obj);
 		~ScaleModifier();
 

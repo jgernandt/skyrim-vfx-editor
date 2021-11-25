@@ -31,7 +31,6 @@ namespace node
 	public:
 		virtual ~ExtraData() = default;
 
-	public:
 		constexpr static const char* TARGET = "Targets";
 		constexpr static const char* NAME = "Name";
 
@@ -57,14 +56,14 @@ namespace node
 	public:
 		virtual ~StringDataShared() = default;
 
-	public:
 		constexpr static const char* VALUE = "Value";
 	};
 
 	class StringData final : public StringDataShared
 	{
 	public:
-		StringData(File& file);
+		using default_object = NiStringExtraData;
+
 		StringData(ni_ptr<NiStringExtraData>&& obj);
 		~StringData();
 
@@ -75,13 +74,12 @@ namespace node
 	class WeaponTypeData final : public StringDataShared
 	{
 	public:
-		WeaponTypeData(File& file);
+		using default_object = NiStringExtraData;
+
 		WeaponTypeData(ni_ptr<NiStringExtraData>&& obj);
 		~WeaponTypeData();
 
-	public:
 		constexpr static const char* TYPE = "Type";
-
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 90.0f;
 	};

@@ -26,7 +26,6 @@ namespace node
 	class SimpleColourModifier final : public Modifier
 	{
 	public:
-		SimpleColourModifier(File& file);
 		SimpleColourModifier(ni_ptr<BSPSysSimpleColorModifier>&& obj);
 		~SimpleColourModifier();
 

@@ -125,13 +125,6 @@ public:
 	}
 };
 
-node::PlanarForceField::PlanarForceField(File& file) :
-	PlanarForceField(file.create<NiPSysGravityModifier>())
-{
-	//object().active().set(true);
-	//object().forceType().set(nif::FORCE_PLANAR);
-	//object().gravityAxis().set({ 0.0f, 0.0f, 1.0f });
-}
 
 node::PlanarForceField::PlanarForceField(ni_ptr<NiPSysGravityModifier>&& obj) :
 	GravityModifier(obj)
@@ -156,14 +149,6 @@ node::PlanarForceField::~PlanarForceField()
 }
 
 
-
-node::SphericalForceField::SphericalForceField(File& file) :
-	SphericalForceField(file.create<NiPSysGravityModifier>())
-{
-	//object().active().set(true);
-	//object().forceType().set(nif::FORCE_SPHERICAL);
-	//object().gravityAxis().set({ 0.0f, 0.0f, 1.0f });
-}
 
 node::SphericalForceField::SphericalForceField(ni_ptr<NiPSysGravityModifier>&& obj) :
 	GravityModifier(obj)

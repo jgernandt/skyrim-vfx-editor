@@ -19,10 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Node_internal.h" />
     <ClInclude Include="src\AVObject.h" />
+    <ClInclude Include="src\AVObject_internal.h" />
     <ClInclude Include="src\Constructor.h" />
     <ClInclude Include="src\Controllers.h" />
+    <ClInclude Include="src\Controllers_internal.h" />
+    <ClInclude Include="src\Emitters_internal.h" />
+    <ClInclude Include="src\Modifiers_internal.h" />
     <ClInclude Include="src\nodes_internal.h" />
     <ClInclude Include="src\node_conversions.h" />
     <ClInclude Include="src\node_devices.h" />
@@ -39,11 +42,13 @@
     <ClInclude Include="src\Node_internal.h" />
     <ClInclude Include="src\ParticleSystem.h" />
     <ClInclude Include="src\Positioner.h" />
+    <ClInclude Include="src\PSys_internal.h" />
     <ClInclude Include="src\RotationModifier.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\node_traits.h" />
     <ClInclude Include="src\ScaleModifier.h" />
     <ClInclude Include="src\Shaders.h" />
+    <ClInclude Include="src\Shaders_internal.h" />
     <ClInclude Include="src\SimpleColourModifier.h" />
     <ClInclude Include="src\style.h" />
     <ClInclude Include="src\widget_types.h" />

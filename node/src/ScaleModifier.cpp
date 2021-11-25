@@ -268,12 +268,6 @@ private:
 	};
 };
 
-node::ScaleModifier::ScaleModifier(File& file) :
-	ScaleModifier(file.create<BSPSysScaleModifier>())
-{
-	//object().scales().set({ 0.0f, 1.0f });
-}
-
 node::ScaleModifier::ScaleModifier(ni_ptr<BSPSysScaleModifier>&& obj) :
 	Modifier(obj)
 {

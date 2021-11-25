@@ -26,12 +26,6 @@
 constexpr gui::ColRGBA TitleCol_Anim = { 0.8f, 0.8f, 0.8f, 1.0f };
 constexpr gui::ColRGBA TitleCol_AnimActive = { 0.8f, 0.8f, 0.8f, 1.0f };
 
-constexpr unsigned short DEFAULT_FLAGS = 72;
-constexpr float DEFAULT_FREQUENCY = 1.0f;
-constexpr float DEFAULT_PHASE = 0.0f;
-constexpr float DEFAULT_STARTTIME = 0.0f;
-constexpr float DEFAULT_STOPTIME = 1.0f;
-
 using namespace nif;
 
 template<typename T, T Width, T Offset>
@@ -89,66 +83,23 @@ private:
 	Sender<IController<float>> m_sndr;
 };
 
-node::FloatController::FloatController(nif::File& file) : 
-	FloatController(file, ni_ptr<nif::NiFloatInterpolator>(), ni_ptr<nif::NiFloatData>(), nullptr)
-{
-}
-
-node::FloatController::FloatController(File& file,
+node::FloatController::FloatController(
 	ni_ptr<NiFloatInterpolator>&& iplr,
-	ni_ptr<NiFloatData>&& data,
-	const NiTimeController* ctlr) :
+	ni_ptr<NiFloatData>&& data) :
 	m_iplr{ std::move(iplr) },
 	m_data{ std::move(data) },
 	//Our controller is a dummy object that will never be exported or assigned to another field,
 	//hence we can bypass file. Still, this is a little fishy.
 	m_ctlr{ std::make_shared<NiTimeController>() }
 {
-	if (ctlr) {
-		m_ctlr->flags.raise(ctlr->flags.raised());
-		m_ctlr->frequency.set(ctlr->frequency.get());
-		m_ctlr->phase.set(ctlr->phase.get());
-		m_ctlr->startTime.set(ctlr->startTime.get());
-		m_ctlr->stopTime.set(ctlr->stopTime.get());
-	}
-	else {
-		m_ctlr->flags.raise(DEFAULT_FLAGS);
-		m_ctlr->frequency.set(DEFAULT_FREQUENCY);
-		m_ctlr->phase.set(DEFAULT_PHASE);
-		m_ctlr->startTime.set(DEFAULT_STARTTIME);
-		m_ctlr->stopTime.set(DEFAULT_STOPTIME);
-	}
+	assert(iplr && data);
+	iplr->data.assign(data);
 
 	setClosable(true);
 	setTitle("Float controller");
 	setSize({ WIDTH, HEIGHT });
 	setColour(COL_TITLE, TitleCol_Anim);
 	setColour(COL_TITLE_ACTIVE, TitleCol_AnimActive);
-
-	if (!m_iplr) {
-		m_iplr = file.create<nif::NiFloatInterpolator>();
-		if (!m_iplr)
-			throw std::runtime_error("Failed to create NiFloatInterpolator");
-	}
-
-	if (!m_data) {
-		//We don't necessarily need a data block. Should we always have one regardless?
-		m_data = file.create<NiFloatData>();
-		if (!m_data)
-			throw std::runtime_error("Failed to create NiFloatData");
-
-		m_data->keyType.set(KEY_LINEAR);
-
-		m_data->keys.push_back();
-		m_data->keys.back().time.set(m_ctlr->startTime.get());
-		m_data->keys.back().value.set(0.0f);
-
-		m_data->keys.push_back();
-		m_data->keys.back().time.set(m_ctlr->stopTime.get());
-		m_data->keys.back().value.set(0.0f);
-
-		m_iplr->data.assign(m_data);
-	}
 
 	m_target = newField<TargetField>(TARGET, *this);
 
