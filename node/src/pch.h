@@ -22,10 +22,12 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
+#include <fstream>
 #include <list>
 #include <map>
 #include <memory>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <thread>
 #include <vector>
