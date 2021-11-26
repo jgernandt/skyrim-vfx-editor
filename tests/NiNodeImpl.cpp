@@ -35,9 +35,8 @@ bool objects::FactoryTester<NiNode>::operator()(NiNode& obj, TestConstructor& ct
 
 bool objects::FactoryTester<NiNode>::operator()(const NiNode& obj, const TestConstructor& ctor)
 {
-	auto it = ctor.nodes.find(&obj);
-	Assert::IsTrue(it != ctor.nodes.end());
-	Assert::IsNotNull(dynamic_cast<node::Node*>(it->second.get()));
+	Assert::IsTrue(ctor.node.first == &obj);
+	Assert::IsNotNull(dynamic_cast<node::Node*>(ctor.node.second.get()));
 	return false;
 }
 

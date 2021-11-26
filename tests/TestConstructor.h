@@ -19,7 +19,7 @@ namespace objects
 		std::vector<node::ConnectionInfo> connections;
 
 		//For FactoryTester
-		std::map<const NiObject*, std::unique_ptr<node::NodeBase>> nodes;
+		std::pair<NiObject*, std::unique_ptr<node::NodeBase>> node;
 
 		//For ForwardTester
 		std::vector<NiObject*> forwards;
@@ -37,9 +37,10 @@ namespace objects
 		void addConnection(const node::ConnectionInfo& info) { connections.push_back(info); }
 
 		template<typename ObjType, typename NodeType>
-		void addNode(ObjType* obj, std::unique_ptr<NodeType>&& node) 
+		void addNode(ObjType* obj, std::unique_ptr<NodeType>&& n) 
 		{ 
-			Assert::IsTrue(nodes.insert({ obj, std::move(node) }).second); 
+			Assert::IsTrue(!node.first && !node.second);
+			node = { obj, std::move(n) };
 		}
 
 		void pushObject(const ni_ptr<NiObject>& obj) { objects.push_back(obj); }

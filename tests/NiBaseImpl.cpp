@@ -35,8 +35,7 @@ bool objects::ConnectorTester<NiObjectNET>::operator()(const NiObjectNET& obj, c
 bool objects::FactoryTester<NiObjectNET>::operator()(const NiObjectNET& obj, const TestConstructor& ctor)
 {
 	//Should not add a node
-	auto it = ctor.nodes.find(&obj);
-	Assert::IsTrue(it == ctor.nodes.end());
+	Assert::IsTrue(!ctor.node.first && !ctor.node.second);
 	return false;
 }
 
@@ -75,9 +74,8 @@ bool objects::ConnectorTester<NiAVObject>::operator()(const NiAVObject& obj, con
 bool objects::FactoryTester<NiAVObject>::operator()(const NiAVObject& obj, const TestConstructor& ctor)
 {
 	//Expect a DummyAVObject
-	auto it = ctor.nodes.find(&obj);
-	Assert::IsTrue(it != ctor.nodes.end());
-	Assert::IsNotNull(dynamic_cast<node::DummyAVObject*>(it->second.get()));
+	Assert::IsTrue(ctor.node.first == &obj);
+	Assert::IsNotNull(dynamic_cast<node::DummyAVObject*>(ctor.node.second.get()));
 	return false;
 }
 

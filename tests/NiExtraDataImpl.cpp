@@ -17,9 +17,8 @@ bool objects::ConnectorTester<NiExtraData>::operator()(const NiExtraData& obj, c
 bool objects::FactoryTester<NiExtraData>::operator()(const NiExtraData& obj, const TestConstructor& ctor)
 {
 	//Expect a DummyExtraData
-	auto it = ctor.nodes.find(&obj);
-	Assert::IsTrue(it != ctor.nodes.end());
-	Assert::IsNotNull(dynamic_cast<node::DummyExtraData*>(it->second.get()));
+	Assert::IsTrue(ctor.node.first == &obj);
+	Assert::IsNotNull(dynamic_cast<node::DummyExtraData*>(ctor.node.second.get()));
 	return false;
 }
 
@@ -40,30 +39,29 @@ void objects::FactoryTest<NiStringExtraData>::run()
 {
 	File file(File::Version::SKYRIM_SE);
 
-	TestConstructor ctor(file);
+	{//WeaponType
+		TestConstructor ctor(file);
+		auto obj1 = file.create<NiStringExtraData>();
+		obj1->name.set("Prn");
 
-	//WeaponType
-	auto obj1 = file.create<NiStringExtraData>();
-	obj1->name.set("Prn");
+		ctor.pushObject(obj1);
+		node::Factory<NiStringExtraData>{}.up(*obj1, ctor);
+		ctor.popObject();
 
-	ctor.pushObject(obj1);
-	node::Factory<NiStringExtraData>{}.up(*obj1, ctor);
-	ctor.popObject();
+		Assert::IsTrue(ctor.node.first == obj1.get());
+		Assert::IsNotNull(dynamic_cast<node::WeaponTypeData*>(ctor.node.second.get()));
+	}
+	{//Default
+		TestConstructor ctor(file);
+		auto obj2 = file.create<NiStringExtraData>();
 
-	auto it = ctor.nodes.find(obj1.get());
-	Assert::IsTrue(it != ctor.nodes.end());
-	Assert::IsNotNull(dynamic_cast<node::WeaponTypeData*>(it->second.get()));
+		ctor.pushObject(obj2);
+		node::Factory<NiStringExtraData>{}.up(*obj2, ctor);
+		ctor.popObject();
 
-	//Default
-	auto obj2 = file.create<NiStringExtraData>();
-
-	ctor.pushObject(obj2);
-	node::Factory<NiStringExtraData>{}.up(*obj2, ctor);
-	ctor.popObject();
-
-	it = ctor.nodes.find(obj2.get());
-	Assert::IsTrue(it != ctor.nodes.end());
-	Assert::IsNotNull(dynamic_cast<node::StringData*>(it->second.get()));
+		Assert::IsTrue(ctor.node.first == obj2.get());
+		Assert::IsNotNull(dynamic_cast<node::StringData*>(ctor.node.second.get()));
+	}
 }
 
 bool objects::ForwardTester<NiStringExtraData>::operator()(const NiStringExtraData& obj, const TestConstructor& ctor)
