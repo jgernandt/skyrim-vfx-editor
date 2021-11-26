@@ -27,10 +27,10 @@ bool common::EquivalenceTester<NiParticleSystem>::operator()(const NiParticleSys
 bool common::ForwardOrderTester<NiParticleSystem>::operator()(
 	const NiParticleSystem& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
 {
-	fwdAssignable(object.data, it, end);
+	fwdRef(object.data, it, end);
 	fwdSequence(object.modifiers, it, end);
-	fwdAssignable(object.shaderProperty, it, end);
-	fwdAssignable(object.alphaProperty, it, end);
+	fwdRef(object.shaderProperty, it, end);
+	fwdRef(object.alphaProperty, it, end);
 
 	return true;
 }
@@ -115,7 +115,12 @@ bool common::Randomiser<NiPSysModifier>::operator()(NiPSysModifier& object, File
 {
 	randomiseProperty(object.name, rng);
 	randomiseProperty(object.order, rng);
-	object.target.assign(file.create<NiParticleSystem>());
+
+	//need to make our target persistent
+	auto target = file.create<NiParticleSystem>();
+	file.getRoot()->children.add(target);
+	object.target.assign(target);
+
 	object.active.set(randi<int>(rng, { 0, 1 }));
 
 	return true;
@@ -127,9 +132,12 @@ bool common::Randomiser<NiPSysModifier>::operator()(const NiPSysModifier&, Nifli
 	native->SetOrder(randi<unsigned int>(rng));
 
 	//Target is a weak reference. We need to make our new object persistent.
-	Niflib::Ref<Niflib::NiParticleSystem> target = new Niflib::NiParticleSystem;
-	file.getNative<NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(target));
-	native->SetTarget(target);
+	Niflib::Ref<Niflib::NiParticleSystem> native_target = new Niflib::NiParticleSystem;
+	file.getNative<NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(native_target));
+	native->SetTarget(native_target);
+	//this goes for our object too!
+	auto target = file.get<NiParticleSystem>(native_target);
+	file.getRoot()->children.add(target);
 
 	native->SetActive(randi<int>(rng, { 0, 1 }));
 
@@ -153,7 +161,10 @@ bool common::EquivalenceTester<NiPSysGravityModifier>::operator()(const NiPSysGr
 
 bool common::Randomiser<NiPSysGravityModifier>::operator()(NiPSysGravityModifier& object, File& file, std::mt19937& rng)
 {
-	object.gravityObject.assign(file.create<NiNode>());
+	auto gravityObject = file.create<NiNode>();
+	file.getRoot()->children.add(gravityObject);
+	object.gravityObject.assign(gravityObject);
+
 	randomiseProperty(object.gravityAxis, rng);
 	randomiseProperty(object.decay, rng);
 	randomiseProperty(object.strength, rng);
@@ -168,9 +179,11 @@ bool common::Randomiser<NiPSysGravityModifier>::operator()(NiPSysGravityModifier
 bool common::Randomiser<NiPSysGravityModifier>::operator()(const NiPSysGravityModifier&, Niflib::NiPSysGravityModifier* native, File& file, std::mt19937& rng)
 {
 	//weak ref
-	Niflib::Ref<Niflib::NiNode> gravObj = new Niflib::NiNode;
-	file.getNative<NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(gravObj));
-	native->SetGravityObject(gravObj);
+	Niflib::Ref<Niflib::NiNode> native_gravObj = new Niflib::NiNode;
+	file.getNative<NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(native_gravObj));
+	native->SetGravityObject(native_gravObj);
+	auto gravObj = file.get<NiNode>(native_gravObj);
+	file.getRoot()->children.add(gravObj);
 
 	native->SetGravityAxis(randf<Niflib::Vector3>(rng));
 	native->SetDecay(randf<float>(rng));

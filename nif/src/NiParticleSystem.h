@@ -23,11 +23,11 @@ namespace nif
 {
 	struct NiParticleSystem : NiTraversable<NiParticleSystem, NiAVObject>
 	{
-		Assignable	<NiPSysData>		data;
-		Sequence	<NiPSysModifier>	modifiers;
-		Assignable	<BSShaderProperty>	shaderProperty;
-		Assignable	<NiAlphaProperty>	alphaProperty;
-		Property	<bool>				worldSpace;
+		Ref<NiPSysData> data;
+		Sequence<NiPSysModifier> modifiers;
+		Ref<BSShaderProperty> shaderProperty;
+		Ref<NiAlphaProperty> alphaProperty;
+		Property<bool> worldSpace;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }

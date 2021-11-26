@@ -182,37 +182,37 @@ namespace nodes
 	using namespace nif;
 
 	//Test that the node's connector responds to a signal by assigning the expected object to the sender
-	template<typename NodeType, typename RefType>
+	template<template<typename> typename AssType, typename NodeType, typename RefType>
 	void AssignableReceiverTest(std::unique_ptr<NodeType>&& node, RefType& expected, 
 		const std::string& connector, bool multi)
 	{
-		Assignable<RefType> target1;
-		Assignable<RefType> target2;
+		AssType<RefType> target1;
+		AssType<RefType> target2;
 		ConnectorTester<NodeType> tester(std::move(node));
 
-		tester.tryConnect<void, Assignable<RefType>>(connector, multi, &target1);
-		tester.tryConnect<void, Assignable<RefType>>(connector, multi, &target2);
+		tester.tryConnect<void, AssType<RefType>>(connector, multi, &target1);
+		tester.tryConnect<void, AssType<RefType>>(connector, multi, &target2);
 
 		Assert::IsTrue((target1.assigned() == &expected) == multi);
 		Assert::IsTrue(target2.assigned() == &expected);
 
 		if (multi) {
-			tester.disconnect<Assignable<RefType>>(&target1);
+			tester.disconnect<AssType<RefType>>(&target1);
 			Assert::IsFalse(target1.assigned() == &expected);
 		}
 
-		tester.disconnect<Assignable<RefType>>(&target2);
+		tester.disconnect<AssType<RefType>>(&target2);
 		Assert::IsFalse(target2.assigned() == &expected);
 	}
 
 	//Test that the node exposes the expected Assignable through the given connector
-	template<typename NodeType, typename RefType>
-	void AssignableSenderTest(std::unique_ptr<NodeType>&& node, Assignable<RefType>& expected, 
+	template<template<typename> typename AssType, typename NodeType, typename RefType>
+	void AssignableSenderTest(std::unique_ptr<NodeType>&& node, AssType<RefType>& expected,
 		const std::string& connector, bool multi)
 	{
 		ConnectorTester<NodeType> tester(std::move(node));
-		tester.tryConnect<Assignable<RefType>, void>(connector, multi, nullptr);
-		auto ifc = tester.tryConnect<Assignable<RefType>, void>(connector, multi, nullptr);
+		tester.tryConnect<AssType<RefType>, void>(connector, multi, nullptr);
+		auto ifc = tester.tryConnect<AssType<RefType>, void>(connector, multi, nullptr);
 		Assert::IsTrue(ifc == &expected);
 	}
 

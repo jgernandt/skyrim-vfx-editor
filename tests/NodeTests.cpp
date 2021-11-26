@@ -39,7 +39,7 @@ namespace nodes
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiNode>();
-			AssignableReceiverTest(std::make_unique<node::Node>(obj), *obj, node::Node::OBJECT, true);
+			AssignableReceiverTest<Ptr>(std::make_unique<node::Node>(obj), *obj, node::Node::OBJECT, true);
 		}
 
 		TEST_METHOD(Connector_Children)

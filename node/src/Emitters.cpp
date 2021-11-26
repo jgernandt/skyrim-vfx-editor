@@ -129,7 +129,7 @@ private:
 	ni_ptr<NiFloatInterpolator> m_iplr;
 
 	ControllerReceiver m_rcvr;
-	Sender<Assignable<NiInterpolator>> m_sndr;
+	Sender<Ref<NiInterpolator>> m_sndr;
 };
 
 class node::Emitter::LifeSpanField final : public Field
@@ -370,7 +370,7 @@ node::VolumeEmitter::VolumeEmitter(
 }
 
 node::VolumeEmitter::EmitterObjectField::EmitterObjectField(
-	const std::string& name, NodeBase& node, ni_ptr<Assignable<NiNode>>&& emitterObject) :
+	const std::string& name, NodeBase& node, ni_ptr<Ptr<NiNode>>&& emitterObject) :
 	Field(name), 
 	m_sdr(*emitterObject)//old format, should use the pointer
 {

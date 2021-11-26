@@ -60,7 +60,7 @@ namespace nif
 	struct NiBoolInterpolator : NiTraversable<NiBoolInterpolator, NiInterpolator>
 	{
 		Property<bool> value;
-		Assignable<NiBoolData> data;
+		Ref<NiBoolData> data;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
@@ -73,7 +73,7 @@ namespace nif
 	struct NiFloatInterpolator : NiTraversable<NiFloatInterpolator, NiInterpolator>
 	{
 		Property<float> value;
-		Assignable<NiFloatData> data;
+		Ref<NiFloatData> data;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
@@ -111,7 +111,7 @@ namespace nif
 		Property<float> phase;
 		Property<float> startTime;
 		Property<float> stopTime;
-		Assignable<NiObjectNET> target;
+		Ptr<NiObjectNET> target;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
@@ -119,7 +119,7 @@ namespace nif
 
 	struct NiSingleInterpController : NiTraversable<NiSingleInterpController, NiTimeController>
 	{
-		Assignable<NiInterpolator> interpolator;
+		Ref<NiInterpolator> interpolator;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
@@ -145,7 +145,7 @@ namespace nif
 
 	struct NiPSysEmitterCtlr : NiTraversable<NiPSysEmitterCtlr, NiPSysModifierCtlr>
 	{
-		Assignable<NiInterpolator> visIplr;
+		Ref<NiInterpolator> visIplr;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }

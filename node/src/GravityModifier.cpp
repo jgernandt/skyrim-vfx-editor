@@ -26,10 +26,10 @@ using namespace nif;
 class GravityObjectField final : public Field
 {
 	Receiver<void> m_rcvr;
-	Sender<Assignable<NiNode>> m_sndr;
+	Sender<Ptr<NiNode>> m_sndr;
 
 public:
-	GravityObjectField(const std::string& name, NodeBase& node, ni_ptr<Assignable<NiNode>>&& obj) :
+	GravityObjectField(const std::string& name, NodeBase& node, ni_ptr<Ptr<NiNode>>&& obj) :
 		Field(name), m_sndr(*obj) //old format
 	{
 		connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));

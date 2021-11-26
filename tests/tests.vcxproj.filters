@@ -36,9 +36,6 @@
     <ClCompile Include="ControllerTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BSEffectShaderPropertyTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -133,8 +133,8 @@ namespace nodes
 			MockController target;
 			ConnectorTester<node::Emitter> tester(node::Default<node::BoxEmitter>{}.create(file, nullptr, ctlr));
 
-			tester.tryConnect<Assignable<NiInterpolator>, node::IController<float>>(node::Emitter::BIRTH_RATE, false, &target0);
-			auto ifc = tester.tryConnect<Assignable<NiInterpolator>, node::IController<float>>(node::Emitter::BIRTH_RATE, false, &target);
+			tester.tryConnect<Ref<NiInterpolator>, node::IController<float>>(node::Emitter::BIRTH_RATE, false, &target0);
+			auto ifc = tester.tryConnect<Ref<NiInterpolator>, node::IController<float>>(node::Emitter::BIRTH_RATE, false, &target);
 			Assert::IsNotNull(ifc);
 
 			//Setting the properties on target (but not target0) should set the corresponding on ctlr

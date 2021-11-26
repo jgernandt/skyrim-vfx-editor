@@ -23,19 +23,19 @@ namespace objects
 			Assert::IsTrue(!duplicate++);
 
 			nif::File file{ nif::File::Version::SKYRIM_SE };
-			T object{};
 			Niflib::Ref<typename type_map<T>::type> native = new typename type_map<T>::type;
+			auto object = file.get<T>(native);
 
 			//Read test
-			Randomiser<T>{}.down(object, file, g_rng);//randomise object
-			Randomiser<T>{}.down(object, native, file, g_rng);//randomise native
-			nif::ReadSyncer<T>{}.down(object, native, file);
-			EquivalenceTester<T>{}.down(object, native, file);
+			Randomiser<T>{}.down(*object, file, g_rng);//randomise object
+			Randomiser<T>{}.down(*object, native, file, g_rng);//randomise native
+			nif::ReadSyncer<T>{}.down(*object, native, file);
+			EquivalenceTester<T>{}.down(*object, native, file);
 
 			//Write test
-			Randomiser<T>{}.down(object, file, g_rng);
-			nif::WriteSyncer<T>{}.down(object, native, file);
-			EquivalenceTester<T>{}.down(object, native, file);
+			Randomiser<T>{}.down(*object, file, g_rng);
+			nif::WriteSyncer<T>{}.down(*object, native, file);
+			EquivalenceTester<T>{}.down(*object, native, file);
 		}
 	};
 

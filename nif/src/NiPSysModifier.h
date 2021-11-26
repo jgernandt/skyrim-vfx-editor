@@ -25,7 +25,7 @@ namespace nif
 	{
 		Property<std::string> name;
 		Property<unsigned int> order;
-		Assignable<NiParticleSystem> target;//should be assigned by our Nodes
+		Ptr<NiParticleSystem> target;
 		Property<bool> active;
 
 		static const ni_type TYPE;
@@ -46,7 +46,7 @@ namespace nif
 
 	struct NiPSysGravityModifier : NiTraversable<NiPSysGravityModifier, NiPSysModifier>
 	{
-		Assignable<NiNode> gravityObject;
+		Ptr<NiNode> gravityObject;
 		Property<Floats<3>> gravityAxis;
 		Property<float> decay;
 		Property<float> strength;

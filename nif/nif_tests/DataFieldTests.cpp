@@ -12,40 +12,41 @@ namespace fields
 	TEST_CLASS(Assignable) 
 	{
 	public:
-		TEST_METHOD(AssignableTest)
+
+		struct Listener : AssignableListener<NiObject>
 		{
-			struct Listener : AssignableListener<NiObject>
+			virtual void onAssign(NiObject* obj) override
 			{
-				virtual void onAssign(NiObject* obj) override
-				{
-					signalled = true;
-					assigned = obj;
-				}
+				signalled = true;
+				assigned = obj;
+			}
 
-				bool wasAssigned()
-				{
-					bool result = signalled;
-					signalled = false;
-					assigned = nullptr;
-					return result;
-				}
+			bool wasAssigned()
+			{
+				bool result = signalled;
+				signalled = false;
+				assigned = nullptr;
+				return result;
+			}
 
-				bool wasAssigned(NiObject* obj)
-				{
-					bool result = signalled && assigned == obj;
-					signalled = false;
-					assigned = nullptr;
-					return result;
-				}
+			bool wasAssigned(NiObject* obj)
+			{
+				bool result = signalled && assigned == obj;
+				signalled = false;
+				assigned = nullptr;
+				return result;
+			}
 
-			private:
-				bool signalled{ false };
-				NiObject* assigned{ nullptr };
-			};
+		private:
+			bool signalled{ false };
+			NiObject* assigned{ nullptr };
+		};
 
+		TEST_METHOD(RefTest)
+		{
 			Listener lsnr;
 			{
-				nif::Assignable<NiObject> ass;
+				Ref<NiObject> ass;
 				ass.addListener(lsnr);
 				Assert::IsFalse(lsnr.wasAssigned());
 
@@ -87,6 +88,59 @@ namespace fields
 				Assert::IsFalse(weak1.expired());
 				ass.assign(nullptr);
 				Assert::IsTrue(weak1.expired());
+
+				ass.assign(o2);
+				ass.addListener(lsnr);
+			}
+			//Signal unassign on destruction
+			Assert::IsTrue(lsnr.wasAssigned(nullptr));
+		}
+
+		TEST_METHOD(PtrTest)
+		{
+			Listener lsnr;
+			{
+				Ptr<NiObject> ass;
+				ass.addListener(lsnr);
+				Assert::IsFalse(lsnr.wasAssigned());
+
+				auto o1 = std::make_shared<NiObject>();
+				std::weak_ptr<NiObject> weak1 = o1;
+				Assert::IsTrue(ass.assigned() == nullptr);
+
+				//Assign
+				ass.assign(o1);
+				Assert::IsTrue(ass.assigned() == o1);
+				Assert::IsTrue(lsnr.wasAssigned(o1.get()));
+
+				//Reassigning
+				ass.assign(o1);
+				Assert::IsFalse(lsnr.wasAssigned(o1.get()));
+
+				auto o2 = std::make_shared<NiObject>();
+
+				//Assign replacer
+				ass.assign(o2);
+				Assert::IsFalse(ass.assigned() == o1);
+				Assert::IsTrue(ass.assigned() == o2);
+				Assert::IsTrue(lsnr.wasAssigned(o2.get()));
+
+				//Assign null
+				ass.assign(nullptr);
+				Assert::IsFalse(ass.assigned() == o2);
+				Assert::IsTrue(lsnr.wasAssigned(nullptr));
+
+				//Remove listener
+				ass.removeListener(lsnr);
+				ass.assign(o2);
+				Assert::IsFalse(lsnr.wasAssigned(o2.get()));
+				ass.assign(nullptr);
+
+				//Test ownership
+				ass.assign(o1);
+				o1.reset();
+				Assert::IsTrue(weak1.expired());
+				Assert::IsTrue(ass.assigned() == nullptr);
 
 				ass.assign(o2);
 				ass.addListener(lsnr);

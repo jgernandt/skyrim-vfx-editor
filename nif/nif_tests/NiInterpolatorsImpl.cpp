@@ -132,7 +132,7 @@ bool common::EquivalenceTester<NiBoolInterpolator>::operator()(const NiBoolInter
 bool common::ForwardOrderTester<NiBoolInterpolator>::operator()(
 	const NiBoolInterpolator& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
 {
-	fwdAssignable(object.data, it, end);
+	fwdRef(object.data, it, end);
 
 	return true;
 }
@@ -165,7 +165,7 @@ bool common::EquivalenceTester<NiFloatInterpolator>::operator()(const NiFloatInt
 bool common::ForwardOrderTester<NiFloatInterpolator>::operator()(
 	const NiFloatInterpolator& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
 {
-	fwdAssignable(object.data, it, end);
+	fwdRef(object.data, it, end);
 
 	return true;
 }
@@ -206,7 +206,10 @@ bool common::Randomiser<NiTimeController>::operator()(NiTimeController& object, 
 	randomiseProperty(object.phase, rng);
 	randomiseProperty(object.startTime, rng);
 	randomiseProperty(object.stopTime, rng);
-	object.target.assign(file.create<NiObjectNET>());
+
+	auto target = file.create<NiAVObject>();
+	file.getRoot()->children.add(target);
+	object.target.assign(target);
 
 	return true;
 }
@@ -219,9 +222,11 @@ bool common::Randomiser<NiTimeController>::operator()(const NiTimeController&, N
 	native->SetStartTime(randf<float>(rng));
 	native->SetStopTime(randf<float>(rng));
 	//weak ref
-	Niflib::Ref<Niflib::NiAVObject> target = new Niflib::NiAVObject;
-	file.getNative<NiNode>(file.getRoot().get())->AddChild(target);
-	native->SetTarget(target);
+	Niflib::Ref<Niflib::NiAVObject> native_target = new Niflib::NiAVObject;
+	file.getNative<NiNode>(file.getRoot().get())->AddChild(native_target);
+	native->SetTarget(native_target);
+	auto target = file.get<NiAVObject>(native_target);
+	file.getRoot()->children.add(target);
 
 	return true;
 }
@@ -237,7 +242,7 @@ bool common::EquivalenceTester<NiSingleInterpController>::operator()(const NiSin
 bool common::ForwardOrderTester<NiSingleInterpController>::operator()(
 	const NiSingleInterpController& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
 {
-	fwdAssignable(object.interpolator, it, end);
+	fwdRef(object.interpolator, it, end);
 
 	return true;
 }

@@ -25,7 +25,7 @@ using namespace node;
 
 class GeometryField final : public Field
 {
-	AssignableReceiver<BSShaderProperty> m_receiver;//Should be BSEffecShaderProperty, but we need to fix device inheritance
+	RefReceiver<BSShaderProperty> m_receiver;//Should be BSEffecShaderProperty, but we need to fix device inheritance
 	Sender<void> m_sender;
 
 public:

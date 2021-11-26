@@ -69,7 +69,9 @@ bool common::EquivalenceTester<NiPSysVolumeEmitter>::operator()(const NiPSysVolu
 
 bool common::Randomiser<NiPSysVolumeEmitter>::operator()(NiPSysVolumeEmitter& object, File& file, std::mt19937& rng)
 {
-	object.emitterObject.assign(file.create<NiNode>());
+	auto emitterObject = file.create<NiNode>();
+	file.getRoot()->children.add(emitterObject);
+	object.emitterObject.assign(emitterObject);
 
 	return true;
 }
@@ -77,9 +79,11 @@ bool common::Randomiser<NiPSysVolumeEmitter>::operator()(NiPSysVolumeEmitter& ob
 bool common::Randomiser<NiPSysVolumeEmitter>::operator()(const NiPSysVolumeEmitter&, Niflib::NiPSysVolumeEmitter* native, File& file, std::mt19937& rng)
 {
 	//weak ref
-	Niflib::Ref<Niflib::NiNode> emitterObject = new Niflib::NiNode;
-	file.getNative<NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(emitterObject));
-	native->SetEmitterObject(emitterObject);
+	Niflib::Ref<Niflib::NiNode> native_emitterObject = new Niflib::NiNode;
+	file.getNative<NiNode>(file.getRoot().get())->AddChild(Niflib::StaticCast<Niflib::NiAVObject>(native_emitterObject));
+	native->SetEmitterObject(native_emitterObject);
+	auto emitterObject = file.get<NiNode>(native_emitterObject);
+	file.getRoot()->children.add(emitterObject);
 
 	return true;
 }
@@ -170,7 +174,7 @@ bool common::EquivalenceTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitte
 bool common::ForwardOrderTester<NiPSysEmitterCtlr>::operator()(
 	const NiPSysEmitterCtlr& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
 {
-	fwdAssignable(object.visIplr, it, end);
+	fwdRef(object.visIplr, it, end);
 
 	return true;
 }

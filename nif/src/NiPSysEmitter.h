@@ -46,7 +46,7 @@ namespace nif
 
 	struct NiPSysVolumeEmitter : NiTraversable<NiPSysVolumeEmitter, NiPSysEmitter>
 	{
-		Assignable<NiNode> emitterObject;
+		Ptr<NiNode> emitterObject;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }

@@ -8,7 +8,7 @@ namespace common
 	using namespace nif;
 
 	template<typename T>
-	void fwdAssignable(const Assignable<T>& ass, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
+	void fwdRef(const Ref<T>& ass, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
 	{
 		if (auto&& obj = ass.assigned()) {
 			Assert::IsTrue(it != end);

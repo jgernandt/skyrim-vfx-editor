@@ -90,11 +90,11 @@ namespace node
 		{
 		public:
 			EmitterObjectField(const std::string& name, NodeBase& node, 
-				ni_ptr<Assignable<NiNode>>&& emitterObject);
+				ni_ptr<Ptr<NiNode>>&& emitterObject);
 
 		private:
 			Receiver<void> m_rvr;
-			Sender<Assignable<NiNode>> m_sdr;
+			Sender<Ptr<NiNode>> m_sdr;
 		};
 		class EmitterMetricField final : public Field
 		{

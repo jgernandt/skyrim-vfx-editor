@@ -79,7 +79,7 @@ private:
 		FloatController& m_node;
 	};
 	Controller m_ifc;
-	AssignableReceiver<NiInterpolator> m_rcvr;
+	RefReceiver<NiInterpolator> m_rcvr;
 	Sender<IController<float>> m_sndr;
 };
 

@@ -201,16 +201,31 @@ namespace node
 
 
 	template<typename T>
-	class AssignableReceiver : public Receiver<nif::Assignable<T>>
+	class RefReceiver : public Receiver<nif::Ref<T>>
 	{
 	public:
-		AssignableReceiver(const nif::ni_ptr<T>& obj) : m_obj{ obj } {}
-		AssignableReceiver(const AssignableReceiver&) = delete;
-		virtual ~AssignableReceiver() = default;
-		AssignableReceiver& operator=(const AssignableReceiver&) = delete;
+		RefReceiver(const nif::ni_ptr<T>& obj) : m_obj{ obj } {}
+		RefReceiver(const RefReceiver&) = delete;
+		virtual ~RefReceiver() = default;
+		RefReceiver& operator=(const RefReceiver&) = delete;
 
-		virtual void onConnect(nif::Assignable<T>& ifc) override { ifc.assign(m_obj); }
-		virtual void onDisconnect(nif::Assignable<T>& ifc) override { ifc.assign(nullptr); }
+		virtual void onConnect(nif::Ref<T>& ifc) override { ifc.assign(m_obj); }
+		virtual void onDisconnect(nif::Ref<T>& ifc) override { ifc.assign(nullptr); }
+
+	private:
+		nif::ni_ptr<T> m_obj;
+	};
+	template<typename T>
+	class PtrReceiver : public Receiver<nif::Ptr<T>>
+	{
+	public:
+		PtrReceiver(const nif::ni_ptr<T>& obj) : m_obj{ obj } {}
+		PtrReceiver(const PtrReceiver&) = delete;
+		virtual ~PtrReceiver() = default;
+		PtrReceiver& operator=(const PtrReceiver&) = delete;
+
+		virtual void onConnect(nif::Ptr<T>& ifc) override { ifc.assign(m_obj); }
+		virtual void onDisconnect(nif::Ptr<T>& ifc) override { ifc.assign(nullptr); }
 
 	private:
 		nif::ni_ptr<T> m_obj;

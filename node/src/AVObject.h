@@ -48,7 +48,7 @@ namespace node
 			}
 
 		private:
-			AssignableReceiver<T> m_rvr;
+			PtrReceiver<T> m_rvr;
 			Sender<void> m_sdr;
 		};
 		class NameField final : public Field

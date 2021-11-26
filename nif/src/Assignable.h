@@ -34,24 +34,33 @@ namespace nif
 
 	template<typename T> using AssignableListener = IListener<Assignable<T>>;
 
-	//Do we want to distinguish between upwards and downwards references?
-	//Will we get in trouble for keeping owning pointers upwards in the hierarchy?
-	//We'll see.
 	template<typename T>
-	class Assignable final : public Observable<Assignable<T>>
+	class Assignable : public Observable<Assignable<T>>
 	{
 	public:
 		using ref_type = T;
 
+	protected:
+		Assignable() = default;
+
+		void notify(T* obj)
+		{
+			for (AssignableListener<T>* l : this->m_lsnrs) {
+				assert(l);
+				l->onAssign(obj);
+			}
+		}
+	};
+	
+	template<typename T>
+	class Ref final : public Assignable<T>
+	{
 	public:
-		Assignable(const std::shared_ptr<T>& t = std::shared_ptr<T>()) : m_assigned{ t } {}
-		~Assignable()
+		Ref(const std::shared_ptr<T>& t = std::shared_ptr<T>()) : m_assigned{ t } {}
+		~Ref()
 		{
 			if (m_assigned) {
-				for (AssignableListener<T>* l : this->m_lsnrs) {
-					assert(l);
-					l->onAssign(nullptr);
-				}
+				this->notify(nullptr);
 			}
 		}
 
@@ -59,10 +68,7 @@ namespace nif
 		{
 			if (m_assigned != t) {
 				m_assigned = t;
-				for (AssignableListener<T>* l : this->m_lsnrs) {
-					assert(l);
-					l->onAssign(t.get());
-				}
+				this->notify(m_assigned.get());
 			}
 		}
 
@@ -73,5 +79,35 @@ namespace nif
 
 	private:
 		std::shared_ptr<T> m_assigned;
+	};
+
+	template<typename T>
+	class Ptr final : public Assignable<T>
+	{
+	public:
+		Ptr(const std::shared_ptr<T>& t = std::shared_ptr<T>()) : m_assigned{ t } {}
+		~Ptr()
+		{
+			//Unlike Ref, we always signal null here. If we were to only signal
+			//if we have a resource, we would not signal in a situation where our resource
+			//has expired. A listener would probably be interested in hearing that.
+			this->notify(nullptr);
+		}
+
+		void assign(const std::shared_ptr<T>& t)
+		{
+			if (m_assigned.lock() != t) {
+				m_assigned = t;
+				this->notify(t.get());
+			}
+		}
+
+		std::shared_ptr<T> assigned() const noexcept
+		{
+			return m_assigned.lock();
+		}
+
+	private:
+		std::weak_ptr<T> m_assigned;
 	};
 }

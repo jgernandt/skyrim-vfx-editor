@@ -93,12 +93,12 @@ namespace nodes
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiFloatInterpolator>();
 
-			Assignable<NiInterpolator> target0;
-			Assignable<NiInterpolator> target;
+			Ref<NiInterpolator> target0;
+			Ref<NiInterpolator> target;
 			ConnectorTester<node::FloatController> tester(node::Default<node::FloatController>{}.create(file, obj));
 
-			tester.tryConnect<node::IController<float>, Assignable<NiInterpolator>>(node::FloatController::TARGET, false, &target0);
-			auto ifc = tester.tryConnect<node::IController<float>, Assignable<NiInterpolator>>(node::FloatController::TARGET, false, &target);
+			tester.tryConnect<node::IController<float>, Ref<NiInterpolator>>(node::FloatController::TARGET, false, &target0);
+			auto ifc = tester.tryConnect<node::IController<float>, Ref<NiInterpolator>>(node::FloatController::TARGET, false, &target);
 			Assert::IsNotNull(ifc);
 
 			Assert::IsTrue(target0.assigned() == nullptr);

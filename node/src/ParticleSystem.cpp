@@ -217,7 +217,7 @@ public:
 class node::ParticleSystem::ShaderField : public Field
 {
 public:
-	ShaderField(const std::string& name, NodeBase& node, ni_ptr<Assignable<BSShaderProperty>>&& shaderProperty) :
+	ShaderField(const std::string& name, NodeBase& node, ni_ptr<Ref<BSShaderProperty>>&& shaderProperty) :
 		Field(name), 
 		m_sender(*shaderProperty)//old format, should use ptr
 	{
@@ -226,7 +226,7 @@ public:
 
 private:
 	Receiver<void> m_rcvr;
-	Sender<Assignable<BSShaderProperty>> m_sender;
+	Sender<Ref<BSShaderProperty>> m_sender;
 };
 
 

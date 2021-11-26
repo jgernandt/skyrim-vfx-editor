@@ -18,7 +18,7 @@ namespace nodes
 
 			//Testing for BSShaderProperty now, should be BSEffectShaderProperty.
 			//We'll have to fix inheritance for Assignable.
-			AssignableReceiverTest(std::make_unique<node::EffectShader>(obj), 
+			AssignableReceiverTest<Ref>(std::make_unique<node::EffectShader>(obj), 
 				*std::static_pointer_cast<BSShaderProperty>(obj), node::EffectShader::GEOMETRY, true);
 		}
 	};
