@@ -318,8 +318,8 @@ node::Emitter::Emitter(
 	newChild<gui::Separator>();
 
 	m_sizeField = newField<SizeField>(SIZE, *this,
-		make_ni_ptr(obj, &NiPSysEmitter::lifeSpan),
-		make_ni_ptr(obj, &NiPSysEmitter::lifeSpanVar));
+		make_ni_ptr(obj, &NiPSysEmitter::size),
+		make_ni_ptr(obj, &NiPSysEmitter::sizeVar));
 
 	m_colField = newField<ColourField>(COLOUR, *this,
 		make_ni_ptr(obj, &NiPSysEmitter::colour));
