@@ -1,8 +1,10 @@
 #pragma once
+#include "CppUnitTest.h"
 #include "Constructor.h"
 
 namespace objects
 {
+	using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 	using namespace nif;
 
 	class TestConstructor : public nif::HorizontalTraverser<TestConstructor>
@@ -35,7 +37,10 @@ namespace objects
 		void addConnection(const node::ConnectionInfo& info) { connections.push_back(info); }
 
 		template<typename ObjType, typename NodeType>
-		void addNode(ObjType* obj, std::unique_ptr<NodeType>&& node) { nodes.insert({ obj, std::move(node) }); }
+		void addNode(ObjType* obj, std::unique_ptr<NodeType>&& node) 
+		{ 
+			Assert::IsTrue(nodes.insert({ obj, std::move(node) }).second); 
+		}
 
 		void pushObject(const ni_ptr<NiObject>& obj) { objects.push_back(obj); }
 		void popObject() { objects.pop_back(); }
