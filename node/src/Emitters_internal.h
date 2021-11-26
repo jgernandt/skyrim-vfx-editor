@@ -54,6 +54,11 @@ namespace node
 				throw std::runtime_error("Failed to create NiBoolInterpolator");
 			visI->value.set(true);
 		}
+
+		void setDefaults(NiPSysEmitter& obj) {
+			obj.colour.set(DEFAULT_VCOLOUR);
+			obj.elevation.set(DEFAULT_ELEVATION);
+		}
 	};
 
 	template<>
@@ -71,15 +76,11 @@ namespace node
 				obj = file.create<NiPSysBoxEmitter>();
 				if (!obj)
 					throw std::runtime_error("Failed to create NiPSysBoxEmitter");
+				setDefaults(*obj);
 			}
 			getIplrs(file, ctlr, iplr, visIplr);
 
 			return std::make_unique<BoxEmitter>(obj, ctlr, iplr, visIplr);
-		}
-
-		void setDefaults(NiPSysEmitter& obj) {
-			obj.colour.set(DEFAULT_VCOLOUR);
-			obj.elevation.set(DEFAULT_ELEVATION);
 		}
 	};
 
@@ -98,6 +99,7 @@ namespace node
 				obj = file.create<NiPSysCylinderEmitter>();
 				if (!obj)
 					throw std::runtime_error("Failed to create NiPSysCylinderEmitter");
+				setDefaults(*obj);
 			}
 			getIplrs(file, ctlr, iplr, visIplr);
 
@@ -120,6 +122,7 @@ namespace node
 				obj = file.create<NiPSysSphereEmitter>();
 				if (!obj)
 					throw std::runtime_error("Failed to create NiPSysSphereEmitter");
+				setDefaults(*obj);
 			}
 			getIplrs(file, ctlr, iplr, visIplr);
 
