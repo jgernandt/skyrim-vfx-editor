@@ -10,8 +10,38 @@ namespace node
 	using namespace nif;
 
 	//NiPSysModifier/////
+
+	template<>
+	class Default<Modifier>
+	{
+	public:
+		void setDefaults(NiPSysModifier& obj)
+		{
+			obj.active.set(true);
+			obj.order.set(-1);
+		}
+	};
 	
-	//No Default specialisation
+	template<>
+	class Default<DummyModifier> : public Default<Modifier>
+	{
+	public:
+		std::unique_ptr<DummyModifier> create(nif::File& file,
+			const ni_ptr<NiPSysModifier>& obj = ni_ptr<NiPSysModifier>())
+		{
+			if (obj)
+				return std::make_unique<DummyModifier>(obj);
+			else {
+				auto new_obj = file.create<NiPSysModifier>();
+				if (!new_obj)
+					throw std::runtime_error("Failed to create NiPSysModifier");
+
+				this->setDefaults(*new_obj);
+
+				return std::make_unique<DummyModifier>(new_obj);
+			}
+		}
+	};
 
 	template<>
 	class Connector<NiPSysModifier> : public VerticalTraverser<NiPSysModifier, Connector>
@@ -90,7 +120,7 @@ namespace node
 
 
 	template<>
-	class Default<PlanarForceField>
+	class Default<PlanarForceField> : public Default<Modifier>
 	{
 	public:
 		std::unique_ptr<PlanarForceField> create(File& file, const ni_ptr<NiPSysGravityModifier>& obj = ni_ptr<NiPSysGravityModifier>())
@@ -102,7 +132,7 @@ namespace node
 				if (!new_obj)
 					throw std::runtime_error("Failed to create NiPSysGravityModifier");
 
-				new_obj->active.set(true);
+				this->setDefaults(*new_obj);
 				new_obj->forceType.set(FORCE_PLANAR);
 				new_obj->gravityAxis.set({ 0.0f, 0.0f, 1.0f });
 
@@ -112,7 +142,7 @@ namespace node
 	};
 
 	template<>
-	class Default<SphericalForceField>
+	class Default<SphericalForceField> : public Default<Modifier>
 	{
 	public:
 		std::unique_ptr<SphericalForceField> create(File& file, const ni_ptr<NiPSysGravityModifier>& obj = ni_ptr<NiPSysGravityModifier>())
@@ -124,7 +154,7 @@ namespace node
 				if (!new_obj)
 					throw std::runtime_error("Failed to create NiPSysGravityModifier");
 
-				new_obj->active.set(true);
+				this->setDefaults(*new_obj);
 				new_obj->forceType.set(FORCE_SPHERICAL);
 
 				return std::make_unique<SphericalForceField>(new_obj);
@@ -133,7 +163,7 @@ namespace node
 	};
 
 	template<>
-	class Default<RotationModifier>
+	class Default<RotationModifier> : public Default<Modifier>
 	{
 	public:
 		std::unique_ptr<RotationModifier> create(File& file, const ni_ptr<NiPSysRotationModifier>& obj = ni_ptr<NiPSysRotationModifier>())
@@ -145,7 +175,7 @@ namespace node
 				if (!new_obj)
 					throw std::runtime_error("Failed to create NiPSysRotationModifier");
 
-				new_obj->active.set(true);
+				this->setDefaults(*new_obj);
 
 				return std::make_unique<RotationModifier>(new_obj);
 			}
@@ -153,7 +183,7 @@ namespace node
 	};
 
 	template<>
-	class Default<ScaleModifier>
+	class Default<ScaleModifier> : public Default<Modifier>
 	{
 	public:
 		std::unique_ptr<ScaleModifier> create(File& file, const ni_ptr<BSPSysScaleModifier>& obj = ni_ptr<BSPSysScaleModifier>())
@@ -165,7 +195,7 @@ namespace node
 				if (!new_obj)
 					throw std::runtime_error("Failed to create BSPSysScaleModifier");
 
-				new_obj->active.set(true);
+				this->setDefaults(*new_obj);
 				new_obj->scales.set({ 0.0f, 1.0f });
 
 				return std::make_unique<ScaleModifier>(new_obj);
@@ -174,7 +204,7 @@ namespace node
 	};
 
 	template<>
-	class Default<SimpleColourModifier>
+	class Default<SimpleColourModifier> : public Default<Modifier>
 	{
 	public:
 		std::unique_ptr<SimpleColourModifier> create(File& file, const ni_ptr<BSPSysSimpleColorModifier>& obj = ni_ptr<BSPSysSimpleColorModifier>())
@@ -186,7 +216,7 @@ namespace node
 				if (!new_obj)
 					throw std::runtime_error("Failed to create BSPSysSimpleColorModifier");
 
-				new_obj->active.set(true);
+				this->setDefaults(*new_obj);
 
 				new_obj->col1.value.set({ 1.0f, 0.0f, 0.0f, 0.0f });
 				new_obj->col2.value.set(COL_GREEN);

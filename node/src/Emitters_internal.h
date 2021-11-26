@@ -2,6 +2,7 @@
 #include "Emitters.h"
 #include "Constructor.h"
 #include "Controllers_internal.h"
+#include "Modifiers_internal.h"
 
 namespace node
 {
@@ -11,7 +12,7 @@ namespace node
 	constexpr math::degf DEFAULT_ELEVATION = math::degf{ 0.0f };
 
 	template<>
-	class Default<Emitter>
+	class Default<Emitter> : public Default<Modifier>
 	{
 	public:
 
@@ -56,6 +57,7 @@ namespace node
 		}
 
 		void setDefaults(NiPSysEmitter& obj) {
+			Default<Modifier>::setDefaults(obj);
 			obj.colour.set(DEFAULT_VCOLOUR);
 			obj.elevation.set(DEFAULT_ELEVATION);
 		}
