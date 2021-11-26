@@ -101,8 +101,8 @@ public:
 
 		m_obj->col3.RGBbegin.addListener(m_end2Less);
 
-		m_obj->col2.Abegin.addListener(m_a2BegLess);
-		m_obj->col2.Aend.addListener(m_a2EndGr);
+		m_obj->col2.Aend.addListener(m_a2BegLess);
+		m_obj->col2.Abegin.addListener(m_a2EndGr);
 	}
 
 	~ColourField()
@@ -117,8 +117,8 @@ public:
 
 		m_obj->col3.RGBbegin.removeListener(m_end2Less);
 
-		m_obj->col2.Abegin.removeListener(m_a2BegLess);
-		m_obj->col2.Aend.removeListener(m_a2EndGr);
+		m_obj->col2.Aend.removeListener(m_a2BegLess);
+		m_obj->col2.Abegin.removeListener(m_a2EndGr);
 	}
 
 private:
