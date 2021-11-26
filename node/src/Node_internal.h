@@ -51,7 +51,7 @@ namespace node
 		template<typename C>
 		bool operator() (NiNode& obj, C& ctor)
 		{
-			if (auto ptr = ctor.getObject(); ptr.get() == &obj) {
+			if (auto&& ptr = ctor.getObject(); ptr.get() == &obj) {
 				auto node = std::make_unique<Node>(std::static_pointer_cast<NiNode>(ptr));
 				ctor.addNode(&obj, std::move(node));
 			}
@@ -65,7 +65,7 @@ namespace node
 		template<typename C>
 		bool operator() (NiNode& obj, C& ctor) 
 		{
-			if (auto ptr = ctor.getObject(); ptr.get() == &obj) {
+			if (auto&& ptr = ctor.getObject(); ptr.get() == &obj) {
 				auto node = std::make_unique<Root>(std::static_pointer_cast<NiNode>(ptr));
 				ctor.addNode(&obj, std::move(node));
 			}

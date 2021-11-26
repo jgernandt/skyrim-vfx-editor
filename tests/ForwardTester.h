@@ -19,9 +19,37 @@ namespace objects
 	};
 
 	template<>
+	struct ForwardTester<NiObjectNET> : VerticalTraverser<NiObjectNET, ForwardTester>
+	{
+		bool operator() (NiObjectNET& obj, TestConstructor& ctor, File& file);
+		bool operator() (const NiObjectNET& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct ForwardTester<NiAVObject> : VerticalTraverser<NiAVObject, ForwardTester>
+	{
+		bool operator() (NiAVObject&, TestConstructor&, File&) { return false; }
+		bool operator() (const NiAVObject& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct ForwardTester<NiNode> : VerticalTraverser<NiNode, ForwardTester>
 	{
 		bool operator() (NiNode& obj, TestConstructor& ctor, File& file);
 		bool operator() (const NiNode& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct ForwardTester<NiExtraData> : VerticalTraverser<NiExtraData, ForwardTester>
+	{
+		bool operator() (NiExtraData&, TestConstructor&, File&) { return false; }
+		bool operator() (const NiExtraData& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct ForwardTester<NiStringExtraData> : VerticalTraverser<NiStringExtraData, ForwardTester>
+	{
+		bool operator() (NiStringExtraData&, TestConstructor&, File&) { return false; }
+		bool operator() (const NiStringExtraData& obj, const TestConstructor& ctor);
 	};
 }

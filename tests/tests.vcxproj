@@ -221,6 +221,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="NiBaseImpl.cpp" />
+    <ClCompile Include="NiExtraDataImpl.cpp" />
     <ClCompile Include="NiNodeImpl.cpp" />
     <ClCompile Include="objects.cpp" />
     <ClCompile Include="ParticleSystemTests.cpp">

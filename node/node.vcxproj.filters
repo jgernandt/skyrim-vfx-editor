@@ -13,14 +13,8 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\NiTypes">
-      <UniqueIdentifier>{1eda6d9a-407c-45c1-8639-fc9b28d86c8d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Nodes">
       <UniqueIdentifier>{e904cfb2-a49a-45f5-93f4-183c5d0dfb1b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Controls">
-      <UniqueIdentifier>{16499604-c752-4071-aff1-11512a7d75bc}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Nodes">
       <UniqueIdentifier>{d39648fd-2777-47f6-bd99-74e7acf75b5d}</UniqueIdentifier>
@@ -127,6 +121,9 @@
       <Filter>Header Files\Nodes\internal</Filter>
     </ClInclude>
     <ClInclude Include="src\PSys_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ExtraData_internal.h">
       <Filter>Header Files\Nodes\internal</Filter>
     </ClInclude>
   </ItemGroup>

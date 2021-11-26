@@ -11,6 +11,7 @@ namespace objects
 	{
 		//Should prepare object to have a certain structure. 
 		//Unlike ConnectorTester, may need to also set up the Constructor.
+		//I don't know if anyone will actually use this step.
 		bool operator() (T&, TestConstructor&, File&) { return true; }
 
 		//Should test that Constructor has the expected Node
@@ -18,9 +19,57 @@ namespace objects
 	};
 
 	template<>
+	struct FactoryTester<NiObjectNET> : VerticalTraverser<NiObjectNET, FactoryTester>
+	{
+		bool operator() (NiObjectNET&, TestConstructor&, File&) { return false; }
+		bool operator() (const NiObjectNET& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct FactoryTester<NiAVObject> : VerticalTraverser<NiAVObject, FactoryTester>
+	{
+		bool operator() (NiAVObject&, TestConstructor&, File&) { return false; }
+		bool operator() (const NiAVObject& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct FactoryTester<NiNode> : VerticalTraverser<NiNode, FactoryTester>
 	{
 		bool operator() (NiNode& obj, TestConstructor& ctor, File& file);
 		bool operator() (const NiNode& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct FactoryTester<NiExtraData> : VerticalTraverser<NiExtraData, FactoryTester>
+	{
+		bool operator() (NiExtraData&, TestConstructor&, File&) { return false; }
+		bool operator() (const NiExtraData& obj, const TestConstructor& ctor);
+	};
+
+
+	template<typename T>
+	struct FactoryTest
+	{
+		void run()
+		{
+			static int duplicate = 0;
+			Assert::IsTrue(!duplicate++);
+
+			nif::File file(nif::File::Version::SKYRIM_SE);
+			auto obj = file.create<T>();
+
+			TestConstructor c(file);
+			c.pushObject(obj);
+			FactoryTester<T>{}.up(*obj, c, file);//this overload sets up obj and c
+			node::Factory<T>{}.up(*obj, c);
+			FactoryTester<T>{}.up(*obj, c);//this overload makes the assertions
+		}
+	};
+
+
+	template<>
+	struct FactoryTest<NiStringExtraData>
+	{
+		void run();
 	};
 }

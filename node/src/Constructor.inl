@@ -15,7 +15,7 @@ namespace node
 			m_objectStack.push_back(m_file.getRoot());
 
 			//Create a root node
-			//RootFactory<T>{}.down(obj, *this);
+			RootFactory<T>{}.down(obj, *this);
 
 			//if it failed, the root object must be invalid
 			if (m_nodes.empty())

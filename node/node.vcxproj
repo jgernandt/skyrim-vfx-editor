@@ -25,6 +25,7 @@
     <ClInclude Include="src\Controllers.h" />
     <ClInclude Include="src\Controllers_internal.h" />
     <ClInclude Include="src\Emitters_internal.h" />
+    <ClInclude Include="src\ExtraData_internal.h" />
     <ClInclude Include="src\Modifiers_internal.h" />
     <ClInclude Include="src\nodes_internal.h" />
     <ClInclude Include="src\node_conversions.h" />

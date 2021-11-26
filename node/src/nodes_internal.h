@@ -10,3 +10,5 @@
 #include "Node_internal.h"
 
 #include "Shaders_internal.h"
+
+#include "ExtraData_internal.h"

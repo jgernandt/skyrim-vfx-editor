@@ -54,10 +54,8 @@ namespace node
 		//(the caller is responsible for making sure target is a valid receiver)
 		void extractNodes(gui::ConnectionHandler& target);
 
-	private:
-		template<typename T> friend class Connector;
-		template<typename T> friend class Factory;
-		template<typename T> friend class Forwarder;
+
+		//Used during traversal
 
 		void addConnection(const node::ConnectionInfo& info) { m_connections.push_back(info); }
 
@@ -69,6 +67,7 @@ namespace node
 
 		File& getFile() { return m_file; }
 
+	private:
 		File& m_file;
 		std::vector<ConnectionInfo> m_connections;
 		std::vector<std::unique_ptr<NodeBase>> m_nodes;
