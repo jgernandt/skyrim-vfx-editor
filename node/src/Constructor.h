@@ -51,8 +51,9 @@ namespace node
 		std::vector<std::string>& warnings() { return m_warnings; }
 
 		//should transfer ownership of our nodes to target and resolve our connections
-		//(the caller is responsible for making sure target is a valid receiver)
-		void extractNodes(gui::ConnectionHandler& target);
+		//(the caller is responsible for making sure target is a valid receiver).
+		//Arranging of the nodes can be disabled (for testing, mostly).
+		void extractNodes(gui::ConnectionHandler& target, bool arrange = true);
 
 
 		//Used during traversal

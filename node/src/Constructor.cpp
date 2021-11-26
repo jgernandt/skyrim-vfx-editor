@@ -22,7 +22,7 @@
 
 using namespace nif;
 
-void node::Constructor::extractNodes(gui::ConnectionHandler& target)
+void node::Constructor::extractNodes(gui::ConnectionHandler& target, bool arrange)
 {
 	std::vector<std::pair<gui::Connector*, gui::Connector*>> couplings;
 	std::vector<Positioner::LinkInfo> linkInfo;
@@ -85,27 +85,21 @@ void node::Constructor::extractNodes(gui::ConnectionHandler& target)
 	m_connections.clear();
 
 	if (m_nodes.size() > 1) {
-		target.addChild(std::make_unique<Positioner>(std::move(m_nodes), std::move(linkInfo)));
-		//Positioner solver(connectivity);
-		//auto pos = solver.solve(connectivity);
-		//if (pos.size() == 2 * m_nodes.size()) {
-		//	for (int i = 0; i < static_cast<int>(m_nodes.size()); i++)
-		//		m_nodes[i]->setTranslation({ pos[i], pos[i + m_nodes.size()] });
-		//}
+		if (arrange)
+			target.addChild(std::make_unique<Positioner>(std::move(m_nodes), std::move(linkInfo)));
+		else {
+			for (auto&& node : m_nodes)
+				target.addChild(std::move(node));
+			m_nodes.clear();
+		}
 	}
 	else if (m_nodes.size() == 1)
 		target.addChild(std::move(m_nodes.front()));
-
-	//for (auto&& node : m_nodes) {
-	//	target.addChild(std::move(node));
-	//}
-	//m_nodes.clear();
 
 	for (auto&& pair : couplings) {
 		pair.first->setConnectionState(pair.second, true);
 		pair.second->setConnectionState(pair.first, true);
 	}
-
 }
 
 void node::Constructor::addNode(NiObject* obj, std::unique_ptr<NodeBase>&& node)
