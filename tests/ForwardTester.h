@@ -40,6 +40,20 @@ namespace objects
 	};
 
 	template<>
+	struct ForwardTester<NiParticleSystem> : VerticalTraverser<NiParticleSystem, ForwardTester>
+	{
+		bool operator() (NiParticleSystem& obj, TestConstructor& ctor, File& file);
+		bool operator() (const NiParticleSystem& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct ForwardTester<NiPSysModifier> : VerticalTraverser<NiPSysModifier, ForwardTester>
+	{
+		bool operator() (NiPSysModifier& obj, TestConstructor& ctor, File& file);
+		bool operator() (const NiPSysModifier& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct ForwardTester<NiExtraData> : VerticalTraverser<NiExtraData, ForwardTester>
 	{
 		bool operator() (NiExtraData&, TestConstructor&, File&) { return false; }

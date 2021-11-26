@@ -9,6 +9,86 @@ namespace node
 {
 	using namespace nif;
 
+	//NiPSysModifier/////
+	
+	//No Default specialisation
+
+	template<>
+	class Connector<NiPSysModifier> : public VerticalTraverser<NiPSysModifier, Connector>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiPSysModifier& obj, C& ctor)
+		{
+			//Request connection to our psys and specify our order. 
+			//Who we will actually connect to will be sorted out later.
+			ConnectionInfo info;
+			info.object1 = &obj;
+			info.field1 = Modifier::TARGET;
+			info.object2 = obj.target.assigned().get();
+			info.field2 = ParticleSystem::MODIFIERS;
+			info.order = obj.order.get();
+			ctor.addConnection(info);
+
+			return true;
+		}
+	};
+
+	template<>
+	class Factory<NiPSysModifier> : public VerticalTraverser<NiPSysModifier, Factory>
+	{
+	public:
+		class Traverser final : public NiTraverser
+		{
+			std::string m_name;
+		public:
+			ni_ptr<NiTimeController> current;
+			std::vector<ni_ptr<NiPSysModifierCtlr>> controllers;
+
+			Traverser(std::string&& name) : m_name{ std::move(name) } {}
+
+			virtual void traverse(NiPSysModifierCtlr& obj) override
+			{
+				assert(current.get() == &obj);
+				if (obj.modifierName.get() == m_name)
+					controllers.push_back(std::static_pointer_cast<NiPSysModifierCtlr>(current));
+			}
+			virtual void traverse(NiPSysEmitterCtlr& obj) override
+			{
+				Traverser::traverse(static_cast<NiPSysModifierCtlr&>(obj));
+			}
+		};
+
+		template<typename C>
+		bool operator() (NiPSysModifier& obj, C& ctor)
+		{
+			if (ni_ptr<NiPSysModifier> ptr = std::static_pointer_cast<NiPSysModifier>(ctor.getObject()); ptr.get() == &obj) {
+
+				//need to go through target's controllers
+				//if PSysModifierCtlr, look if name matches that of obj
+				Traverser t(obj.name.get());
+				if (auto&& target = obj.target.assigned()) {
+					for (auto&& ctlr : target->controllers) {
+						t.current = ctlr;
+						ctlr->receive(t);
+					}
+				}
+
+				auto node = Default<DummyModifier>{}.create(ctor.getFile(), ptr);
+
+				for (auto&& ctlr : t.controllers)
+					node->addController(ctlr);
+
+				ctor.addNode(&obj, std::move(node));
+			}
+			return false;
+		}
+	};
+
+	//No Forwarder specialisation
+
+
+
 	template<>
 	class Default<PlanarForceField>
 	{

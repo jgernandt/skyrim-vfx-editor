@@ -92,4 +92,104 @@ namespace node
 			return std::make_unique<ParticleSystem>(psys, data, alpha, adm, bum, pm, ctlr);
 		}
 	};
+
+	template<>
+	class Connector<NiParticleSystem> : public VerticalTraverser<NiParticleSystem, Connector>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiParticleSystem& obj, C& ctor)
+		{
+			//We expect that shader and alpha properties have already been added if missing.
+			assert(obj.shaderProperty.assigned() && obj.alphaProperty.assigned());
+			ctor.addConnection(ConnectionInfo{ 
+				&obj, 
+				obj.shaderProperty.assigned().get(), 
+				ParticleSystem::SHADER, 
+				EffectShader::GEOMETRY });
+
+			ctor.addConnection(ConnectionInfo{
+				&obj,
+				obj.alphaProperty.assigned().get(),
+				ParticleSystem::ALPHA,
+				"" });
+
+			return true;
+		}
+	};
+	
+	template<>
+	class Factory<NiParticleSystem> : public VerticalTraverser<NiParticleSystem, Factory>
+	{
+	public:
+		struct Compare
+		{
+			bool operator() (const ni_ptr<NiPSysModifier>& lhs, const ni_ptr<NiPSysModifier>& rhs)
+			{
+				assert(lhs && rhs);
+				return lhs->order.get() < rhs->order.get();
+			}
+		};
+
+		template<typename C>
+		bool operator() (NiParticleSystem& obj, C& ctor)
+		{
+			if (ni_ptr<NiParticleSystem> ptr = std::static_pointer_cast<NiParticleSystem>(ctor.getObject()); ptr.get() == &obj) {
+				//Sort mods
+				std::sort(obj.modifiers.begin(), obj.modifiers.end(), Compare{});
+				//Locate our static mods, if we have them
+				ni_ptr<NiPSysAgeDeathModifier> adm;
+				ni_ptr<NiPSysBoundUpdateModifier> bum;
+				ni_ptr<NiPSysPositionModifier> pm;
+				for (auto&& mod : obj.modifiers) {
+					if (ni_type type = mod->type(); type == NiPSysAgeDeathModifier::TYPE)
+						adm = std::static_pointer_cast<NiPSysAgeDeathModifier>(mod);
+					else if (type == NiPSysBoundUpdateModifier::TYPE)
+						bum = std::static_pointer_cast<NiPSysBoundUpdateModifier>(mod);
+					else if (type == NiPSysPositionModifier::TYPE)
+						pm = std::static_pointer_cast<NiPSysPositionModifier>(mod);
+				}
+
+				//and our update ctlr
+				ni_ptr<NiPSysUpdateCtlr> uc;
+				for (auto&& ctlr : obj.controllers) {
+					if (ni_type type = ctlr->type(); type == NiPSysUpdateCtlr::TYPE)
+						uc = std::static_pointer_cast<NiPSysUpdateCtlr>(ctlr);
+				}
+
+				ctor.addNode(&obj, Default<ParticleSystem>{}.create(
+					ctor.getFile(), ptr, obj.data.assigned(), obj.alphaProperty.assigned(), adm, bum, pm, uc));
+			}
+			return false;
+		}
+	};
+
+	template<>
+	class Forwarder<NiParticleSystem> : public VerticalTraverser<NiParticleSystem, Forwarder>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiParticleSystem& obj, C& ctor)
+		{
+			//Forward to modifiers, shader and alpha
+			for (auto&& mod : obj.modifiers) {
+				assert(mod);
+				ctor.pushObject(mod);
+				mod->receive(ctor);
+				ctor.popObject();
+			}
+			if (auto&& shader = obj.shaderProperty.assigned()) {
+				ctor.pushObject(shader);
+				shader->receive(ctor);
+				ctor.popObject();
+			}
+			if (auto&& alpha = obj.alphaProperty.assigned()) {
+				ctor.pushObject(alpha);
+				alpha->receive(ctor);
+				ctor.popObject();
+			}
+
+			return true;
+		}
+	};
 }

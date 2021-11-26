@@ -43,6 +43,7 @@ namespace node
 		constexpr static const char* WORLD_SPACE = "World space";
 		constexpr static const char* MAX_COUNT = "Particle limit";
 		constexpr static const char* SHADER = "Shader";
+		constexpr static const char* ALPHA = "Blending";
 		constexpr static const char* MODIFIERS = "Modifiers";
 
 		constexpr static float WIDTH = 160.0f;

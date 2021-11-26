@@ -38,6 +38,20 @@ namespace objects
 	};
 
 	template<>
+	struct ConnectorTester<NiParticleSystem> : VerticalTraverser<NiParticleSystem, ConnectorTester>
+	{
+		bool operator() (NiParticleSystem& obj, File& file);
+		bool operator() (const NiParticleSystem& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct ConnectorTester<NiPSysModifier> : VerticalTraverser<NiPSysModifier, ConnectorTester>
+	{
+		bool operator() (NiPSysModifier& obj, File& file);
+		bool operator() (const NiPSysModifier& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct ConnectorTester<NiExtraData> : VerticalTraverser<NiExtraData, ConnectorTester>
 	{
 		bool operator() (NiExtraData&, File&) { return false; }

@@ -11,7 +11,6 @@ namespace objects
 	{
 		//Should prepare object to have a certain structure. 
 		//Unlike ConnectorTester, may need to also set up the Constructor.
-		//I don't know if anyone will actually use this step.
 		bool operator() (T&, TestConstructor&, File&) { return true; }
 
 		//Should test that Constructor has the expected Node
@@ -37,6 +36,13 @@ namespace objects
 	{
 		bool operator() (NiNode& obj, TestConstructor& ctor, File& file);
 		bool operator() (const NiNode& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct FactoryTester<NiPSysModifier> : VerticalTraverser<NiPSysModifier, FactoryTester>
+	{
+		bool operator() (NiPSysModifier& obj, TestConstructor& ctor, File& file);
+		bool operator() (const NiPSysModifier& obj, const TestConstructor& ctor);
 	};
 
 	template<>
@@ -66,9 +72,14 @@ namespace objects
 		}
 	};
 
-
 	template<>
 	struct FactoryTest<NiStringExtraData>
+	{
+		void run();
+	};
+
+	template<>
+	struct FactoryTest<NiParticleSystem>
 	{
 		void run();
 	};

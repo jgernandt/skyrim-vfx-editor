@@ -72,6 +72,22 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiNode>{}.run(); }
 	};
 
+	TEST_CLASS(NiParticleSystem)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiParticleSystem>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiParticleSystem>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiParticleSystem>{}.run(); }
+	};
+
+	TEST_CLASS(NiPSysModifier)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysModifier>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysModifier>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysModifier>{}.run(); }
+	};
+
 	TEST_CLASS(NiExtraData)
 	{
 	public:

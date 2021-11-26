@@ -211,6 +211,7 @@
       </ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="math.cpp" />
+    <ClCompile Include="ModifiersImpl.cpp" />
     <ClCompile Include="ModifiersTests.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </ExcludedFromBuild>
@@ -224,6 +225,7 @@
     <ClCompile Include="NiBaseImpl.cpp" />
     <ClCompile Include="NiExtraDataImpl.cpp" />
     <ClCompile Include="NiNodeImpl.cpp" />
+    <ClCompile Include="NiParticleSystemImpl.cpp" />
     <ClCompile Include="objects.cpp" />
     <ClCompile Include="ParticleSystemTests.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
