@@ -10,6 +10,10 @@
 #include "NiPSysEmitter_internal.h"
 #include "NiPSysModifier_internal.h"
 
+#ifdef _DEBUG
+extern int g_downwardsPtrs;
+#endif
+
 namespace nif
 {
 	class ForwardingReadSyncer final : public HorizontalTraverser<ForwardingReadSyncer>
@@ -63,19 +67,21 @@ namespace nif
 
 		if (nativeRef) {
 			if (auto it = m_nativeIndex.find(static_cast<Niflib::NiObject*>(nativeRef)); it != m_nativeIndex.end()) {
-				auto object = it->second.lock();
-				//if (!object) {
+				if (auto object = it->second.lock()) {
+					//downcast safe if type_map is correct
+					result = std::static_pointer_cast<T>(object);
+				}
+				else {
 					//The object is indexed, but it has expired.
-					//This is unexpected, but not really a problem. We can just recreate it.
-					//However, it is probably a bug. Let's treat it as such for now.
-				//}
-				assert(object);
-
-				//downcast safe if type_map is correct
-				result = std::static_pointer_cast<T>(object);
+					//We'll get here if we load a file that has a downward Ptr.
+					//However, it could also be a bug, so we should keep an eye on this.
+					result = make_ni<T>(nativeRef);
+#ifdef _DEBUG
+					g_downwardsPtrs++;
+#endif
+				}
 			}
 			else
-				//needs sync. Who's responsibility is that?
 				result = make_ni<T>(nativeRef);
 		}
 

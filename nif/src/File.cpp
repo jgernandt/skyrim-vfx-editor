@@ -20,6 +20,10 @@
 #include "File.h"
 #include "File.inl"
 
+#ifdef _DEBUG
+int g_downwardsPtrs = 0;
+#endif
+
 using namespace nif;
 
 template<typename T>
