@@ -102,6 +102,15 @@ void node::Constructor::extractNodes(gui::ConnectionHandler& target, bool arrang
 	}
 }
 
+void node::Constructor::addConnection(const node::ConnectionInfo& info)
+{
+	m_connections.push_back(info);
+}
+
+void node::Constructor::addModConnection(NiParticleSystem* target, NiPSysModifier* mod)
+{
+}
+
 void node::Constructor::addNode(NiObject* obj, std::unique_ptr<NodeBase>&& node)
 {
 	assert(obj && node);

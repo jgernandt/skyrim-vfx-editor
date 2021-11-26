@@ -40,13 +40,7 @@ namespace creation
 					ctor.addNode(mods[i].get(), std::move(nodes[i]));
 				}
 
-				node::ConnectionInfo info;
-				info.object1 = mods[i].get();
-				info.field1 = node::Modifier::TARGET;
-				info.object2 = psys.get();
-				info.field2 = node::ParticleSystem::MODIFIERS;
-				info.order = i;
-				ctor.addConnection(info);
+				ctor.addModConnection(psys.get(), mods[i].get());
 			}
 
 			gui::ConnectionHandler root;

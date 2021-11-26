@@ -17,6 +17,7 @@ namespace objects
 
 		//For ConnectorTester
 		std::vector<node::ConnectionInfo> connections;
+		std::vector<std::pair<NiParticleSystem*, NiPSysModifier*>> modConnections;
 
 		//For FactoryTester
 		std::pair<NiObject*, std::unique_ptr<node::NodeBase>> node;
@@ -35,6 +36,7 @@ namespace objects
 		}
 
 		void addConnection(const node::ConnectionInfo& info) { connections.push_back(info); }
+		void addModConnection(NiParticleSystem* target, NiPSysModifier* mod) { modConnections.push_back({ target, mod }); }
 
 		template<typename ObjType, typename NodeType>
 		void addNode(ObjType* obj, std::unique_ptr<NodeType>&& n) 

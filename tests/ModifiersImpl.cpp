@@ -19,14 +19,9 @@ bool objects::ConnectorTester<NiPSysModifier>::operator()(NiPSysModifier& obj, F
 
 bool objects::ConnectorTester<NiPSysModifier>::operator()(const NiPSysModifier& obj, const TestConstructor& ctor)
 {
-	//We should have left a request to connect to the particle system, where we also specified our order.
-	//This will let the Constructor sort out where to connect us, after all nodes have been created.
-	Assert::IsTrue(ctor.connections.size() == 1);
-	Assert::IsTrue(ctor.connections[0].object1 == &obj);
-	Assert::IsTrue(ctor.connections[0].field1 == node::Modifier::TARGET);
-	Assert::IsTrue(ctor.connections[0].object2 == obj.target.assigned().get());
-	Assert::IsTrue(ctor.connections[0].field2 == node::ParticleSystem::MODIFIERS);
-	Assert::IsTrue(ctor.connections[0].order == obj.order.get());
+	//Our target should handle everything
+	Assert::IsTrue(ctor.connections.size() == 0);
+	Assert::IsTrue(ctor.modConnections.size() == 0);
 
 	return false;
 }

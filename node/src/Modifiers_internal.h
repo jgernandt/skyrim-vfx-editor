@@ -43,26 +43,7 @@ namespace node
 		}
 	};
 
-	template<>
-	class Connector<NiPSysModifier> : public VerticalTraverser<NiPSysModifier, Connector>
-	{
-	public:
-		template<typename C>
-		bool operator() (NiPSysModifier& obj, C& ctor)
-		{
-			//Request connection to our psys and specify our order. 
-			//Who we will actually connect to will be sorted out later.
-			ConnectionInfo info;
-			info.object1 = &obj;
-			info.field1 = Modifier::TARGET;
-			info.object2 = obj.target.assigned().get();
-			info.field2 = ParticleSystem::MODIFIERS;
-			info.order = obj.order.get();
-			ctor.addConnection(info);
-
-			return true;
-		}
-	};
+	//No Connector specialisation
 
 	template<>
 	class Factory<NiPSysModifier> : public VerticalTraverser<NiPSysModifier, Factory>

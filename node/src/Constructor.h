@@ -37,7 +37,6 @@ namespace node
 		std::string field2;
 
 		//possibly:
-		int order{ -1 };//for modifiers
 		int target{ -1 };//for controllers
 	};
 
@@ -58,7 +57,8 @@ namespace node
 
 		//Used during traversal
 
-		void addConnection(const node::ConnectionInfo& info) { m_connections.push_back(info); }
+		void addConnection(const node::ConnectionInfo& info);
+		void addModConnection(NiParticleSystem* target, NiPSysModifier* mod);
 
 		void addNode(NiObject* obj, std::unique_ptr<NodeBase>&& node);
 
@@ -70,7 +70,10 @@ namespace node
 
 	private:
 		File& m_file;
+
 		std::vector<ConnectionInfo> m_connections;
+		std::map<NiParticleSystem*, std::vector<NiPSysModifier*>> m_modConnections;
+
 		std::vector<std::unique_ptr<NodeBase>> m_nodes;
 		std::map<NiObject*, int> m_objectMap;//maps processed objects to an index in m_nodes (-1 if none)
 

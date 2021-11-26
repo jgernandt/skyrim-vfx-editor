@@ -100,6 +100,9 @@ namespace node
 		template<typename C>
 		bool operator() (NiParticleSystem& obj, C& ctor)
 		{
+			for (auto&& mod : obj.modifiers)
+				ctor.addModConnection(&obj, mod.get());
+
 			//We expect that shader and alpha properties have already been added if missing.
 			assert(obj.shaderProperty.assigned() && obj.alphaProperty.assigned());
 			ctor.addConnection(ConnectionInfo{ 
