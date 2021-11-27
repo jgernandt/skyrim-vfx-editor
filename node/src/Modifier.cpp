@@ -21,6 +21,8 @@
 #include "style.h"
 #include "widget_types.h"
 
+using namespace nif;
+
 node::Modifier::Modifier(const ni_ptr<NiPSysModifier>& obj) :
 	m_device(obj),
 	m_nameUpdater(make_ni_ptr(obj, &NiPSysModifier::name))
@@ -46,6 +48,11 @@ void node::Modifier::addController(const ni_ptr<nif::NiPSysModifierCtlr>& ctlr)
 {
 	if (ctlr)
 		m_device.addController(ctlr);
+}
+
+std::vector<NiPSysModifierCtlr*> node::Modifier::getControllers() const
+{
+	return m_device.getControllers();
 }
 
 
@@ -135,6 +142,15 @@ void node::Modifier::Device::removeController(nif::NiPSysModifierCtlr* ctlr)
 			m_ctlrs.erase(it);
 		}
 	}
+}
+
+std::vector<NiPSysModifierCtlr*> node::Modifier::Device::getControllers() const
+{
+	std::vector<NiPSysModifierCtlr*> out;
+	out.reserve(m_ctlrs.size());
+	for (auto&& pair : m_ctlrs)
+		out.push_back(pair.first.get());
+	return out;
 }
 
 void node::Modifier::Device::addRequirement(ModRequirement req)

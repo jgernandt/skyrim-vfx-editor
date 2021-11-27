@@ -37,6 +37,7 @@ namespace node
 		virtual ~Modifier();
 
 		void addController(const ni_ptr<NiPSysModifierCtlr>& ctlr);
+		std::vector<NiPSysModifierCtlr*> getControllers() const;
 
 	public:
 		constexpr static const char* TARGET = "Target";
@@ -67,6 +68,7 @@ namespace node
 			//Also registers the controller to receive name changes.
 			void addController(const ni_ptr<NiPSysModifierCtlr>& ctlr);
 			void removeController(NiPSysModifierCtlr* ctlr);
+			std::vector<NiPSysModifierCtlr*> getControllers() const;
 
 			//Add a requirement to our connected interface (current or future).
 			void addRequirement(ModRequirement req);
