@@ -21,7 +21,7 @@ bool objects::ConnectorTester<NiPSysModifier>::operator()(const NiPSysModifier& 
 {
 	//Our target should handle everything
 	Assert::IsTrue(ctor.connections.size() == 0);
-	Assert::IsTrue(ctor.modConnections.size() == 0);
+	Assert::IsTrue(ctor.modConnections.second.empty());
 
 	return false;
 }

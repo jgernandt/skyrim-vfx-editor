@@ -100,8 +100,11 @@ namespace node
 		template<typename C>
 		bool operator() (NiParticleSystem& obj, C& ctor)
 		{
+			std::vector<NiPSysModifier*> mods;
+			mods.reserve(obj.modifiers.size());
 			for (auto&& mod : obj.modifiers)
-				ctor.addModConnection(&obj, mod.get());
+				mods.push_back(mod.get());
+			ctor.addModConnections(&obj, std::move(mods));
 
 			//We expect that shader and alpha properties have already been added if missing.
 			assert(obj.shaderProperty.assigned() && obj.alphaProperty.assigned());

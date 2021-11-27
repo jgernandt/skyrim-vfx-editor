@@ -142,10 +142,10 @@ void node::Constructor::addConnection(const node::ConnectionInfo& info)
 	m_connections.push_back(info);
 }
 
-void node::Constructor::addModConnection(NiParticleSystem* target, NiPSysModifier* mod)
+void node::Constructor::addModConnections(NiParticleSystem* target, std::vector<NiPSysModifier*>&& mods)
 {
-	if (target && mod)
-		m_modConnections[target].push_back(mod);
+	if (target)
+		m_modConnections[target] = std::move(mods);
 }
 
 void node::Constructor::addNode(NiObject* obj, std::unique_ptr<NodeBase>&& node)

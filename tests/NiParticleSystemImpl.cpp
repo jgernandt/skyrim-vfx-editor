@@ -30,9 +30,10 @@ bool objects::ConnectorTester<NiParticleSystem>::operator()(const NiParticleSyst
 	//Should *not* connect to data. This will never be made into a separate node.
 
 	//Should connect the modifiers
-	Assert::IsTrue(ctor.modConnections.size() == 2);
-	Assert::IsTrue(ctor.modConnections[0].first == &obj && ctor.modConnections[0].second == obj.modifiers.at(0).get());
-	Assert::IsTrue(ctor.modConnections[1].first == &obj && ctor.modConnections[1].second == obj.modifiers.at(1).get());
+	Assert::IsTrue(ctor.modConnections.second.size() == 2);
+	Assert::IsTrue(ctor.modConnections.first == &obj);
+	Assert::IsTrue(ctor.modConnections.second[0] == obj.modifiers.at(0).get());
+	Assert::IsTrue(ctor.modConnections.second[1] == obj.modifiers.at(1).get());
 
 	//Should connect to the shader property
 	Assert::IsTrue(ctor.connections[0].object1 == &obj);

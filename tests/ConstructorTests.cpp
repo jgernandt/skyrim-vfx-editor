@@ -28,20 +28,22 @@ namespace creation
 			bool addNode[5]{ false, true, false, true, false };
 			std::unique_ptr<node::DummyModifier> nodes[5];
 			node::DummyModifier* node[5]{ nullptr, nullptr, nullptr, nullptr, nullptr };
+			std::vector<NiPSysModifier*> reqs(5);
 
 			ctor.addNode(psys.get(), std::move(psys_node));
 
 			for (int i = 0; i < 5; i++) {
 				mods[i] = file.create<NiPSysModifier>();
 				mods[i]->order.set(i);
+				reqs[i] = mods[i].get();
 				if (addNode[i]) {
 					nodes[i] = node::Default<node::DummyModifier>{}.create(file, mods[i]);
 					node[i] = nodes[i].get();
 					ctor.addNode(mods[i].get(), std::move(nodes[i]));
 				}
 
-				ctor.addModConnection(psys.get(), mods[i].get());
 			}
+			ctor.addModConnections(psys.get(), std::move(reqs));
 
 			gui::ConnectionHandler root;
 			ctor.extractNodes(root, false);

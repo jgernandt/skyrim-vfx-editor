@@ -58,7 +58,7 @@ namespace node
 		//Used during traversal
 
 		void addConnection(const node::ConnectionInfo& info);
-		void addModConnection(NiParticleSystem* target, NiPSysModifier* mod);
+		void addModConnections(NiParticleSystem* target, std::vector<NiPSysModifier*>&& mods);
 
 		void addNode(NiObject* obj, std::unique_ptr<NodeBase>&& node);
 
