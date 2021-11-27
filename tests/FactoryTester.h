@@ -120,6 +120,12 @@ namespace objects
 	};
 
 	template<>
+	struct FactoryTester<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, FactoryTester>
+	{
+		bool operator() (const NiPSysEmitterCtlr& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct FactoryTester<NiPSysSphereEmitter> : VerticalTraverser<NiPSysSphereEmitter, FactoryTester>
 	{
 		bool operator() (const NiPSysSphereEmitter& obj, const TestConstructor& ctor);
@@ -165,6 +171,12 @@ namespace objects
 
 	template<>
 	struct FactoryTest<NiPSysGravityModifier>
+	{
+		void run();
+	};
+
+	template<>
+	struct FactoryTest<NiPSysEmitterCtlr>
 	{
 		void run();
 	};

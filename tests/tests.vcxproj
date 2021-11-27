@@ -181,6 +181,7 @@
       </ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="ConstructorTests.cpp" />
+    <ClCompile Include="ControllersImpl.cpp" />
     <ClCompile Include="ControllerTests.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </ExcludedFromBuild>
@@ -262,7 +263,6 @@
     <ClInclude Include="ConnectorTester.h" />
     <ClInclude Include="FactoryTester.h" />
     <ClInclude Include="ForwardTester.h" />
-    <ClInclude Include="Mocks.h" />
     <ClInclude Include="ModifiersTests.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="TestConstructor.h" />

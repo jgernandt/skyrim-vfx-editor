@@ -83,4 +83,62 @@ namespace node
 			return node;
 		}
 	};
+
+	template<>
+	class Connector<NiPSysEmitterCtlr> : public VerticalTraverser<NiPSysEmitterCtlr, Connector>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiPSysEmitterCtlr& obj, C& ctor)
+		{
+			//Locate our target modifier
+			if (auto target = obj.target.assigned()) {
+				for (auto&& mod : std::static_pointer_cast<NiParticleSystem>(target)->modifiers) {
+					assert(mod);
+					if (mod->name.get() == obj.modifierName.get()) {
+						ConnectionInfo info;
+						info.object1 = obj.interpolator.assigned().get();
+						info.field1 = FloatController::TARGET;
+						info.object2 = mod.get();
+						info.field2 = Emitter::BIRTH_RATE;
+						ctor.addConnection(info);
+
+						break;
+					}
+				}
+			}
+
+			return true;
+		}
+	};
+
+	template<>
+	class Factory<NiPSysEmitterCtlr> : public VerticalTraverser<NiPSysEmitterCtlr, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiPSysEmitterCtlr& obj, C& ctor)
+		{
+			//If we have a float iplr with data, create a controller node.
+			//That we invoke a factory on the interpolator is perhaps not entirely consistent
+			//with how we do this elsewhere, but seems like the cleanest solution. We are the
+			//one that knows what type of node (if any) to create. 
+			//Not the interpolator, not the modifier, not the particle system.
+			if (auto&& iplr = obj.interpolator.assigned()) {
+				ni_type type = iplr->type();
+				if (type == NiFloatInterpolator::TYPE) {
+					if (auto&& data = static_cast<NiFloatInterpolator*>(iplr.get())->data.assigned()) {
+						auto node = Default<FloatController>{}.create(
+							ctor.getFile(), std::static_pointer_cast<NiFloatInterpolator>(iplr), data, &obj);
+						ctor.addNode(iplr.get(), std::move(node));
+					}
+				}
+				else if (type == NiBlendFloatInterpolator::TYPE) {
+					//maybe another type of node
+				}
+			}
+
+			return false;
+		}
+	};
 }

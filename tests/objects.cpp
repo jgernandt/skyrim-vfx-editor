@@ -158,6 +158,14 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysSphereEmitter>{}.run(); }
 	};
 
+	TEST_CLASS(NiPSysEmitterCtlr)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysEmitterCtlr>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysEmitterCtlr>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysEmitterCtlr>{}.run(); }
+	};
+
 	TEST_CLASS(NiExtraData)
 	{
 	public:

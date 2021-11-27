@@ -105,4 +105,10 @@ namespace objects
 	{
 		bool operator() (NiPSysSphereEmitter& obj, File& file) { return TestSetup<NiPSysVolumeEmitter>::operator() (obj, file); }
 	};
+
+	template<>
+	struct TestSetup<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, TestSetup>
+	{
+		bool operator() (NiPSysEmitterCtlr& obj, File& file);
+	};
 }
