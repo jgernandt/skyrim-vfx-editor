@@ -72,6 +72,14 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiNode>{}.run(); }
 	};
 
+	TEST_CLASS(BSEffectShaderProperty)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::BSEffectShaderProperty>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::BSEffectShaderProperty>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::BSEffectShaderProperty>{}.run(); }
+	};
+
 	TEST_CLASS(NiParticleSystem)
 	{
 	public:

@@ -38,6 +38,13 @@ namespace objects
 	};
 
 	template<>
+	struct ConnectorTester<BSEffectShaderProperty> : VerticalTraverser<BSEffectShaderProperty, ConnectorTester>
+	{
+		bool operator() (BSEffectShaderProperty&, File&) { return false; }
+		bool operator() (const BSEffectShaderProperty& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct ConnectorTester<NiParticleSystem> : VerticalTraverser<NiParticleSystem, ConnectorTester>
 	{
 		bool operator() (NiParticleSystem& obj, File& file);

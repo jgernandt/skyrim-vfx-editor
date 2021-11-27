@@ -40,6 +40,13 @@ namespace objects
 	};
 
 	template<>
+	struct ForwardTester<BSEffectShaderProperty> : VerticalTraverser<BSEffectShaderProperty, ForwardTester>
+	{
+		bool operator() (BSEffectShaderProperty&, TestConstructor&, File&) { return false; }
+		bool operator() (const BSEffectShaderProperty& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct ForwardTester<NiParticleSystem> : VerticalTraverser<NiParticleSystem, ForwardTester>
 	{
 		bool operator() (NiParticleSystem& obj, TestConstructor& ctor, File& file);

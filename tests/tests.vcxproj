@@ -254,6 +254,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="PropertiesImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonTests.h" />

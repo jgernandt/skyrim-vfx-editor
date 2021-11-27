@@ -66,6 +66,9 @@
     <ClCompile Include="ConstructorTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PropertiesImpl.cpp">
+      <Filter>Source Files\impl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">

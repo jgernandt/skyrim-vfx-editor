@@ -39,6 +39,13 @@ namespace objects
 	};
 
 	template<>
+	struct FactoryTester<BSEffectShaderProperty> : VerticalTraverser<BSEffectShaderProperty, FactoryTester>
+	{
+		bool operator() (BSEffectShaderProperty&, TestConstructor&, File&) { return false; }
+		bool operator() (const BSEffectShaderProperty& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct FactoryTester<NiPSysModifier> : VerticalTraverser<NiPSysModifier, FactoryTester>
 	{
 		bool operator() (NiPSysModifier& obj, TestConstructor& ctor, File& file);
