@@ -99,6 +99,55 @@ namespace node
 	//No Forwarder specialisation
 
 
+	//NiPSysAgeDeathModifier/////
+
+	//No Default specialisation
+	//No Connector specialisation
+
+	template<>
+	class Factory<NiPSysAgeDeathModifier> : public VerticalTraverser<NiPSysAgeDeathModifier, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiPSysAgeDeathModifier&, C&) { return false; }
+	};
+	
+	//No Forwarder specialisation
+
+
+	//NiPSysBoundUpdateModifier/////
+
+	//No Default specialisation
+	//No Connector specialisation
+
+	template<>
+	class Factory<NiPSysBoundUpdateModifier> : public VerticalTraverser<NiPSysBoundUpdateModifier, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiPSysBoundUpdateModifier&, C&) { return false; }
+	};
+
+	//No Forwarder specialisation
+
+
+	//NiPSysPositionModifier/////
+
+	//No Default specialisation
+	//No Connector specialisation
+
+	template<>
+	class Factory<NiPSysPositionModifier> : public VerticalTraverser<NiPSysPositionModifier, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiPSysPositionModifier&, C&) { return false; }
+	};
+
+	//No Forwarder specialisation
+
+
+	//NiPSysGravityModifier/////
 
 	template<>
 	class Default<PlanarForceField> : public Default<Modifier>
