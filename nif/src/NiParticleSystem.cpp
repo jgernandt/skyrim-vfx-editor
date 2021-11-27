@@ -49,7 +49,8 @@ bool nif::ReadSyncer<nif::NiParticleSystem>::operator()(NiParticleSystem& object
 
 	object.modifiers.clear();
 	for (auto&& mod : native->GetModifiers())
-		object.modifiers.insert(object.modifiers.size(), file.get<NiPSysModifier>(mod));
+		if (mod)
+			object.modifiers.insert(object.modifiers.size(), file.get<NiPSysModifier>(mod));
 
 	object.shaderProperty.assign(file.get<BSShaderProperty>(native->GetShaderProperty()));
 	object.alphaProperty.assign(file.get<NiAlphaProperty>(native->GetAlphaProperty()));

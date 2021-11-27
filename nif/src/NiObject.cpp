@@ -65,11 +65,13 @@ bool nif::ReadSyncer<nif::NiObjectNET>::operator()(NiObjectNET& object, const Ni
 
 	object.extraData.clear();
 	for (auto&& data : native->GetExtraData())
-		object.extraData.add(file.get<NiExtraData>(data));
+		if (data)
+			object.extraData.add(file.get<NiExtraData>(data));
 
 	object.controllers.clear();
 	for (auto&& ctlr : native->GetControllers())
-		object.controllers.insert(object.controllers.size(), file.get<NiTimeController>(ctlr));
+		if (ctlr)
+			object.controllers.insert(object.controllers.size(), file.get<NiTimeController>(ctlr));
 
 	return true;
 }

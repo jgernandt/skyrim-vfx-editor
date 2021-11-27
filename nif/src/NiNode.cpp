@@ -39,7 +39,9 @@ bool nif::ReadSyncer<nif::NiNode>::operator()(NiNode& object, const Niflib::NiNo
 	object.children.clear();
 	auto&& children = native->GetChildren();
 	for (auto&& child : children)
-		object.children.add(file.get<NiAVObject>(child));
+		if (child)
+			object.children.add(file.get<NiAVObject>(child));
+
 	return true;
 }
 
