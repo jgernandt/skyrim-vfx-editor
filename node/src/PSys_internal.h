@@ -68,7 +68,7 @@ namespace node
 
 				alpha->mode.set(AlphaMode::BLEND);
 				alpha->srcFcn.set(BlendFunction::SRC_ALPHA);
-				alpha->dstFcn.set(BlendFunction::ONE_MINUS_SRC_ALPHA);
+				alpha->dstFcn.set(BlendFunction::ONE);
 
 				assert(!psys->alphaProperty.assigned());
 				psys->alphaProperty.assign(alpha);
