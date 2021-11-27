@@ -53,6 +53,30 @@ namespace objects
 	};
 
 	template<>
+	struct FactoryTester<NiPSysGravityModifier> : VerticalTraverser<NiPSysGravityModifier, FactoryTester>
+	{
+		bool operator() (const NiPSysGravityModifier& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct FactoryTester<NiPSysRotationModifier> : VerticalTraverser<NiPSysRotationModifier, FactoryTester>
+	{
+		bool operator() (const NiPSysRotationModifier& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct FactoryTester<BSPSysScaleModifier> : VerticalTraverser<BSPSysScaleModifier, FactoryTester>
+	{
+		bool operator() (const BSPSysScaleModifier& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct FactoryTester<BSPSysSimpleColorModifier> : VerticalTraverser<BSPSysSimpleColorModifier, FactoryTester>
+	{
+		bool operator() (const BSPSysSimpleColorModifier& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct FactoryTester<NiPSysEmitter> : VerticalTraverser<NiPSysEmitter, FactoryTester>
 	{
 		bool operator() (const NiPSysEmitter& obj, const TestConstructor& ctor);
@@ -117,6 +141,12 @@ namespace objects
 
 	template<>
 	struct FactoryTest<NiParticleSystem>
+	{
+		void run();
+	};
+
+	template<>
+	struct FactoryTest<NiPSysGravityModifier>
 	{
 		void run();
 	};

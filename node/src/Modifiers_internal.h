@@ -200,6 +200,68 @@ namespace node
 	};
 
 	template<>
+	class Connector<NiPSysGravityModifier> : public VerticalTraverser<NiPSysGravityModifier, Connector>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiPSysGravityModifier& obj, C& ctor)
+		{
+			ConnectionInfo info;
+			info.object1 = &obj;
+			info.field1 = GravityModifier::GRAVITY_OBJECT;
+			info.object2 = obj.gravityObject.assigned().get();
+			info.field2 = Node::OBJECT;
+			ctor.addConnection(info);
+
+			return true;
+		}
+	};
+
+	class GravityCtlrTraverser final : public ModifierCtlrTraverser
+	{
+	public:
+		GravityCtlrTraverser(std::string&& name) : ModifierCtlrTraverser{ std::move(name) } {}
+		//virtual void traverse(NiPSysGravityStrengthCtlr& obj) final override {}
+	};
+
+	template<>
+	class Factory<NiPSysGravityModifier> : public VerticalTraverser<NiPSysGravityModifier, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiPSysGravityModifier& obj, C& ctor)
+		{
+			if (ni_ptr<NiPSysGravityModifier> ptr = std::static_pointer_cast<NiPSysGravityModifier>(ctor.getObject()); ptr.get() == &obj) {
+
+				GravityCtlrTraverser t(obj.name.get());
+				findControllers(obj, t);
+
+				std::unique_ptr<GravityModifier> node;
+				if (ptr->forceType.get() == FORCE_PLANAR)
+					node = Default<PlanarForceField>{}.create(ctor.getFile(), ptr);
+				else if (ptr->forceType.get() == FORCE_SPHERICAL)
+					node = Default<SphericalForceField>{}.create(ctor.getFile(), ptr);
+
+				if (node) {
+					for (auto&& ctlr : t.controllers)
+						node->addController(ctlr);
+
+					ctor.addNode(&obj, std::move(node));
+					return false;
+				}
+				else
+					return true;
+			}
+			return false;
+		}
+	};
+
+	//No Forwarder specialisation
+
+
+	//NiPSysRotationModifier/////
+
+	template<>
 	class Default<RotationModifier> : public Default<Modifier>
 	{
 	public:
@@ -218,6 +280,46 @@ namespace node
 			}
 		}
 	};
+
+	//No Connector specialisation
+
+	class RotationCtlrTraverser final : public ModifierCtlrTraverser
+	{
+	public:
+		RotationCtlrTraverser(std::string&& name) : ModifierCtlrTraverser{ std::move(name) } {}
+		//virtual void traverse(NiPSysInitialRotAngleCtlr& obj) final override {}
+		//virtual void traverse(NiPSysInitialRotAngleVarCtlr& obj) final override {}
+		//virtual void traverse(NiPSysInitialRotSpeedCtlr& obj) final override {}
+		//virtual void traverse(NiPSysInitialRotSpeedVarCtlr& obj) final override {}
+	};
+
+	template<>
+	class Factory<NiPSysRotationModifier> : public VerticalTraverser<NiPSysRotationModifier, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiPSysRotationModifier& obj, C& ctor)
+		{
+			if (ni_ptr<NiPSysRotationModifier> ptr = std::static_pointer_cast<NiPSysRotationModifier>(ctor.getObject()); ptr.get() == &obj) {
+
+				RotationCtlrTraverser t(obj.name.get());
+				findControllers(obj, t);
+
+				auto node = Default<RotationModifier>{}.create(ctor.getFile(), ptr);
+
+				for (auto&& ctlr : t.controllers)
+					node->addController(ctlr);
+
+				ctor.addNode(&obj, std::move(node));
+			}
+			return false;
+		}
+	};
+
+	//No Forwarder specialisation
+
+
+	//BSPSysScaleModifier/////
 
 	template<>
 	class Default<ScaleModifier> : public Default<Modifier>
@@ -239,6 +341,36 @@ namespace node
 			}
 		}
 	};
+
+	//No Connector specialisation
+
+	template<>
+	class Factory<BSPSysScaleModifier> : public VerticalTraverser<BSPSysScaleModifier, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (BSPSysScaleModifier& obj, C& ctor)
+		{
+			if (ni_ptr<BSPSysScaleModifier> ptr = std::static_pointer_cast<BSPSysScaleModifier>(ctor.getObject()); ptr.get() == &obj) {
+
+				ModifierCtlrTraverser t(obj.name.get());
+				findControllers(obj, t);
+
+				auto node = Default<ScaleModifier>{}.create(ctor.getFile(), ptr);
+
+				for (auto&& ctlr : t.controllers)
+					node->addController(ctlr);
+
+				ctor.addNode(&obj, std::move(node));
+			}
+			return false;
+		}
+	};
+
+	//No Forwarder specialisation
+
+
+	//BSPSysSimpleColorModifier/////
 
 	template<>
 	class Default<SimpleColourModifier> : public Default<Modifier>
@@ -271,4 +403,31 @@ namespace node
 			}
 		}
 	};
+
+	//No Connector specialisation
+
+	template<>
+	class Factory<BSPSysSimpleColorModifier> : public VerticalTraverser<BSPSysSimpleColorModifier, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (BSPSysSimpleColorModifier& obj, C& ctor)
+		{
+			if (ni_ptr<BSPSysSimpleColorModifier> ptr = std::static_pointer_cast<BSPSysSimpleColorModifier>(ctor.getObject()); ptr.get() == &obj) {
+
+				ModifierCtlrTraverser t(obj.name.get());
+				findControllers(obj, t);
+
+				auto node = Default<SimpleColourModifier>{}.create(ctor.getFile(), ptr);
+
+				for (auto&& ctlr : t.controllers)
+					node->addController(ctlr);
+
+				ctor.addNode(&obj, std::move(node));
+			}
+			return false;
+		}
+	};
+
+	//No Forwarder specialisation
 }

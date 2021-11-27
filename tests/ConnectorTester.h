@@ -45,6 +45,12 @@ namespace objects
 	};
 
 	template<>
+	struct ConnectorTester<NiPSysGravityModifier> : VerticalTraverser<NiPSysGravityModifier, ConnectorTester>
+	{
+		bool operator() (const NiPSysGravityModifier& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct ConnectorTester<NiPSysVolumeEmitter> : VerticalTraverser<NiPSysVolumeEmitter, ConnectorTester>
 	{
 		bool operator() (const NiPSysVolumeEmitter& obj, const TestConstructor& ctor);

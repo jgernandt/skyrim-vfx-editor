@@ -76,12 +76,44 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysBoundUpdateModifier>{}.run(); }
 	};
 
+	TEST_CLASS(NiPSysGravityModifier)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysGravityModifier>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysGravityModifier>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysGravityModifier>{}.run(); }
+	};
+
 	TEST_CLASS(NiPSysPositionModifier)
 	{
 	public:
 		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysPositionModifier>{}.run(); }
 		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysPositionModifier>{}.run(); }
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysPositionModifier>{}.run(); }
+	};
+
+	TEST_CLASS(NiPSysRotationModifier)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysRotationModifier>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysRotationModifier>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysRotationModifier>{}.run(); }
+	};
+
+	TEST_CLASS(BSPSysScaleModifier)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::BSPSysScaleModifier>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::BSPSysScaleModifier>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::BSPSysScaleModifier>{}.run(); }
+	};
+
+	TEST_CLASS(BSPSysSimpleColorModifier)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::BSPSysSimpleColorModifier>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::BSPSysSimpleColorModifier>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::BSPSysSimpleColorModifier>{}.run(); }
 	};
 
 	TEST_CLASS(NiPSysBoxEmitter)

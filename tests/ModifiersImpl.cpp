@@ -65,3 +65,118 @@ bool objects::ForwardTester<NiPSysModifier>::operator()(const NiPSysModifier&, c
 	return false;
 }
 
+
+bool objects::TestSetup<NiPSysGravityModifier>::operator()(NiPSysGravityModifier& obj, File& file)
+{
+	TestSetup<NiPSysModifier>::operator()(obj, file);
+	obj.gravityObject.assign(file.getRoot());
+
+	//TODO: Set up our specific ctlrs
+
+	return false;
+}
+
+bool objects::ConnectorTester<NiPSysGravityModifier>::operator()(const NiPSysGravityModifier& obj, const TestConstructor& ctor)
+{
+	Assert::IsTrue(ctor.connections.size() == 1);
+	Assert::IsTrue(ctor.connections[0].object1 == &obj);
+	Assert::IsTrue(ctor.connections[0].field1 == node::GravityModifier::GRAVITY_OBJECT);
+	Assert::IsTrue(ctor.connections[0].object2 == obj.gravityObject.assigned().get());
+	Assert::IsTrue(ctor.connections[0].field2 == node::Node::OBJECT);
+	return false;
+}
+
+bool objects::FactoryTester<NiPSysGravityModifier>::operator()(const NiPSysGravityModifier& obj, const TestConstructor& ctor)
+{
+	if (obj.forceType.get() == FORCE_PLANAR)
+		nodeTest<node::PlanarForceField>(obj, ctor);
+	else if (obj.forceType.get() == FORCE_SPHERICAL)
+		nodeTest<node::SphericalForceField>(obj, ctor);
+	else
+		nodeTest<node::Modifier>(obj, ctor);//unspecified type
+
+	//TODO: Complete with our specific controllers
+	auto ctlrs = static_cast<node::Modifier*>(ctor.node.second.get())->getControllers();
+	Assert::IsTrue(ctlrs.size() == 2);
+	controllerTest(ctlrs, obj.target.assigned());
+
+	return false;
+}
+
+void objects::FactoryTest<NiPSysGravityModifier>::run()
+{
+	File file(File::Version::SKYRIM_SE);
+	auto obj = file.create<NiPSysGravityModifier>();
+	TestSetup<NiPSysGravityModifier>{}.up(*obj, file);
+
+	{//Planar
+		obj->forceType.set(FORCE_PLANAR);
+
+		TestConstructor ctor(file);
+		ctor.pushObject(obj);
+		node::Factory<NiPSysGravityModifier>{}.up(*obj, ctor);
+		FactoryTester<NiPSysGravityModifier>{}.up(*obj, ctor);
+	}
+	{//Spherical
+		obj->forceType.set(FORCE_SPHERICAL);
+
+		TestConstructor ctor(file);
+		ctor.pushObject(obj);
+		node::Factory<NiPSysGravityModifier>{}.up(*obj, ctor);
+		FactoryTester<NiPSysGravityModifier>{}.up(*obj, ctor);
+	}
+	{//Unknown
+		obj->forceType.set(FORCE_UNKNOWN);
+
+		TestConstructor ctor(file);
+		ctor.pushObject(obj);
+		node::Factory<NiPSysGravityModifier>{}.up(*obj, ctor);
+		FactoryTester<NiPSysGravityModifier>{}.up(*obj, ctor);
+	}
+}
+
+
+bool objects::TestSetup<NiPSysRotationModifier>::operator()(NiPSysRotationModifier& obj, File& file)
+{
+	TestSetup<NiPSysModifier>::operator()(obj, file);
+
+	//TODO: Set up our specific ctlrs
+
+	return false;
+}
+
+bool objects::FactoryTester<NiPSysRotationModifier>::operator()(const NiPSysRotationModifier& obj, const TestConstructor& ctor)
+{
+	nodeTest<node::RotationModifier>(obj, ctor);
+
+	//TODO: Complete with our specific controllers
+	auto ctlrs = static_cast<node::Modifier*>(ctor.node.second.get())->getControllers();
+	Assert::IsTrue(ctlrs.size() == 2);
+	controllerTest(ctlrs, obj.target.assigned());
+
+	return false;
+}
+
+
+bool objects::FactoryTester<BSPSysScaleModifier>::operator()(const BSPSysScaleModifier& obj, const TestConstructor& ctor)
+{
+	nodeTest<node::ScaleModifier>(obj, ctor);
+
+	auto ctlrs = static_cast<node::Modifier*>(ctor.node.second.get())->getControllers();
+	Assert::IsTrue(ctlrs.size() == 2);
+	controllerTest(ctlrs, obj.target.assigned());
+
+	return false;
+}
+
+
+bool objects::FactoryTester<BSPSysSimpleColorModifier>::operator()(const BSPSysSimpleColorModifier& obj, const TestConstructor& ctor)
+{
+	nodeTest<node::SimpleColourModifier>(obj, ctor);
+
+	auto ctlrs = static_cast<node::Modifier*>(ctor.node.second.get())->getControllers();
+	Assert::IsTrue(ctlrs.size() == 2);
+	controllerTest(ctlrs, obj.target.assigned());
+
+	return false;
+}

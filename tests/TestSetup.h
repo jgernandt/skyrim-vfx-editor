@@ -35,6 +35,30 @@ namespace objects
 	};
 
 	template<>
+	struct TestSetup<NiPSysGravityModifier> : VerticalTraverser<NiPSysGravityModifier, TestSetup>
+	{
+		bool operator() (NiPSysGravityModifier& obj, File& file);
+	};
+
+	template<>
+	struct TestSetup<NiPSysRotationModifier> : VerticalTraverser<NiPSysRotationModifier, TestSetup>
+	{
+		bool operator() (NiPSysRotationModifier& obj, File& file);
+	};
+
+	template<>
+	struct TestSetup<BSPSysScaleModifier> : VerticalTraverser<BSPSysScaleModifier, TestSetup>
+	{
+		bool operator() (BSPSysScaleModifier&, File&) { return true; }//Fall through to setup ctlrs
+	};
+
+	template<>
+	struct TestSetup<BSPSysSimpleColorModifier> : VerticalTraverser<BSPSysSimpleColorModifier, TestSetup>
+	{
+		bool operator() (BSPSysSimpleColorModifier&, File&) { return true; }//Fall through to setup ctlrs
+	};
+
+	template<>
 	struct TestSetup<NiPSysEmitter> : VerticalTraverser<NiPSysEmitter, TestSetup>
 	{
 		bool operator() (NiPSysEmitter& obj, File& file);
