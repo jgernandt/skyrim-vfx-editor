@@ -6,6 +6,13 @@ namespace objects
 {
 	using namespace nif;
 
+	template<typename N>
+	void nodeTest(const NiObject* obj, const TestConstructor& ctor)
+	{
+		Assert::IsTrue(ctor.node.first == obj);
+		Assert::IsNotNull(dynamic_cast<N*>(ctor.node.second.get()));
+	}
+
 	template<typename T>
 	struct FactoryTester : VerticalTraverser<T, FactoryTester>
 	{
@@ -47,6 +54,48 @@ namespace objects
 	{
 		bool operator() (NiPSysModifier& obj, TestConstructor& ctor, File& file);
 		bool operator() (const NiPSysModifier& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct FactoryTester<NiPSysEmitter> : VerticalTraverser<NiPSysEmitter, FactoryTester>
+	{
+		bool operator() (NiPSysEmitter& obj, TestConstructor& ctor, File& file);
+		bool operator() (const NiPSysEmitter&, const TestConstructor& ctor)
+		{
+			Assert::IsTrue(!ctor.node.first && !ctor.node.second);
+			return false;
+		}
+
+		void controllerTest(const NiPSysEmitter& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct FactoryTester<NiPSysVolumeEmitter> : VerticalTraverser<NiPSysVolumeEmitter, FactoryTester>
+	{
+		//Fall through to Emitter
+		bool operator() (NiPSysVolumeEmitter&, TestConstructor&, File&) { return true; }
+		bool operator() (const NiPSysVolumeEmitter&, const TestConstructor&) { return true; }
+	};
+
+	template<>
+	struct FactoryTester<NiPSysBoxEmitter> : VerticalTraverser<NiPSysBoxEmitter, FactoryTester>
+	{
+		bool operator() (NiPSysBoxEmitter&, TestConstructor&, File&) { return true; }//Fall through
+		bool operator() (const NiPSysBoxEmitter& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct FactoryTester<NiPSysCylinderEmitter> : VerticalTraverser<NiPSysCylinderEmitter, FactoryTester>
+	{
+		bool operator() (NiPSysCylinderEmitter&, TestConstructor&, File&) { return true; }//Fall through
+		bool operator() (const NiPSysCylinderEmitter& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct FactoryTester<NiPSysSphereEmitter> : VerticalTraverser<NiPSysSphereEmitter, FactoryTester>
+	{
+		bool operator() (NiPSysSphereEmitter&, TestConstructor&, File&) { return true; }//Fall through
+		bool operator() (const NiPSysSphereEmitter& obj, const TestConstructor& ctor);
 	};
 
 	template<>

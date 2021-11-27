@@ -91,3 +91,4 @@ bool objects::ForwardTester<NiPSysModifier>::operator()(const NiPSysModifier&, c
 	Assert::IsTrue(ctor.forwards.empty());
 	return false;
 }
+

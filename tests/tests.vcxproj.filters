@@ -69,6 +69,9 @@
     <ClCompile Include="PropertiesImpl.cpp">
       <Filter>Source Files\impl</Filter>
     </ClCompile>
+    <ClCompile Include="EmittersImpl.cpp">
+      <Filter>Source Files\impl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">

@@ -96,6 +96,54 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysModifier>{}.run(); }
 	};
 
+	TEST_CLASS(NiPSysAgeDeathModifier)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysAgeDeathModifier>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysAgeDeathModifier>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysAgeDeathModifier>{}.run(); }
+	};
+
+	TEST_CLASS(NiPSysBoundUpdateModifier)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysBoundUpdateModifier>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysBoundUpdateModifier>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysBoundUpdateModifier>{}.run(); }
+	};
+
+	TEST_CLASS(NiPSysPositionModifier)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysPositionModifier>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysPositionModifier>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysPositionModifier>{}.run(); }
+	};
+
+	TEST_CLASS(NiPSysBoxEmitter)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysBoxEmitter>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysBoxEmitter>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysBoxEmitter>{}.run(); }
+	};
+
+	TEST_CLASS(NiPSysCylinderEmitter)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysCylinderEmitter>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysCylinderEmitter>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysCylinderEmitter>{}.run(); }
+	};
+
+	TEST_CLASS(NiPSysSphereEmitter)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysSphereEmitter>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysSphereEmitter>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysSphereEmitter>{}.run(); }
+	};
+
 	TEST_CLASS(NiExtraData)
 	{
 	public:

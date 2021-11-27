@@ -48,4 +48,25 @@ namespace objects
 		bool operator() (const NiPSysModifier& obj, const TestConstructor& ctor);
 	};
 
+	template<>
+	struct ConnectorTester<NiPSysBoxEmitter> : VerticalTraverser<NiPSysBoxEmitter, ConnectorTester>
+	{
+		bool operator() (NiPSysBoxEmitter& obj, File& file);
+		bool operator() (const NiPSysBoxEmitter& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct ConnectorTester<NiPSysCylinderEmitter> : VerticalTraverser<NiPSysCylinderEmitter, ConnectorTester>
+	{
+		bool operator() (NiPSysCylinderEmitter& obj, File& file);
+		bool operator() (const NiPSysCylinderEmitter& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct ConnectorTester<NiPSysSphereEmitter> : VerticalTraverser<NiPSysSphereEmitter, ConnectorTester>
+	{
+		bool operator() (NiPSysSphereEmitter& obj, File& file);
+		bool operator() (const NiPSysSphereEmitter& obj, const TestConstructor& ctor);
+	};
+
 }
