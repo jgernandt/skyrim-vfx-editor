@@ -24,6 +24,41 @@ using namespace nif;
 
 void node::Constructor::extractNodes(gui::ConnectionHandler& target, bool arrange)
 {
+	//Translate modifier connection requests into actual ConnectionInfo
+	struct Compare
+	{
+		bool operator() (NiPSysModifier* lhs, NiPSysModifier* rhs)
+		{
+			assert(lhs && rhs);
+			return lhs->order.get() < rhs->order.get();
+		}
+	};
+	for (auto&& entry : m_modConnections) {
+		//The particle system should always have a node
+		assert(m_objectMap.find(entry.first) != m_objectMap.end() && m_objectMap.find(entry.first)->second >= 0);
+
+		//Sort the list by mod order (should be already)
+		std::sort(entry.second.begin(), entry.second.end(), Compare{});
+
+		//for each modifier with a node, register a connection to the previous one
+		NiObject* prev = entry.first;
+		for (auto next = entry.second.begin(); next < entry.second.end(); ++next) {
+			if (auto it = m_objectMap.find(*next); it != m_objectMap.end()) {
+				if (it->second >= 0) {
+					//This mod has a node
+					ConnectionInfo info;
+					info.object1 = prev;
+					info.field1 = prev == entry.first ? ParticleSystem::MODIFIERS : Modifier::NEXT_MODIFIER;
+					info.object2 = *next;
+					info.field2 = Modifier::TARGET;
+					addConnection(info);
+
+					prev = *next;
+				}
+			}
+		}
+	}
+
 	std::vector<std::pair<gui::Connector*, gui::Connector*>> couplings;
 	std::vector<Positioner::LinkInfo> linkInfo;
 
@@ -109,6 +144,8 @@ void node::Constructor::addConnection(const node::ConnectionInfo& info)
 
 void node::Constructor::addModConnection(NiParticleSystem* target, NiPSysModifier* mod)
 {
+	if (target && mod)
+		m_modConnections[target].push_back(mod);
 }
 
 void node::Constructor::addNode(NiObject* obj, std::unique_ptr<NodeBase>&& node)
