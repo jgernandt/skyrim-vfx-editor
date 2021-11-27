@@ -8,55 +8,52 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
-bool objects::FactoryTester<NiPSysEmitter>::operator()(NiPSysEmitter& obj, TestConstructor& ctor, File& file)
+
+bool objects::TestSetup<NiPSysEmitter>::operator()(NiPSysEmitter& obj, File& file)
 {
-	auto target = file.create<NiParticleSystem>();
-	file.getRoot()->children.add(target);
-	obj.target.assign(target);
+	TestSetup<NiPSysModifier>::operator()(obj, file);
 
-	obj.name.set("ajnseogo");
+	//Should also set up to test for any other Emitter-specific ctlrs, if we introduce them
 
-	auto ctlr0 = file.create<NiPSysModifierCtlr>();
-	target->controllers.insert(0, ctlr0);
-	auto ctlr1 = file.create<NiPSysModifierCtlr>();
-	target->controllers.insert(1, ctlr1);
-	auto ctlr2 = file.create<NiPSysEmitterCtlr>();
-	target->controllers.insert(2, ctlr2);
+	auto ctlr3 = file.create<NiPSysEmitterCtlr>();
+	obj.target.assigned()->controllers.insert(3, ctlr3);
+	ctlr3->modifierName.set(obj.name.get());
 
-	//0 and 2 are ours
-	ctlr0->modifierName.set(obj.name.get());
-	ctlr2->modifierName.set(obj.name.get());
+	return false;
+}
+
+bool objects::FactoryTester<NiPSysEmitter>::operator()(const NiPSysEmitter& obj, const TestConstructor& ctor)
+{
+	nodeTest<node::Emitter>(obj, ctor);
+
+	Assert::IsTrue(obj.target.assigned()->controllers.size() == 4);
+	controllerTest(obj, ctor);
 
 	return false;
 }
 
 void objects::FactoryTester<NiPSysEmitter>::controllerTest(const NiPSysEmitter& obj, const TestConstructor& ctor)
 {
-	//This should test all the controller types for Emitters, but let's copy the Modifier's test for now
+	FactoryTester<NiPSysModifier>::controllerTest(obj, ctor);
 
 	std::string name = obj.name.get();
-	const_cast<NiPSysEmitter&>(obj).name.set("oawgnvauvb");//I just had to make it const, right?
+	const_cast<NiPSysEmitter&>(obj).name.set("baoerbnhio");
 
-	auto ctlr0 = static_cast<NiPSysModifierCtlr*>(obj.target.assigned()->controllers.at(0).get());
-	Assert::IsTrue(ctlr0->modifierName.get() == obj.name.get());
-
-	auto ctlr1 = static_cast<NiPSysModifierCtlr*>(obj.target.assigned()->controllers.at(1).get());
-	Assert::IsFalse(ctlr1->modifierName.get() == obj.name.get());
-
-	auto ctlr2 = static_cast<NiPSysModifierCtlr*>(obj.target.assigned()->controllers.at(2).get());
-	Assert::IsTrue(ctlr2->modifierName.get() == obj.name.get());
+	auto ctlr3 = static_cast<NiPSysModifierCtlr*>(obj.target.assigned()->controllers.at(3).get());
+	Assert::IsTrue(ctlr3->modifierName.get() == obj.name.get());
 
 	const_cast<NiPSysEmitter&>(obj).name.set(name);
 }
 
 
-bool objects::ConnectorTester<NiPSysBoxEmitter>::operator()(NiPSysBoxEmitter& obj, File& file)
+bool objects::TestSetup<NiPSysVolumeEmitter>::operator()(NiPSysVolumeEmitter& obj, File& file)
 {
+	TestSetup<NiPSysEmitter>::operator()(obj, file);
 	obj.emitterObject.assign(file.getRoot());
 	return false;
 }
 
-bool objects::ConnectorTester<NiPSysBoxEmitter>::operator()(const NiPSysBoxEmitter& obj, const TestConstructor& ctor)
+bool objects::ConnectorTester<NiPSysVolumeEmitter>::operator()(const NiPSysVolumeEmitter& obj, const TestConstructor& ctor)
 {
 	Assert::IsTrue(ctor.connections.size() == 1);
 	Assert::IsTrue(ctor.connections[0].object1 == &obj);
@@ -65,58 +62,30 @@ bool objects::ConnectorTester<NiPSysBoxEmitter>::operator()(const NiPSysBoxEmitt
 	Assert::IsTrue(ctor.connections[0].field2 == node::Node::OBJECT);
 	return false;
 }
+
+bool objects::FactoryTester<NiPSysVolumeEmitter>::operator()(const NiPSysVolumeEmitter& obj, const TestConstructor& ctor)
+{
+	nodeTest<node::VolumeEmitter>(obj, ctor);
+	return true;//need to test ctlrs here
+}
+
 
 bool objects::FactoryTester<NiPSysBoxEmitter>::operator()(const NiPSysBoxEmitter& obj, const TestConstructor& ctor)
 {
-	nodeTest<node::BoxEmitter>(&obj, ctor);
-	controllerTest(obj, ctor);
-	return false;
+	nodeTest<node::BoxEmitter>(obj, ctor);
+	return true;//need to test ctlrs here
 }
 
-
-bool objects::ConnectorTester<NiPSysCylinderEmitter>::operator()(NiPSysCylinderEmitter& obj, File& file)
-{
-	obj.emitterObject.assign(file.getRoot());
-	return false;
-}
-
-bool objects::ConnectorTester<NiPSysCylinderEmitter>::operator()(const NiPSysCylinderEmitter& obj, const TestConstructor& ctor)
-{
-	Assert::IsTrue(ctor.connections.size() == 1);
-	Assert::IsTrue(ctor.connections[0].object1 == &obj);
-	Assert::IsTrue(ctor.connections[0].field1 == node::VolumeEmitter::EMITTER_OBJECT);
-	Assert::IsTrue(ctor.connections[0].object2 == obj.emitterObject.assigned().get());
-	Assert::IsTrue(ctor.connections[0].field2 == node::Node::OBJECT);
-	return false;
-}
 
 bool objects::FactoryTester<NiPSysCylinderEmitter>::operator()(const NiPSysCylinderEmitter& obj, const TestConstructor& ctor)
 {
-	nodeTest<node::CylinderEmitter>(&obj, ctor);
-	controllerTest(obj, ctor);
-	return false;
+	nodeTest<node::CylinderEmitter>(obj, ctor);
+	return true;//need to test ctlrs here
 }
 
-
-bool objects::ConnectorTester<NiPSysSphereEmitter>::operator()(NiPSysSphereEmitter& obj, File& file)
-{
-	obj.emitterObject.assign(file.getRoot());
-	return false;
-}
-
-bool objects::ConnectorTester<NiPSysSphereEmitter>::operator()(const NiPSysSphereEmitter& obj, const TestConstructor& ctor)
-{
-	Assert::IsTrue(ctor.connections.size() == 1);
-	Assert::IsTrue(ctor.connections[0].object1 == &obj);
-	Assert::IsTrue(ctor.connections[0].field1 == node::VolumeEmitter::EMITTER_OBJECT);
-	Assert::IsTrue(ctor.connections[0].object2 == obj.emitterObject.assigned().get());
-	Assert::IsTrue(ctor.connections[0].field2 == node::Node::OBJECT);
-	return false;
-}
 
 bool objects::FactoryTester<NiPSysSphereEmitter>::operator()(const NiPSysSphereEmitter& obj, const TestConstructor& ctor)
 {
-	nodeTest<node::SphereEmitter>(&obj, ctor);
-	controllerTest(obj, ctor);
-	return false;
+	nodeTest<node::SphereEmitter>(obj, ctor);
+	return true;//need to test ctlrs here
 }

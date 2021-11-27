@@ -7,13 +7,15 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
-bool objects::ConnectorTester<NiObjectNET>::operator()(NiObjectNET& obj, File& file)
+bool objects::TestSetup<NiObjectNET>::operator()(NiObjectNET& obj, File& file)
 {
 	obj.extraData.clear();
 	obj.extraData.add(file.create<NiExtraData>());
 	obj.extraData.add(file.create<NiExtraData>());
 
-	obj.controllers.insert(obj.controllers.size(), file.create<NiTimeController>());
+	obj.controllers.clear();
+	obj.controllers.insert(0, file.create<NiTimeController>());
+	obj.controllers.insert(1, file.create<NiTimeController>());
 
 	return false;
 }
@@ -28,19 +30,6 @@ bool objects::ConnectorTester<NiObjectNET>::operator()(const NiObjectNET& obj, c
 
 	//We should not ask for connections with controllers, since we don't know where they should be connected.
 	//They will have to do that themselves.
-
-	return false;
-}
-
-bool objects::ForwardTester<NiObjectNET>::operator()(NiObjectNET& obj, TestConstructor& ctor, File& file)
-{
-	obj.extraData.clear();
-	obj.extraData.add(file.create<NiExtraData>());
-	obj.extraData.add(file.create<NiExtraData>());
-
-	obj.controllers.clear();
-	obj.controllers.insert(0, file.create<NiTimeController>());
-	obj.controllers.insert(1, file.create<NiTimeController>());
 
 	return false;
 }

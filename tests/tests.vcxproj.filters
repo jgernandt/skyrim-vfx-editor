@@ -98,5 +98,8 @@
     <ClInclude Include="ModifiersTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TestSetup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

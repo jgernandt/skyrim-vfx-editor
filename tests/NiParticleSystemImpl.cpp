@@ -8,7 +8,7 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
-bool objects::ConnectorTester<NiParticleSystem>::operator()(NiParticleSystem& obj, File& file)
+bool objects::TestSetup<NiParticleSystem>::operator()(NiParticleSystem& obj, File& file)
 {
 	obj.data.assign(file.create<NiPSysData>());
 
@@ -95,21 +95,6 @@ void objects::FactoryTest<NiParticleSystem>::run()
 	//And that a node was added, obviously
 	Assert::IsTrue(ctor.node.first == psys.get());
 	Assert::IsNotNull(dynamic_cast<node::ParticleSystem*>(ctor.node.second.get()));
-}
-
-bool objects::ForwardTester<NiParticleSystem>::operator()(NiParticleSystem& obj, TestConstructor& ctor, File& file)
-{
-	obj.data.assign(file.create<NiPSysData>());
-
-	obj.modifiers.clear();
-	obj.modifiers.insert(0, file.create<NiPSysModifier>());
-	obj.modifiers.insert(1, file.create<NiPSysModifier>());
-
-	obj.shaderProperty.assign(file.create<BSShaderProperty>());
-
-	obj.alphaProperty.assign(file.create<NiAlphaProperty>());
-
-	return false;
 }
 
 bool objects::ForwardTester<NiParticleSystem>::operator()(const NiParticleSystem& obj, const TestConstructor& ctor)

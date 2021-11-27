@@ -8,11 +8,25 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
-bool objects::ConnectorTester<NiPSysModifier>::operator()(NiPSysModifier& obj, File& file)
+bool objects::TestSetup<NiPSysModifier>::operator()(NiPSysModifier& obj, File& file)
 {
 	auto target = file.create<NiParticleSystem>();
 	file.getRoot()->children.add(target);
 	obj.target.assign(target);
+
+	obj.name.set("ajnseogo");
+
+	//Should set up to test for unknown and general controllers (ModifierActive)
+	auto ctlr0 = file.create<NiPSysModifierCtlr>();
+	target->controllers.insert(0, ctlr0);
+	auto ctlr1 = file.create<NiPSysModifierCtlr>();
+	target->controllers.insert(1, ctlr1);
+	auto ctlr2 = file.create<NiPSysModifierCtlr>();// -> ModifierActive, if we introduce it
+	target->controllers.insert(2, ctlr2);
+
+	//0 and 2 are ours
+	ctlr0->modifierName.set(obj.name.get());
+	ctlr2->modifierName.set(obj.name.get());
 
 	return false;
 }
@@ -26,42 +40,23 @@ bool objects::ConnectorTester<NiPSysModifier>::operator()(const NiPSysModifier& 
 	return false;
 }
 
-bool objects::FactoryTester<NiPSysModifier>::operator()(NiPSysModifier& obj, TestConstructor& ctor, File& file)
+bool objects::FactoryTester<NiPSysModifier>::operator()(const NiPSysModifier& obj, const TestConstructor& ctor)
 {
-	auto target = file.create<NiParticleSystem>();
-	file.getRoot()->children.add(target);
-	obj.target.assign(target);
+	nodeTest<node::DummyModifier>(obj, ctor);
 
-	obj.name.set("ajnseogo");
-
-	auto ctlr0 = file.create<NiPSysModifierCtlr>();
-	target->controllers.insert(0, ctlr0);
-	auto ctlr1 = file.create<NiPSysModifierCtlr>();
-	target->controllers.insert(1, ctlr1);
-	auto ctlr2 = file.create<NiPSysEmitterCtlr>();
-	target->controllers.insert(2, ctlr2);
-
-	//0 and 2 are ours
-	ctlr0->modifierName.set(obj.name.get());
-	ctlr2->modifierName.set(obj.name.get());
+	Assert::IsTrue(obj.target.assigned()->controllers.size() == 3);
+	controllerTest(obj, ctor);
 
 	return false;
 }
 
-bool objects::FactoryTester<NiPSysModifier>::operator()(const NiPSysModifier& obj, const TestConstructor& ctor)
+void objects::FactoryTester<NiPSysModifier>::controllerTest(const NiPSysModifier& obj, const TestConstructor& ctor)
 {
-	//We need to pick up any controllers that belong to us.
-	//Derived modifiers will never get here. They will create their node and return false.
-	//They will have to do the same thing (which kind of sucks, should be reusable!).
-
-	Assert::IsTrue(ctor.node.first == &obj);
-	Assert::IsNotNull(dynamic_cast<node::DummyModifier*>(ctor.node.second.get()));
-
 	//How to directly test if we picked up the controllers?
 	//We could check if they respond to name a change, but that's indirect and may give a false negative.
 	//Good enough for now, I guess.
 	std::string name = obj.name.get();
-	const_cast<NiPSysModifier&>(obj).name.set("oawgnvauvb");//I just had to make it const, right?
+	const_cast<NiPSysModifier&>(obj).name.set("oawgnvauvb");//we shouldn't have to change obj to make this test
 
 	auto ctlr0 = static_cast<NiPSysModifierCtlr*>(obj.target.assigned()->controllers.at(0).get());
 	Assert::IsTrue(ctlr0->modifierName.get() == obj.name.get());
@@ -73,17 +68,6 @@ bool objects::FactoryTester<NiPSysModifier>::operator()(const NiPSysModifier& ob
 	Assert::IsTrue(ctlr2->modifierName.get() == obj.name.get());
 
 	const_cast<NiPSysModifier&>(obj).name.set(name);
-
-	return false;
-}
-
-bool objects::ForwardTester<NiPSysModifier>::operator()(NiPSysModifier& obj, TestConstructor& ctor, File& file)
-{
-	auto target = file.create<NiParticleSystem>();
-	file.getRoot()->children.add(target);
-	obj.target.assign(target);
-
-	return false;
 }
 
 bool objects::ForwardTester<NiPSysModifier>::operator()(const NiPSysModifier&, const TestConstructor& ctor)

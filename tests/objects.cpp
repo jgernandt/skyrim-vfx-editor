@@ -12,42 +12,6 @@ namespace objects
 {
 	using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-	template<typename T>
-	struct ConnectorTest
-	{
-		void run()
-		{
-			static int duplicate = 0;
-			Assert::IsTrue(!duplicate++);
-
-			nif::File file(nif::File::Version::SKYRIM_SE);
-			auto obj = file.create<T>();
-
-			TestConstructor c(file);
-			ConnectorTester<T>{}.up(*obj, file);//this overload sets up obj
-			node::Connector<T>{}.down(*obj, c);
-			ConnectorTester<T>{}.up(*obj, c);//this overload makes the assertions
-		}
-	};
-
-	template<typename T>
-	struct ForwardTest
-	{
-		void run()
-		{
-			static int duplicate = 0;
-			Assert::IsTrue(!duplicate++);
-
-			nif::File file(nif::File::Version::SKYRIM_SE);
-			auto obj = file.create<T>();
-
-			TestConstructor c(file);
-			ForwardTester<T>{}.up(*obj, c, file);//this overload sets up obj and c
-			node::Forwarder<T>{}.down(*obj, c);
-			ForwardTester<T>{}.up(*obj, c);//this overload makes the assertions
-		}
-	};
-
 	TEST_CLASS(NiObjectNET)
 	{
 	public:

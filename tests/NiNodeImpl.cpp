@@ -7,7 +7,7 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
-bool objects::ConnectorTester<NiNode>::operator()(NiNode& obj, nif::File& file)
+bool objects::TestSetup<NiNode>::operator()(NiNode& obj, nif::File& file)
 {
 	obj.children.clear();
 	obj.children.add(file.create<NiAVObject>());
@@ -31,15 +31,6 @@ bool objects::FactoryTester<NiNode>::operator()(const NiNode& obj, const TestCon
 {
 	Assert::IsTrue(ctor.node.first == &obj);
 	Assert::IsNotNull(dynamic_cast<node::Node*>(ctor.node.second.get()));
-	return false;
-}
-
-bool objects::ForwardTester<NiNode>::operator()(NiNode& obj, TestConstructor& ctor, File& file)
-{
-	obj.children.clear();
-	obj.children.add(file.create<NiAVObject>());
-	obj.children.add(file.create<NiNode>());
-
 	return false;
 }
 

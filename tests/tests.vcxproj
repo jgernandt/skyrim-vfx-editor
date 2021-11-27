@@ -266,6 +266,7 @@
     <ClInclude Include="ModifiersTests.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="TestConstructor.h" />
+    <ClInclude Include="TestSetup.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\gui\gui.vcxproj">
