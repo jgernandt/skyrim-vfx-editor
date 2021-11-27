@@ -9,6 +9,29 @@ namespace node
 {
 	using namespace nif;
 
+	class ModifierCtlrTraverser : public NiTraverser
+	{
+	protected:
+		std::string m_name;
+
+	public:
+		ni_ptr<NiTimeController> current;
+		std::vector<ni_ptr<NiPSysModifierCtlr>> controllers;
+
+		ModifierCtlrTraverser(std::string&& name) : m_name{ std::move(name) } {}
+
+		virtual void traverse(NiPSysModifierCtlr& obj) final override
+		{
+			assert(current.get() == &obj);
+			if (obj.modifierName.get() == m_name)
+				controllers.push_back(std::static_pointer_cast<NiPSysModifierCtlr>(current));
+		}
+		virtual void traverse(NiPSysEmitterCtlr& obj) override
+		{
+			ModifierCtlrTraverser::traverse(static_cast<NiPSysModifierCtlr&>(obj));
+		}
+	};
+
 	//NiPSysModifier/////
 
 	template<>
@@ -49,27 +72,6 @@ namespace node
 	class Factory<NiPSysModifier> : public VerticalTraverser<NiPSysModifier, Factory>
 	{
 	public:
-		class Traverser final : public NiTraverser
-		{
-			std::string m_name;
-		public:
-			ni_ptr<NiTimeController> current;
-			std::vector<ni_ptr<NiPSysModifierCtlr>> controllers;
-
-			Traverser(std::string&& name) : m_name{ std::move(name) } {}
-
-			virtual void traverse(NiPSysModifierCtlr& obj) override
-			{
-				assert(current.get() == &obj);
-				if (obj.modifierName.get() == m_name)
-					controllers.push_back(std::static_pointer_cast<NiPSysModifierCtlr>(current));
-			}
-			virtual void traverse(NiPSysEmitterCtlr& obj) override
-			{
-				Traverser::traverse(static_cast<NiPSysModifierCtlr&>(obj));
-			}
-		};
-
 		template<typename C>
 		bool operator() (NiPSysModifier& obj, C& ctor)
 		{
@@ -77,13 +79,8 @@ namespace node
 
 				//need to go through target's controllers
 				//if PSysModifierCtlr, look if name matches that of obj
-				Traverser t(obj.name.get());
-				if (auto&& target = obj.target.assigned()) {
-					for (auto&& ctlr : target->controllers) {
-						t.current = ctlr;
-						ctlr->receive(t);
-					}
-				}
+				ModifierCtlrTraverser t(obj.name.get());
+				findControllers(obj, t);
 
 				auto node = Default<DummyModifier>{}.create(ctor.getFile(), ptr);
 
@@ -93,6 +90,16 @@ namespace node
 				ctor.addNode(&obj, std::move(node));
 			}
 			return false;
+		}
+
+		void findControllers(NiPSysModifier& obj, ModifierCtlrTraverser& t)
+		{
+			if (auto&& target = obj.target.assigned()) {
+				for (auto&& ctlr : target->controllers) {
+					t.current = ctlr;
+					ctlr->receive(t);
+				}
+			}
 		}
 	};
 

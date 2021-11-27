@@ -11,30 +11,20 @@ namespace node
 	constexpr ColRGBA DEFAULT_VCOLOUR = COL_WHITE;
 	constexpr math::degf DEFAULT_ELEVATION = math::degf{ 0.0f };
 
-	class EmitterCtlrTraverser final : public NiTraverser
+	class EmitterCtlrTraverser final : public ModifierCtlrTraverser
 	{
-		std::string m_name;
 	public:
-		ni_ptr<NiTimeController> current;
 		ni_ptr<NiPSysEmitterCtlr> emitterCtlr;
-		//Unknown ctlrs, to be replaced by list of specific ctlrs for Emitters
-		std::vector<ni_ptr<NiPSysModifierCtlr>> controllers;
 
-		EmitterCtlrTraverser(std::string&& name) : m_name{ std::move(name) } {}
+		EmitterCtlrTraverser(std::string&& name) : ModifierCtlrTraverser{ std::move(name) } {}
 
-		virtual void traverse(NiPSysModifierCtlr& obj) override
-		{
-			assert(current.get() == &obj);
-			if (obj.modifierName.get() == m_name)
-				controllers.push_back(std::static_pointer_cast<NiPSysModifierCtlr>(current));
-		}
-		virtual void traverse(NiPSysEmitterCtlr& obj) override
+		virtual void traverse(NiPSysEmitterCtlr& obj) final override
 		{
 			assert(current.get() == &obj);
 			if (obj.modifierName.get() == m_name) {
 				if (emitterCtlr)
 					//Unexpected: we have multiple emitter ctlrs (file error?). Treat this as an unknown ctlr.
-					EmitterCtlrTraverser::traverse(static_cast<NiPSysModifierCtlr&>(obj));
+					ModifierCtlrTraverser::traverse(static_cast<NiPSysModifierCtlr&>(obj));
 				else
 					emitterCtlr = std::static_pointer_cast<NiPSysEmitterCtlr>(current);
 			}
@@ -158,12 +148,7 @@ namespace node
 
 				//Find our controllers
 				EmitterCtlrTraverser t(obj.name.get());
-				if (auto&& target = obj.target.assigned()) {
-					for (auto&& ctlr : target->controllers) {
-						t.current = ctlr;
-						ctlr->receive(t);
-					}
-				}
+				findControllers(obj, t);
 
 				auto node = Default<BoxEmitter>{}.create(ctor.getFile(), ptr, t.emitterCtlr);
 
@@ -218,12 +203,7 @@ namespace node
 
 				//Find our controllers
 				EmitterCtlrTraverser t(obj.name.get());
-				if (auto&& target = obj.target.assigned()) {
-					for (auto&& ctlr : target->controllers) {
-						t.current = ctlr;
-						ctlr->receive(t);
-					}
-				}
+				findControllers(obj, t);
 
 				auto node = Default<CylinderEmitter>{}.create(ctor.getFile(), ptr, t.emitterCtlr);
 
@@ -278,12 +258,7 @@ namespace node
 
 				//Find our controllers
 				EmitterCtlrTraverser t(obj.name.get());
-				if (auto&& target = obj.target.assigned()) {
-					for (auto&& ctlr : target->controllers) {
-						t.current = ctlr;
-						ctlr->receive(t);
-					}
-				}
+				findControllers(obj, t);
 
 				auto node = Default<SphereEmitter>{}.create(ctor.getFile(), ptr, t.emitterCtlr);
 
