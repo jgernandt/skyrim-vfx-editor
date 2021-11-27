@@ -39,30 +39,43 @@ namespace node
 		void updateAxisUnits();
 
 	private:
-		using Selection = std::set<IComponent*>;
 
-		class Interpolant;
-		class KeyFrame;
-		class ForwardHandle
+		class KeyHandle : public gui::Component
 		{
-			//Maybe instead of holding an interface ptr directly we should know
-			//what KeyFrame we are a part of and the name (or other id)
-			//of the property we represent.
+			class Listener final : public PropertyListener<float>
+			{
+			public:
+				Listener(float* target) : m_target{ target } {}
+				virtual void onSet(const float& val) { *m_target = val; }//should also dirty us!
 
-			KeyFrame* m_keyFrame;
-			const char* id = "ForwardTangent";
-		};
-		class BackwardHandle
-		{
+			private:
+				float* m_target;
+			};
+
+		public:
+			KeyHandle(ni_ptr<Key<float>>&& key, ni_ptr<Key<float>>&& next);
+			virtual ~KeyHandle();
+
+			virtual void frame(gui::FrameDrawer& fd) override;
+			virtual void setTranslation(const gui::Floats<2>& t) override;
+
+			virtual void setFocussed(bool on) override {}
+			virtual void setSelected(bool on) override { m_selected = on; }
+
+			ni_ptr<Property<float>> getXProperty() const;
+			ni_ptr<Property<float>> getYProperty() const;
+
+		private:
+			Listener m_timeLsnr;
+			Listener m_valueLsnr;
+			ni_ptr<Key<float>> m_key;
+			ni_ptr<Key<float>> m_next;
+			bool m_selected{ false };
+			bool m_dirty{ true };
 		};
 
-		class KeyFrame
-		{
-			Interpolant* m_curve;
-			int m_index;
-			ForwardHandle* m_fwd;
-			BackwardHandle* m_bwd;
-		};
+		using Selection = std::set<KeyHandle*>;
+
 
 		class Interpolant : public gui::Composite
 		{
@@ -83,12 +96,8 @@ namespace node
 			public Interpolant, public ListListener<Key<float>>
 		{
 		public:
-			class LinearHandle;
-		public:
 			LinearInterpolant(const ni_ptr<List<Key<float>>>& keys);
 			~LinearInterpolant();
-
-			virtual void frame(gui::FrameDrawer& fd) override;
 
 			virtual gui::Floats<2> getBounds() const override;
 
@@ -128,13 +137,15 @@ namespace node
 			ZOOM,
 		};
 		Selection m_selection;
-		gui::Floats<2> m_clickPoint;
-		gui::Floats<2> m_startS;
-		gui::Floats<2> m_startT;
+
+		//temp data for handling mouse input
+		gui::Floats<2> m_clickPoint;//point clicked in global coords
+		gui::Floats<2> m_startS;//axis scale at the time of clicking
+		gui::Floats<2> m_startT;//axis translation at the time of clicking
 		Selection::iterator m_activeItem;
 		Op m_currentOp{ Op::NONE };
 
-		std::vector<std::pair<IComponent*, gui::Floats<2>>> m_initialState;
+		std::vector<std::pair<KeyHandle*, gui::Floats<2>>> m_initialState;
 		bool m_dragThresholdPassed{ false };
 	};
 }

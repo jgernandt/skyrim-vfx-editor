@@ -10,19 +10,39 @@ constexpr float SCALE_SENSITIVITY = 0.1f;
 
 using namespace nif;
 
-//The command needs to work on persistent interfaces, it cannot just move the components.
-//What to do...
+using PosProperties = std::array<ni_ptr<Property<float>>, 2>;
+
 class MoveOp final : public gui::ICommand
 {
+	std::vector<PosProperties> m_targets;
+	std::vector<Eigen::Vector2f> m_to;
+	std::vector<Eigen::Vector2f> m_from;
+
 public:
-	MoveOp() {}
+	MoveOp(std::vector<PosProperties>&& targets,
+		std::vector<Eigen::Vector2f>&& to, std::vector<Eigen::Vector2f>&& from) :
+		m_targets{ targets }, m_to{ to }, m_from{ from }
+	{}
+
 	virtual void execute() override 
 	{
+		assert(m_targets.size() == m_to.size() && m_from.size() == m_to.size());
+		for (size_t i = 0; i < m_targets.size(); i++) {
+			m_targets[i][0]->set(m_to[i][0]);
+			m_targets[i][1]->set(m_to[i][1]);
+		}
 	}
 	virtual void reverse() override 
 	{
+		for (size_t i = 0; i < m_targets.size(); i++) {
+			m_targets[i][0]->set(m_from[i][0]);
+			m_targets[i][1]->set(m_from[i][1]);
+		}
 	}
-	virtual bool reversible() const override { return false; }
+	virtual bool reversible() const override 
+	{ 
+		return m_to != m_from;
+	}
 };
 
 //Locate a component whose center is in the vicinity of the cursor
@@ -239,7 +259,10 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 		//locate the clicked object
 		ClickSelector v(gui::Mouse::getPosition());
 		m_plot->getPlotArea().accept(v);
-		gui::IComponent* object = v.result;
+
+		//I'm not sure how much type info we want to have (or require).
+		//Let's do a downcast for now
+		KeyHandle* object = dynamic_cast<KeyHandle*>(v.result);
 
 		if (object) {
 			if (gui::Keyboard::isDown(gui::Keyboard::Key::SHIFT)) {
@@ -323,6 +346,26 @@ bool node::FloatKeyEditor::onMouseUp(gui::Mouse::Button button)
 				}
 				m_selection = std::move(newSelection);
 			}
+			else {
+				//send final move op
+
+				//Collect the properties from each selected key
+				std::vector<PosProperties> props(m_initialState.size());
+				//collect current values
+				std::vector<Eigen::Vector2f> to(m_initialState.size());
+				//collect initial state
+				std::vector<Eigen::Vector2f> from(m_initialState.size());
+
+				int i = 0;
+				for (auto&& item : m_initialState) {
+					props[i] = { item.first->getXProperty(), item.first->getYProperty() };
+					to[i] = item.first->getTranslation();
+					from[i] = item.second;
+					i++;
+				}
+
+				asyncInvoke<MoveOp>(std::move(props), std::move(to), std::move(from));
+			}
 
 			m_currentOp = Op::NONE;
 			assert(m_plot && gui::Mouse::getCapture() == &m_plot->getPlotArea());
@@ -385,7 +428,7 @@ void node::FloatKeyEditor::drag(const gui::Floats<2>& pos)
 		//save initial state
 		assert(m_initialState.empty());
 		m_initialState.reserve(m_selection.size());
-		for (IComponent* obj : m_selection) {
+		for (KeyHandle* obj : m_selection) {
 			assert(obj);
 			m_initialState.push_back({ obj, obj->getTranslation() });
 		}
@@ -394,15 +437,14 @@ void node::FloatKeyEditor::drag(const gui::Floats<2>& pos)
 	if (m_dragThresholdPassed) {
 		gui::Floats<2> delta = pos - m_clickPoint;
 
-		//Depending on what component is selected, a move operation can mean different things.
-		//Different properties, different interpretation of movement.
-		//We need to ask the active component
-
-		Selection::iterator comp = m_activeItem != m_selection.end() ? m_activeItem : m_selection.begin();
-		//Ask comp for a "move" command
-
 		for (auto&& item : m_initialState) {
 			if (IComponent* parent = item.first->getParent()) {
+				//Do we forego our previous design of sending everything to the Invoker?
+				//If we do any synchronous access to the data, the Property themselves should guard.
+				//Then again, we don't know if a listener wants to make changes to the graph in response.
+				//Let's forego it, but make sure we can easily find everywhere we have done so:
+				static_assert(FOREGO_ASYNC);
+
 				gui::Floats<2> global = parent->toGlobalSpace(item.second);
 				item.first->setTranslation(parent->fromGlobalSpace(global + delta));
 			}
@@ -464,38 +506,61 @@ void node::FloatKeyEditor::updateAxisUnits()
 	m_plot->getPlotArea().getAxes().setMinorUnits(minor);
 }
 
-class node::FloatKeyEditor::LinearInterpolant::LinearHandle final : public gui::Component
+
+node::FloatKeyEditor::KeyHandle::KeyHandle(ni_ptr<Key<float>>&& key, ni_ptr<Key<float>>&& next) :
+	m_timeLsnr{ &m_translation[0] },
+	m_valueLsnr{ &m_translation[1] },
+	m_key{ std::move(key) }, 
+	m_next{ std::move(next) }
 {
-	ni_ptr<Key<float>> m_key;
-	//One way to deal with limits (these are the times of our adjacent keys, or start/stop time)
-	ni_ptr<Property<float>> m_low;
-	ni_ptr<Property<float>> m_high;
+	assert(m_key);
+	m_key->time.addListener(m_timeLsnr);
+	m_key->value.addListener(m_valueLsnr);
+	m_translation = { m_key->time.get(), m_key->value.get() };
+}
 
-	bool m_selected{ false };
+node::FloatKeyEditor::KeyHandle::~KeyHandle()
+{
+	m_key->time.removeListener(m_timeLsnr);
+	m_key->value.removeListener(m_valueLsnr);
+}
 
-public:
-	LinearHandle(
-		ni_ptr<Key<float>>&& key, 
-		ni_ptr<Property<float>>&& low = ni_ptr<Property<float>>(),
-		ni_ptr<Property<float>>&& high = ni_ptr<Property<float>>()) :
-		m_key{ key }, m_low{ low }, m_high{ high }
-	{}
-	~LinearHandle() {}
-
-	virtual void frame(gui::FrameDrawer& fd) override 
-	{
-		//We want to scale with PlotArea, not Axes. Not so easy right now. 
-		//We'll just not scale at all.
-		fd.circle(fd.toGlobal(m_translation), 3.0f, m_selected ? nif::COL_WHITE : nif::COL_BLACK, true);
+void node::FloatKeyEditor::KeyHandle::frame(gui::FrameDrawer& fd)
+{
+	if (m_dirty) {
+		//Recalculate our interpolation (if we were quadratic)
+		m_dirty = false;
 	}
 
-	//The command cannot rely on calling this function, since we will
-	//not survive. It needs our interface to the data model.
-	//virtual void setTranslation(const gui::Floats<2>& t) override {}
+	//We want to scale with PlotArea, not Axes. Not so easy right now. 
+	//We'll just not scale at all.
+	if (m_next)
+		fd.line(
+			fd.toGlobal(m_translation), 
+			fd.toGlobal({ m_next->time.get(), m_next->value.get() }), 
+			{ 1.0f, 0.0f, 0.0f, 1.0f }, 
+			3.0f,
+			true);
+	fd.circle(fd.toGlobal(m_translation), 3.0f, m_selected ? nif::COL_WHITE : nif::COL_BLACK, true);
+}
 
-	virtual void setFocussed(bool on) override {}
-	virtual void setSelected(bool on) override { m_selected = on; }
-};
+void node::FloatKeyEditor::KeyHandle::setTranslation(const gui::Floats<2>& t)
+{
+	assert(m_key);
+	m_key->time.set(t[0]);
+	m_key->value.set(t[1]);
+}
+
+ni_ptr<Property<float>> node::FloatKeyEditor::KeyHandle::getXProperty() const
+{
+	return make_ni_ptr(m_key, &Key<float>::time);
+}
+
+ni_ptr<Property<float>> node::FloatKeyEditor::KeyHandle::getYProperty() const
+{
+	return make_ni_ptr(m_key, &Key<float>::value);
+}
+
 
 node::FloatKeyEditor::LinearInterpolant::LinearInterpolant(const ni_ptr<List<Key<float>>>& keys) :
 	m_keys{ keys }
@@ -503,35 +568,24 @@ node::FloatKeyEditor::LinearInterpolant::LinearInterpolant(const ni_ptr<List<Key
 	assert(m_keys);
 	m_keys->addListener(*this);
 
-	for (auto&& key : *m_keys)
-		newChild<LinearHandle>(make_ni_ptr(m_keys, &key));
+	if (m_keys->size() > 0) {
+
+		auto next = ++m_keys->begin();
+		for (auto&& key : *m_keys) {
+
+			ni_ptr<Key<float>> next_key;
+			if (next != m_keys->end()) {
+				next_key = make_ni_ptr(m_keys, &(*next));
+				++next;
+			}
+			newChild<KeyHandle>(make_ni_ptr(m_keys, &key), std::move(next_key));
+		}
+	}
 }
 
 node::FloatKeyEditor::LinearInterpolant::~LinearInterpolant()
 {
 	m_keys->removeListener(*this);
-}
-
-void node::FloatKeyEditor::LinearInterpolant::frame(gui::FrameDrawer& fd)
-{
-	//Draw line (we should probably let each handle draw its next segment)
-	for (size_t i = 0; i < m_keys->size() - 1; i++)
-		fd.line({ m_keys->at(i).time.get(), m_keys->at(i).value.get() },
-			{ m_keys->at(i + 1).time.get(), m_keys->at(i + 1).value.get() },
-			{ 1.0f, 0.0f, 0.0f, 1.0f },
-			3.0f);
-
-	//Or
-	//for (auto&& c : getChildren()) {
-	//	auto key = static_cast<LinearHandle*>(c.get());
-		//etc
-	//}
-
-	//We may also want to draw the line outside the start-stop time,
-	//according to the current cycle rule.
-
-	Composite::frame(fd);
-
 }
 
 gui::Floats<2> node::FloatKeyEditor::LinearInterpolant::getBounds() const
