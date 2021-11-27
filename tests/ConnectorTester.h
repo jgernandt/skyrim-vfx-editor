@@ -10,10 +10,14 @@ namespace objects
 	struct ConnectorTester : VerticalTraverser<T, ConnectorTester>
 	{
 		//Should prepare object to have a certain structure
-		bool operator() (T&, File&) { return true; }
+		bool operator() (T&, File&) { return false; }
 
 		//Should test that Constructor has all the expected connections
-		bool operator() (const T&, const TestConstructor&) { Assert::Fail(); return true; }
+		bool operator() (const T&, const TestConstructor& ctor) 
+		{ 
+			Assert::IsTrue(ctor.connections.empty() && ctor.modConnections.second.empty());
+			return false; 
+		}
 	};
 
 	template<>
@@ -24,24 +28,10 @@ namespace objects
 	};
 
 	template<>
-	struct ConnectorTester<NiAVObject> : VerticalTraverser<NiAVObject, ConnectorTester>
-	{
-		bool operator() (NiAVObject&, File&) { return false; }
-		bool operator() (const NiAVObject& obj, const TestConstructor& ctor);
-	};
-
-	template<>
 	struct ConnectorTester<NiNode> : VerticalTraverser<NiNode, ConnectorTester>
 	{
 		bool operator() (NiNode& obj, File& file);
 		bool operator() (const NiNode& obj, const TestConstructor& ctor);
-	};
-
-	template<>
-	struct ConnectorTester<BSEffectShaderProperty> : VerticalTraverser<BSEffectShaderProperty, ConnectorTester>
-	{
-		bool operator() (BSEffectShaderProperty&, File&) { return false; }
-		bool operator() (const BSEffectShaderProperty& obj, const TestConstructor& ctor);
 	};
 
 	template<>
@@ -56,20 +46,6 @@ namespace objects
 	{
 		bool operator() (NiPSysModifier& obj, File& file);
 		bool operator() (const NiPSysModifier& obj, const TestConstructor& ctor);
-	};
-
-	template<>
-	struct ConnectorTester<NiExtraData> : VerticalTraverser<NiExtraData, ConnectorTester>
-	{
-		bool operator() (NiExtraData&, File&) { return false; }
-		bool operator() (const NiExtraData& obj, const TestConstructor& ctor);
-	};
-
-	template<>
-	struct ConnectorTester<NiStringExtraData> : VerticalTraverser<NiStringExtraData, ConnectorTester>
-	{
-		bool operator() (NiStringExtraData&, File&) { return false; }
-		bool operator() (const NiStringExtraData& obj, const TestConstructor& ctor);
 	};
 
 }

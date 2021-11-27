@@ -27,12 +27,6 @@ bool objects::ConnectorTester<NiNode>::operator()(const NiNode& obj, const TestC
 	return false;
 }
 
-bool objects::FactoryTester<NiNode>::operator()(NiNode& obj, TestConstructor& ctor, File& file)
-{
-	//we don't need to do anything?
-	return false;
-}
-
 bool objects::FactoryTester<NiNode>::operator()(const NiNode& obj, const TestConstructor& ctor)
 {
 	Assert::IsTrue(ctor.node.first == &obj);

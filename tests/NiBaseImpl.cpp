@@ -32,13 +32,6 @@ bool objects::ConnectorTester<NiObjectNET>::operator()(const NiObjectNET& obj, c
 	return false;
 }
 
-bool objects::FactoryTester<NiObjectNET>::operator()(const NiObjectNET& obj, const TestConstructor& ctor)
-{
-	//Should not add a node
-	Assert::IsTrue(!ctor.node.first && !ctor.node.second);
-	return false;
-}
-
 bool objects::ForwardTester<NiObjectNET>::operator()(NiObjectNET& obj, TestConstructor& ctor, File& file)
 {
 	obj.extraData.clear();
@@ -65,22 +58,10 @@ bool objects::ForwardTester<NiObjectNET>::operator()(const NiObjectNET& obj, con
 }
 
 
-bool objects::ConnectorTester<NiAVObject>::operator()(const NiAVObject& obj, const TestConstructor& ctor)
-{
-	Assert::IsTrue(ctor.connections.size() == 0);
-	return false;
-}
-
 bool objects::FactoryTester<NiAVObject>::operator()(const NiAVObject& obj, const TestConstructor& ctor)
 {
 	//Expect a DummyAVObject
 	Assert::IsTrue(ctor.node.first == &obj);
 	Assert::IsNotNull(dynamic_cast<node::DummyAVObject*>(ctor.node.second.get()));
-	return false;
-}
-
-bool objects::ForwardTester<NiAVObject>::operator()(const NiAVObject& obj, const TestConstructor& ctor)
-{
-	Assert::IsTrue(ctor.forwards.size() == 0);
 	return false;
 }

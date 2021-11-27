@@ -8,12 +8,6 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
-bool objects::ConnectorTester<NiExtraData>::operator()(const NiExtraData& obj, const TestConstructor& ctor)
-{
-	Assert::IsTrue(ctor.connections.size() == 0);
-	return false;
-}
-
 bool objects::FactoryTester<NiExtraData>::operator()(const NiExtraData& obj, const TestConstructor& ctor)
 {
 	//Expect a DummyExtraData
@@ -22,18 +16,6 @@ bool objects::FactoryTester<NiExtraData>::operator()(const NiExtraData& obj, con
 	return false;
 }
 
-bool objects::ForwardTester<NiExtraData>::operator()(const NiExtraData& obj, const TestConstructor& ctor)
-{
-	Assert::IsTrue(ctor.forwards.size() == 0);
-	return false;
-}
-
-
-bool objects::ConnectorTester<NiStringExtraData>::operator()(const NiStringExtraData& obj, const TestConstructor& ctor)
-{
-	Assert::IsTrue(ctor.connections.size() == 0);
-	return false;
-}
 
 void objects::FactoryTest<NiStringExtraData>::run()
 {
@@ -62,10 +44,4 @@ void objects::FactoryTest<NiStringExtraData>::run()
 		Assert::IsTrue(ctor.node.first == obj2.get());
 		Assert::IsNotNull(dynamic_cast<node::StringData*>(ctor.node.second.get()));
 	}
-}
-
-bool objects::ForwardTester<NiStringExtraData>::operator()(const NiStringExtraData& obj, const TestConstructor& ctor)
-{
-	Assert::IsTrue(ctor.forwards.size() == 0);
-	return false;
 }
