@@ -44,30 +44,19 @@ bool objects::FactoryTester<NiPSysModifier>::operator()(const NiPSysModifier& ob
 {
 	nodeTest<node::DummyModifier>(obj, ctor);
 
-	Assert::IsTrue(obj.target.assigned()->controllers.size() == 3);
-	controllerTest(obj, ctor);
+	auto ctlrs = static_cast<node::Modifier*>(ctor.node.second.get())->getControllers();
+	Assert::IsTrue(ctlrs.size() == 2);
+	controllerTest(ctlrs, obj.target.assigned());
 
 	return false;
 }
 
-void objects::FactoryTester<NiPSysModifier>::controllerTest(const NiPSysModifier& obj, const TestConstructor& ctor)
+void objects::FactoryTester<NiPSysModifier>::controllerTest(
+	const std::vector<NiPSysModifierCtlr*>& ctlrs, const ni_ptr<NiParticleSystem>& target)
 {
-	//How to directly test if we picked up the controllers?
-	//We could check if they respond to name a change, but that's indirect and may give a false negative.
-	//Good enough for now, I guess.
-	std::string name = obj.name.get();
-	const_cast<NiPSysModifier&>(obj).name.set("oawgnvauvb");//we shouldn't have to change obj to make this test
-
-	auto ctlr0 = static_cast<NiPSysModifierCtlr*>(obj.target.assigned()->controllers.at(0).get());
-	Assert::IsTrue(ctlr0->modifierName.get() == obj.name.get());
-
-	auto ctlr1 = static_cast<NiPSysModifierCtlr*>(obj.target.assigned()->controllers.at(1).get());
-	Assert::IsFalse(ctlr1->modifierName.get() == obj.name.get());
-
-	auto ctlr2 = static_cast<NiPSysModifierCtlr*>(obj.target.assigned()->controllers.at(2).get());
-	Assert::IsTrue(ctlr2->modifierName.get() == obj.name.get());
-
-	const_cast<NiPSysModifier&>(obj).name.set(name);
+	Assert::IsTrue(std::find(ctlrs.begin(), ctlrs.end(), target->controllers.at(0).get()) != ctlrs.end());
+	Assert::IsTrue(std::find(ctlrs.begin(), ctlrs.end(), target->controllers.at(1).get()) == ctlrs.end());
+	Assert::IsTrue(std::find(ctlrs.begin(), ctlrs.end(), target->controllers.at(2).get()) != ctlrs.end());
 }
 
 bool objects::ForwardTester<NiPSysModifier>::operator()(const NiPSysModifier&, const TestConstructor& ctor)

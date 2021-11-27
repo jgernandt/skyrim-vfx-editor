@@ -26,23 +26,18 @@ bool objects::FactoryTester<NiPSysEmitter>::operator()(const NiPSysEmitter& obj,
 {
 	nodeTest<node::Emitter>(obj, ctor);
 
-	Assert::IsTrue(obj.target.assigned()->controllers.size() == 4);
-	controllerTest(obj, ctor);
+	auto ctlrs = static_cast<node::Modifier*>(ctor.node.second.get())->getControllers();
+	Assert::IsTrue(ctlrs.size() == 3);
+	controllerTest(ctlrs, obj.target.assigned());
 
 	return false;
 }
 
-void objects::FactoryTester<NiPSysEmitter>::controllerTest(const NiPSysEmitter& obj, const TestConstructor& ctor)
+void objects::FactoryTester<NiPSysEmitter>::controllerTest(
+	const std::vector<NiPSysModifierCtlr*>& ctlrs, const ni_ptr<NiParticleSystem>& target)
 {
-	FactoryTester<NiPSysModifier>::controllerTest(obj, ctor);
-
-	std::string name = obj.name.get();
-	const_cast<NiPSysEmitter&>(obj).name.set("baoerbnhio");
-
-	auto ctlr3 = static_cast<NiPSysModifierCtlr*>(obj.target.assigned()->controllers.at(3).get());
-	Assert::IsTrue(ctlr3->modifierName.get() == obj.name.get());
-
-	const_cast<NiPSysEmitter&>(obj).name.set(name);
+	FactoryTester<NiPSysModifier>::controllerTest(ctlrs, target);
+	Assert::IsTrue(std::find(ctlrs.begin(), ctlrs.end(), target->controllers.at(3).get()) != ctlrs.end());
 }
 
 

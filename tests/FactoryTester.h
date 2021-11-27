@@ -49,14 +49,14 @@ namespace objects
 	struct FactoryTester<NiPSysModifier> : VerticalTraverser<NiPSysModifier, FactoryTester>
 	{
 		bool operator() (const NiPSysModifier& obj, const TestConstructor& ctor);
-		void controllerTest(const NiPSysModifier& obj, const TestConstructor& ctor);
+		void controllerTest(const std::vector<NiPSysModifierCtlr*>& ctlrs, const ni_ptr<NiParticleSystem>& target);
 	};
 
 	template<>
 	struct FactoryTester<NiPSysEmitter> : VerticalTraverser<NiPSysEmitter, FactoryTester>
 	{
 		bool operator() (const NiPSysEmitter& obj, const TestConstructor& ctor);
-		void controllerTest(const NiPSysEmitter& obj, const TestConstructor& ctor);
+		void controllerTest(const std::vector<NiPSysModifierCtlr*>& ctlrs, const ni_ptr<NiParticleSystem>& target);
 	};
 
 	template<>
