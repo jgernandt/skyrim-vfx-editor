@@ -539,38 +539,71 @@ namespace fields
 	TEST_CLASS(Property)
 	{
 	public:
+		struct Listener : PropertyListener<float>
+		{
+			virtual void onSet(const float& f) override
+			{
+				m_signalled = true;
+				m_set = f;
+			}
+
+			bool wasSet()
+			{
+				bool result = m_signalled;
+				m_signalled = false;
+				m_set = std::numeric_limits<float>::quiet_NaN();
+				return result;
+			}
+
+			bool wasSet(float f)
+			{
+				bool result = m_signalled && m_set == f;
+				m_signalled = false;
+				m_set = std::numeric_limits<float>::quiet_NaN();
+				return result;
+			}
+
+		private:
+			float m_set{ std::numeric_limits<float>::quiet_NaN() };
+			bool m_signalled{ false };
+		};
+
+		TEST_METHOD(Movable)
+		{
+			//Should we do this test on some other type than float, 
+			//to see if it gets moved rather than copied?
+			//Now we're just testing listeners.
+
+			nif::Property<float> p1;
+			Listener lsnr;
+			p1.addListener(lsnr);
+			Assert::IsFalse(lsnr.wasSet());
+			p1.set(1.0f);
+			Assert::IsTrue(lsnr.wasSet(1.0f));
+
+			//move constructor
+			nif::Property<float> p2(std::move(p1));
+			Assert::IsTrue(p2.get() == p1.get());
+			//we should not hear p1 anymore
+			p1.set(2.0f);
+			Assert::IsFalse(lsnr.wasSet());
+			//only p2
+			p2.set(2.0f);
+			Assert::IsTrue(lsnr.wasSet(2.0f));
+
+			//move assigner
+			nif::Property<float> p3(std::move(p2));
+			Assert::IsTrue(p3.get() == p2.get());
+			//we should not hear p2 anymore
+			p2.set(3.0f);
+			Assert::IsFalse(lsnr.wasSet());
+			//only p3
+			p3.set(3.0f);
+			Assert::IsTrue(lsnr.wasSet(3.0f));
+		}
 
 		TEST_METHOD(PropertyTest)
 		{
-			struct Listener : PropertyListener<float>
-			{
-				virtual void onSet(const float& f) override
-				{
-					m_signalled = true;
-					m_set = f;
-				}
-
-				bool wasSet()
-				{
-					bool result = m_signalled;
-					m_signalled = false;
-					m_set = std::numeric_limits<float>::quiet_NaN();
-					return result;
-				}
-
-				bool wasSet(float f)
-				{
-					bool result = m_signalled && m_set == f;
-					m_signalled = false;
-					m_set = std::numeric_limits<float>::quiet_NaN();
-					return result;
-				}
-
-			private:
-				float m_set{ std::numeric_limits<float>::quiet_NaN() };
-				bool m_signalled{ false };
-			};
-
 			nif::Property<float> prop;
 			Listener lsnr;
 			prop.addListener(lsnr);

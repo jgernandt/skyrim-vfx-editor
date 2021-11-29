@@ -42,7 +42,7 @@ namespace nif
 	public:
 		Property(const T& val = T()) : m_value{ val } {}
 		Property(const Property<T>&) = delete;
-		Property(Property<T>&& other) noexcept : Observable<Property<T>>(std::move(other)) { *this = std::move(other); }
+		Property(Property<T>&& other) noexcept { *this = std::move(other); }
 
 		~Property() = default;
 
