@@ -55,32 +55,36 @@ namespace nif
 		iterator end() { return m_ctnr.end(); }
 		const_iterator end() const { return m_ctnr.end(); }
 
-		//Is this inconsistency (not calling vector::at) going to be a problem? Probably, right?
-		T& at(int i) { return m_ctnr[i]; }
-		const T& at(int i) const { return m_ctnr[i]; }
+		T& at(int i) 
+		{
+			assert(i >= 0 && (size_t)i < size());
+			return m_ctnr[i]; 
+		}
+		const T& at(int i) const 
+		{
+			assert(i >= 0 && (size_t)i < size());
+			return m_ctnr[i]; 
+		}
+
+		T& back() { return m_ctnr.back(); }
+		const T& back() const { return m_ctnr.back(); }
+		T& front() { return m_ctnr.front(); }
+		const T& front() const { return m_ctnr.front(); }
 
 		//TODO: use iterators instead of ints
-		int insert(int i, const T& val)
+		//We could template insertions to forward ctor arguments
+		void insert(int i)
 		{
-			assert(i >= 0);
+			assert(i >= 0 && (size_t)i <= m_ctnr.size());
 
-			typename ctnr_type::iterator it;
-			if ((size_t)i < m_ctnr.size())
-				it = m_ctnr.begin() + i;
-			else {
-				it = m_ctnr.end();
-				i = m_ctnr.size();
-			}
+			m_ctnr.emplace(m_ctnr.begin() + i);
 
-			m_ctnr.insert(it, val);
 			for (VectorListener<T>* l : this->m_lsnrs) {
 				assert(l);
 				l->onInsert(i);
 			}
-
-			return i;
 		}
-		int erase(int i)
+		void erase(int i)
 		{
 			assert(i >= 0 && (size_t)i < m_ctnr.size());
 
@@ -90,13 +94,35 @@ namespace nif
 				assert(l);
 				l->onErase(i);
 			}
-
-			return i;
 		}
 
-		void push_back(const T& val)
+		void pop_back()
 		{
-			insert(m_ctnr.size(), val);
+			erase(size() - 1);
+		}
+
+		void pop_front()
+		{
+			erase(0);
+		}
+
+		void push_back()
+		{
+			insert(size());
+		}
+
+		void push_front()
+		{
+			insert(0);
+		}
+
+		void resize(int size)
+		{
+			assert(size >= 0);
+			while (m_ctnr.size() > (size_t)size)
+				pop_back();
+			while (m_ctnr.size() < (size_t)size)
+				push_back();
 		}
 
 		size_t size() const
@@ -107,7 +133,7 @@ namespace nif
 		void clear()
 		{
 			while (!m_ctnr.empty())
-				erase(m_ctnr.size() - 1);
+				pop_back();
 		}
 
 		friend constexpr bool operator==(const Vector<T>& lhs, const Vector<T>& rhs)

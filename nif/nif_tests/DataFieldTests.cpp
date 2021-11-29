@@ -25,6 +25,44 @@ namespace fields
 {
 	using namespace nif;
 
+	static_assert(std::is_move_assignable<Key<float>>::value);
+	static_assert(std::is_move_constructible<Key<float>>::value);
+
+	bool operator==(const Key<float>& lhs, const Key<float>& rhs)
+	{
+		return lhs.time.get() == rhs.time.get() &&
+			lhs.value.get() == rhs.value.get() &&
+			lhs.fwdTan.get() == rhs.fwdTan.get() &&
+			lhs.bwdTan.get() == rhs.bwdTan.get() &&
+			lhs.tension.get() == rhs.tension.get() &&
+			lhs.bias.get() == rhs.bias.get() &&
+			lhs.continuity.get() == rhs.continuity.get();
+	}
+	bool operator!=(const Key<float>& lhs, const Key<float>& rhs) { return !(lhs == rhs); }
+
+	void randomiseKey(Key<float>& key, std::mt19937& rng)
+	{
+		std::uniform_real_distribution<float> D;
+		key.time.set(D(rng));
+		key.value.set(D(rng));
+		key.fwdTan.set(D(rng));
+		key.bwdTan.set(D(rng));
+		key.tension.set(D(rng));
+		key.bias.set(D(rng));
+		key.continuity.set(D(rng));
+	}
+
+	void copyKey(Key<float>& key, const Key<float>& from)
+	{
+		key.time.set(from.time.get());
+		key.value.set(from.value.get());
+		key.fwdTan.set(from.fwdTan.get());
+		key.bwdTan.set(from.bwdTan.get());
+		key.tension.set(from.tension.get());
+		key.bias.set(from.bias.get());
+		key.continuity.set(from.continuity.get());
+	}
+
 	//Should probably split into smaller tests, if I can be bothered
 
 	TEST_CLASS(Assignable) 
@@ -895,7 +933,7 @@ namespace fields
 
 		TEST_METHOD(VectorTest)
 		{
-			struct Listener : VectorListener<float>
+			struct Listener : VectorListener<Key<float>>
 			{
 				virtual void onInsert(int pos) override
 				{
@@ -944,109 +982,180 @@ namespace fields
 				std::deque<int> m_erased;
 			};
 
-			Listener lsnr;
+			struct PListener : PropertyListener<float>
 			{
-				nif::Vector<float> vec;
+				virtual void onSet(const float& f) override
+				{
+					m_signalled = true;
+					m_set = f;
+				}
+
+				bool wasSet()
+				{
+					bool result = m_signalled;
+					m_signalled = false;
+					m_set = std::numeric_limits<float>::quiet_NaN();
+					return result;
+				}
+
+				bool wasSet(float f)
+				{
+					bool result = m_signalled && m_set == f;
+					m_signalled = false;
+					m_set = std::numeric_limits<float>::quiet_NaN();
+					return result;
+				}
+
+			private:
+				float m_set{ std::numeric_limits<float>::quiet_NaN() };
+				bool m_signalled{ false };
+			};
+
+			Listener lsnr;
+			PListener plsnr;
+			{
+				nif::Vector<Key<float>> vec;
 				vec.addListener(lsnr);
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 
 				std::mt19937 rng;
-				std::uniform_real_distribution<float> D;
-
-				std::vector<float> expected;
 
 				//push_back
-				float val = D(rng);
-				expected.push_back(val);
-				vec.push_back(val);
-				Assert::IsTrue(vec == expected);
+				vec.push_back();
 				Assert::IsTrue(vec.size() == 1);
 				Assert::IsTrue(lsnr.wasInserted(0));
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
-				val = D(rng);
-				expected.push_back(val);
-				vec.push_back(val);
-				Assert::IsTrue(vec == expected);
+
+				randomiseKey(vec.at(0), rng);
+				Key<float> key0;
+				copyKey(key0, vec.at(0));
+
+				//listen to this key
+				vec.at(0).time.addListener(plsnr);
+				Key<float>* key0_ptr = &vec.at(0);
+
+				vec.push_back();
 				Assert::IsTrue(vec.size() == 2);
 				Assert::IsTrue(lsnr.wasInserted(1));
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 
-				//insert
-				val = D(rng);
-				expected.insert(expected.begin(), val);
-				vec.insert(0, val);
-				Assert::IsTrue(vec == expected);
+				randomiseKey(vec.at(1), rng);
+				Key<float> key1;
+				copyKey(key1, vec.at(1));
+
+				//access
+				Assert::IsTrue(key0 == vec.front() && key0 == vec.at(0));
+				Assert::IsTrue(key1 == vec.at(1) && key1 == vec.back());
+
+				//push_front
+				vec.push_front();
 				Assert::IsTrue(vec.size() == 3);
 				Assert::IsTrue(lsnr.wasInserted(0));
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == vec.at(1));
+				Assert::IsTrue(key1 == vec.at(2));
 
-				val = D(rng);
-				expected.insert(expected.begin() + 1, val);
-				vec.insert(1, val);
-				Assert::IsTrue(vec == expected);
-				Assert::IsTrue(vec.size() == 4);
+				//pop_front
+				vec.pop_front();
+				Assert::IsTrue(vec.size() == 2);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsTrue(lsnr.wasErased(0));
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == vec.front());
+				Assert::IsTrue(key1 == vec.back());
+
+				//pop_back
+				vec.pop_back();
+				Assert::IsTrue(vec.size() == 1);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsTrue(lsnr.wasErased(1));
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == vec.front());
+
+				//insert
+				vec.insert(1);
+				Assert::IsTrue(vec.size() == 2);
 				Assert::IsTrue(lsnr.wasInserted(1));
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
 
+				randomiseKey(vec.at(1), rng);
+				copyKey(key1, vec.at(1));
+				Assert::IsTrue(key0 == vec.front());
+
+				vec.insert(0);
+				Assert::IsTrue(vec.size() == 3);
+				Assert::IsTrue(lsnr.wasInserted(0));
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == vec.at(1));
+				Assert::IsTrue(key1 == vec.at(2));
+
+				//erase
+				vec.erase(0);
+				Assert::IsTrue(vec.size() == 2);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsTrue(lsnr.wasErased(0));
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == vec.at(0));
+				Assert::IsTrue(key1 == vec.at(1));
+
+				vec.erase(1);
+				Assert::IsTrue(vec.size() == 1);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsTrue(lsnr.wasErased(1));
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == vec.at(0));
+
+				//resize larger
+				vec.resize(3);
+				Assert::IsTrue(vec.size() == 3);
+				Assert::IsTrue(lsnr.wasInserted(1));
+				Assert::IsTrue(lsnr.wasInserted(2));
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == vec.at(0));
+
+				//resize smaller
+				vec.resize(1);
+				Assert::IsTrue(vec.size() == 1);
+				Assert::IsFalse(lsnr.wasInserted());
+				Assert::IsTrue(lsnr.wasErased(2));
+				Assert::IsTrue(lsnr.wasErased(1));
+				Assert::IsFalse(lsnr.wasErased());
+				Assert::IsTrue(key0 == vec.at(0));
+
+				//make sure we have not lost the listener (despite moving the property)
+				Assert::IsTrue(&vec.at(0) != key0_ptr);
+				Assert::IsFalse(plsnr.wasSet());
+				vec.at(0).time.set(0.0f);
+				Assert::IsTrue(plsnr.wasSet(0.0f));
+
 				//clear
+				vec.insert(1);
+				Assert::IsTrue(lsnr.wasInserted());
 				vec.clear();
 				Assert::IsTrue(vec.size() == 0);
 				Assert::IsFalse(lsnr.wasInserted());
-				//calls should have come back to front
-				Assert::IsTrue(lsnr.wasErased(3));
-				Assert::IsTrue(lsnr.wasErased(2));
 				Assert::IsTrue(lsnr.wasErased(1));
-				Assert::IsTrue(lsnr.wasErased(0));
-				Assert::IsFalse(lsnr.wasErased());
-
-				for (float f : expected)
-					vec.push_back(f);
-				Assert::IsTrue(vec == expected);
-				Assert::IsTrue(lsnr.wasInserted());
-
-				//erase
-				expected.erase(expected.end() - 1);
-				vec.erase(vec.size() - 1);
-				Assert::IsTrue(vec == expected);
-				Assert::IsTrue(vec.size() == 3);
-				Assert::IsFalse(lsnr.wasInserted());
-				Assert::IsTrue(lsnr.wasErased(3));
-				Assert::IsFalse(lsnr.wasErased());
-
-				expected.erase(expected.begin());
-				vec.erase(0);
-				Assert::IsTrue(vec == expected);
-				Assert::IsTrue(vec.size() == 2);
-				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsTrue(lsnr.wasErased(0));
 				Assert::IsFalse(lsnr.wasErased());
 
 				//Remove listener
 				vec.removeListener(lsnr);
-				expected.erase(expected.end() - 1);
-				vec.erase(vec.size() - 1);
-				Assert::IsTrue(vec == expected);
-				Assert::IsTrue(vec.size() == 1);
+				vec.push_back();
+				vec.push_back();
 				Assert::IsFalse(lsnr.wasInserted());
 				Assert::IsFalse(lsnr.wasErased());
-
-				vec.clear();
-				for (int i = 0; i < 4; i++)
-					vec.push_back(D(rng));
 
 				vec.addListener(lsnr);
-				Assert::IsFalse(lsnr.wasInserted());
-				Assert::IsFalse(lsnr.wasErased());
 			}
 			//signal erase on destruction
 			Assert::IsFalse(lsnr.wasInserted());
-			Assert::IsTrue(lsnr.wasErased(3));
-			Assert::IsTrue(lsnr.wasErased(2));
 			Assert::IsTrue(lsnr.wasErased(1));
 			Assert::IsTrue(lsnr.wasErased(0));
 			Assert::IsFalse(lsnr.wasErased());
