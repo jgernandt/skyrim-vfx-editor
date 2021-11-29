@@ -53,7 +53,7 @@ namespace nif
 	struct NiBoolData : NiTraversable<NiBoolData, NiObject>
 	{
 		Property<KeyType> keyType;
-		List<Key<bool>> keys;
+		Vector<Key<bool>> keys;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
@@ -62,7 +62,7 @@ namespace nif
 	struct NiFloatData : NiTraversable<NiFloatData, NiObject>
 	{
 		Property<KeyType> keyType;
-		List<Key<float>> keys;
+		Vector<Key<float>> keys;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
