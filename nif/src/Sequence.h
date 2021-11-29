@@ -28,11 +28,34 @@ namespace nif
 	template<typename T> inline bool operator==(T* lhs, const std::shared_ptr<T>& rhs) noexcept { return rhs == lhs; }
 
 	template<typename T> class Sequence;
+
+	template<typename T>
+	struct Event<Sequence<T>>
+	{
+		enum {
+			INSERT,
+			ERASE,
+		} type{ INSERT };
+		int pos{ -1 };
+	};
+
 	template<typename T>
 	class IListener<Sequence<T>>
 	{
 	public:
 		virtual ~IListener() = default;
+
+		void receive(const Event<Sequence<T>>&e, Observable<Sequence<T>>&)
+		{
+			switch (e.type) {
+			case Event<Sequence<T>>::INSERT:
+				onInsert(e.pos);
+				break;
+			case Event<Sequence<T>>::ERASE:
+				onErase(e.pos);
+				break;
+			}
+		}
 
 		virtual void onInsert(int) {}
 		virtual void onErase(int) {}
@@ -83,10 +106,9 @@ namespace nif
 				i = std::min((size_t)i, m_ctnr.size());
 				if (auto it = std::find(m_ctnr.begin(), m_ctnr.end(), obj); it == m_ctnr.end()) {
 					m_ctnr.insert(m_ctnr.begin() + i, obj);
-					for (SequenceListener<T>* l : this->m_lsnrs) {
-						assert(l);
-						l->onInsert(i);
-					}
+
+					this->signal(Event<Sequence<T>>{ Event<Sequence<T>>::INSERT, i });
+
 					return i;
 				}
 				else
@@ -102,10 +124,8 @@ namespace nif
 
 			m_ctnr.erase(m_ctnr.begin() + i);
 
-			for (SequenceListener<T>* l : this->m_lsnrs) {
-				assert(l);
-				l->onErase(i);
-			}
+
+			this->signal(Event<Sequence<T>>{ Event<Sequence<T>>::ERASE, i });
 
 			return i;
 		}

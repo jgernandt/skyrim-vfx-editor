@@ -23,11 +23,23 @@
 namespace nif
 {
 	template<typename T> class Property;
+
+	template<typename T>
+	struct Event<Property<T>>
+	{
+		const T& value;
+	};
+
 	template<typename T>
 	class IListener<Property<T>>
 	{
 	public:
 		virtual ~IListener() = default;
+
+		void receive(const Event<Property<T>>& e, Observable<Property<T>>&)
+		{ 
+			onSet(e.value); 
+		}
 		virtual void onSet(const T&) {}
 	};
 
@@ -64,20 +76,14 @@ namespace nif
 		{
 			if (val != m_value) {
 				m_value = val;
-				for (PropertyListener<T>* l : this->m_lsnrs) {
-					assert(l);
-					l->onSet(val);
-				}
+				this->signal(Event<Property<T>>{ m_value });
 			}
 		}
 		void set(T&& val)
 		{
 			if (val != m_value) {
 				m_value = std::move(val);
-				for (PropertyListener<T>* l : this->m_lsnrs) {
-					assert(l);
-					l->onSet(m_value);
-				}
+				this->signal(Event<Property<T>>{ m_value });
 			}
 			else
 				//Disard val? Inconsistent otherwise?

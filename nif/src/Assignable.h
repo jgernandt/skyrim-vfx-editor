@@ -24,11 +24,22 @@
 namespace nif
 {
 	template<typename T> class Assignable;
+
+	template<typename T>
+	struct Event<Assignable<T>>
+	{
+		T* obj{ nullptr };
+	};
+
 	template<typename T>
 	class IListener<Assignable<T>>
 	{
 	public:
 		virtual ~IListener() = default;
+		void receive(const Event<Assignable<T>>&e, Observable<Assignable<T>>&)
+		{ 
+			onAssign(e.obj); 
+		}
 		virtual void onAssign(T*) {}
 	};
 
@@ -39,17 +50,6 @@ namespace nif
 	{
 	public:
 		using ref_type = T;
-
-	protected:
-		Assignable() = default;
-
-		void notify(T* obj)
-		{
-			for (AssignableListener<T>* l : this->m_lsnrs) {
-				assert(l);
-				l->onAssign(obj);
-			}
-		}
 	};
 	
 	template<typename T>
@@ -60,7 +60,7 @@ namespace nif
 		~Ref()
 		{
 			if (m_assigned) {
-				this->notify(nullptr);
+				this->signal(Event<Assignable<T>>{ nullptr });
 			}
 		}
 
@@ -68,7 +68,7 @@ namespace nif
 		{
 			if (m_assigned != t) {
 				m_assigned = t;
-				this->notify(m_assigned.get());
+				this->signal(Event<Assignable<T>>{ m_assigned.get() });
 			}
 		}
 
@@ -91,14 +91,14 @@ namespace nif
 			//Unlike Ref, we always signal null here. If we were to only signal
 			//if we have a resource, we would not signal in a situation where our resource
 			//has expired. A listener would probably be interested in hearing that.
-			this->notify(nullptr);
+			this->signal(Event<Assignable<T>>{ nullptr });
 		}
 
 		void assign(const std::shared_ptr<T>& t)
 		{
 			if (m_assigned.lock() != t) {
 				m_assigned = t;
-				this->notify(t.get());
+				this->signal(Event<Assignable<T>>{ t.get() });
 			}
 		}
 

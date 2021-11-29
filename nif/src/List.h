@@ -28,10 +28,32 @@ namespace nif
 	template<typename T> class List;
 
 	template<typename T>
+	struct Event<List<T>>
+	{
+		enum {
+			INSERT,
+			ERASE,
+		} type{ INSERT };
+		int pos{ -1 };
+	};
+
+	template<typename T>
 	class IListener<List<T>>
 	{
 	public:
 		virtual ~IListener() = default;
+
+		void receive(const Event<List<T>>& e, Observable<List<T>>&)
+		{
+			switch (e.type) {
+			case Event<List<T>>::INSERT:
+				onInsert(e.pos);
+				break;
+			case Event<List<T>>::ERASE:
+				onErase(e.pos);
+				break;
+			}
+		}
 
 		//TODO: use iterators instead of ints
 		virtual void onInsert(int) {}
@@ -86,10 +108,7 @@ namespace nif
 			else
 				m_ctnr.emplace(getIt(i));
 
-			for (ListListener<T>* l : this->m_lsnrs) {
-				assert(l);
-				l->onInsert(i);
-			}
+			this->signal(Event<List<T>>{ Event<List<T>>::INSERT, i });
 
 			return i;
 		}
@@ -104,10 +123,7 @@ namespace nif
 			else
 				m_ctnr.erase(getIt(i));
 
-			for (ListListener<T>* l : this->m_lsnrs) {
-				assert(l);
-				l->onErase(i);
-			}
+			this->signal(Event<List<T>>{ Event<List<T>>::ERASE, i });
 
 			return i;
 		}

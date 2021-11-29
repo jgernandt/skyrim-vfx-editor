@@ -25,10 +25,32 @@ namespace nif
 	template<typename T> class Vector;
 
 	template<typename T>
+	struct Event<Vector<T>>
+	{
+		enum {
+			INSERT,
+			ERASE,
+		} type{ INSERT };
+		int pos{ -1 };
+	};
+
+	template<typename T>
 	class IListener<Vector<T>>
 	{
 	public:
 		virtual ~IListener() = default;
+
+		void receive(const Event<Vector<T>>&e, Observable<Vector<T>>&)
+		{
+			switch (e.type) {
+			case Event<Vector<T>>::INSERT:
+				onInsert(e.pos);
+				break;
+			case Event<Vector<T>>::ERASE:
+				onErase(e.pos);
+				break;
+			}
+		}
 
 		//TODO: use iterators instead of ints
 		virtual void onInsert(int) {}
@@ -79,10 +101,7 @@ namespace nif
 
 			m_ctnr.emplace(m_ctnr.begin() + i);
 
-			for (VectorListener<T>* l : this->m_lsnrs) {
-				assert(l);
-				l->onInsert(i);
-			}
+			this->signal(Event<Vector<T>>{ Event<Vector<T>>::INSERT, i });
 		}
 		void erase(int i)
 		{
@@ -90,10 +109,7 @@ namespace nif
 
 			m_ctnr.erase(m_ctnr.begin() + i);
 
-			for (VectorListener<T>* l : this->m_lsnrs) {
-				assert(l);
-				l->onErase(i);
-			}
+			this->signal(Event<Vector<T>>{ Event<Vector<T>>::ERASE, i });
 		}
 
 		void pop_back()

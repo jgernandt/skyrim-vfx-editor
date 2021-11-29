@@ -24,11 +24,33 @@
 namespace nif
 {
 	template<typename T> class FlagSet;
+
+	template<typename T>
+	struct Event<FlagSet<T>>
+	{
+		enum {
+			RAISE,
+			CLEAR,
+		} type{ RAISE };
+		T flags{ T() };
+	};
+
 	template<typename T>
 	class IListener<FlagSet<T>>
 	{
 	public:
 		virtual ~IListener() = default;
+		void receive(const Event<FlagSet<T>>&e, Observable<FlagSet<T>>&)
+		{ 
+			switch (e.type) {
+			case Event<FlagSet<T>>::RAISE:
+				onRaise(e.flags);
+				break;
+			case Event<FlagSet<T>>::CLEAR:
+				onClear(e.flags);
+				break;
+			}
+		}
 		virtual void onRaise(T) {}
 		virtual void onClear(T) {}
 	};
@@ -46,12 +68,7 @@ namespace nif
 		FlagSet(T val = T()) : m_flags{ val } {}
 		~FlagSet()
 		{
-			if (m_flags != T(0)) {
-				for (FlagSetListener<T>* l : this->m_lsnrs) {
-					assert(l);
-					l->onClear(m_flags);
-				}
-			}
+			clear(m_flags);
 		}
 
 		T raised() const { return m_flags; }
@@ -64,20 +81,14 @@ namespace nif
 				if (E to_set = ((E)flags & ~((E)m_flags & (E)flags)); to_set != E(0)) {
 					//one or more flags will be set, but not necessarily every flag that was passed
 					m_flags = (T)((E)m_flags | (E)flags);
-					for (FlagSetListener<T>* l : this->m_lsnrs) {
-						assert(l);
-						l->onRaise((T)to_set);
-					}
+					this->signal(Event<FlagSet<T>>{ Event<FlagSet<T>>::RAISE, (T)to_set });
 				}
 			}
 			else {
 				if (T to_set = (flags & ~(m_flags & flags)); to_set != T(0)) {
 					//one or more flags will be set, but not necessarily every flag that was passed
 					m_flags |= flags;
-					for (FlagSetListener<T>* l : this->m_lsnrs) {
-						assert(l);
-						l->onRaise(to_set);
-					}
+					this->signal(Event<FlagSet<T>>{ Event<FlagSet<T>>::RAISE, to_set });
 				}
 			}
 		}
@@ -89,19 +100,13 @@ namespace nif
 				using E = typename std::underlying_type<T>::type;
 				if (E to_clear = ((E)m_flags & (E)flags); to_clear != E(0)) {
 					m_flags = (T)(~(E)flags);
-					for (FlagSetListener<T>* l : this->m_lsnrs) {
-						assert(l);
-						l->onClear((T)to_clear);
-					}
+					this->signal(Event<FlagSet<T>>{ Event<FlagSet<T>>::CLEAR, (T)to_clear });
 				}
 			}
 			else {
 				if (T to_clear = (m_flags & flags); to_clear != T(0)) {
 					m_flags &= ~flags;
-					for (FlagSetListener<T>* l : this->m_lsnrs) {
-						assert(l);
-						l->onClear(to_clear);
-					}
+					this->signal(Event<FlagSet<T>>{ Event<FlagSet<T>>::CLEAR, to_clear });
 				}
 			}
 		}

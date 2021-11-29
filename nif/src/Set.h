@@ -19,6 +19,7 @@
 #pragma once
 #include <cassert>
 #include <map>
+#include <memory>
 #include <set>
 #include "Observable.h"
 
@@ -36,10 +37,32 @@ namespace nif
 	}
 
 	template<typename T>
+	struct Event<Set<T>>
+	{
+		enum {
+			ADD,
+			REMOVE,
+		} type{ ADD };
+		T* obj{ nullptr };
+	};
+
+	template<typename T>
 	class IListener<Set<T>>
 	{
 	public:
 		virtual ~IListener() = default;
+
+		void receive(const Event<Set<T>>&e, Observable<Set<T>>&)
+		{
+			switch (e.type) {
+			case Event<Set<T>>::ADD:
+				onAdd(e.obj);
+				break;
+			case Event<Set<T>>::REMOVE:
+				onRemove(e.obj);
+				break;
+			}
+		}
 
 		virtual void onAdd(T*) {}
 		virtual void onRemove(T*) {}
@@ -109,23 +132,15 @@ namespace nif
 		void add(const std::shared_ptr<T>& obj)
 		{
 			if (obj) {
-				if (auto res = m_ctnr.insert({ obj.get(), obj }); res.second) {
-					for (SetListener<T>* l : this->m_lsnrs) {
-						assert(l);
-						l->onAdd(obj.get());
-					}
-				}
+				if (auto res = m_ctnr.insert({ obj.get(), obj }); res.second)
+					this->signal(Event<Set<T>>{ Event<Set<T>>::ADD, obj.get() });
 			}
 		}
 		void remove(T* obj)
 		{
 			if (obj) {
-				if (int n = m_ctnr.erase(obj)) {
-					for (SetListener<T>* l : this->m_lsnrs) {
-						assert(l);
-						l->onRemove(obj);
-					}
-				}
+				if (int n = m_ctnr.erase(obj))
+					this->signal(Event<Set<T>>{ Event<Set<T>>::REMOVE, obj });
 			}
 		}
 		bool has(T* obj) const
