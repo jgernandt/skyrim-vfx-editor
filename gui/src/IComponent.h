@@ -51,6 +51,8 @@ namespace gui
 
 		//Pass ownership of a component to us, and add it as a child
 		virtual void addChild(std::unique_ptr<IComponent>&&) = 0;
+		//Add child in given position (use iterator instead?)
+		virtual void insertChild(int pos, std::unique_ptr<IComponent>&&) = 0;
 		//Remove a child from us, and return ownership of it to the caller
 		virtual std::unique_ptr<IComponent> removeChild(IComponent*) = 0;
 		//Remove all our children and release their resources

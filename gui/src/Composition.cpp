@@ -267,10 +267,19 @@ void gui::Composite::accept(Visitor& v)
 void gui::Composite::addChild(ComponentPtr&& c)
 {
 	if (c) {
-		//ptr must not have a parent (we do not check for duplicate children, though)
 		assert(!c->getParent());
 		c->setParent(this);
 		m_children.push_back(std::move(c));
+	}
+}
+
+void gui::Composite::insertChild(int pos, std::unique_ptr<IComponent>&& c)
+{
+	assert(pos >= 0 && (size_t)pos <= m_children.size());
+	if (c) {
+		assert(!c->getParent());
+		c->setParent(this);
+		m_children.insert(m_children.begin() + pos, std::move(c));
 	}
 }
 

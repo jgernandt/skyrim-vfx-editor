@@ -67,6 +67,7 @@ namespace gui
 		virtual void accept(Visitor& v) override;
 
 		virtual void addChild(ComponentPtr&&) override {}
+		virtual void insertChild(int pos, std::unique_ptr<IComponent>&&) override {}
 		virtual ComponentPtr removeChild(IComponent*) override { return ComponentPtr(); }
 		virtual void clearChildren() override {}
 
@@ -122,6 +123,7 @@ namespace gui
 		virtual void accept(Visitor& v) override;
 
 		virtual void addChild(ComponentPtr&& c) override;
+		virtual void insertChild(int pos, std::unique_ptr<IComponent>&& c) override;
 		virtual ComponentPtr removeChild(IComponent* c) override;
 		virtual void clearChildren() override;
 
