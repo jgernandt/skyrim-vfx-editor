@@ -24,6 +24,23 @@ namespace nif
 	template<typename T>
 	struct Key
 	{
+		Key() = default;
+		Key(const Key<T>&) = delete;
+		Key(Key<T>&& other) noexcept { *this = std::move(other); }
+
+		Key<T>& operator=(const Key<T>&) = delete;
+		Key<T>& operator=(Key<T>&& other) noexcept
+		{
+			time = std::move(other.time);
+			value = std::move(other.value);
+			fwdTan = std::move(other.fwdTan);
+			bwdTan = std::move(other.bwdTan);
+			tension = std::move(other.tension);
+			bias = std::move(other.bias);
+			continuity = std::move(other.continuity);
+			return *this;
+		}
+
 		Property<float> time;
 		Property<T> value;
 		Property<T> fwdTan;

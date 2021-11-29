@@ -36,10 +36,16 @@ namespace nif
 	public:
 		Observable() = default;
 		Observable(const Observable&) = delete;
+		Observable(Observable&& other) noexcept { *this = std::move(other); }
 
 		~Observable() = default;
 
 		Observable& operator=(const Observable&) = delete;
+		Observable& operator=(Observable&& other) noexcept
+		{
+			m_lsnrs = std::move(other.m_lsnrs);
+			return *this;
+		}
 
 		void addListener(IListener<T>& l)
 		{

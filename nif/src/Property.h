@@ -41,7 +41,20 @@ namespace nif
 
 	public:
 		Property(const T& val = T()) : m_value{ val } {}
+		Property(const Property<T>&) = delete;
+		Property(Property<T>&& other) noexcept : Observable<Property<T>>(std::move(other)) { *this = std::move(other); }
+
 		~Property() = default;
+
+		Property<T>& operator=(const Property<T>&) = delete;
+		Property<T>& operator=(Property<T>&& other) noexcept
+		{
+			static_assert(std::is_nothrow_move_assignable<T>::value);
+
+			Observable<Property<T>>::operator=(std::move(other));
+			m_value = std::move(other.m_value);
+			return *this;
+		}
 
 		T get() const
 		{
