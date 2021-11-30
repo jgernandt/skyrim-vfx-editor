@@ -270,6 +270,8 @@ void gui::Composite::addChild(ComponentPtr&& c)
 		assert(!c->getParent());
 		c->setParent(this);
 		m_children.push_back(std::move(c));
+
+		signal(Event<Component>{ Event<Component>::ADD_CHILD, this, m_children.back().get() });
 	}
 }
 
@@ -280,6 +282,8 @@ void gui::Composite::insertChild(int pos, std::unique_ptr<IComponent>&& c)
 		assert(!c->getParent());
 		c->setParent(this);
 		m_children.insert(m_children.begin() + pos, std::move(c));
+
+		signal(Event<Component>{ Event<Component>::ADD_CHILD, this, m_children[pos].get() });
 	}
 }
 
@@ -287,8 +291,13 @@ void gui::Composite::eraseChild(int pos)
 {
 	assert(pos >= 0 && (size_t)pos < m_children.size());
 	assert(m_children[pos]);
+
+	auto child = m_children[pos].get();
+
 	m_children[pos]->setParent(nullptr);
 	m_children.erase(m_children.begin() + pos);
+
+	signal(Event<Component>{ Event<Component>::REMOVE_CHILD, this, child });//child will be destroyed before calling this
 }
 
 gui::ComponentPtr gui::Composite::removeChild(IComponent* c)
@@ -301,6 +310,8 @@ gui::ComponentPtr gui::Composite::removeChild(IComponent* c)
 		c->setParent(nullptr);
 		ret = std::move(*it);
 		m_children.erase(it);
+
+		signal(Event<Component>{ Event<Component>::REMOVE_CHILD, this, ret.get() });
 	}
 
 	return ret;

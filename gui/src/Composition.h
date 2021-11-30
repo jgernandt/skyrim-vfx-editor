@@ -18,11 +18,55 @@
 
 #pragma once
 #include <vector>
+#include "Observable.h"
 #include "IComponent.h"
 
 namespace gui
 {
-	class Component : public IComponent
+	class Component;
+}
+
+template<>
+struct Event<gui::Component>
+{
+	enum {
+		ADD_CHILD,
+		REMOVE_CHILD,
+
+	} type{ ADD_CHILD };
+
+	gui::Component* source{ nullptr };
+	gui::IComponent* component{ nullptr };
+};
+
+template<>
+class IListener<gui::Component>
+{
+public:
+	virtual ~IListener() = default;
+
+	void receive(const Event<gui::Component>& e, Observable<gui::Component>&)
+	{
+		switch (e.type) {
+		case Event<gui::Component>::ADD_CHILD:
+			onAddChild(e.component, e.source);
+			break;
+		case Event<gui::Component>::REMOVE_CHILD:
+			onRemoveChild(e.component, e.source);
+			break;
+		}
+	}
+
+	virtual void onAddChild(gui::IComponent* c, gui::Component* source) {}
+	//c may have been destroyed when sending this. Stupid?
+	virtual void onRemoveChild(gui::IComponent* c, gui::Component* source) {}
+};
+
+namespace gui
+{
+	using ComponentListener = IListener<gui::Component>;
+
+	class Component : public IComponent, public Observable<Component>
 	{
 	public:
 		Component() {}
