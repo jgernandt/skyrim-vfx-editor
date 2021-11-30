@@ -30,31 +30,64 @@ using namespace nif;
 
 using PosProperties = std::array<ni_ptr<Property<float>>, 2>;
 
-class MoveOp final : public gui::ICommand
+class InsertOp final : public gui::ICommand
 {
-	std::vector<PosProperties> m_targets;
-	std::vector<Eigen::Vector2f> m_to;
-	std::vector<Eigen::Vector2f> m_from;
+	const ni_ptr<Vector<Key<float>>> m_target;
+	const int m_index;
+	const gui::Floats<2> m_position;
 
 public:
-	MoveOp(std::vector<PosProperties>&& targets,
+	InsertOp(const ni_ptr<Vector<Key<float>>>& target, int index, const gui::Floats<2>& pos) :
+		m_target{ target }, m_index{ index }, m_position{ pos }
+	{
+		assert(target);
+	}
+
+	virtual void execute() override
+	{
+		m_target->insert(m_index);
+		m_target->at(m_index).time.set(m_position[0]);
+		m_target->at(m_index).value.set(m_position[1]);
+	}
+	virtual void reverse() override
+	{
+		m_target->erase(m_index);
+	}
+	virtual bool reversible() const override
+	{
+		return true;
+	}
+};
+
+class MoveOp final : public gui::ICommand
+{
+	const ni_ptr<Vector<Key<float>>> m_target;
+	const std::vector<int> m_indices;
+
+	const std::vector<Eigen::Vector2f> m_to;
+	const std::vector<Eigen::Vector2f> m_from;
+
+public:
+	MoveOp(const ni_ptr<Vector<Key<float>>>& target, std::vector<int>&& indices,
 		std::vector<Eigen::Vector2f>&& to, std::vector<Eigen::Vector2f>&& from) :
-		m_targets{ targets }, m_to{ to }, m_from{ from }
-	{}
+		m_target{ target }, m_indices{ std::move(indices) }, m_to{ std::move(to) }, m_from{ std::move(from) }
+	{
+		assert(target);
+	}
 
 	virtual void execute() override 
 	{
-		assert(m_targets.size() == m_to.size() && m_from.size() == m_to.size());
-		for (size_t i = 0; i < m_targets.size(); i++) {
-			m_targets[i][0]->set(m_to[i][0]);
-			m_targets[i][1]->set(m_to[i][1]);
+		assert(m_indices.size() == m_to.size() && m_from.size() == m_to.size());
+		for (size_t i = 0; i < m_indices.size(); i++) {
+			m_target->at(m_indices[i]).time.set(m_to[i][0]);
+			m_target->at(m_indices[i]).value.set(m_to[i][1]);
 		}
 	}
 	virtual void reverse() override 
 	{
-		for (size_t i = 0; i < m_targets.size(); i++) {
-			m_targets[i][0]->set(m_from[i][0]);
-			m_targets[i][1]->set(m_from[i][1]);
+		for (size_t i = 0; i < m_indices.size(); i++) {
+			m_target->at(m_indices[i]).time.set(m_from[i][0]);
+			m_target->at(m_indices[i]).value.set(m_from[i][1]);
 		}
 	}
 	virtual bool reversible() const override 
@@ -147,14 +180,9 @@ public:
 	std::vector<gui::IComponent*> found;
 };
 
-node::FloatKeyEditor::FloatKeyEditor(
-	ni_ptr<Property<KeyType>>&& keyType,
-	ni_ptr<List<Key<float>>>&& keys,
-	ni_ptr<Property<float>>&& tStart,
-	ni_ptr<Property<float>>&& tStop) :
-	m_keyType{ keyType }, m_keys{ keys }
+node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data)
 {
-	assert(m_keyType && m_keys && tStart && tStop);
+	assert(ctlr && data);
 
 	setSize({ 640.0f, 480.0f });
 
@@ -170,20 +198,20 @@ node::FloatKeyEditor::FloatKeyEditor(
 	item->setSize({ 200.0f, -1.0f });
 	item->newChild<gui::Text>("Interpolation");
 	using selector_type = gui::Selector<KeyType, ni_ptr<Property<KeyType>>>;
-	auto selector = item->newChild<selector_type>(m_keyType, std::string(),
+	auto selector = item->newChild<selector_type>(make_ni_ptr(data, &NiFloatData::keyType), std::string(),
 		selector_type::ItemList{
 			{ KEY_CONSTANT, "Constant" },
 			{ KEY_LINEAR, "Linear" },
 			{ KEY_QUADRATIC, "Quadratic" } });
 
 	m_plot = newChild<gui::Plot>();
-
-	//The initial curve is created by the callback from keyType.
-	m_keyType->addListener(*this);
-	onSet(m_keyType->get());
+	auto series = std::make_unique<DataSeries>(data);
+	m_data = series.get();
+	m_plot->getPlotArea().getAxes().addChild(std::move(series));
+	m_data->addListener(*this);
 
 	//determine limits
-	gui::Floats<2> xlims = { tStart->get(), tStop->get() };
+	gui::Floats<2> xlims = { ctlr->startTime.get(), ctlr->stopTime.get() };
 	if (float diff = xlims[1] - xlims[0]; diff > 0.0f) {
 		xlims[0] -= 0.25f * diff;
 		xlims[1] += 0.25f * diff;
@@ -203,8 +231,8 @@ node::FloatKeyEditor::FloatKeyEditor(
 	}
 	m_plot->getPlotArea().setXLimits(xlims);
 
-	if (m_curve) {
-		gui::Floats<2> ylims = m_curve->getBounds();
+	if (m_data) {
+		gui::Floats<2> ylims = m_data->getBounds();
 		if (float diff = ylims[1] - ylims[0]; diff > 0.0f) {
 			ylims[0] -= 0.25f * diff;
 			ylims[1] += 0.25f * diff;
@@ -223,48 +251,13 @@ node::FloatKeyEditor::FloatKeyEditor(
 
 node::FloatKeyEditor::~FloatKeyEditor()
 {
-	//Exiting the program while we are open will make this invalid.
-	//The property is destroyed before we are. 
-	//We need to refactor NodeBase to solve this.
-	m_keyType->removeListener(*this);
+	if (m_data)
+		m_data->removeListener(*this);
 }
 
 void node::FloatKeyEditor::onClose()
 {
 	asyncInvoke<gui::RemoveChild>(this, getParent(), false);
-}
-
-void node::FloatKeyEditor::onSet(const nif::KeyType& type)
-{
-	assert(m_plot);
-	//Remove existing curve, clear selection
-	if (m_curve) {
-		//Any reason to unselect first?
-		m_selection.clear();
-
-		m_plot->getPlotArea().getAxes().removeChild(m_curve);
-		m_curve = nullptr;
-	}
-
-	//Then we need to make a new of the appropriate type and add that one instead.
-	//The new curve will need to know about the keys property.
-	std::unique_ptr<Interpolant> curve;
-	switch (type) {
-	case KEY_CONSTANT:
-		curve = std::make_unique<ConstantInterpolant>();
-		break;
-	case KEY_LINEAR:
-		curve = std::make_unique<LinearInterpolant>(m_keys);
-		break;
-	case KEY_QUADRATIC:
-		curve = std::make_unique<QuadraticInterpolant>(m_keys);
-		break;
-	}
-	if (curve) {
-		auto tmp = curve.get();//addChild may throw. Don't assign until we know it will survive.
-		m_plot->getPlotArea().getAxes().addChild(std::move(curve));
-		m_curve = tmp;
-	}
 }
 
 bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
@@ -274,58 +267,74 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 	if (m_currentOp != Op::NONE)
 		return true;
 	else if (button == gui::Mouse::Button::LEFT) {
-		//locate the clicked object
-		ClickSelector v(gui::Mouse::getPosition());
-		m_plot->getPlotArea().accept(v);
+		if (gui::Keyboard::isDown(gui::Keyboard::Key::CTRL)) {
+			//InsertOp
 
-		//I'm not sure how much type info we want to have (or require).
-		//Let's do a downcast for now
-		KeyHandle* object = dynamic_cast<KeyHandle*>(v.result);
+			//clicked point in key space
+			gui::Floats<2> p = m_data->fromGlobalSpace(gui::Mouse::getPosition());
 
-		if (object) {
-			if (gui::Keyboard::isDown(gui::Keyboard::Key::SHIFT)) {
-				if (auto res = m_selection.insert(object); !res.second) {
-					//shift+clicked selected object
-					//remove from selection
-					if (m_activeItem == res.first)
-						m_activeItem = m_selection.end();
-					m_selection.erase(res.first);
-					object->setSelected(false);
-				}
-				else {
-					//shift+clicked non-selected object
-					//add to selection
-					object->setSelected(true);
-					m_activeItem = res.first;
-				}
-			}
-			else {
-				if (auto it = m_selection.find(object); it != m_selection.end()) {
-					//clicked selected object
-					//start dragging selection (if threshold is passed)
+			if (gui::IInvoker* inv = getInvoker())
+				inv->queue(m_data->getInsertOp(p));
 
-					//if we release before reaching the drag threshold, should clear
-					//other selected objects
-					m_activeItem = it;
-				}
-				else {
-					//clicked non-selected object
-					//set selection and start dragging (if threshold is passed)
-					for (auto&& o : m_selection)
-						o->setSelected(false);
-					m_selection.clear();
-					m_activeItem = m_selection.insert(object).first;
-					object->setSelected(true);
-				}
-				//start dragging
-				gui::Mouse::setCapture(&m_plot->getPlotArea());
-				m_clickPoint = gui::Mouse::getPosition();
-				m_dragThresholdPassed = false;
-				m_currentOp = Op::DRAG;
-			}
+			return true;
 		}
-		//else clear selection? Or not?
-		return true;
+		else {
+			//MoveOp
+			
+			//locate the clicked object
+			ClickSelector v(gui::Mouse::getPosition());
+			m_plot->getPlotArea().accept(v);
+
+			//I'm not sure how much type info we want to have (or require).
+			//Let's do a downcast for now
+			KeyHandle* object = dynamic_cast<KeyHandle*>(v.result);
+
+			if (object) {
+				if (gui::Keyboard::isDown(gui::Keyboard::Key::SHIFT)) {
+					if (auto res = m_selection.insert(object); !res.second) {
+						//shift+clicked selected object
+						//remove from selection
+						if (m_activeItem == res.first)
+							m_activeItem = m_selection.end();
+						m_selection.erase(res.first);
+						object->setSelected(false);
+					}
+					else {
+						//shift+clicked non-selected object
+						//add to selection
+						object->setSelected(true);
+						m_activeItem = res.first;
+					}
+				}
+				else {
+					if (auto it = m_selection.find(object); it != m_selection.end()) {
+						//clicked selected object
+						//start dragging selection (if threshold is passed)
+
+						//if we release before reaching the drag threshold, should clear
+						//other selected objects
+						m_activeItem = it;
+					}
+					else {
+						//clicked non-selected object
+						//set selection and start dragging (if threshold is passed)
+						for (auto&& o : m_selection)
+							o->setSelected(false);
+						m_selection.clear();
+						m_activeItem = m_selection.insert(object).first;
+						object->setSelected(true);
+					}
+					//start dragging
+					gui::Mouse::setCapture(&m_plot->getPlotArea());
+					m_clickPoint = gui::Mouse::getPosition();
+					m_dragThresholdPassed = false;
+					m_currentOp = Op::DRAG;
+				}
+			}
+			//else clear selection? Or not?
+
+			return true;
+		}
 	}
 	else if (button == gui::Mouse::Button::MIDDLE) {
 		assert(gui::Mouse::getCapture() == nullptr);
@@ -366,23 +375,8 @@ bool node::FloatKeyEditor::onMouseUp(gui::Mouse::Button button)
 			}
 			else {
 				//send final move op
-
-				//Collect the properties from each selected key
-				std::vector<PosProperties> props(m_initialState.size());
-				//collect current values
-				std::vector<Eigen::Vector2f> to(m_initialState.size());
-				//collect initial state
-				std::vector<Eigen::Vector2f> from(m_initialState.size());
-
-				int i = 0;
-				for (auto&& item : m_initialState) {
-					props[i] = { item.first->getXProperty(), item.first->getYProperty() };
-					to[i] = item.first->getTranslation();
-					from[i] = item.second;
-					i++;
-				}
-
-				asyncInvoke<MoveOp>(std::move(props), std::move(to), std::move(from));
+				if (gui::IInvoker* inv = getInvoker())
+					inv->queue((*m_activeItem)->getMoveOp(m_initialState));
 			}
 
 			m_currentOp = Op::NONE;
@@ -524,27 +518,42 @@ void node::FloatKeyEditor::updateAxisUnits()
 	m_plot->getPlotArea().getAxes().setMinorUnits(minor);
 }
 
+void node::FloatKeyEditor::onRemoveChild(gui::IComponent* c, gui::Component* source)
+{
+	//c does not exist anymore, but we're just going to search for it
+	if (m_activeItem != m_selection.end() && *m_activeItem == c) {
+		m_selection.erase(m_activeItem);
+		m_activeItem = m_selection.end();
+	}
+	else if (auto it = m_selection.find(static_cast<KeyHandle*>(c)); it != m_selection.end())
+		m_selection.erase(it);
+}
 
-node::FloatKeyEditor::KeyHandle::KeyHandle(ni_ptr<Key<float>>&& key, ni_ptr<Key<float>>&& next) :
+
+node::FloatKeyEditor::KeyHandle::KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index) :
 	m_timeLsnr{ &m_translation[0] },
 	m_valueLsnr{ &m_translation[1] },
-	m_key{ std::move(key) }, 
-	m_next{ std::move(next) }
+	m_keys{ std::move(keys) }, 
+	m_index{ index }
 {
-	assert(m_key);
-	m_key->time.addListener(m_timeLsnr);
-	m_key->value.addListener(m_valueLsnr);
-	m_translation = { m_key->time.get(), m_key->value.get() };
+	assert(m_keys);
+	m_keys->at(m_index).time.addListener(m_timeLsnr);
+	m_keys->at(m_index).value.addListener(m_valueLsnr);
+	m_translation = { m_keys->at(m_index).time.get(), m_keys->at(m_index).value.get() };
 }
 
 node::FloatKeyEditor::KeyHandle::~KeyHandle()
 {
-	m_key->time.removeListener(m_timeLsnr);
-	m_key->value.removeListener(m_valueLsnr);
+	if (m_keys) {
+		m_keys->at(m_index).time.removeListener(m_timeLsnr);
+		m_keys->at(m_index).value.removeListener(m_valueLsnr);
+	}
 }
 
 void node::FloatKeyEditor::KeyHandle::frame(gui::FrameDrawer& fd)
 {
+	assert(m_keys);
+
 	if (m_dirty) {
 		//Recalculate our interpolation (if we were quadratic)
 		m_dirty = false;
@@ -552,10 +561,10 @@ void node::FloatKeyEditor::KeyHandle::frame(gui::FrameDrawer& fd)
 
 	//We want to scale with PlotArea, not Axes. Not so easy right now. 
 	//We'll just not scale at all.
-	if (m_next)
+	if ((size_t)m_index < m_keys->size() - 1)
 		fd.line(
 			fd.toGlobal(m_translation), 
-			fd.toGlobal({ m_next->time.get(), m_next->value.get() }), 
+			fd.toGlobal({ m_keys->at(m_index + 1).time.get(), m_keys->at(m_index + 1).value.get() }),
 			{ 1.0f, 0.0f, 0.0f, 1.0f }, 
 			3.0f,
 			true);
@@ -564,56 +573,112 @@ void node::FloatKeyEditor::KeyHandle::frame(gui::FrameDrawer& fd)
 
 void node::FloatKeyEditor::KeyHandle::setTranslation(const gui::Floats<2>& t)
 {
-	assert(m_key);
-	m_key->time.set(t[0]);
-	m_key->value.set(t[1]);
-}
-
-ni_ptr<Property<float>> node::FloatKeyEditor::KeyHandle::getXProperty() const
-{
-	return make_ni_ptr(m_key, &Key<float>::time);
-}
-
-ni_ptr<Property<float>> node::FloatKeyEditor::KeyHandle::getYProperty() const
-{
-	return make_ni_ptr(m_key, &Key<float>::value);
-}
-
-
-node::FloatKeyEditor::LinearInterpolant::LinearInterpolant(const ni_ptr<List<Key<float>>>& keys) :
-	m_keys{ keys }
-{
 	assert(m_keys);
-	m_keys->addListener(*this);
-
-	if (m_keys->size() > 0) {
-
-		auto next = ++m_keys->begin();
-		for (auto&& key : *m_keys) {
-
-			ni_ptr<Key<float>> next_key;
-			if (next != m_keys->end()) {
-				next_key = make_ni_ptr(m_keys, &(*next));
-				++next;
-			}
-			newChild<KeyHandle>(make_ni_ptr(m_keys, &key), std::move(next_key));
-		}
-	}
+	m_keys->at(m_index).time.set(t[0]);
+	m_keys->at(m_index).value.set(t[1]);
 }
 
-node::FloatKeyEditor::LinearInterpolant::~LinearInterpolant()
+std::unique_ptr<gui::ICommand> node::FloatKeyEditor::KeyHandle::getMoveOp(
+	const std::vector<std::pair<KeyHandle*, gui::Floats<2>>>& initial) const
 {
-	m_keys->removeListener(*this);
+	//Collect the indices from each selected key
+	std::vector<int> indices(initial.size());
+	//collect current values
+	std::vector<Eigen::Vector2f> to(initial.size());
+	//collect initial state
+	std::vector<Eigen::Vector2f> from(initial.size());
+
+	int i = 0;
+	for (auto&& item : initial) {
+		indices[i] = item.first->getIndex();
+		to[i] = item.first->getTranslation();
+		from[i] = item.second;
+		i++;
+	}
+
+	return std::make_unique<MoveOp>(m_keys, std::move(indices), std::move(to), std::move(from));
 }
 
-gui::Floats<2> node::FloatKeyEditor::LinearInterpolant::getBounds() const
+void node::FloatKeyEditor::KeyHandle::invalidate()
+{
+	//The Properties we are listening to may no longer exist.
+	//We must prevent our dtor from unregistering 
+	//(our destruction should be imminent).
+	m_keys.reset();
+}
+
+
+node::FloatKeyEditor::DataSeries::DataSeries(const ni_ptr<NiFloatData>& data) :
+	m_data{ data }
+{
+	assert(m_data);
+	m_data->keys.addListener(*this);
+
+	int i = 0;
+	for (auto&& key : m_data->keys)
+		newChild<KeyHandle>(make_ni_ptr(m_data, &NiFloatData::keys), i++);
+}
+
+node::FloatKeyEditor::DataSeries::~DataSeries()
+{
+	m_data->keys.removeListener(*this);
+}
+
+void node::FloatKeyEditor::DataSeries::onInsert(int pos)
+{
+	assert(pos >= 0 && size_t(pos) <= getChildren().size());
+
+	//Insert handle at pos
+	insertChild(pos, std::make_unique<KeyHandle>(make_ni_ptr(m_data, &NiFloatData::keys), pos));
+
+	//Handles after pos must update their index
+	for (int i = pos + 1; (size_t)i < getChildren().size(); i++)
+		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i);
+
+	//The handle right before pos must refresh its interpolation
+	if (pos != 0)
+		static_cast<KeyHandle*>(getChildren()[pos - 1].get())->recalcIpln();
+}
+
+void node::FloatKeyEditor::DataSeries::onErase(int pos)
+{
+	assert(pos >= 0 && size_t(pos) < getChildren().size());
+
+	//The handle at i = pos is invalidated
+	static_cast<KeyHandle*>(getChildren()[pos].get())->invalidate();
+
+	//Erase invalidated handle
+	eraseChild(pos);
+
+	//Handles at i >= pos must update their index
+	for (int i = pos; (size_t)i < getChildren().size(); i++)
+		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i);
+
+	//The handle at i = pos - 1 must refresh
+	if (pos != 0)
+		static_cast<KeyHandle*>(getChildren()[pos - 1].get())->recalcIpln();
+}
+
+gui::Floats<2> node::FloatKeyEditor::DataSeries::getBounds() const
 {
 	gui::Floats<2> result = { 0.0f, 0.0f };
-	for (auto&& key : *m_keys) {
-		if (key.time.get() < result[0])
+	for (auto&& key : m_data->keys) {
+		if (float val = key.value.get(); val < result[0])
 			result[0] = key.value.get();
-		else if (key.value.get() > result[1])
+		else if (val > result[1])
 			result[1] = key.value.get();
 	}
 	return result;
+}
+
+std::unique_ptr<gui::ICommand> node::FloatKeyEditor::DataSeries::getInsertOp(const gui::Floats<2>& pos) const
+{
+	//locate the first key with larger time and insert before it
+	int index = 0;
+	for (auto&& key : m_data->keys) {
+		if (key.time.get() < pos[0])
+			index++;
+	}
+
+	return std::make_unique<InsertOp>(make_ni_ptr(m_data, &NiFloatData::keys), index, pos);
 }

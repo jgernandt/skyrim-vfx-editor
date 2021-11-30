@@ -130,11 +130,7 @@ node::FloatController::~FloatController()
 
 void node::FloatController::openKeyEditor()
 {
-	auto c = std::make_unique<FloatKeyEditor>(
-		make_ni_ptr(m_data, &NiFloatData::keyType),
-		make_ni_ptr(m_data, &NiFloatData::keys),
-		make_ni_ptr(m_ctlr, &NiTimeController::startTime),
-		make_ni_ptr(m_ctlr, &NiTimeController::stopTime));
+	auto c = std::make_unique<FloatKeyEditor>(m_ctlr, m_data);
 	c->open();
 	asyncInvoke<gui::AddChild>(std::move(c), this, false);
 }

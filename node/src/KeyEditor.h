@@ -28,26 +28,24 @@ namespace node
 	using namespace nif;
 
 	class FloatKeyEditor final : 
-		public gui::Popup, public nif::PropertyListener<KeyType>, public gui::MouseHandler
+		public gui::Popup, 
+		public gui::MouseHandler,
+		public gui::ComponentListener
 	{
 	public:
-		FloatKeyEditor(
-			ni_ptr<Property<KeyType>>&& keyType,
-			ni_ptr<List<Key<float>>>&& keys,
-			ni_ptr<Property<float>>&& tStart,
-			ni_ptr<Property<float>>&& tStop);
+		FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data);
 
 		~FloatKeyEditor();
 
 		virtual void onClose() override;
-
-		virtual void onSet(const KeyType& type) override;
 
 		virtual bool onMouseDown(gui::Mouse::Button button) override;
 		virtual bool onMouseUp(gui::Mouse::Button button) override;
 		virtual bool onMouseWheel(float delta) override;
 
 		virtual void onMouseMove(const gui::Floats<2>& pos) override;
+
+		virtual void onRemoveChild(gui::IComponent* c, gui::Component* source) override;
 
 	private:
 		void drag(const gui::Floats<2>& pos);
@@ -57,7 +55,6 @@ namespace node
 		void updateAxisUnits();
 
 	private:
-
 		class KeyHandle : public gui::Component
 		{
 			class Listener final : public PropertyListener<float>
@@ -71,7 +68,7 @@ namespace node
 			};
 
 		public:
-			KeyHandle(ni_ptr<Key<float>>&& key, ni_ptr<Key<float>>&& next);
+			KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index);
 			virtual ~KeyHandle();
 
 			virtual void frame(gui::FrameDrawer& fd) override;
@@ -80,72 +77,52 @@ namespace node
 			virtual void setFocussed(bool on) override {}
 			virtual void setSelected(bool on) override { m_selected = on; }
 
-			ni_ptr<Property<float>> getXProperty() const;
-			ni_ptr<Property<float>> getYProperty() const;
+			std::unique_ptr<gui::ICommand> getMoveOp(
+				const std::vector<std::pair<KeyHandle*, gui::Floats<2>>>& initial) const;
+
+			int getIndex() const { return m_index; }
+			void setIndex(int i) { m_index = i; }
+
+			void invalidate();
+
+			void recalcIpln() { m_dirty = true; }
 
 		private:
 			Listener m_timeLsnr;
 			Listener m_valueLsnr;
-			ni_ptr<Key<float>> m_key;
-			ni_ptr<Key<float>> m_next;
+			ni_ptr<Vector<Key<float>>> m_keys;
+			int m_index;
 			bool m_selected{ false };
 			bool m_dirty{ true };
 		};
 
 		using Selection = std::set<KeyHandle*>;
 
-
-		class Interpolant : public gui::Composite
+		class DataSeries final : 
+			public gui::Composite, 
+			public nif::PropertyListener<KeyType>,
+			public nif::VectorListener<Key<float>>
 		{
 		public:
-			virtual ~Interpolant() = default;
-			virtual gui::Floats<2> getBounds() const = 0;
+			DataSeries(const ni_ptr<NiFloatData>& data);
+			~DataSeries();
 
-			virtual void insertKey(const gui::Floats<2>& key) {}
-			virtual void setKey(const gui::Floats<2>& key) {}
-		};
+			//virtual void onSet(const KeyType& type) override;
+			virtual void onInsert(int pos) override;
+			virtual void onErase(int pos) override;
 
-		class ConstantInterpolant final : public Interpolant
-		{
-		public:
-			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(0.0f, 0.0f); }
-		};
-		class LinearInterpolant final : 
-			public Interpolant, public ListListener<Key<float>>
-		{
-		public:
-			LinearInterpolant(const ni_ptr<List<Key<float>>>& keys);
-			~LinearInterpolant();
+			gui::Floats<2> getBounds() const;
+			NiFloatData* get() { return m_data.get(); }
 
-			virtual gui::Floats<2> getBounds() const override;
-
-			//add handle
-			virtual void onInsert(int i) override {}
-			//remove handle
-			virtual void onErase(int i) override {}
+			//std::unique_ptr<gui::ICommand> getEraseOp() const;
+			std::unique_ptr<gui::ICommand> getInsertOp(const gui::Floats<2>& pos) const;
 
 		private:
-			const ni_ptr<List<Key<float>>> m_keys;
+			const ni_ptr<NiFloatData> m_data;
 		};
-		class QuadraticInterpolant final :
-			public Interpolant, public ListListener<Key<float>>
-		{
-		public:
-			QuadraticInterpolant(const ni_ptr<List<Key<float>>>& keys) {}
-
-			virtual gui::Floats<2> getBounds() const override { return gui::Floats<2>(0.0f, 0.0f); }
-
-			//add handle
-			virtual void onInsert(int i) override {}
-			//remove handle
-			virtual void onErase(int i) override {}
-		};
-
-		const ni_ptr<Property<KeyType>> m_keyType;
-		const ni_ptr<List<Key<float>>> m_keys;
 
 		gui::Plot* m_plot{ nullptr };
-		Interpolant* m_curve{ nullptr };
+		DataSeries* m_data{ nullptr };
 
 		enum class Op
 		{
