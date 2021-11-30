@@ -28,7 +28,30 @@ constexpr float SCALE_SENSITIVITY = 0.1f;
 
 using namespace nif;
 
-using PosProperties = std::array<ni_ptr<Property<float>>, 2>;
+template<typename T, T Width, T Offset>
+struct BitSetWrapper
+{
+	constexpr static T MASK = ~(~T(0) << Width) << Offset;
+	ni_ptr<FlagSet<T>> ptr;
+};
+
+template<typename T, T Width, T Offset>
+struct util::property_traits<BitSetWrapper<T, Width, Offset>>
+{
+	using property_type = BitSetWrapper<T, Width, Offset>;
+	using value_type = T;
+	using get_type = T;
+
+	static T get(const BitSetWrapper<T, Width, Offset>& p)
+	{
+		return (p.ptr->raised() & p.MASK) >> Offset;
+	}
+	static void set(BitSetWrapper<T, Width, Offset>& p, T val)
+	{
+		p.ptr->clear(~(val << Offset) & p.MASK);
+		p.ptr->raise((val << Offset) & p.MASK);
+	}
+};
 
 class InsertOp final : public gui::ICommand
 {
@@ -184,27 +207,13 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 {
 	assert(ctlr && data);
 
-	setSize({ 640.0f, 480.0f });
+	setSize({ 800.0f, 480.0f });
 
-	//We need:
-	//plot area
-	//input handler for plot area (specific mechanic on generic component inserted above plot area?)
-	//handles for each key
-	//a curve that interpolates the data
-	//widget to select interpolation type
-	//controls for start/stop time
+	auto plot_panel = newChild<gui::Subwindow>();
+	plot_panel->setSize({ 640.0f, 464.0f });
+	plot_panel->setTranslation({ 8.0f, 16.0f });
+	m_plot = plot_panel->newChild<gui::Plot>();
 
-	auto item = newChild<gui::Item>();
-	item->setSize({ 200.0f, -1.0f });
-	item->newChild<gui::Text>("Interpolation");
-	using selector_type = gui::Selector<KeyType, ni_ptr<Property<KeyType>>>;
-	auto selector = item->newChild<selector_type>(make_ni_ptr(data, &NiFloatData::keyType), std::string(),
-		selector_type::ItemList{
-			{ KEY_CONSTANT, "Constant" },
-			{ KEY_LINEAR, "Linear" },
-			{ KEY_QUADRATIC, "Quadratic" } });
-
-	m_plot = newChild<gui::Plot>();
 	auto series = std::make_unique<DataSeries>(data);
 	m_data = series.get();
 	m_plot->getPlotArea().getAxes().addChild(std::move(series));
@@ -247,6 +256,53 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 
 	updateAxisUnits();
 	m_plot->getPlotArea().setMouseHandler(this);
+
+	//Side panel(s)
+	auto side_panel = newChild<gui::Subwindow>();
+	side_panel->setSize({ 142.0f, 200.0f });
+	side_panel->setTranslation({ 648.0f, 16.0f });
+
+	side_panel->newChild<gui::Text>("Interpolation");
+	using selector_type = gui::Selector<KeyType, ni_ptr<Property<KeyType>>>;
+	auto selector = side_panel->newChild<selector_type>(make_ni_ptr(data, &NiFloatData::keyType), std::string(),
+		selector_type::ItemList{
+			{ KEY_CONSTANT, "Constant" },
+			{ KEY_LINEAR, "Linear" },
+			{ KEY_QUADRATIC, "Quadratic" } });
+
+	side_panel->newChild<gui::VerticalSpacing>();
+
+	side_panel->newChild<gui::Text>("Cycle");
+	using selector_type2 = gui::Selector<ControllerFlags, BitSetWrapper<ControllerFlags, 2, 1>>;
+	side_panel->newChild<selector_type2>(
+		BitSetWrapper<ControllerFlags, 2, 1>{ make_ni_ptr(ctlr, &NiTimeController::flags) },
+		std::string(),
+		selector_type2::ItemList{ { 0, "Repeat" }, { 1, "Reverse" }, { 2, "Clamp" } });
+
+	auto fr = side_panel->newChild<DragFloat>(make_ni_ptr(ctlr, &NiTimeController::frequency), "Frequency");
+	fr->setSensitivity(0.01f);
+	fr->setLowerLimit(0.0f);
+	fr->setAlwaysClamp(true);
+	fr->setNumberFormat("%.2f");
+
+	auto ph = side_panel->newChild<DragFloat>(make_ni_ptr(ctlr, &NiTimeController::phase), "Phase");
+	ph->setSensitivity(0.01f);
+	ph->setNumberFormat("%.2f");
+
+	side_panel->newChild<gui::VerticalSpacing>();
+
+	auto st = side_panel->newChild<DragFloat>(make_ni_ptr(ctlr, &NiTimeController::startTime), "Start time");
+	st->setSensitivity(0.01f);
+	st->setNumberFormat("%.2f");
+
+	auto sp = side_panel->newChild<DragFloat>(make_ni_ptr(ctlr, &NiTimeController::stopTime), "Stop time");
+	sp->setSensitivity(0.01f);
+	sp->setNumberFormat("%.2f");
+
+	//Active component panel
+	m_activePanel = newChild<gui::Subwindow>();
+	m_activePanel->setSize({ 142.0f, 200.0f });
+	m_activePanel->setTranslation({ 648.0f, 220.0f });
 }
 
 node::FloatKeyEditor::~FloatKeyEditor()
@@ -258,6 +314,24 @@ node::FloatKeyEditor::~FloatKeyEditor()
 void node::FloatKeyEditor::onClose()
 {
 	asyncInvoke<gui::RemoveChild>(this, getParent(), false);
+}
+
+void node::FloatKeyEditor::setActiveKey(Selection::iterator key)
+{
+	//To continue what we've done so far, we should send all composition
+	//changes to the invoker.
+
+	assert(m_activePanel);
+	if (m_activeItem != m_selection.end()) {
+		m_activePanel->clearChildren();
+		(*m_activeItem)->setFocussed(false);
+	}
+
+	if (key != m_selection.end()) {
+		m_activePanel->addChild((*key)->getActiveWidget());
+		(*key)->setFocussed(true);
+	}
+	m_activeItem = key;
 }
 
 bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
@@ -295,7 +369,7 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 						//shift+clicked selected object
 						//remove from selection
 						if (m_activeItem == res.first)
-							m_activeItem = m_selection.end();
+							setActiveKey(m_selection.end());
 						m_selection.erase(res.first);
 						object->setSelected(false);
 					}
@@ -303,7 +377,7 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 						//shift+clicked non-selected object
 						//add to selection
 						object->setSelected(true);
-						m_activeItem = res.first;
+						setActiveKey(res.first);
 					}
 				}
 				else {
@@ -313,15 +387,16 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 
 						//if we release before reaching the drag threshold, should clear
 						//other selected objects
-						m_activeItem = it;
+						setActiveKey(it);
 					}
 					else {
 						//clicked non-selected object
 						//set selection and start dragging (if threshold is passed)
 						for (auto&& o : m_selection)
 							o->setSelected(false);
+						setActiveKey(m_selection.end());
 						m_selection.clear();
-						m_activeItem = m_selection.insert(object).first;
+						setActiveKey(m_selection.insert(object).first);
 						object->setSelected(true);
 					}
 					//start dragging
@@ -518,15 +593,42 @@ void node::FloatKeyEditor::updateAxisUnits()
 	m_plot->getPlotArea().getAxes().setMinorUnits(minor);
 }
 
+void node::FloatKeyEditor::onAddChild(gui::IComponent* c, gui::Component* source)
+{
+	//Our active widget might be pointing at the wrong key. Refresh it.
+	//There are cleaner ways of doing this, but it's no big deal.
+	if (m_activeItem != m_selection.end()) {
+		assert(m_activePanel);
+		m_activePanel->clearChildren();
+		m_activePanel->addChild((*m_activeItem)->getActiveWidget());
+	}
+}
+
 void node::FloatKeyEditor::onRemoveChild(gui::IComponent* c, gui::Component* source)
 {
-	//c does not exist anymore, but we're just going to search for it
-	if (m_activeItem != m_selection.end() && *m_activeItem == c) {
-		m_selection.erase(m_activeItem);
-		m_activeItem = m_selection.end();
+	//If c was selected, it must be removed immediately (it may no longer exist).
+
+	//Regardless, we should refresh our active widget. It may be pointing to 
+	//the wrong (and possibly invalid) key.
+
+	bool erased = false;
+
+	if (m_activeItem != m_selection.end()) {
+		assert(m_activePanel);
+		m_activePanel->clearChildren();
+
+		if (*m_activeItem == c) {
+			m_selection.erase(m_activeItem);
+			m_activeItem = m_selection.end();
+			erased = true;
+		}
+		else
+			m_activePanel->addChild((*m_activeItem)->getActiveWidget());
 	}
-	else if (auto it = m_selection.find(static_cast<KeyHandle*>(c)); it != m_selection.end())
-		m_selection.erase(it);
+
+	if (!erased)
+		if (auto it = m_selection.find(static_cast<KeyHandle*>(c)); it != m_selection.end())
+			m_selection.erase(it);
 }
 
 
@@ -568,7 +670,12 @@ void node::FloatKeyEditor::KeyHandle::frame(gui::FrameDrawer& fd)
 			{ 1.0f, 0.0f, 0.0f, 1.0f }, 
 			3.0f,
 			true);
-	fd.circle(fd.toGlobal(m_translation), 3.0f, m_selected ? nif::COL_WHITE : nif::COL_BLACK, true);
+
+	fd.circle(
+		fd.toGlobal(m_translation), 
+		3.0f, 
+		m_selected ? m_active ? gui::ColRGBA{ 1.0f, 1.0f, 0.0f, 1.0f } : nif::COL_WHITE : nif::COL_BLACK, 
+		true);
 }
 
 void node::FloatKeyEditor::KeyHandle::setTranslation(const gui::Floats<2>& t)
@@ -576,6 +683,42 @@ void node::FloatKeyEditor::KeyHandle::setTranslation(const gui::Floats<2>& t)
 	assert(m_keys);
 	m_keys->at(m_index).time.set(t[0]);
 	m_keys->at(m_index).value.set(t[1]);
+}
+
+template<>
+struct util::property_traits<node::FloatKeyEditor::KeyHandle::KeyProperty>
+{
+	using property_type = node::FloatKeyEditor::KeyHandle::KeyProperty;
+	using value_type = float;
+	using get_type = float;
+
+	static float get(const property_type& t) 
+	{ 
+		return (t.keys->at(t.index).*t.member).get();
+	}
+	static void set(property_type& t, float val) 
+	{ 
+		(t.keys->at(t.index).*t.member).set(val);
+	}
+};
+
+std::unique_ptr<gui::IComponent> node::FloatKeyEditor::KeyHandle::getActiveWidget() const
+{
+	assert(m_keys);
+
+	auto root = std::make_unique<gui::Composite>();
+
+	root->newChild<gui::Text>("Linear key");
+
+	auto time = root->newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::time }, "Time");
+	time->setSensitivity(0.01f);
+	time->setNumberFormat("%.2f");
+
+	auto val = root->newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::value }, "Value");
+	val->setSensitivity(0.01f);
+	val->setNumberFormat("%.2f");
+
+	return root;
 }
 
 std::unique_ptr<gui::ICommand> node::FloatKeyEditor::KeyHandle::getMoveOp(
@@ -597,6 +740,12 @@ std::unique_ptr<gui::ICommand> node::FloatKeyEditor::KeyHandle::getMoveOp(
 	}
 
 	return std::make_unique<MoveOp>(m_keys, std::move(indices), std::move(to), std::move(from));
+}
+
+Key<float>& node::FloatKeyEditor::KeyHandle::getKey() const
+{
+	assert(m_keys);
+	return m_keys->at(m_index);
 }
 
 void node::FloatKeyEditor::KeyHandle::invalidate()
@@ -628,12 +777,12 @@ void node::FloatKeyEditor::DataSeries::onInsert(int pos)
 {
 	assert(pos >= 0 && size_t(pos) <= getChildren().size());
 
+	//Handles after pos must update their index
+	for (int i = pos; (size_t)i < getChildren().size(); i++)
+		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i + 1);
+
 	//Insert handle at pos
 	insertChild(pos, std::make_unique<KeyHandle>(make_ni_ptr(m_data, &NiFloatData::keys), pos));
-
-	//Handles after pos must update their index
-	for (int i = pos + 1; (size_t)i < getChildren().size(); i++)
-		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i);
 
 	//The handle right before pos must refresh its interpolation
 	if (pos != 0)
@@ -647,12 +796,12 @@ void node::FloatKeyEditor::DataSeries::onErase(int pos)
 	//The handle at i = pos is invalidated
 	static_cast<KeyHandle*>(getChildren()[pos].get())->invalidate();
 
+	//Handles at i > pos must update their index
+	for (int i = pos + 1; (size_t)i < getChildren().size(); i++)
+		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i - 1);
+
 	//Erase invalidated handle
 	eraseChild(pos);
-
-	//Handles at i >= pos must update their index
-	for (int i = pos; (size_t)i < getChildren().size(); i++)
-		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i);
 
 	//The handle at i = pos - 1 must refresh
 	if (pos != 0)

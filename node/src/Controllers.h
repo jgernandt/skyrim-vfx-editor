@@ -71,8 +71,8 @@ namespace node
 	public:
 		constexpr static const char* TARGET = "Target";
 
-		constexpr static float WIDTH = 150.0f;
-		constexpr static float HEIGHT = 160.0f;
+		constexpr static float WIDTH = 120.0f;
+		constexpr static float HEIGHT = 96.0f;
 
 	private:
 		//Managed objects

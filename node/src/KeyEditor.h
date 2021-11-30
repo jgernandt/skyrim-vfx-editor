@@ -33,28 +33,6 @@ namespace node
 		public gui::ComponentListener
 	{
 	public:
-		FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data);
-
-		~FloatKeyEditor();
-
-		virtual void onClose() override;
-
-		virtual bool onMouseDown(gui::Mouse::Button button) override;
-		virtual bool onMouseUp(gui::Mouse::Button button) override;
-		virtual bool onMouseWheel(float delta) override;
-
-		virtual void onMouseMove(const gui::Floats<2>& pos) override;
-
-		virtual void onRemoveChild(gui::IComponent* c, gui::Component* source) override;
-
-	private:
-		void drag(const gui::Floats<2>& pos);
-		void pan(const gui::Floats<2>& pos);
-		void zoom(const gui::Floats<2>& pos);
-
-		void updateAxisUnits();
-
-	private:
 		class KeyHandle : public gui::Component
 		{
 			class Listener final : public PropertyListener<float>
@@ -68,20 +46,34 @@ namespace node
 			};
 
 		public:
+			//For use in our active widgets. We specialise property_traits
+			//to get/set keys->at(index).*member
+			struct KeyProperty
+			{
+				const ni_ptr<Vector<Key<float>>> keys;
+				int index;
+				Property<float> Key<float>::* member;
+			};
+
+		public:
 			KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index);
 			virtual ~KeyHandle();
 
 			virtual void frame(gui::FrameDrawer& fd) override;
 			virtual void setTranslation(const gui::Floats<2>& t) override;
 
-			virtual void setFocussed(bool on) override {}
+			virtual void setFocussed(bool on) override { m_active = on; }
 			virtual void setSelected(bool on) override { m_selected = on; }
+
+			std::unique_ptr<gui::IComponent> getActiveWidget() const;
 
 			std::unique_ptr<gui::ICommand> getMoveOp(
 				const std::vector<std::pair<KeyHandle*, gui::Floats<2>>>& initial) const;
 
 			int getIndex() const { return m_index; }
 			void setIndex(int i) { m_index = i; }
+
+			Key<float>& getKey() const;
 
 			void invalidate();
 
@@ -93,13 +85,12 @@ namespace node
 			ni_ptr<Vector<Key<float>>> m_keys;
 			int m_index;
 			bool m_selected{ false };
+			bool m_active{ false };
 			bool m_dirty{ true };
 		};
 
-		using Selection = std::set<KeyHandle*>;
-
-		class DataSeries final : 
-			public gui::Composite, 
+		class DataSeries final :
+			public gui::Composite,
 			public nif::PropertyListener<KeyType>,
 			public nif::VectorListener<Key<float>>
 		{
@@ -121,6 +112,35 @@ namespace node
 			const ni_ptr<NiFloatData> m_data;
 		};
 
+		using Selection = std::set<KeyHandle*>;
+
+	public:
+		FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data);
+
+		~FloatKeyEditor();
+
+		virtual void onClose() override;
+
+		virtual bool onMouseDown(gui::Mouse::Button button) override;
+		virtual bool onMouseUp(gui::Mouse::Button button) override;
+		virtual bool onMouseWheel(float delta) override;
+
+		virtual void onMouseMove(const gui::Floats<2>& pos) override;
+
+		virtual void onAddChild(gui::IComponent* c, gui::Component* source) override;
+		virtual void onRemoveChild(gui::IComponent* c, gui::Component* source) override;
+
+		void setActiveKey(Selection::iterator key);
+
+	private:
+		void drag(const gui::Floats<2>& pos);
+		void pan(const gui::Floats<2>& pos);
+		void zoom(const gui::Floats<2>& pos);
+
+		void updateAxisUnits();
+
+	private:
+
 		gui::Plot* m_plot{ nullptr };
 		DataSeries* m_data{ nullptr };
 
@@ -132,12 +152,13 @@ namespace node
 			ZOOM,
 		};
 		Selection m_selection;
+		Selection::iterator m_activeItem{ m_selection.end() };
+		gui::Composite* m_activePanel{ nullptr };
 
 		//temp data for handling mouse input
 		gui::Floats<2> m_clickPoint;//point clicked in global coords
 		gui::Floats<2> m_startS;//axis scale at the time of clicking
 		gui::Floats<2> m_startT;//axis translation at the time of clicking
-		Selection::iterator m_activeItem;
 		Op m_currentOp{ Op::NONE };
 
 		std::vector<std::pair<KeyHandle*, gui::Floats<2>>> m_initialState;
