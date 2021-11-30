@@ -36,7 +36,7 @@ namespace nif
 	public:
 		virtual ~IListener() = default;
 
-		void receive(const Event<Property<T>>& e, Observable<Property<T>>&)
+		void receive(const Event<nif::Property<T>>& e, Observable<nif::Property<T>>&)
 		{ 
 			onSet(e.value); 
 		}

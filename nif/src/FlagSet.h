@@ -40,13 +40,13 @@ namespace nif
 	{
 	public:
 		virtual ~IListener() = default;
-		void receive(const Event<FlagSet<T>>&e, Observable<FlagSet<T>>&)
+		void receive(const Event<nif::FlagSet<T>>&e, Observable<nif::FlagSet<T>>&)
 		{ 
 			switch (e.type) {
-			case Event<FlagSet<T>>::RAISE:
+			case Event<nif::FlagSet<T>>::RAISE:
 				onRaise(e.flags);
 				break;
-			case Event<FlagSet<T>>::CLEAR:
+			case Event<nif::FlagSet<T>>::CLEAR:
 				onClear(e.flags);
 				break;
 			}

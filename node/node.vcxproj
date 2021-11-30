@@ -56,20 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AVObject.cpp" />
-    <ClCompile Include="src\Constructor.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="src\Constructor.cpp" />
     <ClCompile Include="src\Controllers.cpp" />
     <ClCompile Include="src\Emitters.cpp" />
     <ClCompile Include="src\ExtraData.cpp" />
@@ -185,7 +172,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\common; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -204,7 +191,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\common; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -224,7 +211,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\common; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -243,7 +230,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\common; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>

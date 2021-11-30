@@ -52,13 +52,13 @@ namespace nif
 	public:
 		virtual ~IListener() = default;
 
-		void receive(const Event<Set<T>>&e, Observable<Set<T>>&)
+		void receive(const Event<nif::Set<T>>&e, Observable<nif::Set<T>>&)
 		{
 			switch (e.type) {
-			case Event<Set<T>>::ADD:
+			case Event<nif::Set<T>>::ADD:
 				onAdd(e.obj);
 				break;
-			case Event<Set<T>>::REMOVE:
+			case Event<nif::Set<T>>::REMOVE:
 				onRemove(e.obj);
 				break;
 			}

@@ -43,13 +43,13 @@ namespace nif
 	public:
 		virtual ~IListener() = default;
 
-		void receive(const Event<List<T>>& e, Observable<List<T>>&)
+		void receive(const Event<nif::List<T>>& e, Observable<nif::List<T>>&)
 		{
 			switch (e.type) {
-			case Event<List<T>>::INSERT:
+			case Event<nif::List<T>>::INSERT:
 				onInsert(e.pos);
 				break;
-			case Event<List<T>>::ERASE:
+			case Event<nif::List<T>>::ERASE:
 				onErase(e.pos);
 				break;
 			}

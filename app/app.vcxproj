@@ -100,7 +100,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; ..\math\eigen; ..\gui\src; ..\node\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; ..\math\eigen; ..\gui\src; ..\node\src; ..\nif\src</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -119,7 +119,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; ..\math\eigen; ..\gui\src; ..\node\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; ..\math\eigen; ..\gui\src; ..\node\src; ..\nif\src</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -139,7 +139,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; ..\math\eigen; ..\gui\src; ..\node\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; ..\math\eigen; ..\gui\src; ..\node\src; ..\nif\src</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -158,7 +158,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; ..\math\eigen; ..\gui\src; ..\node\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; ..\math\eigen; ..\gui\src; ..\node\src; ..\nif\src</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>

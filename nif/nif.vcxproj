@@ -41,7 +41,6 @@
     <ClInclude Include="src\NiParticleSystem.h" />
     <ClInclude Include="src\NiPSysEmitter.h" />
     <ClInclude Include="src\NiPSysModifier.h" />
-    <ClInclude Include="src\Observable.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Property.h" />
     <ClInclude Include="src\Sequence.h" />
@@ -162,7 +161,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -181,7 +180,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -201,7 +200,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -220,7 +219,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>

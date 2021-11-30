@@ -36,9 +36,6 @@
     <ClInclude Include="src\nif_backend.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Observable.h">
-      <Filter>Header Files\Data fields</Filter>
-    </ClInclude>
     <ClInclude Include="src\Assignable.h">
       <Filter>Header Files\Data fields</Filter>
     </ClInclude>

@@ -36,7 +36,7 @@ namespace nif
 	{
 	public:
 		virtual ~IListener() = default;
-		void receive(const Event<Assignable<T>>&e, Observable<Assignable<T>>&)
+		void receive(const Event<nif::Assignable<T>>&e, Observable<nif::Assignable<T>>&)
 		{ 
 			onAssign(e.obj); 
 		}

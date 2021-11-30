@@ -40,13 +40,13 @@ namespace nif
 	public:
 		virtual ~IListener() = default;
 
-		void receive(const Event<Vector<T>>&e, Observable<Vector<T>>&)
+		void receive(const Event<nif::Vector<T>>&e, Observable<nif::Vector<T>>&)
 		{
 			switch (e.type) {
-			case Event<Vector<T>>::INSERT:
+			case Event<nif::Vector<T>>::INSERT:
 				onInsert(e.pos);
 				break;
-			case Event<Vector<T>>::ERASE:
+			case Event<nif::Vector<T>>::ERASE:
 				onErase(e.pos);
 				break;
 			}

@@ -45,13 +45,13 @@ namespace nif
 	public:
 		virtual ~IListener() = default;
 
-		void receive(const Event<Sequence<T>>&e, Observable<Sequence<T>>&)
+		void receive(const Event<nif::Sequence<T>>&e, Observable<nif::Sequence<T>>&)
 		{
 			switch (e.type) {
-			case Event<Sequence<T>>::INSERT:
+			case Event<nif::Sequence<T>>::INSERT:
 				onInsert(e.pos);
 				break;
-			case Event<Sequence<T>>::ERASE:
+			case Event<nif::Sequence<T>>::ERASE:
 				onErase(e.pos);
 				break;
 			}
