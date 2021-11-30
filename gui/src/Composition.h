@@ -120,9 +120,6 @@ namespace gui
 
 		virtual void setMouseHandler(MouseHandler* h) override { m_mouseHandler = h; }
 
-		virtual void setFocussed(bool) override {}
-		virtual void setSelected(bool) override {}
-
 	protected:
 		virtual IInvoker* getInvoker() override;
 

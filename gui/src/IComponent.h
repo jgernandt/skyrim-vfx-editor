@@ -100,10 +100,6 @@ namespace gui
 		virtual IComponent* getRoot() = 0;
 
 		virtual void setMouseHandler(MouseHandler*) = 0;
-
-		//Are these general enough to belong here?
-		virtual void setFocussed(bool) = 0;
-		virtual void setSelected(bool) = 0;
 	};
 
 	typedef std::unique_ptr<IComponent> ComponentPtr;

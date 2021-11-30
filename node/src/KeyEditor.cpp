@@ -324,12 +324,12 @@ void node::FloatKeyEditor::setActiveKey(Selection::iterator key)
 	assert(m_activePanel);
 	if (m_activeItem != m_selection.end()) {
 		m_activePanel->clearChildren();
-		(*m_activeItem)->setFocussed(false);
+		(*m_activeItem)->setActive(false);
 	}
 
 	if (key != m_selection.end()) {
 		m_activePanel->addChild((*key)->getActiveWidget());
-		(*key)->setFocussed(true);
+		(*key)->setActive(true);
 	}
 	m_activeItem = key;
 }

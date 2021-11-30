@@ -62,8 +62,8 @@ namespace node
 			virtual void frame(gui::FrameDrawer& fd) override;
 			virtual void setTranslation(const gui::Floats<2>& t) override;
 
-			virtual void setFocussed(bool on) override { m_active = on; }
-			virtual void setSelected(bool on) override { m_selected = on; }
+			void setActive(bool on) { m_active = on; }
+			void setSelected(bool on) { m_selected = on; }
 
 			std::unique_ptr<gui::IComponent> getActiveWidget() const;
 
