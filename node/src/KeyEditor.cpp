@@ -203,7 +203,8 @@ public:
 	std::vector<gui::IComponent*> found;
 };
 
-node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data)
+node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data) :
+	m_ctlr{ ctlr }
 {
 	assert(ctlr && data);
 
@@ -303,10 +304,22 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	m_activePanel = newChild<gui::Subwindow>();
 	m_activePanel->setSize({ 142.0f, 200.0f });
 	m_activePanel->setTranslation({ 648.0f, 220.0f });
+	
+	//Clip-space transform listeners
+	m_freqLsnr.setTarget(m_data);
+	ctlr->frequency.addListener(m_freqLsnr);
+	m_freqLsnr.onSet(ctlr->frequency.get());
+
+	m_phaseLsnr.setTarget(m_data);
+	ctlr->phase.addListener(m_phaseLsnr);
+	m_phaseLsnr.onSet(ctlr->phase.get());
 }
 
 node::FloatKeyEditor::~FloatKeyEditor()
 {
+	assert(m_ctlr);
+	m_ctlr->phase.removeListener(m_phaseLsnr);
+
 	if (m_data)
 		m_data->removeListener(*this);
 }
@@ -631,6 +644,18 @@ void node::FloatKeyEditor::onRemoveChild(gui::IComponent* c, gui::Component* sou
 			m_selection.erase(it);
 }
 
+void node::FloatKeyEditor::FrequencyListener::onSet(const float& f)
+{
+	if (m_target)
+		m_target->setScaleX(1.0f / f);
+}
+
+void node::FloatKeyEditor::PhaseListener::onSet(const float& f)
+{
+	if (m_target)
+		m_target->setTranslationX(f);
+}
+
 
 node::FloatKeyEditor::KeyHandle::KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index) :
 	m_timeLsnr{ &m_translation[0] },
@@ -665,9 +690,9 @@ void node::FloatKeyEditor::KeyHandle::frame(gui::FrameDrawer& fd)
 	//We'll just not scale at all.
 	if ((size_t)m_index < m_keys->size() - 1)
 		fd.line(
-			fd.toGlobal(m_translation), 
+			fd.toGlobal(m_translation),
 			fd.toGlobal({ m_keys->at(m_index + 1).time.get(), m_keys->at(m_index + 1).value.get() }),
-			{ 1.0f, 0.0f, 0.0f, 1.0f }, 
+			{ 1.0f, 0.0f, 0.0f, 1.0f },
 			3.0f,
 			true);
 
@@ -771,6 +796,17 @@ node::FloatKeyEditor::DataSeries::DataSeries(const ni_ptr<NiFloatData>& data) :
 node::FloatKeyEditor::DataSeries::~DataSeries()
 {
 	m_data->keys.removeListener(*this);
+}
+
+void node::FloatKeyEditor::DataSeries::frame(gui::FrameDrawer& fd)
+{
+	if (m_data->keyType.get() == KEY_LINEAR) {
+		//We want to draw from low axis limit to upper.
+		//The phase/frequency should be our transform from our axes, so we work in clip space.
+
+	}
+
+	Composite::frame(fd);
 }
 
 void node::FloatKeyEditor::DataSeries::onInsert(int pos)

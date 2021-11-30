@@ -98,7 +98,8 @@ namespace node
 			DataSeries(const ni_ptr<NiFloatData>& data);
 			~DataSeries();
 
-			//virtual void onSet(const KeyType& type) override;
+			virtual void frame(gui::FrameDrawer& fd) override;
+
 			virtual void onInsert(int pos) override;
 			virtual void onErase(int pos) override;
 
@@ -113,6 +114,28 @@ namespace node
 		};
 
 		using Selection = std::set<KeyHandle*>;
+
+		class FrequencyListener final : public PropertyListener<float>
+		{
+		public:
+			FrequencyListener() {}
+			virtual void onSet(const float& f) override;
+			void setTarget(gui::IComponent* target) { m_target = target; }
+
+		private:
+			IComponent* m_target{ nullptr };
+		};
+
+		class PhaseListener final : public PropertyListener<float>
+		{
+		public:
+			PhaseListener() {}
+			virtual void onSet(const float& f) override;
+			void setTarget(gui::IComponent* target) { m_target = target; }
+
+		private:
+			IComponent* m_target{ nullptr };
+		};
 
 	public:
 		FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data);
@@ -140,6 +163,10 @@ namespace node
 		void updateAxisUnits();
 
 	private:
+		const ni_ptr<NiTimeController> m_ctlr;
+
+		FrequencyListener m_freqLsnr;
+		PhaseListener m_phaseLsnr;
 
 		gui::Plot* m_plot{ nullptr };
 		DataSeries* m_data{ nullptr };
