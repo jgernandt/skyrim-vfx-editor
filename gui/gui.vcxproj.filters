@@ -275,9 +275,6 @@
     <ClCompile Include="src\DragInputImGui.cpp">
       <Filter>Source Files\Backend</Filter>
     </ClCompile>
-    <ClCompile Include="src\Subwindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Number.cpp">
       <Filter>Source Files\Widgets</Filter>
     </ClCompile>
@@ -298,6 +295,9 @@
     </ClCompile>
     <ClCompile Include="src\input.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Subwindow.cpp">
+      <Filter>Source Files\Widgets</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -17,7 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "Widget.h"
+#include "Window.h"
 #include "UniqueLabel.h"
 
 namespace gui
@@ -27,8 +27,10 @@ namespace gui
 	public:
 		Subwindow(const std::string& name = std::string()) : m_label(name) {}
 		virtual void frame(FrameDrawer& fd) override;
+		void setStyle(Window::Style style, bool on = true);
 
 	private:
 		UniqueLabel<1> m_label;
+		unsigned int m_style{ 24 };//no scroll
 	};
 }

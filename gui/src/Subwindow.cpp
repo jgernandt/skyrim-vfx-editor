@@ -20,12 +20,37 @@
 #include "Subwindow.h"
 #include "CallWrapper.h"
 
+//We make use of Eigen::Array methods for rounding
+static_assert(TO_PIXEL == static_cast<decltype(TO_PIXEL)>(&std::floor));
+
 void gui::Subwindow::frame(FrameDrawer& fd)
 {
+	ImGui::SetCursorPos(gui_type_conversion<ImVec2>::from((m_translation * fd.getCurrentScale()).floor().eval()));
+
 	util::CallWrapper end;
-	if (ImGui::BeginChild(m_label[0].c_str(), gui_type_conversion<ImVec2>::from(m_size))) {
+	if (ImGui::BeginChild(
+		m_label[0].c_str(), 
+		gui_type_conversion<ImVec2>::from((m_size * fd.getCurrentScale()).floor().eval()),
+		false,
+		m_style))
+	{
 		end = util::CallWrapper(ImGui::EndChild);
 
+		ImGui::PushItemWidth(-std::numeric_limits<float>::min());
+		util::CallWrapper popItemWidth(&ImGui::PopItemWidth);
+
 		Composite::frame(fd);
+	}
+}
+
+void gui::Subwindow::setStyle(Window::Style style, bool on)
+{
+	switch (style) {
+	case Window::Style::SCROLLABLE:
+		if (on)
+			m_style &= ~(ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
+		else
+			m_style |= ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar;
+		break;
 	}
 }
