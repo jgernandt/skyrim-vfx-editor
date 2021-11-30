@@ -283,6 +283,14 @@ void gui::Composite::insertChild(int pos, std::unique_ptr<IComponent>&& c)
 	}
 }
 
+void gui::Composite::eraseChild(int pos)
+{
+	assert(pos >= 0 && (size_t)pos < m_children.size());
+	assert(m_children[pos]);
+	m_children[pos]->setParent(nullptr);
+	m_children.erase(m_children.begin() + pos);
+}
+
 gui::ComponentPtr gui::Composite::removeChild(IComponent* c)
 {
 	ComponentPtr ret;

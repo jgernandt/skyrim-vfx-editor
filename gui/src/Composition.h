@@ -38,6 +38,12 @@ namespace gui
 		virtual void setParent(IComponent* c) override { m_parent = c; }
 		virtual bool hasAncestor(IComponent* c) const override;
 
+		virtual void addChild(ComponentPtr&&) override {}
+		virtual void insertChild(int pos, std::unique_ptr<IComponent>&&) override {}
+		virtual void eraseChild(int pos) override {}
+		virtual ComponentPtr removeChild(IComponent*) override { return ComponentPtr(); }
+		virtual void clearChildren() override {}
+
 		virtual void frame(FrameDrawer& fd) override;
 
 		virtual Floats<2> getTranslation() const override { return m_translation; }
@@ -65,11 +71,6 @@ namespace gui
 		virtual void setSizeHint(const Floats<2>& hint) override { m_sizeHint = hint; }
 
 		virtual void accept(Visitor& v) override;
-
-		virtual void addChild(ComponentPtr&&) override {}
-		virtual void insertChild(int pos, std::unique_ptr<IComponent>&&) override {}
-		virtual ComponentPtr removeChild(IComponent*) override { return ComponentPtr(); }
-		virtual void clearChildren() override {}
 
 		virtual IComponent* getRoot() override;
 
@@ -124,6 +125,7 @@ namespace gui
 
 		virtual void addChild(ComponentPtr&& c) override;
 		virtual void insertChild(int pos, std::unique_ptr<IComponent>&& c) override;
+		virtual void eraseChild(int pos) override;
 		virtual ComponentPtr removeChild(IComponent* c) override;
 		virtual void clearChildren() override;
 
