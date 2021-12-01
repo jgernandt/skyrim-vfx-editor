@@ -56,6 +56,7 @@ namespace nif
 	//Need to test what happens if you set both reverse and clamp.
 	constexpr ControllerFlags CTLR_LOOP_REVERSE = 0x02;
 	constexpr ControllerFlags CTLR_LOOP_CLAMP = 0x04;
+	constexpr ControllerFlags CTLR_LOOP_MASK = 0x06;
 	constexpr ControllerFlags CTLR_ACTIVE = 0x08;
 	constexpr ControllerFlags CTLR_PLAY_BWD = 0x10;
 	constexpr ControllerFlags CTLR_MNGR_CTRLD = 0x20;
