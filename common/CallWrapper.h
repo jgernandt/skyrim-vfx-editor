@@ -44,6 +44,8 @@ namespace util
 		}
 		CallWrapper& operator=(CallWrapper&& other) noexcept
 		{
+			if (m_call)
+				m_call();
 			m_call = std::move(other.m_call);
 			return *this;
 		}
