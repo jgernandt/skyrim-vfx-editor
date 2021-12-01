@@ -81,12 +81,23 @@ int app::VFXEditor::run()
     //This is pretty bad message handling, but imgui more or less needs it this way
     ZeroMemory(&msg, sizeof(msg));
     while (msg.message != WM_QUIT) {
-        while (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) && msg.message != WM_QUIT) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+
+        //This whole m_draw thing is a quick fix to prevent an ImGui problem when minimising the window.
+        //We'll want to do this another way later.
+        if (m_draw) {
+            while (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) && msg.message != WM_QUIT) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+            if (msg.message != WM_QUIT && m_draw)
+                frame();
         }
-        if (msg.message != WM_QUIT)
-            frame();
+        else {
+            while (!m_draw && GetMessage(&msg, NULL, 0, 0)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
     }
 
     /*This would be nicer
@@ -300,6 +311,12 @@ LRESULT app::VFXEditor::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_SIZE:
         if (m_current)
             m_current->setSize({ static_cast<float>(LOWORD(lParam)), static_cast<float>(HIWORD(lParam)) });
+
+        if (LOWORD(lParam) == 0 || HIWORD(lParam) == 0)
+            m_draw = false;
+        else
+            m_draw = true;
+
         break;
     case WM_SYSCOMMAND:
         if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu

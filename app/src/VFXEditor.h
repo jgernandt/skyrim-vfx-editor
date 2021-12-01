@@ -70,5 +70,7 @@ namespace app
 		std::unique_ptr<AboutBox> m_aboutBox;
 
 		gui::backend::ImGuiWinD3D10 m_guiEngine;
+
+		bool m_draw{ true };
 	};
 }
