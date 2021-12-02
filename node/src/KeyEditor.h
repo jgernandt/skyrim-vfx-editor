@@ -85,8 +85,6 @@ namespace node
 			int getIndex() const { return m_index; }
 			void setIndex(int i) { m_index = i; }
 
-			Key<float>& getKey() const;
-
 			Interpolant getInterpolant();
 
 			void invalidate();

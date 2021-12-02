@@ -776,12 +776,6 @@ std::unique_ptr<gui::ICommand> node::FloatKeyEditor::KeyHandle::getMoveOp(
 	return std::make_unique<MoveOp>(m_keys, std::move(indices), std::move(to), std::move(from));
 }
 
-Key<float>& node::FloatKeyEditor::KeyHandle::getKey() const
-{
-	assert(m_keys);
-	return m_keys->at(m_index);
-}
-
 node::FloatKeyEditor::Interpolant node::FloatKeyEditor::KeyHandle::getInterpolant()
 {
 	assert(m_keys);
@@ -827,13 +821,12 @@ void node::FloatKeyEditor::DataSeries::frame(gui::FrameDrawer& fd)
 		{
 			return mirrored ? 2 * points.size() - 1 : points.size();
 		}
-		//const gui::Floats<2>& operator[](int i) const { return points[i]; }
 
 		float time(int i) const
 		{
 			assert(i >= 0);
-			if (mirrored && i >= points.size()) {
-				assert(i < 2 * points.size() - 1);
+			if (mirrored && (size_t)i >= points.size()) {
+				assert((size_t)i < 2 * points.size() - 1);
 				return length() - points[2 * points.size() - i - 2][0];
 			}
 			else
@@ -843,8 +836,8 @@ void node::FloatKeyEditor::DataSeries::frame(gui::FrameDrawer& fd)
 		float value(int i) const
 		{
 			assert(i >= 0);
-			if (mirrored && i >= points.size()) {
-				assert(i < 2 * points.size() - 1);
+			if (mirrored && (size_t)i >= points.size()) {
+				assert((size_t)i < 2 * points.size() - 1);
 				return points[2 * points.size() - i - 2][1];
 			}
 			else
@@ -921,15 +914,11 @@ void node::FloatKeyEditor::DataSeries::frame(gui::FrameDrawer& fd)
 			curve.reserve(clip.size() + 2);
 		}
 		else {
-			//if (loop == CTLR_LOOP_REVERSE)
-			//	clip.length() *= 2.0f;//account for mirrored section
-
 			float d = lims[0] + std::fmod(startTime - lims[0], clip.length());
 
 			time = d >= lims[0] ? d - clip.length() : d;
 			N = static_cast<int>(std::ceil((lims[1] - time) / clip.length()));
 
-			//curve.reserve(clip.size() * (loop == CTLR_LOOP_REVERSE ? 2 * N : N));
 			curve.reserve(clip.size() * N);
 		}
 
@@ -993,21 +982,26 @@ void node::FloatKeyEditor::DataSeries::frame(gui::FrameDrawer& fd)
 
 		assert(curve.size() >= 2);
 
+		gui::Floats<2> tl1;
+		gui::Floats<2> br1;
+		gui::Floats<2> tl2;
+		gui::Floats<2> br2;
+
 		{
 			auto popper = fd.pushTransform(m_translation, m_scale);
 			for (auto&& p : curve)
 				p = fd.toGlobal(p);
+
+			tl1 = { fd.toGlobal({ lims[0], 0.0f })[0], std::numeric_limits<float>::max() };
+			br1 = { fd.toGlobal({ startTime, 0.0f })[0], -std::numeric_limits<float>::max() };
+			tl2 = { fd.toGlobal({ stopTime, 0.0f })[0], std::numeric_limits<float>::max() };
+			br2 = { fd.toGlobal({ lims[1], 0.0f })[0], -std::numeric_limits<float>::max() };
 		}
 		fd.curve(curve, lineCol, lineWidth, true);
-	}
 
-	/*
-	fd.line(
-		fd.toGlobal(m_translation + m_scale * gui::Floats<2>{ begin, val1 }),
-		fd.toGlobal(m_translation + m_scale * gui::Floats<2>{ end, val2 }),
-		lineCol,
-		lineWidth,
-		true);*/
+		fd.rectangle(tl1, br1, { 0.0f, 0.0f, 0.0f, 0.075f }, true);
+		fd.rectangle(tl2, br2, { 0.0f, 0.0f, 0.0f, 0.075f }, true);
+	}
 
 	Composite::frame(fd);
 }
