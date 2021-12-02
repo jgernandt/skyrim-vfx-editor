@@ -23,6 +23,7 @@
 #include "NiController.h"
 #include "node_concepts.h"
 
+
 namespace node
 {
 	using namespace nif;
@@ -33,6 +34,17 @@ namespace node
 		public gui::ComponentListener
 	{
 	public:
+		class Interpolant
+		{
+		public:
+			Interpolant(float m = 0.0f, float k = 1.0f) : m_m{ m }, m_k{ k } {}
+			//should this be in normalised time?
+			float eval(float t) { return t <= 0.0f ? m_m : t >= 1.0f ? m_k : m_m + t * m_k; }
+
+			float m_m;
+			float m_k;
+		};
+
 		class KeyHandle : public gui::Component
 		{
 			class Listener final : public PropertyListener<float>
@@ -75,6 +87,8 @@ namespace node
 
 			Key<float>& getKey() const;
 
+			Interpolant getInterpolant();
+
 			void invalidate();
 
 			void recalcIpln() { m_dirty = true; }
@@ -95,7 +109,7 @@ namespace node
 			public nif::VectorListener<Key<float>>
 		{
 		public:
-			DataSeries(const ni_ptr<NiFloatData>& data);
+			DataSeries(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data);
 			~DataSeries();
 
 			virtual void frame(gui::FrameDrawer& fd) override;
@@ -104,13 +118,16 @@ namespace node
 			virtual void onErase(int pos) override;
 
 			gui::Floats<2> getBounds() const;
-			NiFloatData* get() { return m_data.get(); }
 
 			//std::unique_ptr<gui::ICommand> getEraseOp() const;
 			std::unique_ptr<gui::ICommand> getInsertOp(const gui::Floats<2>& pos) const;
 
+			void setAxisLimits(const gui::Floats<2>& lims) { m_axisLims = lims; }
+
 		private:
+			const ni_ptr<NiTimeController> m_ctlr;
 			const ni_ptr<NiFloatData> m_data;
+			gui::Floats<2> m_axisLims;
 		};
 
 		using Selection = std::set<KeyHandle*>;
@@ -118,22 +135,24 @@ namespace node
 		class FrequencyListener final : public PropertyListener<float>
 		{
 		public:
-			FrequencyListener() {}
+			FrequencyListener(Property<float>* phase) : m_phase{ phase } {}
 			virtual void onSet(const float& f) override;
 			void setTarget(gui::IComponent* target) { m_target = target; }
 
 		private:
+			Property<float>* m_phase;
 			IComponent* m_target{ nullptr };
 		};
 
 		class PhaseListener final : public PropertyListener<float>
 		{
 		public:
-			PhaseListener() {}
+			PhaseListener(Property<float>* frequency) : m_frequency{ frequency } {}
 			virtual void onSet(const float& f) override;
 			void setTarget(gui::IComponent* target) { m_target = target; }
 
 		private:
+			Property<float>* m_frequency;
 			IComponent* m_target{ nullptr };
 		};
 

@@ -28,11 +28,24 @@ constexpr float SCALE_SENSITIVITY = 0.1f;
 
 using namespace nif;
 
+//Move somewhere else?
 template<typename T, T Width, T Offset>
 struct BitSetWrapper
 {
 	constexpr static T MASK = ~(~T(0) << Width) << Offset;
-	ni_ptr<FlagSet<T>> ptr;
+	nif::ni_ptr<nif::FlagSet<T>> ptr;
+
+	T get() const
+	{
+		return ptr ? (ptr->raised() & MASK) >> Offset : T();
+	}
+	void set(T val)
+	{
+		if (ptr) {
+			ptr->clear(~(val << Offset) & MASK);
+			ptr->raise((val << Offset) & MASK);
+		}
+	}
 };
 
 template<typename T, T Width, T Offset>
@@ -42,15 +55,8 @@ struct util::property_traits<BitSetWrapper<T, Width, Offset>>
 	using value_type = T;
 	using get_type = T;
 
-	static T get(const BitSetWrapper<T, Width, Offset>& p)
-	{
-		return (p.ptr->raised() & p.MASK) >> Offset;
-	}
-	static void set(BitSetWrapper<T, Width, Offset>& p, T val)
-	{
-		p.ptr->clear(~(val << Offset) & p.MASK);
-		p.ptr->raise((val << Offset) & p.MASK);
-	}
+	static T get(const BitSetWrapper<T, Width, Offset>& p) { return p.get(); }
+	static void set(BitSetWrapper<T, Width, Offset>& p, T val) { p.set(val); }
 };
 
 class InsertOp final : public gui::ICommand
@@ -204,7 +210,7 @@ public:
 };
 
 node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data) :
-	m_ctlr{ ctlr }
+	m_ctlr{ ctlr }, m_freqLsnr{ ctlr ? &ctlr->phase : nullptr }, m_phaseLsnr{ ctlr ? &ctlr->frequency : nullptr }
 {
 	assert(ctlr && data);
 
@@ -215,7 +221,7 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	plot_panel->setTranslation({ 8.0f, 16.0f });
 	m_plot = plot_panel->newChild<gui::Plot>();
 
-	auto series = std::make_unique<DataSeries>(data);
+	auto series = std::make_unique<DataSeries>(ctlr, data);
 	m_data = series.get();
 	m_plot->getPlotArea().getAxes().addChild(std::move(series));
 	m_data->addListener(*this);
@@ -256,6 +262,8 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	}
 
 	updateAxisUnits();
+	m_data->setAxisLimits(xlims);
+
 	m_plot->getPlotArea().setMouseHandler(this);
 
 	//Side panel(s)
@@ -496,6 +504,7 @@ bool node::FloatKeyEditor::onMouseWheel(float delta)
 	m_plot->getPlotArea().getAxes().scale({ scaleFactor, scaleFactor });
 
 	updateAxisUnits();
+	m_data->setAxisLimits(m_plot->getPlotArea().getXLimits());
 
 	return true;
 }
@@ -557,6 +566,8 @@ void node::FloatKeyEditor::pan(const gui::Floats<2>& pos)
 	assert(m_plot);
 	gui::Floats<2> delta = m_plot->getPlotArea().fromGlobalSpace(pos) - m_clickPoint;
 	m_plot->getPlotArea().getAxes().setTranslation(m_startT + delta);
+
+	m_data->setAxisLimits(m_plot->getPlotArea().getXLimits());
 }
 
 void node::FloatKeyEditor::zoom(const gui::Floats<2>& pos)
@@ -571,6 +582,7 @@ void node::FloatKeyEditor::zoom(const gui::Floats<2>& pos)
 	m_plot->getPlotArea().getAxes().setScale(m_startS * factor);
 
 	updateAxisUnits();
+	m_data->setAxisLimits(m_plot->getPlotArea().getXLimits());
 }
 
 void node::FloatKeyEditor::updateAxisUnits()
@@ -644,16 +656,21 @@ void node::FloatKeyEditor::onRemoveChild(gui::IComponent* c, gui::Component* sou
 			m_selection.erase(it);
 }
 
-void node::FloatKeyEditor::FrequencyListener::onSet(const float& f)
+//Phase and frequency are the inverse transform of the data series
+void node::FloatKeyEditor::FrequencyListener::onSet(const float& freq)
 {
-	if (m_target)
-		m_target->setScaleX(1.0f / f);
+	assert(m_phase);
+	if (m_target) {
+		m_target->setScaleX(1.0f / freq);
+		m_target->setTranslationX(-m_phase->get() / freq);
+	}
 }
 
-void node::FloatKeyEditor::PhaseListener::onSet(const float& f)
+void node::FloatKeyEditor::PhaseListener::onSet(const float& phase)
 {
+	assert(m_frequency);
 	if (m_target)
-		m_target->setTranslationX(f);
+		m_target->setTranslationX(-phase / m_frequency->get());
 }
 
 
@@ -688,14 +705,6 @@ void node::FloatKeyEditor::KeyHandle::frame(gui::FrameDrawer& fd)
 
 	//We want to scale with PlotArea, not Axes. Not so easy right now. 
 	//We'll just not scale at all.
-	if ((size_t)m_index < m_keys->size() - 1)
-		fd.line(
-			fd.toGlobal(m_translation),
-			fd.toGlobal({ m_keys->at(m_index + 1).time.get(), m_keys->at(m_index + 1).value.get() }),
-			{ 1.0f, 0.0f, 0.0f, 1.0f },
-			3.0f,
-			true);
-
 	fd.circle(
 		fd.toGlobal(m_translation), 
 		3.0f, 
@@ -773,6 +782,16 @@ Key<float>& node::FloatKeyEditor::KeyHandle::getKey() const
 	return m_keys->at(m_index);
 }
 
+node::FloatKeyEditor::Interpolant node::FloatKeyEditor::KeyHandle::getInterpolant()
+{
+	assert(m_keys);
+
+	float v0 = m_keys->at(m_index).value.get();
+
+	return Interpolant(v0,
+		m_index < (int)m_keys->size() - 1 ? m_keys->at(m_index + 1).value.get() - v0 : 0.0f);
+}
+
 void node::FloatKeyEditor::KeyHandle::invalidate()
 {
 	//The Properties we are listening to may no longer exist.
@@ -782,8 +801,8 @@ void node::FloatKeyEditor::KeyHandle::invalidate()
 }
 
 
-node::FloatKeyEditor::DataSeries::DataSeries(const ni_ptr<NiFloatData>& data) :
-	m_data{ data }
+node::FloatKeyEditor::DataSeries::DataSeries(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data) :
+	m_ctlr{ ctlr }, m_data{ data }
 {
 	assert(m_data);
 	m_data->keys.addListener(*this);
@@ -800,11 +819,195 @@ node::FloatKeyEditor::DataSeries::~DataSeries()
 
 void node::FloatKeyEditor::DataSeries::frame(gui::FrameDrawer& fd)
 {
-	if (m_data->keyType.get() == KEY_LINEAR) {
-		//We want to draw from low axis limit to upper.
-		//The phase/frequency should be our transform from our axes, so we work in clip space.
+	assert(m_data && m_ctlr);
 
+	struct Clip
+	{
+		int size()
+		{
+			return mirrored ? 2 * points.size() - 1 : points.size();
+		}
+		//const gui::Floats<2>& operator[](int i) const { return points[i]; }
+
+		float time(int i) const
+		{
+			assert(i >= 0);
+			if (mirrored && i >= points.size()) {
+				assert(i < 2 * points.size() - 1);
+				return length() - points[2 * points.size() - i - 2][0];
+			}
+			else
+				return points[i][0];
+		}
+
+		float value(int i) const
+		{
+			assert(i >= 0);
+			if (mirrored && i >= points.size()) {
+				assert(i < 2 * points.size() - 1);
+				return points[2 * points.size() - i - 2][1];
+			}
+			else
+				return points[i][1];
+		}
+
+		gui::Floats<2>& front() { return points.front(); }
+		gui::Floats<2>& back() 
+		{ 
+			return points.back(); 
+		}
+
+		float length() const { return mirrored ? 2.0f * m_length : m_length; }
+		void setLength(float f) { m_length = f; }
+
+		std::vector<gui::Floats<2>> points;
+		bool mirrored{ false };
+
+	private:
+		float m_length{ 0.0f };
+	};
+
+	float startTime = m_ctlr->startTime.get();
+	float stopTime = m_ctlr->stopTime.get();
+
+	Clip clip;
+	clip.setLength(stopTime - startTime);
+
+	//We want to draw from low axis limit to upper.
+	//The phase/frequency should be our transform from our axes, so we work in clip space.
+	gui::Floats<2> lims = { (m_axisLims[0] - m_translation[0]) / m_scale[0], (m_axisLims[1] - m_translation[0]) / m_scale[0] };
+
+	if (m_data->keys.size() == 0 || clip.length() <= 0.0f || lims[0] == lims[1])
+		return;//nothing to draw
+	else if (m_data->keys.size() > 1) {
+
+		//We can optimise later, just get this working first.
+		//Later we might want to cache these values.
+		//We should also do clip checking in y.
+
+		//Work with the assumption that there is a key at start and stop. It's how it should be.
+		//Start and stop time thus need to adjust to the time of the keys.
+		//We'll make it work.
+
+		clip.points.resize(m_data->keys.size());
+		clip.points[0] = { 0.0f, m_data->keys.front().value.get() };
+
+		for (int i = 1; i < (int)m_data->keys.size(); i++) {
+
+			clip.points[i] = { m_data->keys.at(i).time.get() - startTime, m_data->keys.at(i).value.get() };
+
+			//if we were quadratic we might instead:
+			//*Recalculate the limits to global and determine the resolution of the interval.
+			// From it, decide how many line segments we want to split it into.
+			//*Call the Handle to evaluate the interpolant at the given points
+
+			//If we were constant we should not produce a continuous curve at all. 
+			//We should produce a list of lines.
+		}
+
+		//To hold the final curve
+		std::vector<gui::Floats<2>> curve;
+
+		//Map out the clips to the time line
+		float time;//time of first clip
+		int N;//repetitions
+
+		ControllerFlags loop = m_ctlr->flags.raised() & CTLR_LOOP_MASK;
+		clip.mirrored = loop == CTLR_LOOP_REVERSE;
+
+		if (loop == CTLR_LOOP_CLAMP) {
+			time = startTime;
+			N = 1;
+			curve.reserve(clip.size() + 2);
+		}
+		else {
+			//if (loop == CTLR_LOOP_REVERSE)
+			//	clip.length() *= 2.0f;//account for mirrored section
+
+			float d = lims[0] + std::fmod(startTime - lims[0], clip.length());
+
+			time = d >= lims[0] ? d - clip.length() : d;
+			N = static_cast<int>(std::ceil((lims[1] - time) / clip.length()));
+
+			//curve.reserve(clip.size() * (loop == CTLR_LOOP_REVERSE ? 2 * N : N));
+			curve.reserve(clip.size() * N);
+		}
+
+		gui::ColRGBA lineCol = { 1.0f, 0.0f, 0.0f, 1.0f };
+		float lineWidth = 3.0f;
+
+		//Only valid/relevant on Clamp
+		if (loop == CTLR_LOOP_CLAMP && lims[0] < time) {
+			curve.push_back({ lims[0], clip.front()[1] });
+			curve.push_back(clip.front());
+		}
+
+		for (int i = 0; i < N; i++) {
+			float begin = time + i * clip.length();
+			float end = time + (i + 1) * clip.length();
+
+			float lim0 = lims[0] - begin;//clip time of lim0
+			float lim1 = lims[1] - begin;//clip time of lim1
+
+			if (lim0 < 0.0f && lim1 > clip.length()) {
+				//Whole curve is visible (in x at least, let's worry about y later).
+				//We skip the first point if it is a duplicate
+				assert(!curve.empty() && clip.size() > 0);
+				int i = curve.back()[0] == begin + clip.time(0) && curve.back()[1] == clip.value(0) ? 1 : 0;
+				for (; i < (int)clip.size(); i++)
+					curve.push_back({ begin + clip.time(i), clip.value(i) });
+			}
+			else if (lim0 >= 0.0f) {
+				//This is the start point of the curve (may also be the end!)
+				//Skip if next is less than lim0
+
+				int i = 0;
+				//skip clipped beginning
+				for (; i < (int)clip.size() - 1 && clip.time(i + 1) <= lim0; i++) {}
+
+				//May also be clipped in upper end; include only as long as previous is less than lim1
+				for (; i < (int)clip.size(); i++) {
+					curve.push_back({ begin + clip.time(i), clip.value(i) });
+					if (i != 0 && clip.time(i - 1) >= lim1)
+						break;
+				}
+			}
+			else {
+				//This is the end of the curve (lim1 <= clip.length())
+				//Include as long as previous is less than lim1
+				//We skip the first point if it is a duplicate
+				assert(!curve.empty() && clip.size() > 0);
+				int i = curve.back()[0] == begin + clip.time(0) && curve.back()[1] == clip.value(0) ? 1 : 0;
+				for (; i < (int)clip.size(); i++) {
+					curve.push_back({ begin + clip.time(i), clip.value(i) });
+					if (i != 0 && clip.time(i - 1) >= lim1)
+						break;
+				}
+			}
+		}
+
+		//Only valid/relevant on Clamp
+		if (loop == CTLR_LOOP_CLAMP && lims[1] > time + clip.length()) {
+			curve.push_back({ lims[1], clip.back()[1] });
+		}
+
+		assert(curve.size() >= 2);
+
+		{
+			auto popper = fd.pushTransform(m_translation, m_scale);
+			for (auto&& p : curve)
+				p = fd.toGlobal(p);
+		}
+		fd.curve(curve, lineCol, lineWidth, true);
 	}
+
+	/*
+	fd.line(
+		fd.toGlobal(m_translation + m_scale * gui::Floats<2>{ begin, val1 }),
+		fd.toGlobal(m_translation + m_scale * gui::Floats<2>{ end, val2 }),
+		lineCol,
+		lineWidth,
+		true);*/
 
 	Composite::frame(fd);
 }
