@@ -93,8 +93,8 @@ void gui::Window::frame(FrameDrawer& fd)
 	bool keepOpen = true;
 	bool* p_open = m_closable ? &keepOpen : nullptr;
 
+	util::CallWrapper ender(&ImGui::End);
 	if (Begin(m_title[0].c_str(), p_open, m_style)) {
-		util::CallWrapper end(&End);
 
 		PushItemWidth(-std::numeric_limits<float>::min());
 		util::CallWrapper popItemWidth(&PopItemWidth);

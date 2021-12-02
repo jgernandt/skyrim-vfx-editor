@@ -27,15 +27,13 @@ void gui::Subwindow::frame(FrameDrawer& fd)
 {
 	ImGui::SetCursorPos(gui_type_conversion<ImVec2>::from((m_translation * fd.getCurrentScale()).floor().eval()));
 
-	util::CallWrapper end;
+	util::CallWrapper ender(&ImGui::EndChild);
 	if (ImGui::BeginChild(
 		m_label[0].c_str(), 
 		gui_type_conversion<ImVec2>::from((m_size * fd.getCurrentScale()).floor().eval()),
 		false,
 		m_style))
 	{
-		end = util::CallWrapper(ImGui::EndChild);
-
 		ImGui::PushItemWidth(-std::numeric_limits<float>::min());
 		util::CallWrapper popItemWidth(&ImGui::PopItemWidth);
 
