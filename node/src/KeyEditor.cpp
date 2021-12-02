@@ -261,6 +261,7 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 node::FloatKeyEditor::~FloatKeyEditor()
 {
 	assert(m_ctlr);
+	m_ctlr->frequency.removeListener(m_freqLsnr);
 	m_ctlr->phase.removeListener(m_phaseLsnr);
 
 	if (m_data)
