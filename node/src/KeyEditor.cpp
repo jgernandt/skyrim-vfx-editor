@@ -1055,12 +1055,10 @@ gui::Floats<2> node::FloatKeyEditor::DataSeries::getBounds() const
 
 std::unique_ptr<gui::ICommand> node::FloatKeyEditor::DataSeries::getInsertOp(const gui::Floats<2>& pos) const
 {
-	//locate the first key with larger time and insert before it
-	int index = 0;
-	for (auto&& key : m_data->keys) {
-		if (key.time.get() < pos[0])
-			index++;
-	}
+	//Locate the first key with larger time and insert before it.
+	//Forbid inserting at either end.
+	int index = 1;
+	for (; index < (int)m_data->keys.size() - 1 && m_data->keys.at(index).time.get() < pos[0]; index++) {}
 
 	return std::make_unique<InsertOp>(make_ni_ptr(m_data, &NiFloatData::keys), index, pos);
 }
