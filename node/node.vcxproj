@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\AnimationCurve.h" />
     <ClInclude Include="src\AVObject.h" />
     <ClInclude Include="src\AVObject_internal.h" />
     <ClInclude Include="src\Constructor.h" />
@@ -55,6 +56,7 @@
     <ClInclude Include="src\widget_types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\AnimationCurve.cpp" />
     <ClCompile Include="src\AVObject.cpp" />
     <ClCompile Include="src\Constructor.cpp" />
     <ClCompile Include="src\Controllers.cpp" />

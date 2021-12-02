@@ -126,6 +126,9 @@
     <ClInclude Include="src\ExtraData_internal.h">
       <Filter>Header Files\Nodes\internal</Filter>
     </ClInclude>
+    <ClInclude Include="src\AnimationCurve.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">
@@ -184,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="src\Shaders.cpp">
       <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AnimationCurve.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
