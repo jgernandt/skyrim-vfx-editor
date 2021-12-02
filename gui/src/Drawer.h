@@ -82,6 +82,7 @@ namespace gui
 		virtual void setTargetLayer(Layer) = 0;
 
 		virtual void circle(const Floats<2>& centre, float radius, const ColRGBA& col, bool global = false) = 0;
+		virtual void curve(const std::vector<gui::Floats<2>>& data, const ColRGBA& col, float width = 1.0f, bool global = false) = 0;
 		virtual void line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width = 1.0f, bool global = false) = 0;
 		virtual void rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, bool global = false) = 0;
 		virtual void rectangleGradient(const Floats<2>& p1, const Floats<2>& p2,

@@ -80,6 +80,26 @@ void gui::backend::ImGuiWinD3D10::circle(const Floats<2>& centre, float radius, 
 				gui_type_conversion<ImU32>::from(col));
 }
 
+//Or our pointer reinterpretation wouldn't work!
+static_assert(sizeof(ImVec2) == sizeof(gui::Floats<2>) && sizeof(ImVec2) == 8);
+
+void gui::backend::ImGuiWinD3D10::curve(const std::vector<gui::Floats<2>>& data, const ColRGBA& col, float width, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList) {
+		if (global) {
+			drawList->AddPolyline(
+				reinterpret_cast<const ImVec2*>(data.data()),
+				data.size(),
+				gui_type_conversion<ImU32>::from(col),
+				0,
+				width);
+		}
+		else
+			assert(false);//I don't know if we want this option
+	}
+}
+
 void gui::backend::ImGuiWinD3D10::line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width, bool global)
 {
 	ImDrawList* drawList = getDrawList(m_layer);

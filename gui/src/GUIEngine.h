@@ -44,6 +44,7 @@ namespace gui
 			virtual void setTargetLayer(Layer l) override { m_layer = l; }
 
 			virtual void circle(const Floats<2>& centre, float radius, const ColRGBA& col, bool global) override;
+			virtual void curve(const std::vector<gui::Floats<2>>& data, const ColRGBA& col, float width = 1.0f, bool global = false) override;
 			virtual void line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width, bool global) override;
 			virtual void rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, bool global) override;
 			virtual void rectangleGradient(const Floats<2>& p1, const Floats<2>& p2,
