@@ -557,9 +557,9 @@ void node::FloatKeyEditor::drag(const gui::Floats<2>& pos)
 				gui::Floats<2> global = parent->toGlobalSpace(item.second);
 
 				//Forbid editing the time of start/stop keys
-				if (item.first->isStartKey() || item.first->isStopKey())
-					item.first->setTranslation(parent->fromGlobalSpace(global + gui::Floats<2>{ 0.0f, delta[1] }));
-				else
+				//if (item.first->isStartKey() || item.first->isStopKey())
+				//	item.first->setTranslation(parent->fromGlobalSpace(global + gui::Floats<2>{ 0.0f, delta[1] }));
+				//else
 					item.first->setTranslation(parent->fromGlobalSpace(global + delta));
 			}
 		}
@@ -679,14 +679,14 @@ void node::FloatKeyEditor::PhaseListener::onSet(const float& phase)
 }
 
 
-node::FloatKeyEditor::KeyHandle::KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index, const ni_ptr<NiTimeController>& ctlr) :
+node::FloatKeyEditor::KeyHandle::KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index) :
 	m_timeLsnr{ &m_translation[0] },
 	m_valueLsnr{ &m_translation[1] },
 	m_keys{ std::move(keys) }, 
-	m_ctlr{ ctlr },
+	//m_ctlr{ ctlr },
 	m_index{ index }
 {
-	assert(m_keys && m_ctlr);
+	assert(m_keys);
 	m_keys->at(m_index).time.addListener(m_timeLsnr);
 	m_keys->at(m_index).value.addListener(m_valueLsnr);
 	m_translation = { m_keys->at(m_index).time.get(), m_keys->at(m_index).value.get() };
@@ -696,15 +696,15 @@ node::FloatKeyEditor::KeyHandle::KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, in
 	//*do not send an input widget for time with the active widget
 	//*do not set translation in getMoveOp
 
-	if (m_index == 0)
-		m_ctlr->startTime.addListener(*this);
-	if (m_index == m_keys->size() - 1)
-		m_ctlr->stopTime.addListener(*this);
+	//if (m_index == 0)
+	//	m_ctlr->startTime.addListener(*this);
+	//if (m_index == m_keys->size() - 1)
+	//	m_ctlr->stopTime.addListener(*this);
 }
 
 node::FloatKeyEditor::KeyHandle::~KeyHandle()
 {
-	assert(m_keys && m_ctlr);
+	assert(m_keys);
 
 	//We should have been invalidated if our key has been erased.
 	if (!m_invalid) {
@@ -712,10 +712,10 @@ node::FloatKeyEditor::KeyHandle::~KeyHandle()
 		m_keys->at(m_index).value.removeListener(m_valueLsnr);
 	}
 
-	if (m_index == 0)
-		m_ctlr->startTime.removeListener(*this);
-	if (m_index == m_keys->size() - 1)
-		m_ctlr->stopTime.removeListener(*this);
+	//if (m_index == 0)
+	//	m_ctlr->startTime.removeListener(*this);
+	//if (m_index == m_keys->size() - 1)
+	//	m_ctlr->stopTime.removeListener(*this);
 }
 
 void node::FloatKeyEditor::KeyHandle::frame(gui::FrameDrawer& fd)
@@ -774,7 +774,7 @@ std::unique_ptr<gui::IComponent> node::FloatKeyEditor::KeyHandle::getActiveWidge
 
 	root->newChild<gui::Text>("Linear key");
 
-	if (isStartKey()) {
+	/*if (isStartKey()) {
 		auto item = root->newChild<gui::Item>(std::make_unique<gui::MarginAlign>());
 		item->newChild<gui::Text>("Time");
 		item->newChild<gui::Number<float, ni_ptr<Property<float>>>>(make_ni_ptr(m_ctlr, &NiTimeController::startTime), "%.2f");
@@ -784,11 +784,11 @@ std::unique_ptr<gui::IComponent> node::FloatKeyEditor::KeyHandle::getActiveWidge
 		item->newChild<gui::Text>("Time");
 		item->newChild<gui::Number<float, ni_ptr<Property<float>>>>(make_ni_ptr(m_ctlr, &NiTimeController::stopTime), "%.2f");
 	}
-	else {
+	else {*/
 		auto time = root->newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::time }, "Time");
 		time->setSensitivity(0.01f);
 		time->setNumberFormat("%.2f");
-	}
+	//}
 
 	auto val = root->newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::value }, "Value");
 	val->setSensitivity(0.01f);
@@ -814,8 +814,8 @@ std::unique_ptr<gui::ICommand> node::FloatKeyEditor::KeyHandle::getMoveOp(
 		from[i] = item.second;
 
 		//Forbid editing the time of start/stop keys
-		if (item.first->isStartKey() || item.first->isStopKey())
-			to[i][0] = from[i][0];
+		//if (item.first->isStartKey() || item.first->isStopKey())
+		//	to[i][0] = from[i][0];
 
 		i++;
 	}
@@ -842,7 +842,7 @@ node::FloatKeyEditor::DataSeries::DataSeries(const ni_ptr<NiTimeController>& ctl
 
 	int i = 0;
 	for (auto&& key : m_data->keys)
-		newChild<KeyHandle>(make_ni_ptr(m_data, &NiFloatData::keys), i++, ctlr);
+		newChild<KeyHandle>(make_ni_ptr(m_data, &NiFloatData::keys), i++);
 }
 
 node::FloatKeyEditor::DataSeries::~DataSeries()
@@ -1054,7 +1054,7 @@ void node::FloatKeyEditor::DataSeries::onInsert(int pos)
 		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i + 1);
 
 	//Insert handle at pos
-	insertChild(pos, std::make_unique<KeyHandle>(make_ni_ptr(m_data, &NiFloatData::keys), pos, m_ctlr));
+	insertChild(pos, std::make_unique<KeyHandle>(make_ni_ptr(m_data, &NiFloatData::keys), pos));
 
 	//The handle right before pos must refresh its interpolation
 	if (pos != 0)
@@ -1096,8 +1096,8 @@ std::unique_ptr<gui::ICommand> node::FloatKeyEditor::DataSeries::getInsertOp(con
 {
 	//Locate the first key with larger time and insert before it.
 	//Forbid inserting at either end.
-	int index = 1;
-	for (; index < (int)m_data->keys.size() - 1 && m_data->keys.at(index).time.get() < pos[0]; index++) {}
+	int index = 0;
+	for (; index < (int)m_data->keys.size() && m_data->keys.at(index).time.get() < pos[0]; index++) {}
 
 	return std::make_unique<InsertOp>(make_ni_ptr(m_data, &NiFloatData::keys), index, pos);
 }

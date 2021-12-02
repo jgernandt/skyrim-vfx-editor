@@ -68,7 +68,7 @@ namespace node
 			};
 
 		public:
-			KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index, const ni_ptr<NiTimeController>& ctlr);
+			KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index);
 			virtual ~KeyHandle();
 
 			virtual void frame(gui::FrameDrawer& fd) override;
@@ -86,8 +86,8 @@ namespace node
 
 			int getIndex() const { return m_index; }
 			void setIndex(int i) { m_index = i; }
-			bool isStartKey() const { return m_index == 0; }
-			bool isStopKey() const { return m_index == m_keys->size() - 1; }
+			//bool isStartKey() const { return m_index == 0; }
+			//bool isStopKey() const { return m_index == m_keys->size() - 1; }
 
 			Interpolant getInterpolant();
 
@@ -99,7 +99,7 @@ namespace node
 			Listener m_timeLsnr;
 			Listener m_valueLsnr;
 			const ni_ptr<Vector<Key<float>>> m_keys;
-			const ni_ptr<NiTimeController> m_ctlr;
+			//const ni_ptr<NiTimeController> m_ctlr;
 			int m_index;
 			bool m_selected{ false };
 			bool m_active{ false };
