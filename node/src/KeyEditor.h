@@ -45,7 +45,7 @@ namespace node
 			float m_k;
 		};
 
-		class KeyHandle : public gui::Component
+		class KeyHandle : public gui::Component, public PropertyListener<float>
 		{
 			class Listener final : public PropertyListener<float>
 			{
@@ -68,11 +68,13 @@ namespace node
 			};
 
 		public:
-			KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index);
+			KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index, const ni_ptr<NiTimeController>& ctlr);
 			virtual ~KeyHandle();
 
 			virtual void frame(gui::FrameDrawer& fd) override;
 			virtual void setTranslation(const gui::Floats<2>& t) override;
+
+			virtual void onSet(const float& val) override;
 
 			void setActive(bool on) { m_active = on; }
 			void setSelected(bool on) { m_selected = on; }
@@ -84,21 +86,25 @@ namespace node
 
 			int getIndex() const { return m_index; }
 			void setIndex(int i) { m_index = i; }
+			bool isStartKey() const { return m_index == 0; }
+			bool isStopKey() const { return m_index == m_keys->size() - 1; }
 
 			Interpolant getInterpolant();
 
-			void invalidate();
+			void invalidate() { m_invalid = true; }
 
 			void recalcIpln() { m_dirty = true; }
 
 		private:
 			Listener m_timeLsnr;
 			Listener m_valueLsnr;
-			ni_ptr<Vector<Key<float>>> m_keys;
+			const ni_ptr<Vector<Key<float>>> m_keys;
+			const ni_ptr<NiTimeController> m_ctlr;
 			int m_index;
 			bool m_selected{ false };
 			bool m_active{ false };
 			bool m_dirty{ true };
+			bool m_invalid{ false };
 		};
 
 		class DataSeries final :
