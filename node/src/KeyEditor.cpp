@@ -162,6 +162,7 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	m_data->addListener(*this);
 
 	//determine limits
+	//does not account for frequency/phase - fix!
 	gui::Floats<2> xlims = { ctlr->startTime.get(), ctlr->stopTime.get() };
 	if (float diff = xlims[1] - xlims[0]; diff > 0.0f) {
 		xlims[0] -= 0.25f * diff;

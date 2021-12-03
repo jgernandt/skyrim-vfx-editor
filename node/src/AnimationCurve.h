@@ -26,7 +26,7 @@ namespace node
 	public:
 		Interpolant(float m = 0.0f, float k = 1.0f) : m_m{ m }, m_k{ k } {}
 		//should this be in normalised time?
-		float eval(float t) { return t <= 0.0f ? m_m : t >= 1.0f ? m_k : m_m + t * m_k; }
+		float eval(float t) const { return t <= 0.0f ? m_m : t >= 1.0f ? m_m + m_k : m_m + t * m_k; }
 
 		float m_m;
 		float m_k;
@@ -37,10 +37,11 @@ namespace node
 		class Listener final : public PropertyListener<float>
 		{
 		public:
-			Listener(float* target) : m_target{ target } {}
-			virtual void onSet(const float& val) { *m_target = val; }//should also dirty us!
+			Listener(KeyHandle* owner, float* target) : m_owner{ owner }, m_target{ target } {}
+			virtual void onSet(const float& val) { *m_target = val; m_owner->setDirty(); }
 
 		private:
+			KeyHandle* m_owner;
 			float* m_target;
 		};
 
@@ -76,22 +77,63 @@ namespace node
 		//bool isStartKey() const { return m_index == 0; }
 		//bool isStopKey() const { return m_index == m_keys->size() - 1; }
 
-		Interpolant getInterpolant();
+		//evaluate the interpolation at time t (normalised to the time interval)
+		float eval(float t);
 
 		void invalidate() { m_invalid = true; }
 
-		void recalcIpln() { m_dirty = true; }
+		void setDirty() { m_dirty = true; }
 
 	private:
 		Listener m_timeLsnr;
 		Listener m_valueLsnr;
 		const ni_ptr<Vector<Key<float>>> m_keys;
 		//const ni_ptr<NiTimeController> m_ctlr;
+		Interpolant m_interpolant;
 		int m_index;
 		bool m_selected{ false };
 		bool m_active{ false };
 		bool m_dirty{ true };
 		bool m_invalid{ false };
+	};
+
+	struct AnimationClip
+	{
+		int size()
+		{
+			return points.size();
+			//return mirrored ? 2 * points.size() - 1 : points.size();
+		}
+
+		float time(int i) const
+		{
+			assert(i >= 0);
+			//if (mirrored && (size_t)i >= points.size()) {
+			//	assert((size_t)i < 2 * points.size() - 1);
+			//	return length() - points[2 * points.size() - i - 2][0];
+			//}
+			//else
+				return points[i][0];
+		}
+
+		float value(int i) const
+		{
+			assert(i >= 0);
+			//if (mirrored && (size_t)i >= points.size()) {
+			//	assert((size_t)i < 2 * points.size() - 1);
+			//	return points[2 * points.size() - i - 2][1];
+			//}
+			//else
+				return points[i][1];
+		}
+
+		gui::Floats<2>& operator[](int i) { return points[i]; }
+		const gui::Floats<2>& operator[](int i) const { return points[i]; }
+		gui::Floats<2>& front() { return points.front(); }
+		gui::Floats<2>& back() { return points.back(); }
+
+		std::vector<gui::Floats<2>> points;
+		float length{ 0.0f };
 	};
 
 	class AnimationCurve final :
@@ -116,8 +158,12 @@ namespace node
 		void setAxisLimits(const gui::Floats<2>& lims) { m_axisLims = lims; }
 
 	private:
+		void buildClip(const gui::Floats<2>& lims, float resolution);
+
+	private:
 		const ni_ptr<NiTimeController> m_ctlr;
 		const ni_ptr<NiFloatData> m_data;
+		AnimationClip m_clip;
 		gui::Floats<2> m_axisLims;
 	};
 }

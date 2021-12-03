@@ -89,8 +89,8 @@ public:
 };
 
 node::KeyHandle::KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index) :
-	m_timeLsnr{ &m_translation[0] },
-	m_valueLsnr{ &m_translation[1] },
+	m_timeLsnr{ this, &m_translation[0] },
+	m_valueLsnr{ this,  &m_translation[1] },
 	m_keys{ std::move(keys) },
 	//m_ctlr{ ctlr },
 	m_index{ index }
@@ -130,12 +130,6 @@ node::KeyHandle::~KeyHandle()
 void node::KeyHandle::frame(gui::FrameDrawer& fd)
 {
 	assert(m_keys);
-
-	if (m_dirty) {
-		//Recalculate our interpolation (if we were quadratic)
-		m_dirty = false;
-	}
-
 	//We want to scale with PlotArea, not Axes. Not so easy right now. 
 	//We'll just not scale at all.
 	fd.circle(
@@ -232,14 +226,19 @@ std::unique_ptr<gui::ICommand> node::KeyHandle::getMoveOp(
 	return std::make_unique<MoveOp>(m_keys, std::move(indices), std::move(to), std::move(from));
 }
 
-node::Interpolant node::KeyHandle::getInterpolant()
+float node::KeyHandle::eval(float t)
 {
 	assert(m_keys);
-
-	float v0 = m_keys->at(m_index).value.get();
-
-	return Interpolant(v0,
-		m_index < (int)m_keys->size() - 1 ? m_keys->at(m_index + 1).value.get() - v0 : 0.0f);
+	if (t <= 0.0f) {
+		return m_keys->at(m_index).value.get();
+	}
+	else if (t >= 1.0f) {
+		return m_index < (int)m_keys->size() - 1 ? m_keys->at(m_index + 1).value.get() : m_keys->at(m_index).value.get();
+	}
+	else {
+		float v0 = m_keys->at(m_index).value.get();
+		return m_index < (int)m_keys->size() - 1 ? v0 + t * (m_keys->at(m_index + 1).value.get() - v0) : v0;
+	}
 }
 
 
@@ -263,172 +262,104 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 {
 	assert(m_data && m_ctlr);
 
-	struct Clip
-	{
-		int size()
-		{
-			return mirrored ? 2 * points.size() - 1 : points.size();
-		}
+	//We can optimise later, just get this working first.
+	//Later we might want to cache these values.
+	//We should also do clip checking in y.
 
-		float time(int i) const
-		{
-			assert(i >= 0);
-			if (mirrored && (size_t)i >= points.size()) {
-				assert((size_t)i < 2 * points.size() - 1);
-				return length() - points[2 * points.size() - i - 2][0];
-			}
-			else
-				return points[i][0];
-		}
+	//Should be recalculated on setting axis lims and transforms
+	gui::Floats<2> lims = { (m_axisLims[0] - m_translation[0]) / m_scale[0], (m_axisLims[1] - m_translation[0]) / m_scale[0] };
 
-		float value(int i) const
-		{
-			assert(i >= 0);
-			if (mirrored && (size_t)i >= points.size()) {
-				assert((size_t)i < 2 * points.size() - 1);
-				return points[2 * points.size() - i - 2][1];
-			}
-			else
-				return points[i][1];
-		}
+	buildClip(lims, 0.0f);
 
-		gui::Floats<2>& front() { return points.front(); }
-		gui::Floats<2>& back()
-		{
-			return points.back();
-		}
+	//Map out the clips to the time line
+	int offset;//number of clips to offset
+	int N;//repetitions
 
-		float length() const { return mirrored ? 2.0f * m_length : m_length; }
-		void setLength(float f) { m_length = f; }
-
-		std::vector<gui::Floats<2>> points;
-		bool mirrored{ false };
-
-	private:
-		float m_length{ 0.0f };
-	};
-
+	bool clamp = m_ctlr->flags.hasRaised(CTLR_LOOP_CLAMP);
 	float startTime = m_ctlr->startTime.get();
 	float stopTime = m_ctlr->stopTime.get();
 
-	Clip clip;
-	clip.setLength(stopTime - startTime);
+	if (clamp) {
+		offset = 0;
+		N = 1;
+	}
+	else {
+		offset = static_cast<int>(std::floor((lims[0] - startTime) / m_clip.length));
+		N = static_cast<int>(std::ceil((lims[1] - startTime) / m_clip.length)) - offset;
+	}
 
-	//We want to draw from low axis limit to upper.
-	//The phase/frequency should be our transform from our axes, so we work in clip space.
-	gui::Floats<2> lims = { (m_axisLims[0] - m_translation[0]) / m_scale[0], (m_axisLims[1] - m_translation[0]) / m_scale[0] };
-
-	if (m_data->keys.size() == 0 || clip.length() <= 0.0f || lims[0] == lims[1])
+	if (m_data->keys.size() == 0 || m_clip.length <= 0.0f || lims[0] == lims[1])
 		return;//nothing to draw
 	else if (m_data->keys.size() > 1) {
 
-		//We can optimise later, just get this working first.
-		//Later we might want to cache these values.
-		//We should also do clip checking in y.
-
-		//Work with the assumption that there is a key at start and stop. It's how it should be.
-		//Start and stop time thus need to adjust to the time of the keys.
-		//We'll make it work.
-
-		clip.points.resize(m_data->keys.size());
-		clip.points[0] = { 0.0f, m_data->keys.front().value.get() };
-
-		for (int i = 1; i < (int)m_data->keys.size(); i++) {
-
-			clip.points[i] = { m_data->keys.at(i).time.get() - startTime, m_data->keys.at(i).value.get() };
-
-			//if we were quadratic we might instead:
-			//*Recalculate the limits to global and determine the resolution of the interval.
-			// From it, decide how many line segments we want to split it into.
-			//*Call the Handle to evaluate the interpolant at the given points
-
-			//If we were constant we should not produce a continuous curve at all. 
-			//We should produce a list of lines.
-		}
-
 		//To hold the final curve
 		std::vector<gui::Floats<2>> curve;
-
-		//Map out the clips to the time line
-		float time;//time of first clip
-		int N;//repetitions
-
-		ControllerFlags loop = m_ctlr->flags.raised() & CTLR_LOOP_MASK;
-		clip.mirrored = loop == CTLR_LOOP_REVERSE;
-
-		if (loop == CTLR_LOOP_CLAMP) {
-			time = startTime;
-			N = 1;
-			curve.reserve(clip.size() + 2);
-		}
-		else {
-			float d = lims[0] + std::fmod(startTime - lims[0], clip.length());
-
-			time = d >= lims[0] ? d - clip.length() : d;
-			N = static_cast<int>(std::ceil((lims[1] - time) / clip.length()));
-
-			curve.reserve(clip.size() * N);
-		}
-
-		gui::ColRGBA lineCol = { 1.0f, 0.0f, 0.0f, 1.0f };
-		float lineWidth = 3.0f;
+		curve.reserve(N * m_clip.size() + 2);
 
 		//Only valid/relevant on Clamp
-		if (loop == CTLR_LOOP_CLAMP && lims[0] < time) {
-			curve.push_back({ lims[0], clip.front()[1] });
-			curve.push_back(clip.front());
+		if (clamp && lims[0] < startTime) {
+			curve.push_back({ lims[0], m_clip.front()[1] });
+			curve.push_back(m_clip.front());
 		}
 
 		for (int i = 0; i < N; i++) {
-			float begin = time + i * clip.length();
-			float end = time + (i + 1) * clip.length();
+			float t_offset = (i + offset) * m_clip.length;
 
-			float lim0 = lims[0] - begin;//clip time of lim0
-			float lim1 = lims[1] - begin;//clip time of lim1
+			//push t_offset as a transform and input points in global space directly?
 
-			if (lim0 < 0.0f && lim1 > clip.length()) {
+			//transform limits to this clip space
+			float lim0 = lims[0] - t_offset;
+			float lim1 = lims[1] - t_offset;
+
+			if (lim0 < startTime && lim1 > stopTime) {
 				//Whole curve is visible (in x at least, let's worry about y later).
-				//We skip the first point if it is a duplicate
-				assert(!curve.empty() && clip.size() > 0);
-				int i = curve.back()[0] == begin + clip.time(0) && curve.back()[1] == clip.value(0) ? 1 : 0;
-				for (; i < (int)clip.size(); i++)
-					curve.push_back({ begin + clip.time(i), clip.value(i) });
+				for (int i = 0; i < (int)m_clip.size(); i++) {
+					float t = m_clip.time(i) + t_offset;
+					float v = m_clip.value(i);
+					if (curve.empty() || curve.back()[0] != t || curve.back()[1] != v)
+						curve.push_back({ t, v });
+				}
 			}
-			else if (lim0 >= 0.0f) {
+			else if (lim0 >= startTime) {
 				//This is the start point of the curve (may also be the end!)
 				//Skip if next is less than lim0
 
 				int i = 0;
 				//skip clipped beginning
-				for (; i < (int)clip.size() - 1 && clip.time(i + 1) <= lim0; i++) {}
+				for (; i < (int)m_clip.size() - 1 && m_clip.time(i + 1) <= lim0; i++) {}
 
 				//May also be clipped in upper end; include only as long as previous is less than lim1
-				for (; i < (int)clip.size(); i++) {
-					curve.push_back({ begin + clip.time(i), clip.value(i) });
-					if (i != 0 && clip.time(i - 1) >= lim1)
+				for (; i < (int)m_clip.size(); i++) {
+					if (i != 0 && m_clip.time(i - 1) >= lim1)
 						break;
+
+					float t = m_clip.time(i) + t_offset;
+					float v = m_clip.value(i);
+					if (curve.empty() || curve.back()[0] != t || curve.back()[1] != v)
+						curve.push_back({ t, v });
 				}
 			}
 			else {
-				//This is the end of the curve (lim1 <= clip.length())
+				//This is the end of the curve (lim1 <= clip.length)
 				//Include as long as previous is less than lim1
 				//We skip the first point if it is a duplicate
-				assert(!curve.empty() && clip.size() > 0);
-				int i = curve.back()[0] == begin + clip.time(0) && curve.back()[1] == clip.value(0) ? 1 : 0;
-				for (; i < (int)clip.size(); i++) {
-					curve.push_back({ begin + clip.time(i), clip.value(i) });
-					if (i != 0 && clip.time(i - 1) >= lim1)
+				for (int i = 0; i < (int)m_clip.size(); i++) {
+
+					if (i != 0 && m_clip.time(i - 1) >= lim1)
 						break;
+
+					float t = m_clip.time(i) + t_offset;
+					float v = m_clip.value(i);
+					if (curve.empty() || curve.back()[0] != t || curve.back()[1] != v)
+						curve.push_back({ t, v });
 				}
 			}
 		}
 
 		//Only valid/relevant on Clamp
-		if (loop == CTLR_LOOP_CLAMP && lims[1] > time + clip.length()) {
-			curve.push_back({ lims[1], clip.back()[1] });
+		if (clamp && lims[1] > stopTime) {
+			curve.push_back({ lims[1], m_clip.back()[1] });
 		}
-
-		assert(curve.size() >= 2);
 
 		gui::Floats<2> tl1;
 		gui::Floats<2> br1;
@@ -441,11 +372,14 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 				p = fd.toGlobal(p);
 
 			tl1 = { fd.toGlobal({ lims[0], 0.0f })[0], std::numeric_limits<float>::max() };
-			br1 = { fd.toGlobal({ startTime, 0.0f })[0], -std::numeric_limits<float>::max() };
-			tl2 = { fd.toGlobal({ stopTime, 0.0f })[0], std::numeric_limits<float>::max() };
+			br1 = { fd.toGlobal({ m_ctlr->startTime.get(), 0.0f })[0], -std::numeric_limits<float>::max() };
+			tl2 = { fd.toGlobal({ m_ctlr->stopTime.get(), 0.0f })[0], std::numeric_limits<float>::max() };
 			br2 = { fd.toGlobal({ lims[1], 0.0f })[0], -std::numeric_limits<float>::max() };
 		}
-		fd.curve(curve, lineCol, lineWidth, true);
+		gui::ColRGBA lineCol = { 1.0f, 0.0f, 0.0f, 1.0f };
+		float lineWidth = 3.0f;
+		if (curve.size() >= 2)
+			fd.curve(curve, lineCol, lineWidth, true);
 
 		fd.rectangle(tl1, br1, { 0.0f, 0.0f, 0.0f, 0.075f }, true);
 		fd.rectangle(tl2, br2, { 0.0f, 0.0f, 0.0f, 0.075f }, true);
@@ -467,7 +401,7 @@ void node::AnimationCurve::onInsert(int pos)
 
 	//The handle right before pos must refresh its interpolation
 	if (pos != 0)
-		static_cast<KeyHandle*>(getChildren()[pos - 1].get())->recalcIpln();
+		static_cast<KeyHandle*>(getChildren()[pos - 1].get())->setDirty();
 }
 
 void node::AnimationCurve::onErase(int pos)
@@ -486,7 +420,7 @@ void node::AnimationCurve::onErase(int pos)
 
 	//The handle at i = pos - 1 must refresh
 	if (pos != 0)
-		static_cast<KeyHandle*>(getChildren()[pos - 1].get())->recalcIpln();
+		static_cast<KeyHandle*>(getChildren()[pos - 1].get())->setDirty();
 }
 
 gui::Floats<2> node::AnimationCurve::getBounds() const
@@ -511,3 +445,99 @@ std::unique_ptr<gui::ICommand> node::AnimationCurve::getInsertOp(const gui::Floa
 	return std::make_unique<InsertOp>(make_ni_ptr(m_data, &NiFloatData::keys), index, pos);
 }
 
+void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolution)
+{
+	bool reverse = m_ctlr->flags.hasRaised(CTLR_LOOP_REVERSE);
+	float tStart = m_ctlr->startTime.get();
+	float tStop = m_ctlr->stopTime.get();
+
+	m_clip.length = reverse ? 2.0f * (tStop - tStart) : tStop - tStart;
+
+	m_clip.points.clear();
+
+	if (m_data->keys.size() == 0) {
+		m_clip.points.push_back({ tStart, 0.0f });
+		m_clip.points.push_back({ tStop, 0.0f });
+	}
+	else {
+		//We assume strictly increasing time values. Might enforce that later.
+		//Come to think of it, we should probably just assume non-decreasing.
+		//There may be valid uses for equal-time keys.
+
+		int stopReverse = -1;
+
+		//if the first key is greater than tStart, special treatment is required
+		if (float t = m_data->keys.front().time.get(); t > tStart) {
+			m_clip.points.push_back({ tStart, 0.0f });
+			m_clip.points.push_back({ std::min(t, tStop), 0.0f });
+			stopReverse = 1;
+		}
+
+		//Now proceed until the next key is not less than tStart, or we reach the last key
+		int i = 0;
+		for (; i < (int)m_data->keys.size() - 1 && m_data->keys.at(i + 1).time.get() < tStart; i++) {}
+		int first = i;//save for mirroring
+
+		//evaluate this and every following key, clamped to tStart (only really needed for the first)
+		//break if we pass tStop
+		for (; i < (int)m_data->keys.size(); i++) {
+			if (float t = m_data->keys.at(i).time.get(); t < tStop) {
+				//if this is not the last key and t is less than tStart, interpolate
+				float tau;
+				if (i < (int)m_data->keys.size() - 1 && t < tStart) {
+					tau = (tStart - t) / (m_data->keys.at(i + 1).time.get() - t);
+				}
+				else
+					tau = 0.0f;
+
+				t = std::max(t, tStart);
+
+				//Feels stupid with this indirection here, but it will help with quadratics
+				float v = static_cast<KeyHandle*>(getChildren()[i].get())->eval(tau);
+
+				if (m_clip.points.empty() || m_clip.points.back()[0] != t || m_clip.points.back()[1] != v)
+					m_clip.points.push_back({ t, v });
+			}
+			else {
+				//evaluate clamped to tStop
+				//if this is the first key, we have what we need already
+				if (i > 0) {
+					float tau;
+					if (t > tStop) {
+						tau = (tStop - m_data->keys.at(i - 1).time.get()) / (t - m_data->keys.at(i - 1).time.get());
+						t = tStop;
+					}
+					else
+						tau = 1.0f;
+
+					float v = static_cast<KeyHandle*>(getChildren()[i - 1].get())->eval(tau);
+
+					if (m_clip.points.empty() || m_clip.points.back()[0] != t || m_clip.points.back()[1] != v)
+						m_clip.points.push_back({ t, v });
+				}
+				break;
+			}
+		}
+
+		//if the last point is less than tStop, clamp it to the end
+		if (m_clip.points.back()[0] < tStop)
+			m_clip.points.push_back({ tStop, m_clip.points.back()[1] });
+
+		if (reverse) {
+			for (i = m_clip.points.size() - 2; i > stopReverse; i--)
+				m_clip.points.push_back({ 2.0f * tStop - m_clip.points[i][0], m_clip.points[i][1] });
+
+			if (i != -1)
+				m_clip.points.push_back({ m_clip.length + tStart, m_clip.points.back()[1] });
+		}
+
+		//if we were quadratic we might instead:
+		//*Recalculate the limits to global and determine the resolution of the interval.
+		// From it, decide how many line segments we want to split it into.
+		//*Call the Handle to evaluate the interpolant at the given points
+
+		//If we were constant we should not produce a continuous curve at all. 
+		//We should produce a list of lines.
+	}
+
+}
