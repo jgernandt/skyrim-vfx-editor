@@ -37,6 +37,4 @@
 #define EIGEN_MPL2_ONLY
 #include "Eigen\Dense"
 
-constexpr bool	FOREGO_ASYNC = true;
-
 #endif //PCH_H

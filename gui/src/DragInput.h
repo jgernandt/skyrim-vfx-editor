@@ -24,6 +24,7 @@
 
 #include "Widget.h"
 #include "UniqueLabel.h"
+#include "InputEventSink.h"
 
 //An unreasonable amount of work to keep backend headers out of my dependent projects?
 namespace gui
@@ -209,8 +210,9 @@ namespace gui
         typename T, 
         size_t N, 
         typename PropertyType, 
-        template<typename> typename ConverterType = GuiConverter, 
-        typename WidgetLayout = DefaultLayout>
+        template<typename> typename ConverterType = GuiConverter,
+        typename WidgetLayout = DefaultLayout,
+        template<typename> typename EventSink = DefaultEventSink>
     class DragInput : public DragInputBase<typename util::array_traits<T>::element_type, N>
     {
     private:
@@ -248,7 +250,7 @@ namespace gui
             //Read from the property, convert if needed
             T data = util::type_conversion<T, ConverterType<T>>::from(util::property_traits<PropertyType>::get(m_property));
             
-            WidgetLayout layout;
+            WidgetLayout layout{};
             layout.begin(N);
 
             for (size_t i = 0; i < N; i++) {
@@ -268,19 +270,18 @@ namespace gui
                     this->m_params[p_i].format,
                     this->m_params[p_i].flags);
 
-                //Should these be virtual functions, and we decide the invocation procedure on a higher level?
                 if (result & WIDGET_ACTIVATED) {
                     //edit started, store original value
-                    m_tmp = data;
+                    m_sink.begin(m_property, this);
                 }
                 if (result & WIDGET_EDITED) {
-                    //Edit in progress, send irreversible Action.
-                    //Should not send Action during text input (it currently does!). <- fix this!
-                    this->asyncInvoke<SetProperty<T, PropertyType, ConverterType>>(m_property, data, false);
+                    //Edit in progress, set irreversibly.
+                    //Should not set during text input (it currently does!). <- fix this!
+                    m_sink.update(m_property, this, util::type_conversion<set_type, ConverterType<set_type>>::from(data));
                 }
                 if (result & WIDGET_RELEASED) {
-                    //edit finished, send complete reversible Action
-                    this->asyncInvoke<SetProperty<T, PropertyType, ConverterType>>(m_property, data, m_tmp, true);
+                    //edit finished, send reversible command to invoker
+                    m_sink.end(m_property, this);
                 }
             }
         }
@@ -288,7 +289,7 @@ namespace gui
         virtual Floats<2> getSizeHint() const override { return { this->m_sizeHint[0], WidgetLayout().height(N) }; }
 
     private:
-        PropertyType m_property;
-        T m_tmp{ T() };
+        PropertyType m_property; 
+        EventSink<PropertyType> m_sink;
     };
 }
