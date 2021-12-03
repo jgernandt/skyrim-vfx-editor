@@ -541,42 +541,16 @@ void node::FloatKeyEditor::updateAxisUnits()
 	m_plot->getPlotArea().getAxes().setMinorUnits(minor);
 }
 
-void node::FloatKeyEditor::onAddChild(gui::IComponent* c, gui::Component* source)
-{
-	//Our active widget might be pointing at the wrong key. Refresh it.
-	//There are cleaner ways of doing this, but it's no big deal.
-	if (m_activeItem != m_selection.end()) {
-		assert(m_activePanel);
-		m_activePanel->clearChildren();
-		m_activePanel->addChild((*m_activeItem)->getActiveWidget());
-	}
-}
-
 void node::FloatKeyEditor::onRemoveChild(gui::IComponent* c, gui::Component* source)
 {
-	//If c was selected, it must be removed immediately (it may no longer exist).
-
-	//Regardless, we should refresh our active widget. It may be pointing to 
-	//the wrong (and possibly invalid) key.
-
-	bool erased = false;
-
-	if (m_activeItem != m_selection.end()) {
-		assert(m_activePanel);
+	//If c was selected, it must be removed from selection immediately (it may no longer exist).
+	if (m_activeItem != m_selection.end() && *m_activeItem == c) {
+		m_selection.erase(m_activeItem);
+		m_activeItem = m_selection.end();
 		m_activePanel->clearChildren();
-
-		if (*m_activeItem == c) {
-			m_selection.erase(m_activeItem);
-			m_activeItem = m_selection.end();
-			erased = true;
-		}
-		else
-			m_activePanel->addChild((*m_activeItem)->getActiveWidget());
 	}
-
-	if (!erased)
-		if (auto it = m_selection.find(static_cast<KeyHandle*>(c)); it != m_selection.end())
-			m_selection.erase(it);
+	else if (auto it = m_selection.find(static_cast<KeyHandle*>(c)); it != m_selection.end())
+		m_selection.erase(it);
 }
 
 //Phase and frequency are the inverse transform of the data series

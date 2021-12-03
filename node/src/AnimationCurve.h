@@ -121,6 +121,27 @@ namespace node
 			Property<float> Key<float>::* member;
 		};
 
+		//Second time I use this stupid method. There has to be a nicer way!
+		class TimeWidget {};
+		class ValueWidget {};
+		class ActiveWidget final :
+			public gui::Composite, public TimeWidget, public ValueWidget
+		{
+		public:
+			ActiveWidget(const KeyHandle* handle);
+
+			float getTime() const;
+			void setTime(float t);
+
+			float getValue() const;
+			void setValue(float val);
+
+			KeyProperty getKeyProperty(Property<float> Key<float>::*member) const;
+
+		private:
+			const KeyHandle* const m_handle;
+		};
+
 	public:
 		KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index);
 		virtual ~KeyHandle();

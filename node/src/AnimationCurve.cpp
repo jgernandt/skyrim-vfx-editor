@@ -70,6 +70,9 @@ public:
 	{
 		assert(target);
 
+		//Keep our index list sorted, will make order changes easier to track
+		std::sort(m_initI.begin(), m_initI.end());
+
 		m_initPos.reserve(m_initI.size());
 		for (int i : m_initI) {
 			m_initPos.push_back({ target->at(i).time.get(), target->at(i).value.get() });
@@ -103,13 +106,22 @@ public:
 
 	virtual void update(const gui::Floats<2>& local_move) override
 	{
-		static_assert(FOREGO_ASYNC);
+		static_assert(SINGLE_THREAD);
 
 		if (local_move.matrix() != m_move.matrix()) {
-			m_move = local_move;
-			for (size_t i = 0; i < m_currentI.size(); i++) {
-				m_currentPos[i] = m_initPos[i] + local_move;
+			if (float delta = local_move[0] - m_move[0]; delta >= 0.0f) {
+				//moving toward non-negative time, go through keys in descending order
+				for (int i = (int)m_currentI.size() - 1; i >= 0; i--) {
+					m_currentPos[i] = m_initPos[i] + local_move;
+				}
 			}
+			else {
+				//go through keys in ascending order
+				for (size_t i = 0; i < m_currentI.size(); i++) {
+					m_currentPos[i] = m_initPos[i] + local_move;
+				}
+			}
+			m_move = local_move;
 			m_dirty = true;
 			execute();
 		}
@@ -127,16 +139,6 @@ node::KeyHandle::KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index) :
 	m_keys->at(m_index).time.addListener(m_timeLsnr);
 	m_keys->at(m_index).value.addListener(m_valueLsnr);
 	m_translation = { m_keys->at(m_index).time.get(), m_keys->at(m_index).value.get() };
-
-	//In order to lock editing of the time of start/stop keys:
-	//*listen to the start/stop time properties and set our time
-	//*do not send an input widget for time with the active widget
-	//*do not set translation in getMoveOp
-
-	//if (m_index == 0)
-	//	m_ctlr->startTime.addListener(*this);
-	//if (m_index == m_keys->size() - 1)
-	//	m_ctlr->stopTime.addListener(*this);
 }
 
 node::KeyHandle::~KeyHandle()
@@ -148,11 +150,6 @@ node::KeyHandle::~KeyHandle()
 		m_keys->at(m_index).time.removeListener(m_timeLsnr);
 		m_keys->at(m_index).value.removeListener(m_valueLsnr);
 	}
-
-	//if (m_index == 0)
-	//	m_ctlr->startTime.removeListener(*this);
-	//if (m_index == m_keys->size() - 1)
-	//	m_ctlr->stopTime.removeListener(*this);
 }
 
 void node::KeyHandle::frame(gui::FrameDrawer& fd)
@@ -180,52 +177,9 @@ void node::KeyHandle::onSet(const float& val)
 	m_keys->at(m_index).time.set(val);
 }
 
-template<>
-struct util::property_traits<node::KeyHandle::KeyProperty>
-{
-	using property_type = node::KeyHandle::KeyProperty;
-	using value_type = float;
-	using get_type = float;
-
-	static float get(const property_type& t)
-	{
-		return (t.keys->at(t.index).*t.member).get();
-	}
-	static void set(property_type& t, float val)
-	{
-		(t.keys->at(t.index).*t.member).set(val);
-	}
-};
-
 std::unique_ptr<gui::IComponent> node::KeyHandle::getActiveWidget() const
 {
-	assert(m_keys);
-
-	auto root = std::make_unique<gui::Composite>();
-
-	root->newChild<gui::Text>("Linear key");
-
-	/*if (isStartKey()) {
-		auto item = root->newChild<gui::Item>(std::make_unique<gui::MarginAlign>());
-		item->newChild<gui::Text>("Time");
-		item->newChild<gui::Number<float, ni_ptr<Property<float>>>>(make_ni_ptr(m_ctlr, &NiTimeController::startTime), "%.2f");
-	}
-	else if (isStopKey()) {
-		auto item = root->newChild<gui::Item>(std::make_unique<gui::MarginAlign>());
-		item->newChild<gui::Text>("Time");
-		item->newChild<gui::Number<float, ni_ptr<Property<float>>>>(make_ni_ptr(m_ctlr, &NiTimeController::stopTime), "%.2f");
-	}
-	else {*/
-	auto time = root->newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::time }, "Time");
-	time->setSensitivity(0.01f);
-	time->setNumberFormat("%.2f");
-	//}
-
-	auto val = root->newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::value }, "Value");
-	val->setSensitivity(0.01f);
-	val->setNumberFormat("%.2f");
-
-	return root;
+	return std::make_unique<ActiveWidget>(this);
 }
 
 std::unique_ptr<node::AnimationCurve::Operation> node::KeyHandle::getMoveOp(
@@ -255,6 +209,154 @@ float node::KeyHandle::eval(float t)
 		float v0 = m_keys->at(m_index).value.get();
 		return m_index < (int)m_keys->size() - 1 ? v0 + t * (m_keys->at(m_index + 1).value.get() - v0) : v0;
 	}
+}
+
+
+template<>
+struct util::property_traits<node::KeyHandle::KeyProperty>
+{
+	using property_type = node::KeyHandle::KeyProperty;
+	using value_type = float;
+	using get_type = float;
+
+	static float get(property_type p)
+	{
+		return (p.keys->at(p.index).*p.member).get();
+	}
+	static void set(property_type p, float val)
+	{
+		(p.keys->at(p.index).*p.member).set(val);
+	}
+};
+
+template<>
+struct util::property_traits<node::KeyHandle::TimeWidget*>
+{
+	using property_type = node::KeyHandle::TimeWidget*;
+	using value_type = float;
+	using get_type = float;
+
+	static float get(property_type p) 
+	{ 
+		return static_cast<node::KeyHandle::ActiveWidget*>(p)->getTime();
+	}
+	static void set(property_type p, float val) 
+	{ 
+		static_cast<node::KeyHandle::ActiveWidget*>(p)->setTime(val);
+	}
+};
+template<>
+struct util::property_traits<node::KeyHandle::ValueWidget*>
+{
+	using property_type = node::KeyHandle::ValueWidget*;
+	using value_type = float;
+	using get_type = float;
+
+	static float get(property_type p)
+	{
+		return static_cast<node::KeyHandle::ActiveWidget*>(p)->getValue();
+	}
+	static void set(property_type p, float val)
+	{
+		static_cast<node::KeyHandle::ActiveWidget*>(p)->setValue(val);
+	}
+};
+
+//Like the default, but instead of sending a command to set the property (TimeWidget*)
+//it sends a command to set a KeyProperty that is fetched from the KeyHandle*.
+//Unlike a TimeWidget*, a KeyProperty may safely be accessed at any later time.
+template<>
+struct gui::DefaultEventSink<node::KeyHandle::TimeWidget*>
+{
+	using value_type = float;
+
+	void begin(node::KeyHandle::TimeWidget* p, IComponent* source) 
+	{
+		m_init = util::property_traits<node::KeyHandle::TimeWidget*>::get(p);
+	}
+	void update(node::KeyHandle::TimeWidget* p, IComponent* source, float val) 
+	{
+		static_assert(SINGLE_THREAD);
+		util::property_traits<node::KeyHandle::TimeWidget*>::set(p, val);
+	}
+	void end(node::KeyHandle::TimeWidget* p, IComponent* source) 
+	{
+		if (IInvoker* inv = source->getInvoker())
+			inv->queue(std::make_unique<DefaultSetCommand<node::KeyHandle::KeyProperty>>(
+				static_cast<node::KeyHandle::ActiveWidget*>(p)->getKeyProperty(&Key<float>::time),
+				static_cast<node::KeyHandle::ActiveWidget*>(p)->getTime(), 
+				m_init));
+	}
+
+	float m_init{ 0.0f };
+};
+template<>
+struct gui::DefaultEventSink<node::KeyHandle::ValueWidget*>
+{
+	using value_type = float;
+
+	void begin(node::KeyHandle::ValueWidget* p, IComponent* source)
+	{
+		m_init = util::property_traits<node::KeyHandle::ValueWidget*>::get(p);
+	}
+	void update(node::KeyHandle::ValueWidget* p, IComponent* source, float val)
+	{
+		static_assert(SINGLE_THREAD);
+		util::property_traits<node::KeyHandle::ValueWidget*>::set(p, val);
+	}
+	void end(node::KeyHandle::ValueWidget* p, IComponent* source)
+	{
+		if (IInvoker* inv = source->getInvoker())
+			inv->queue(std::make_unique<DefaultSetCommand<node::KeyHandle::KeyProperty>>(
+				static_cast<node::KeyHandle::ActiveWidget*>(p)->getKeyProperty(&Key<float>::value),
+				static_cast<node::KeyHandle::ActiveWidget*>(p)->getValue(),
+				m_init));
+	}
+
+	float m_init{ 0.0f };
+};
+
+node::KeyHandle::ActiveWidget::ActiveWidget(const KeyHandle* handle) : m_handle{ handle }
+{
+	newChild<gui::Text>("Linear key");
+
+	auto time = newChild<gui::DragInput<float, 1, TimeWidget*>>(static_cast<TimeWidget*>(this), "Time");
+	time->setSensitivity(0.01f);
+	time->setNumberFormat("%.2f");
+
+	auto val = newChild<gui::DragInput<float, 1, ValueWidget*>>(static_cast<ValueWidget*>(this), "Value");
+	val->setSensitivity(0.01f);
+	val->setNumberFormat("%.2f");
+}
+
+float node::KeyHandle::ActiveWidget::getTime() const
+{
+	assert(m_handle && m_handle->m_keys);
+	return m_handle->m_keys->at(m_handle->m_index).time.get();
+}
+
+void node::KeyHandle::ActiveWidget::setTime(float t)
+{
+	assert(m_handle && m_handle->m_keys);
+	m_handle->m_keys->at(m_handle->m_index).time.set(t);
+}
+
+float node::KeyHandle::ActiveWidget::getValue() const
+{
+	assert(m_handle && m_handle->m_keys);
+	return m_handle->m_keys->at(m_handle->m_index).value.get();
+}
+
+void node::KeyHandle::ActiveWidget::setValue(float val)
+{
+	assert(m_handle && m_handle->m_keys);
+	m_handle->m_keys->at(m_handle->m_index).value.set(val);
+}
+
+node::KeyHandle::KeyProperty node::KeyHandle::ActiveWidget::getKeyProperty(Property<float> Key<float>::* member) const
+{
+	assert(m_handle && m_handle->m_keys);
+	return KeyProperty{ m_handle->m_keys, m_handle->m_index, member };
 }
 
 
@@ -454,7 +556,6 @@ gui::Floats<2> node::AnimationCurve::getBounds() const
 std::unique_ptr<gui::ICommand> node::AnimationCurve::getInsertOp(const gui::Floats<2>& pos) const
 {
 	//Locate the first key with larger time and insert before it.
-	//Forbid inserting at either end.
 	int index = 0;
 	for (; index < (int)m_data->keys.size() && m_data->keys.at(index).time.get() < pos[0]; index++) {}
 

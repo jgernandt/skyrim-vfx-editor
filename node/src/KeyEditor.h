@@ -73,7 +73,6 @@ namespace node
 
 		virtual void onMouseMove(const gui::Floats<2>& pos) override;
 
-		virtual void onAddChild(gui::IComponent* c, gui::Component* source) override;
 		virtual void onRemoveChild(gui::IComponent* c, gui::Component* source) override;
 
 		void setActiveKey(Selection::iterator key);
