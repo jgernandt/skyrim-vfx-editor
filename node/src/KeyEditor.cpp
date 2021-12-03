@@ -217,7 +217,7 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 
 	side_panel->newChild<gui::VerticalSpacing>();
 
-	side_panel->newChild<gui::Text>("Cycle");
+	side_panel->newChild<gui::Text>("Clip");
 	using selector_type2 = gui::Selector<ControllerFlags, BitSetWrapper<ControllerFlags, 2, 1>>;
 	side_panel->newChild<selector_type2>(
 		BitSetWrapper<ControllerFlags, 2, 1>{ make_ni_ptr(ctlr, &NiTimeController::flags) },
@@ -225,9 +225,10 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 		selector_type2::ItemList{ { 0, "Repeat" }, { 1, "Reverse" }, { 2, "Clamp" } });
 
 	auto fr = side_panel->newChild<DragFloat>(make_ni_ptr(ctlr, &NiTimeController::frequency), "Frequency");
-	fr->setSensitivity(0.01f);
-	fr->setLowerLimit(0.0f);
-	fr->setAlwaysClamp(true);
+	fr->setSensitivity(0.1f);
+	fr->setLowerLimit(0.01f);
+	fr->setUpperLimit(100.0f);
+	fr->setLogarithmic();
 	fr->setNumberFormat("%.2f");
 
 	auto ph = side_panel->newChild<DragFloat>(make_ni_ptr(ctlr, &NiTimeController::phase), "Phase");
