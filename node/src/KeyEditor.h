@@ -111,7 +111,7 @@ namespace node
 		gui::Floats<2> m_startT;//axis translation at the time of clicking
 		Op m_currentOp{ Op::NONE };
 
-		std::vector<std::pair<KeyHandle*, gui::Floats<2>>> m_initialState;
+		std::unique_ptr<AnimationCurve::Operation> m_op;
 		bool m_dragThresholdPassed{ false };
 	};
 }

@@ -410,13 +410,12 @@ bool node::FloatKeyEditor::onMouseUp(gui::Mouse::Button button)
 			else {
 				//send final move op
 				if (gui::IInvoker* inv = getInvoker())
-					inv->queue((*m_activeItem)->getMoveOp(m_initialState));
+					inv->queue(std::move(m_op));
 			}
 
 			m_currentOp = Op::NONE;
 			assert(m_plot && gui::Mouse::getCapture() == &m_plot->getPlotArea());
 			gui::Mouse::setCapture(nullptr);
-			m_initialState.clear();
 		}
 	}
 	else if (button == gui::Mouse::Button::MIDDLE) {
@@ -470,37 +469,18 @@ void node::FloatKeyEditor::drag(const gui::Floats<2>& pos)
 		(std::abs(pos[0] - m_clickPoint[0]) >= DRAG_THRESHOLD ||
 		std::abs(pos[1] - m_clickPoint[1]) >= DRAG_THRESHOLD))
 	{
-		m_dragThresholdPassed = true;
+		assert(!m_selection.empty());
 
-		//save initial state
-		assert(m_initialState.empty());
-		m_initialState.reserve(m_selection.size());
-		for (KeyHandle* obj : m_selection) {
-			assert(obj);
-			m_initialState.push_back({ obj, obj->getTranslation() });
-		}
+		m_dragThresholdPassed = true;
+		if (m_activeItem != m_selection.end())
+			m_op = (*m_activeItem)->getMoveOp(m_selection);
+		else
+			m_op = (*m_selection.begin())->getMoveOp(m_selection);
 	}
 
 	if (m_dragThresholdPassed) {
-		gui::Floats<2> delta = pos - m_clickPoint;
-
-		for (auto&& item : m_initialState) {
-			if (IComponent* parent = item.first->getParent()) {
-				//Do we forego our previous design of sending everything to the Invoker?
-				//If we do any synchronous access to the data, the Property themselves should guard.
-				//Then again, we don't know if a listener wants to make changes to the graph in response.
-				//Let's forego it, but make sure we can easily find everywhere we have done so:
-				static_assert(FOREGO_ASYNC);
-
-				gui::Floats<2> global = parent->toGlobalSpace(item.second);
-
-				//Forbid editing the time of start/stop keys
-				//if (item.first->isStartKey() || item.first->isStopKey())
-				//	item.first->setTranslation(parent->fromGlobalSpace(global + gui::Floats<2>{ 0.0f, delta[1] }));
-				//else
-					item.first->setTranslation(parent->fromGlobalSpace(global + delta));
-			}
-		}
+		if (m_op)
+			m_op->update(m_data->fromGlobalSpace(pos) - m_data->fromGlobalSpace(m_clickPoint));
 	}
 }
 

@@ -51,40 +51,68 @@ public:
 	}
 };
 
-class MoveOp final : public gui::ICommand
+class MoveOp final : public node::AnimationCurve::Operation
 {
 	const ni_ptr<Vector<Key<float>>> m_target;
-	const std::vector<int> m_indices;
 
-	const std::vector<Eigen::Vector2f> m_to;
-	const std::vector<Eigen::Vector2f> m_from;
+	std::vector<gui::Floats<2>> m_initPos;
+	std::vector<int> m_initI;
+
+	std::vector<gui::Floats<2>> m_currentPos;
+	std::vector<int> m_currentI;
+
+	gui::Floats<2> m_move;
+	bool m_dirty{ false };
 
 public:
-	MoveOp(const ni_ptr<Vector<Key<float>>>& target, std::vector<int>&& indices,
-		std::vector<Eigen::Vector2f>&& to, std::vector<Eigen::Vector2f>&& from) :
-		m_target{ target }, m_indices{ std::move(indices) }, m_to{ std::move(to) }, m_from{ std::move(from) }
+	MoveOp(const ni_ptr<Vector<Key<float>>>& target, std::vector<int>&& indices) :
+		m_target{ target }, m_initI{ std::move(indices) }
 	{
 		assert(target);
+
+		m_initPos.reserve(m_initI.size());
+		for (int i : m_initI) {
+			m_initPos.push_back({ target->at(i).time.get(), target->at(i).value.get() });
+		}
+		m_currentI = m_initI;
+		m_currentPos = m_initPos;
 	}
 
 	virtual void execute() override
 	{
-		assert(m_indices.size() == m_to.size() && m_from.size() == m_to.size());
-		for (size_t i = 0; i < m_indices.size(); i++) {
-			m_target->at(m_indices[i]).time.set(m_to[i][0]);
-			m_target->at(m_indices[i]).value.set(m_to[i][1]);
+		if (m_dirty) {
+			for (size_t i = 0; i < m_currentI.size(); i++) {
+				m_target->at(m_currentI[i]).time.set(m_currentPos[i][0]);
+				m_target->at(m_currentI[i]).value.set(m_currentPos[i][1]);
+			}
+			m_dirty = false;
 		}
 	}
 	virtual void reverse() override
 	{
-		for (size_t i = 0; i < m_indices.size(); i++) {
-			m_target->at(m_indices[i]).time.set(m_from[i][0]);
-			m_target->at(m_indices[i]).value.set(m_from[i][1]);
+		for (size_t i = 0; i < m_currentI.size(); i++) {
+			m_target->at(m_currentI[i]).time.set(m_initPos[i][0]);
+			m_target->at(m_currentI[i]).value.set(m_initPos[i][1]);
 		}
+		m_dirty = true;
 	}
 	virtual bool reversible() const override
 	{
-		return m_to != m_from;
+		return m_move[0] != 0.0f && m_move[1] != 0.0f;
+	}
+
+	virtual void update(const gui::Floats<2>& local_move) override
+	{
+		static_assert(FOREGO_ASYNC);
+
+		if (local_move.matrix() != m_move.matrix()) {
+			m_move = local_move;
+			for (size_t i = 0; i < m_currentI.size(); i++) {
+				m_currentPos[i] = m_initPos[i] + local_move;
+			}
+			m_dirty = true;
+			execute();
+		}
 	}
 };
 
@@ -200,30 +228,18 @@ std::unique_ptr<gui::IComponent> node::KeyHandle::getActiveWidget() const
 	return root;
 }
 
-std::unique_ptr<gui::ICommand> node::KeyHandle::getMoveOp(
-	const std::vector<std::pair<KeyHandle*, gui::Floats<2>>>& initial) const
+std::unique_ptr<node::AnimationCurve::Operation> node::KeyHandle::getMoveOp(
+	const std::set<KeyHandle*>& keys) const
 {
-	//Collect the indices from each selected key
-	std::vector<int> indices(initial.size());
-	//collect current values
-	std::vector<Eigen::Vector2f> to(initial.size());
-	//collect initial state
-	std::vector<Eigen::Vector2f> from(initial.size());
+	std::vector<int> indices(keys.size());
 
 	int i = 0;
-	for (auto&& item : initial) {
-		indices[i] = item.first->getIndex();
-		to[i] = item.first->getTranslation();
-		from[i] = item.second;
-
-		//Forbid editing the time of start/stop keys
-		//if (item.first->isStartKey() || item.first->isStopKey())
-		//	to[i][0] = from[i][0];
-
+	for (auto&& key : keys) {
+		indices[i] = key->getIndex();
 		i++;
 	}
 
-	return std::make_unique<MoveOp>(m_keys, std::move(indices), std::move(to), std::move(from));
+	return std::make_unique<MoveOp>(m_keys, std::move(indices));
 }
 
 float node::KeyHandle::eval(float t)
