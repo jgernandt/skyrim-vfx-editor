@@ -46,6 +46,8 @@ namespace node
 		float length{ 0.0f };
 	};
 
+	class KeyHandle;
+
 	class AnimationCurve final :
 		public gui::Composite,
 		public nif::PropertyListener<KeyType>,
@@ -73,7 +75,7 @@ namespace node
 
 		gui::Floats<2> getBounds() const;
 
-		//std::unique_ptr<gui::ICommand> getEraseOp() const;
+		std::unique_ptr<gui::ICommand> getEraseOp(const std::set<KeyHandle*>& keys) const;
 		std::unique_ptr<gui::ICommand> getInsertOp(const gui::Floats<2>& pos) const;
 
 		void setAxisLimits(const gui::Floats<2>& lims) { m_axisLims = lims; }

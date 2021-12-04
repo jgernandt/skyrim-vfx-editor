@@ -31,7 +31,8 @@ namespace node
 	class FloatKeyEditor final : 
 		public gui::Popup, 
 		public gui::MouseHandler,
-		public gui::ComponentListener
+		public gui::ComponentListener,
+		public gui::KeyListener
 	{
 	public:
 		using Selection = std::set<KeyHandle*>;
@@ -66,6 +67,8 @@ namespace node
 		~FloatKeyEditor();
 
 		virtual void onClose() override;
+
+		virtual void onKeyDown(gui::key_t key) override;
 
 		virtual bool onMouseDown(gui::Mouse::Button button) override;
 		virtual bool onMouseUp(gui::Mouse::Button button) override;

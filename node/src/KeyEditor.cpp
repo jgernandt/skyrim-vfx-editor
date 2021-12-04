@@ -200,6 +200,7 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	updateAxisUnits();
 	m_data->setAxisLimits(xlims);
 
+	m_plot->getPlotArea().addKeyListener(*this);
 	m_plot->getPlotArea().setMouseHandler(this);
 
 	//Side panel(s)
@@ -268,6 +269,8 @@ node::FloatKeyEditor::~FloatKeyEditor()
 
 	if (m_data)
 		m_data->removeComponentListener(*this);
+
+	m_plot->getPlotArea().removeKeyListener(*this);
 }
 
 void node::FloatKeyEditor::onClose()
@@ -291,6 +294,17 @@ void node::FloatKeyEditor::setActiveKey(Selection::iterator key)
 		(*key)->setActive(true);
 	}
 	m_activeItem = key;
+}
+
+void node::FloatKeyEditor::onKeyDown(gui::key_t key)
+{
+	if (key == 'X' || key == gui::KEY_DEL) {
+		//Erase selected
+		if (!m_selection.empty()) {
+			if (gui::IInvoker* inv = getInvoker())
+				inv->queue(m_data->getEraseOp(m_selection));
+		}
+	}
 }
 
 bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)

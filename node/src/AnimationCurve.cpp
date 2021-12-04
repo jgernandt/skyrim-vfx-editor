@@ -22,6 +22,60 @@
 
 using namespace nif;
 
+class EraseOp final : public gui::ICommand
+{
+	const ni_ptr<Vector<Key<float>>> m_target;
+	std::vector<int> m_keys;
+	std::vector<Key<float>> m_storage;
+
+public:
+	EraseOp(ni_ptr<Vector<Key<float>>>&& target, std::vector<int>&& keys) :
+		m_target{ std::move(target) }, m_keys{ std::move(keys) }
+	{
+		assert(m_target);
+
+		std::sort(m_keys.begin(), m_keys.end());
+
+		m_storage.resize(m_keys.size());
+		for (size_t i = 0; i < m_keys.size(); i++) {
+			assert(m_keys[i] >= 0 && (size_t)m_keys[i] < m_target->size());
+			m_storage[i].time.set(m_target->at(m_keys[i]).time.get());
+			m_storage[i].value.set(m_target->at(m_keys[i]).value.get());
+			m_storage[i].fwdTan.set(m_target->at(m_keys[i]).fwdTan.get());
+			m_storage[i].bwdTan.set(m_target->at(m_keys[i]).bwdTan.get());
+			m_storage[i].tension.set(m_target->at(m_keys[i]).tension.get());
+			m_storage[i].bias.set(m_target->at(m_keys[i]).bias.get());
+			m_storage[i].continuity.set(m_target->at(m_keys[i]).continuity.get());
+		}
+	}
+
+	virtual void execute() override
+	{
+		//erase back to front, so indices stay correct
+		for (auto rit = m_keys.rbegin(); rit != m_keys.rend(); ++rit) {
+			m_target->erase(*rit);
+		}
+	}
+	virtual void reverse() override
+	{
+		//insert front to back
+		for (size_t i = 0; i < m_keys.size(); i++) {
+			m_target->insert(m_keys[i]);
+			m_target->at(m_keys[i]).time.set(m_storage[i].time.get());
+			m_target->at(m_keys[i]).value.set(m_storage[i].value.get());
+			m_target->at(m_keys[i]).fwdTan.set(m_storage[i].fwdTan.get());
+			m_target->at(m_keys[i]).bwdTan.set(m_storage[i].bwdTan.get());
+			m_target->at(m_keys[i]).tension.set(m_storage[i].tension.get());
+			m_target->at(m_keys[i]).bias.set(m_storage[i].bias.get());
+			m_target->at(m_keys[i]).continuity.set(m_storage[i].continuity.get());
+		}
+	}
+	virtual bool reversible() const override
+	{
+		return !m_keys.empty();
+	}
+};
+
 class InsertOp final : public gui::ICommand
 {
 	const ni_ptr<Vector<Key<float>>> m_target;
@@ -29,10 +83,10 @@ class InsertOp final : public gui::ICommand
 	const gui::Floats<2> m_position;
 
 public:
-	InsertOp(const ni_ptr<Vector<Key<float>>>& target, int index, const gui::Floats<2>& pos) :
-		m_target{ target }, m_index{ index }, m_position{ pos }
+	InsertOp(ni_ptr<Vector<Key<float>>>&& target, int index, const gui::Floats<2>& pos) :
+		m_target{ std::move(target) }, m_index{ index }, m_position{ pos }
 	{
-		assert(target);
+		assert(m_target);
 	}
 
 	virtual void execute() override
@@ -659,6 +713,19 @@ std::unique_ptr<gui::ICommand> node::AnimationCurve::getInsertOp(const gui::Floa
 	for (; index < (int)m_data->keys.size() && m_data->keys.at(index).time.get() < pos[0]; index++) {}
 
 	return std::make_unique<InsertOp>(make_ni_ptr(m_data, &NiFloatData::keys), index, pos);
+}
+
+std::unique_ptr<gui::ICommand> node::AnimationCurve::getEraseOp(const std::set<KeyHandle*>& keys) const
+{
+	std::vector<int> indices(keys.size());
+	int i = 0;
+	for (KeyHandle* key : keys) {
+		assert(key);
+		//We could search for this handle among our children, to assure it's ours. No point right now, though.
+		indices[i++] = key->getIndex();
+	}
+
+	return std::make_unique<EraseOp>(make_ni_ptr(m_data, &NiFloatData::keys), std::move(indices));
 }
 
 void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolution)
