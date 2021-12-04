@@ -42,6 +42,8 @@ namespace app
 		virtual void setSize(const gui::Floats<2>& size) override;
 		virtual gui::IInvoker* getInvoker() override { return &m_invoker; }
 
+		virtual void handle(Event<gui::Keyboard>& e) override;
+
 		const std::filesystem::path& getFilePath() const { return m_targetPath; }
 		void setFilePath(const std::filesystem::path& path);
 

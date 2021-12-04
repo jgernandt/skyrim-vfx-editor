@@ -22,6 +22,7 @@
 #define WIN32_LEAN_AND_MEAN 
 #include <windows.h>
 
+gui::IComponent* gui::Keyboard::s_capturing = nullptr;
 gui::IComponent* gui::Mouse::s_capturing = nullptr;
 
 int gui::guiToImGuiButton(Mouse::Button button)
@@ -43,7 +44,7 @@ gui::Floats<2> gui::Mouse::getPosition()
 	return gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos);
 }
 
-bool gui::Keyboard::isDown(Key key)
+bool gui::Keyboard::isDown(key_t key)
 {
-	return GetKeyState(static_cast<int>(key)) & 0x8000;
+	return GetKeyState(key) & 0x8000;
 }

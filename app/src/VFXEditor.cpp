@@ -227,18 +227,6 @@ void app::VFXEditor::about()
         m_aboutBox = std::make_unique<AboutBox>();
 }
 
-void app::VFXEditor::undo()
-{
-    if (m_current)
-        m_current->undo();
-}
-
-void app::VFXEditor::redo()
-{
-    if (m_current)
-        m_current->redo();
-}
-
 void app::VFXEditor::setFilePath(Document& doc)
 {
     CComPtr<IFileSaveDialog> obj;
@@ -327,19 +315,19 @@ LRESULT app::VFXEditor::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
         return 0;
     case WM_KEYDOWN:
         if (!m_guiEngine.isCapturingKeyboard() && !(HIWORD(lParam) & KF_REPEAT)) {
-            switch (wParam) {
-            case 'Z':
-                if (GetKeyState(VK_CONTROL) & 0x8000) {
-                    if (GetKeyState(VK_SHIFT) & 0x8000)
-                        redo();
-                    else
-                        undo();
-                }
-                break;
-            case 'Y':
-                if (GetKeyState(VK_CONTROL) & 0x8000)
-                    redo();
-                break;
+            if (m_current) {
+                Event<gui::Keyboard> e{ Event<gui::Keyboard>::DOWN, static_cast<gui::key_t>(wParam) };
+                m_current->handle(e);
+                //return?
+            }
+        }
+        break;
+    case WM_KEYUP:
+        if (!m_guiEngine.isCapturingKeyboard()) {
+            if (m_current) {
+                Event<gui::Keyboard> e{ Event<gui::Keyboard>::UP, static_cast<gui::key_t>(wParam) };
+                m_current->handle(e);
+                //return?
             }
         }
         break;

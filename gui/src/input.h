@@ -17,26 +17,31 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
+#include "Observable.h"
 #include "gui_types.h"
 
 namespace gui
 {
 	class IComponent;
 
-	//I think this is better (as a general idea) than to go via the FrameDrawer/GUIEngine.
-	//Needs some work, though.
+	using key_t = int;
+	constexpr key_t KEY_SHIFT = 0x10;
+	constexpr key_t KEY_CTRL = 0x11;
+	constexpr key_t KEY_ALT = 0x12;
+
 	class Keyboard
 	{
 	public:
-		enum class Key : int
-		{
-			SHIFT		= 0x10,
-			CTRL		= 0x11,
-			ALT			= 0x12,
-		};
-	public:
-		static bool isDown(Key key);
+		static bool isDown(key_t key);
+
+		static IComponent* getCapture() { return s_capturing; }
+		static void setCapture(IComponent* c) { s_capturing = c; }
+
+	private:
+		static IComponent* s_capturing;
 	};
+
+	using KeyListener = IListener<Keyboard>;
 
 	class Mouse
 	{
@@ -69,7 +74,6 @@ namespace gui
 	public:
 		virtual ~MouseHandler() = default;
 
-		//Let true return indicate that the event was handled
 		virtual bool onMouseDown(Mouse::Button) { return false; }
 		virtual bool onMouseUp(Mouse::Button) { return false; }
 		virtual bool onMouseWheel(float) { return false; }
@@ -83,3 +87,37 @@ namespace gui
 
 	int guiToImGuiButton(Mouse::Button button);
 }
+
+template<>
+struct Event<gui::Keyboard>
+{
+	enum {
+		DOWN,
+		UP,
+
+	} type{ DOWN };
+
+	gui::key_t key{ 0 };
+};
+
+template<>
+class IListener<gui::Keyboard>
+{
+public:
+	virtual ~IListener() = default;
+
+	void receive(const ::Event<gui::Keyboard>& e, ::Observable<gui::Keyboard>&)
+	{
+		switch (e.type) {
+		case ::Event<gui::Keyboard>::DOWN:
+			onKeyDown(e.key);
+			break;
+		case ::Event<gui::Keyboard>::UP:
+			onKeyUp(e.key);
+			break;
+		}
+	}
+
+	virtual void onKeyDown(gui::key_t key) {}
+	virtual void onKeyUp(gui::key_t key) {}
+};

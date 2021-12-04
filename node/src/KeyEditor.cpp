@@ -159,7 +159,7 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	auto series = std::make_unique<AnimationCurve>(ctlr, data);
 	m_data = series.get();
 	m_plot->getPlotArea().getAxes().addChild(std::move(series));
-	m_data->addListener(*this);
+	m_data->addComponentListener(*this);
 
 	//determine limits
 	gui::Floats<2> xlims = 
@@ -267,7 +267,7 @@ node::FloatKeyEditor::~FloatKeyEditor()
 	m_ctlr->phase.removeListener(m_phaseLsnr);
 
 	if (m_data)
-		m_data->removeListener(*this);
+		m_data->removeComponentListener(*this);
 }
 
 void node::FloatKeyEditor::onClose()
@@ -300,7 +300,7 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 	if (m_currentOp != Op::NONE)
 		return true;
 	else if (button == gui::Mouse::Button::LEFT) {
-		if (gui::Keyboard::isDown(gui::Keyboard::Key::CTRL)) {
+		if (gui::Keyboard::isDown(gui::KEY_CTRL)) {
 			//InsertOp
 
 			//clicked point in key space
@@ -323,7 +323,7 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 			KeyHandle* object = dynamic_cast<KeyHandle*>(v.result);
 
 			if (object) {
-				if (gui::Keyboard::isDown(gui::Keyboard::Key::SHIFT)) {
+				if (gui::Keyboard::isDown(gui::KEY_SHIFT)) {
 					if (auto res = m_selection.insert(object); !res.second) {
 						//shift+clicked selected object
 						//remove from selection
@@ -374,7 +374,7 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 		assert(gui::Mouse::getCapture() == nullptr);
 		m_clickPoint = m_plot->getPlotArea().fromGlobalSpace(gui::Mouse::getPosition());
 		gui::Mouse::setCapture(&m_plot->getPlotArea());
-		if (gui::Keyboard::isDown(gui::Keyboard::Key::CTRL)) {
+		if (gui::Keyboard::isDown(gui::KEY_CTRL)) {
 			m_currentOp = Op::ZOOM;
 			m_startS = m_plot->getPlotArea().getAxes().getScale();
 			m_startT = m_plot->getPlotArea().getAxes().getTranslation();

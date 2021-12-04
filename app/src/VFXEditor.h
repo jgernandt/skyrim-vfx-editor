@@ -52,9 +52,6 @@ namespace app
 
 		void about();
 
-		void undo();
-		void redo();
-
 	private:
 		void setFilePath(Document& doc);
 

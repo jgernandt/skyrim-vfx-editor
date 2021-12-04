@@ -79,11 +79,13 @@ gui::IInvoker* gui::Component::getInvoker()
 	return m_parent ? m_parent->getInvoker() : nullptr;
 }
 
+void gui::Component::handle(Event<Keyboard>& e)
+{
+	Observable<Keyboard>::signal(e);
+}
+
 void gui::Component::handleMouse(FrameDrawer& fd)
 {
-	//I would much prefer to separate this from the frame event, 
-	//and process each input to completion before considering the next.
-	//Like this it's hard to control and overview who receives what input.
 	if (m_mouseHandler) {
 
 		//To stop ImGui from using our input, we give them a fake widget
@@ -271,7 +273,7 @@ void gui::Composite::addChild(ComponentPtr&& c)
 		c->setParent(this);
 		m_children.push_back(std::move(c));
 
-		signal(Event<Component>{ Event<Component>::ADD_CHILD, this, m_children.back().get() });
+		Observable<Component>::signal(Event<Component>{ Event<Component>::ADD_CHILD, this, m_children.back().get() });
 	}
 }
 
@@ -283,7 +285,7 @@ void gui::Composite::insertChild(int pos, std::unique_ptr<IComponent>&& c)
 		c->setParent(this);
 		m_children.insert(m_children.begin() + pos, std::move(c));
 
-		signal(Event<Component>{ Event<Component>::ADD_CHILD, this, m_children[pos].get() });
+		Observable<Component>::signal(Event<Component>{ Event<Component>::ADD_CHILD, this, m_children[pos].get() });
 	}
 }
 
@@ -297,7 +299,7 @@ void gui::Composite::eraseChild(int pos)
 	m_children[pos]->setParent(nullptr);
 	m_children.erase(m_children.begin() + pos);
 
-	signal(Event<Component>{ Event<Component>::REMOVE_CHILD, this, child });//child will be destroyed before calling this
+	Observable<Component>::signal(Event<Component>{ Event<Component>::REMOVE_CHILD, this, child });//child will be destroyed before calling this
 }
 
 void gui::Composite::moveChild(int pos, int to)
@@ -319,7 +321,7 @@ void gui::Composite::moveChild(int pos, int to)
 
 		m_children[to] = std::move(tmp);
 
-		signal(Event<Component>{ Event<Component>::MOVE_CHILD, this, m_children[to].get() });
+		Observable<Component>::signal(Event<Component>{ Event<Component>::MOVE_CHILD, this, m_children[to].get() });
 	}
 }
 
@@ -334,7 +336,7 @@ gui::ComponentPtr gui::Composite::removeChild(IComponent* c)
 		ret = std::move(*it);
 		m_children.erase(it);
 
-		signal(Event<Component>{ Event<Component>::REMOVE_CHILD, this, ret.get() });
+		Observable<Component>::signal(Event<Component>{ Event<Component>::REMOVE_CHILD, this, ret.get() });
 	}
 
 	return ret;
@@ -347,6 +349,19 @@ void gui::Composite::clearChildren()
 		child->setParent(nullptr);
 	}
 	m_children.clear();
+}
+
+void gui::Composite::handle(Event<Keyboard>& e)
+{
+	//The idea here is that each composite should know via mouse events and capturing
+	//what child component is targeted and forward to it. 
+	//Until we fix mouse handling, however, the key events are going everywhere.
+
+	for (auto&& child : m_children) {
+		assert(child);
+		child->handle(e);
+	}
+	Component::handle(e);
 }
 
 /*

@@ -101,6 +101,8 @@ namespace gui
 		virtual IInvoker* getInvoker() = 0;
 		virtual IComponent* getRoot() = 0;
 
+		virtual void handle(Event<Keyboard>&) = 0;
+
 		virtual void setMouseHandler(MouseHandler*) = 0;
 	};
 

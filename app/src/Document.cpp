@@ -142,6 +142,25 @@ void app::Document::setSize(const gui::Floats<2>& size)
 		m_nodeEditor->setSize(size);
 }
 
+void app::Document::handle(Event<gui::Keyboard>& e)
+{
+	if (e.type == Event<gui::Keyboard>::DOWN) {
+		if (e.key == 'Z' && gui::Keyboard::isDown(gui::KEY_CTRL)) {
+			if (gui::Keyboard::isDown(gui::KEY_SHIFT))
+				redo();
+			else
+				undo();
+			return;
+		}
+		else if (e.key == 'Y' && gui::Keyboard::isDown(gui::KEY_CTRL)) {
+			redo();
+			return;
+		}
+	}
+
+	Composite::handle(e);
+}
+
 void app::Document::setFilePath(const std::filesystem::path& path)
 {
 	m_targetPath = path;

@@ -71,7 +71,10 @@ namespace gui
 {
 	using ComponentListener = IListener<gui::Component>;
 
-	class Component : public IComponent, public Observable<Component>
+	class Component : 
+		public IComponent, 
+		public Observable<Component>,
+		public Observable<Keyboard>
 	{
 	public:
 		Component() {}
@@ -126,9 +129,19 @@ namespace gui
 
 		virtual void setMouseHandler(MouseHandler* h) override { m_mouseHandler = h; }
 
+		virtual void handle(Event<Keyboard>& e) override;
+
+		//for convenience
+		void addComponentListener(ComponentListener& l) { Observable<Component>::addListener(l); }
+		void addKeyListener(KeyListener& l) { Observable<Keyboard>::addListener(l); }
+
+		void removeComponentListener(ComponentListener& l) { Observable<Component>::removeListener(l); }
+		void removeKeyListener(KeyListener& l) { Observable<Keyboard>::removeListener(l); }
+
 	protected:
 		virtual IInvoker* getInvoker() override;
 
+		//TODO: handle mouse input like we handle keyboard input
 		void handleMouse(FrameDrawer& fd);
 		void receiveMouseInput(FrameDrawer& fd, unsigned int imgui_id);
 		bool isHovered(FrameDrawer& fd);
@@ -180,6 +193,8 @@ namespace gui
 		template<typename T, typename ...Args> T* newChild(Args&& ... args);
 		ChildList& getChildren() { return m_children; }
 		const ChildList& getChildren() const { return m_children; }
+
+		virtual void handle(Event<Keyboard>& e) override;
 
 	private:
 		ChildList m_children;
