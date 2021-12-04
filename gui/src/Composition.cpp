@@ -300,6 +300,29 @@ void gui::Composite::eraseChild(int pos)
 	signal(Event<Component>{ Event<Component>::REMOVE_CHILD, this, child });//child will be destroyed before calling this
 }
 
+void gui::Composite::moveChild(int pos, int to)
+{
+	assert(pos >= 0 && (size_t)pos < m_children.size());
+	assert(to >= 0 && (size_t)to < m_children.size());
+
+	if (pos != to) {
+		ComponentPtr tmp = std::move(m_children[pos]);
+
+		if (pos > to) {
+			for (int i = pos; i > to; i--)
+				m_children[i] = std::move(m_children[i - 1]);
+		}
+		else {
+			for (int i = pos; i < to; i++)
+				m_children[i] = std::move(m_children[i + 1]);
+		}
+
+		m_children[to] = std::move(tmp);
+
+		signal(Event<Component>{ Event<Component>::MOVE_CHILD, this, m_children[to].get() });
+	}
+}
+
 gui::ComponentPtr gui::Composite::removeChild(IComponent* c)
 {
 	ComponentPtr ret;

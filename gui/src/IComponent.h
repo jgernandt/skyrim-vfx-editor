@@ -54,6 +54,8 @@ namespace gui
 		//Add/remove child in given position (use iterator instead?)
 		virtual void insertChild(int pos, std::unique_ptr<IComponent>&&) = 0;
 		virtual void eraseChild(int pos) = 0;
+		//Move a child in focus order (effectively erase-insert)
+		virtual void moveChild(int pos, int to) = 0;
 		//Remove a child from us, and return ownership of it to the caller
 		virtual std::unique_ptr<IComponent> removeChild(IComponent*) = 0;
 		//Remove all our children and release their resources

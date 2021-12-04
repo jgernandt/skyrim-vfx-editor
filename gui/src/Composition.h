@@ -32,6 +32,7 @@ struct Event<gui::Component>
 	enum {
 		ADD_CHILD,
 		REMOVE_CHILD,
+		MOVE_CHILD,
 
 	} type{ ADD_CHILD };
 
@@ -54,12 +55,16 @@ public:
 		case Event<gui::Component>::REMOVE_CHILD:
 			onRemoveChild(e.component, e.source);
 			break;
+		case Event<gui::Component>::MOVE_CHILD:
+			onMoveChild(e.component, e.source);
+			break;
 		}
 	}
 
 	virtual void onAddChild(gui::IComponent* c, gui::Component* source) {}
 	//c may have been destroyed when sending this. Stupid?
 	virtual void onRemoveChild(gui::IComponent* c, gui::Component* source) {}
+	virtual void onMoveChild(gui::IComponent* c, gui::Component* source) {}
 };
 
 namespace gui
@@ -85,6 +90,7 @@ namespace gui
 		virtual void addChild(ComponentPtr&&) override {}
 		virtual void insertChild(int pos, std::unique_ptr<IComponent>&&) override {}
 		virtual void eraseChild(int pos) override {}
+		virtual void moveChild(int pos, int to) override {}
 		virtual ComponentPtr removeChild(IComponent*) override { return ComponentPtr(); }
 		virtual void clearChildren() override {}
 
@@ -167,6 +173,7 @@ namespace gui
 		virtual void addChild(ComponentPtr&& c) override;
 		virtual void insertChild(int pos, std::unique_ptr<IComponent>&& c) override;
 		virtual void eraseChild(int pos) override;
+		virtual void moveChild(int pos, int to) override;
 		virtual ComponentPtr removeChild(IComponent* c) override;
 		virtual void clearChildren() override;
 
