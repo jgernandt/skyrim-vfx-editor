@@ -29,6 +29,8 @@ namespace gui
 	constexpr key_t KEY_CTRL = 0x11;
 	constexpr key_t KEY_ALT = 0x12;
 
+	constexpr key_t KEY_DEL = 0x2E;
+
 	class Keyboard
 	{
 	public:
