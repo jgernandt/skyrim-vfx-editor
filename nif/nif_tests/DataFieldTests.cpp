@@ -964,86 +964,163 @@ namespace fields
 	{
 	public:
 
+		struct Listener : VectorListener<Key<float>>
+		{
+			virtual void onInsert(int pos) override
+			{
+				m_inserted.push_back(pos);
+			}
+			virtual void onErase(int pos) override
+			{
+				m_erased.push_back(pos);
+			}
+			virtual void onMove(int from, int to) override
+			{
+				m_moved.push_back({ from, to });
+			}
+
+			bool wasInserted()
+			{
+				bool result = !m_inserted.empty();
+				m_inserted.clear();
+				return result;
+			}
+			bool wasInserted(int pos)
+			{
+				if (!m_inserted.empty()) {
+					bool result = m_inserted.front() == pos;
+					m_inserted.pop_front();
+					return result;
+				}
+				else
+					return false;
+			}
+			bool wasErased()
+			{
+				bool result = !m_erased.empty();
+				m_erased.clear();
+				return result;
+			}
+			bool wasErased(int pos)
+			{
+				if (!m_erased.empty()) {
+					bool result = m_erased.front() == pos;
+					m_erased.pop_front();
+					return result;
+				}
+				else
+					return false;
+			}
+			bool wasMoved()
+			{
+				bool result = !m_moved.empty();
+				m_moved.clear();
+				return result;
+			}
+			bool wasMoved(int from, int to)
+			{
+				if (!m_moved.empty()) {
+					bool result = m_moved.front() == std::pair<int, int>{ from, to };
+					m_moved.pop_front();
+					return result;
+				}
+				else
+					return false;
+			}
+
+		private:
+			std::deque<int> m_inserted;
+			std::deque<int> m_erased;
+			std::deque<std::pair<int, int>> m_moved;
+		};
+
+		struct PListener : PropertyListener<float>
+		{
+			virtual void onSet(const float& f) override
+			{
+				m_signalled = true;
+				m_set = f;
+			}
+
+			bool wasSet()
+			{
+				bool result = m_signalled;
+				m_signalled = false;
+				m_set = std::numeric_limits<float>::quiet_NaN();
+				return result;
+			}
+
+			bool wasSet(float f)
+			{
+				bool result = m_signalled && m_set == f;
+				m_signalled = false;
+				m_set = std::numeric_limits<float>::quiet_NaN();
+				return result;
+			}
+
+		private:
+			float m_set{ std::numeric_limits<float>::quiet_NaN() };
+			bool m_signalled{ false };
+		};
+
+		TEST_METHOD(move)
+		{
+			Listener lsnr;
+			nif::Vector<Key<float>> vec;
+			constexpr int size = 3;
+			vec.resize(size);
+			Assert::IsTrue(vec.size() == size);
+
+			vec.addListener(lsnr);
+			Assert::IsFalse(lsnr.wasMoved());
+
+			vec.at(0).time.set(0.0f);
+			vec.at(1).time.set(1.0f);
+			vec.at(2).time.set(2.0f);
+
+			vec.move(0, 0);
+			Assert::IsFalse(lsnr.wasMoved());
+			Assert::IsFalse(lsnr.wasInserted());
+			Assert::IsFalse(lsnr.wasErased());
+
+			Assert::IsTrue(vec.at(0).time.get() == 0.0f);
+			Assert::IsTrue(vec.at(1).time.get() == 1.0f);
+			Assert::IsTrue(vec.at(2).time.get() == 2.0f);
+
+			vec.move(0, 1);
+			Assert::IsTrue(lsnr.wasMoved(0, 1));
+			Assert::IsFalse(lsnr.wasMoved());
+			Assert::IsFalse(lsnr.wasInserted());
+			Assert::IsFalse(lsnr.wasErased());
+
+			Assert::IsTrue(vec.at(0).time.get() == 1.0f);
+			Assert::IsTrue(vec.at(1).time.get() == 0.0f);
+			Assert::IsTrue(vec.at(2).time.get() == 2.0f);
+
+			vec.move(2, 1);
+			Assert::IsTrue(lsnr.wasMoved(2, 1));
+			Assert::IsFalse(lsnr.wasMoved());
+			Assert::IsFalse(lsnr.wasInserted());
+			Assert::IsFalse(lsnr.wasErased());
+
+			Assert::IsTrue(vec.at(0).time.get() == 1.0f);
+			Assert::IsTrue(vec.at(1).time.get() == 2.0f);
+			Assert::IsTrue(vec.at(2).time.get() == 0.0f);
+
+			vec.move(2, 0);
+			Assert::IsTrue(lsnr.wasMoved(2, 0));
+			Assert::IsFalse(lsnr.wasMoved());
+			Assert::IsFalse(lsnr.wasInserted());
+			Assert::IsFalse(lsnr.wasErased());
+
+			Assert::IsTrue(vec.at(0).time.get() == 0.0f);
+			Assert::IsTrue(vec.at(1).time.get() == 1.0f);
+			Assert::IsTrue(vec.at(2).time.get() == 2.0f);
+		}
+
+		//Should be split into smaller tests:
 		TEST_METHOD(VectorTest)
 		{
-			struct Listener : VectorListener<Key<float>>
-			{
-				virtual void onInsert(int pos) override
-				{
-					m_inserted.push_back(pos);
-				}
-				virtual void onErase(int pos) override
-				{
-					m_erased.push_back(pos);
-				}
-
-				bool wasInserted()
-				{
-					bool result = !m_inserted.empty();
-					m_inserted.clear();
-					return result;
-				}
-				bool wasInserted(int pos)
-				{
-					if (!m_inserted.empty()) {
-						bool result = m_inserted.front() == pos;
-						m_inserted.pop_front();
-						return result;
-					}
-					else
-						return false;
-				}
-				bool wasErased()
-				{
-					bool result = !m_erased.empty();
-					m_erased.clear();
-					return result;
-				}
-				bool wasErased(int pos)
-				{
-					if (!m_erased.empty()) {
-						bool result = m_erased.front() == pos;
-						m_erased.pop_front();
-						return result;
-					}
-					else
-						return false;
-				}
-
-			private:
-				std::deque<int> m_inserted;
-				std::deque<int> m_erased;
-			};
-
-			struct PListener : PropertyListener<float>
-			{
-				virtual void onSet(const float& f) override
-				{
-					m_signalled = true;
-					m_set = f;
-				}
-
-				bool wasSet()
-				{
-					bool result = m_signalled;
-					m_signalled = false;
-					m_set = std::numeric_limits<float>::quiet_NaN();
-					return result;
-				}
-
-				bool wasSet(float f)
-				{
-					bool result = m_signalled && m_set == f;
-					m_signalled = false;
-					m_set = std::numeric_limits<float>::quiet_NaN();
-					return result;
-				}
-
-			private:
-				float m_set{ std::numeric_limits<float>::quiet_NaN() };
-				bool m_signalled{ false };
-			};
-
 			Listener lsnr;
 			PListener plsnr;
 			{

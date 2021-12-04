@@ -30,8 +30,10 @@ namespace nif
 		enum {
 			INSERT,
 			ERASE,
+			MOVE,
 		} type{ INSERT };
-		int pos{ -1 };
+		int pos1{ -1 };
+		int pos2{ -1 };
 	};
 
 	template<typename T>
@@ -44,10 +46,13 @@ namespace nif
 		{
 			switch (e.type) {
 			case Event<nif::Vector<T>>::INSERT:
-				onInsert(e.pos);
+				onInsert(e.pos1);
 				break;
 			case Event<nif::Vector<T>>::ERASE:
-				onErase(e.pos);
+				onErase(e.pos1);
+				break;
+			case Event<nif::Vector<T>>::MOVE:
+				onMove(e.pos1, e.pos2);
 				break;
 			}
 		}
@@ -55,9 +60,13 @@ namespace nif
 		//TODO: use iterators instead of ints
 		virtual void onInsert(int) {}
 		virtual void onErase(int) {}
+		virtual void onMove(int from, int to) {}
 	};
 	template<typename T> using VectorListener = IListener<Vector<T>>;
 
+	//Intended for use as an array of data fields, bot an array of data.
+	//Should work for data too, but the functionality may not be the most 
+	//useful or intuitive for it.
 	template<typename T>
 	class Vector final : public Observable<Vector<T>>
 	{
@@ -110,6 +119,28 @@ namespace nif
 			m_ctnr.erase(m_ctnr.begin() + i);
 
 			this->signal(Event<Vector<T>>{ Event<Vector<T>>::ERASE, i });
+		}
+		void move(int from, int to)
+		{
+			assert(from >= 0 && (size_t)from < m_ctnr.size());
+			assert(to >= 0 && (size_t)to < m_ctnr.size());
+
+			if (from != to) {
+				T tmp(std::move(m_ctnr[from]));
+
+				if (from > to) {
+					for (int i = from; i > to; i--)
+						m_ctnr[i] = std::move(m_ctnr[i - 1]);
+				}
+				else {
+					for (int i = from; i < to; i++)
+						m_ctnr[i] = std::move(m_ctnr[i + 1]);
+				}
+
+				m_ctnr[to] = std::move(tmp);
+
+				this->signal(Event<Vector<T>>{ Event<Vector<T>>::MOVE, from, to });
+			}
 		}
 
 		void pop_back()
