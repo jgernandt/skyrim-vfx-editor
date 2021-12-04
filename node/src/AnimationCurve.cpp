@@ -22,6 +22,10 @@
 
 using namespace nif;
 
+constexpr gui::ColRGBA ACTIVE_COL{ 1.0f, 1.0f, 1.0f, 1.0f };
+constexpr gui::ColRGBA SELECTED_COL{ 1.0f, 0.8f, 0.0f, 1.0f };
+constexpr gui::ColRGBA UNSELECTED_COL{ 0.0f, 0.0f, 0.0f, 1.0f };
+
 class EraseOp final : public gui::ICommand
 {
 	const ni_ptr<Vector<Key<float>>> m_target;
@@ -286,7 +290,7 @@ void node::KeyHandle::frame(gui::FrameDrawer& fd)
 	fd.circle(
 		fd.toGlobal(m_translation),
 		3.0f,
-		m_selected ? m_active ? gui::ColRGBA{ 1.0f, 1.0f, 0.0f, 1.0f } : nif::COL_WHITE : nif::COL_BLACK,
+		m_selected ? m_active ? ACTIVE_COL : SELECTED_COL : UNSELECTED_COL,
 		true);
 }
 
@@ -532,9 +536,9 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 		N = static_cast<int>(std::ceil((lims[1] - startTime) / m_clip.length)) - offset;
 	}
 
-	if (m_data->keys.size() == 0 || m_clip.length <= 0.0f || lims[0] == lims[1])
+	if (m_clip.length <= 0.0f || lims[0] == lims[1])
 		return;//nothing to draw
-	else if (m_data->keys.size() > 1) {
+	else {
 
 		//To hold the final curve
 		std::vector<gui::Floats<2>> curve;
@@ -611,6 +615,8 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 		gui::Floats<2> br2;
 
 		{
+			//should round to pixel and remove duplicates?
+
 			auto popper = fd.pushTransform(m_translation, m_scale);
 			for (auto&& p : curve)
 				p = fd.toGlobal(p);
@@ -740,7 +746,7 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 
 	if (m_data->keys.size() == 0) {
 		m_clip.points.push_back({ tStart, 0.0f });
-		m_clip.points.push_back({ tStop, 0.0f });
+		m_clip.points.push_back({ reverse ? tStart + m_clip.length : tStop, 0.0f });
 	}
 	else {
 		//We assume strictly increasing time values. Might enforce that later.
