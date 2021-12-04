@@ -128,8 +128,8 @@ app::Document::~Document()
 
 void app::Document::frame(gui::FrameDrawer& fd)
 {
-	Composite::frame(fd);
 	m_invoker.invoke();
+	Composite::frame(fd);
 }
 
 void app::Document::setSize(const gui::Floats<2>& size)
