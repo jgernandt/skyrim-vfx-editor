@@ -61,7 +61,9 @@ class MoveOp final : public node::AnimationCurve::Operation
 	std::vector<gui::Floats<2>> m_currentPos;
 	std::vector<int> m_currentI;
 
-	gui::Floats<2> m_move;
+	std::vector<int> m_finalI;
+
+	gui::Floats<2> m_move{ 0.0f, 0.0f };
 	bool m_dirty{ false };
 
 public:
@@ -79,15 +81,46 @@ public:
 		}
 		m_currentI = m_initI;
 		m_currentPos = m_initPos;
+
+		m_finalI = m_currentI;
 	}
 
 	virtual void execute() override
 	{
 		if (m_dirty) {
+			//Determine direction of last move increment
+			int dir = 0;
+			for (size_t i = 0; i < m_finalI.size(); i++) {
+				if (m_finalI[i] < m_currentI[i]) {
+					dir = -1;
+					break;
+				}
+				else if (m_finalI[i] > m_currentI[i]) {
+					dir = 1;
+					break;
+				}
+			}
+			//Reorder keys if needed
+			if (dir == 1) {
+				for (int i = (int)m_currentI.size() - 1; i >= 0; i--) {
+					assert(m_finalI[i] >= m_currentI[i]);
+					m_target->move(m_currentI[i], m_finalI[i]);
+					m_currentI[i] = m_finalI[i];
+				}
+			}
+			else if (dir == -1) {
+				for (size_t i = 0; i < m_currentI.size(); i++) {
+					assert(m_finalI[i] <= m_currentI[i]);
+					m_target->move(m_currentI[i], m_finalI[i]);
+					m_currentI[i] = m_finalI[i];
+				}
+			}
+
 			for (size_t i = 0; i < m_currentI.size(); i++) {
 				m_target->at(m_currentI[i]).time.set(m_currentPos[i][0]);
 				m_target->at(m_currentI[i]).value.set(m_currentPos[i][1]);
 			}
+
 			m_dirty = false;
 		}
 	}
@@ -96,6 +129,21 @@ public:
 		for (size_t i = 0; i < m_currentI.size(); i++) {
 			m_target->at(m_currentI[i]).time.set(m_initPos[i][0]);
 			m_target->at(m_currentI[i]).value.set(m_initPos[i][1]);
+		}
+
+		if (m_move[0] < 0.0f) {
+			for (int i = (int)m_currentI.size() - 1; i >= 0; i--) {
+				assert(m_initI[i] >= m_currentI[i]);
+				m_target->move(m_currentI[i], m_initI[i]);
+				m_currentI[i] = m_initI[i];
+			}
+		}
+		else if (m_move[0] > 0.0f) {
+			for (size_t i = 0; i < m_currentI.size(); i++) {
+				assert(m_initI[i] <= m_currentI[i]);
+				m_target->move(m_currentI[i], m_initI[i]);
+				m_currentI[i] = m_initI[i];
+			}
 		}
 		m_dirty = true;
 	}
@@ -113,12 +161,36 @@ public:
 				//moving toward non-negative time, go through keys in descending order
 				for (int i = (int)m_currentI.size() - 1; i >= 0; i--) {
 					m_currentPos[i] = m_initPos[i] + local_move;
+
+					//look for order changes:
+					//Increase our current index until the next key is not less than us, or we reach the next key in our selection
+					//(keep in mind that the keys we are moving have not had their times updated yet - hence the backwards iteration)
+					for (; m_finalI[i] < (int)m_target->size() - 1; m_finalI[i]++) {
+						//is the next key part of this move op?
+						if (i < (int)m_finalI.size() - 1 && m_finalI[i] + 1 == m_finalI[i + 1])
+							break;
+						//is the next key at a greater or equal time to ours?
+						else if (m_target->at(m_finalI[i] + 1).time.get() >= m_currentPos[i][0])
+							break;
+						//else we should be moved up (at least) one step
+					}
 				}
 			}
 			else {
 				//go through keys in ascending order
-				for (size_t i = 0; i < m_currentI.size(); i++) {
+				for (size_t i = 0; i < m_finalI.size(); i++) {
 					m_currentPos[i] = m_initPos[i] + local_move;
+
+					//as above, but directions are inverted
+					for (; m_finalI[i] > 0; m_finalI[i]--) {
+						//is the prev key part of this move op?
+						if (i > 0 && m_finalI[i] - 1 == m_finalI[i - 1])
+							break;
+						//is the next key at a greater or equal time to ours?
+						else if (m_target->at(m_finalI[i] - 1).time.get() <= m_currentPos[i][0])
+							break;
+						//else we should be moved down (at least) one step
+					}
 				}
 			}
 			m_move = local_move;
@@ -510,12 +582,12 @@ void node::AnimationCurve::onInsert(int pos)
 {
 	assert(pos >= 0 && size_t(pos) <= getChildren().size());
 
-	//Handles after pos must update their index
-	for (int i = pos; (size_t)i < getChildren().size(); i++)
-		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i + 1);
-
 	//Insert handle at pos
 	insertChild(pos, std::make_unique<KeyHandle>(make_ni_ptr(m_data, &NiFloatData::keys), pos));
+
+	//Handles after pos must update their index
+	for (int i = pos + 1; (size_t)i < getChildren().size(); i++)
+		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i);
 
 	//The handle right before pos must refresh its interpolation
 	if (pos != 0)
@@ -529,16 +601,43 @@ void node::AnimationCurve::onErase(int pos)
 	//The handle at i = pos is invalidated
 	static_cast<KeyHandle*>(getChildren()[pos].get())->invalidate();
 
-	//Handles at i > pos must update their index
-	for (int i = pos + 1; (size_t)i < getChildren().size(); i++)
-		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i - 1);
-
 	//Erase invalidated handle
 	eraseChild(pos);
+
+	//Handles at i > pos must update their index
+	for (int i = pos; (size_t)i < getChildren().size(); i++)
+		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i);
 
 	//The handle at i = pos - 1 must refresh
 	if (pos != 0)
 		static_cast<KeyHandle*>(getChildren()[pos - 1].get())->setDirty();
+}
+
+void node::AnimationCurve::onMove(int from, int to)
+{
+	moveChild(from, to);
+
+	//Handles in [from, to] must update their index
+	assert(from != to);
+	int low;
+	int high;
+	if (from > to) {
+		low = to;
+		high = from;
+	}
+	else {
+		low = from;
+		high = to;
+	}
+
+	for (int i = low; i < high + 1; i++)
+		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i);
+
+	//The handle before min(from, to) must refresh
+	if (low != 0)
+		static_cast<KeyHandle*>(getChildren()[low].get())->setDirty();
+	//The handle at max(from, to) must refresh
+	static_cast<KeyHandle*>(getChildren()[high].get())->setDirty();
 }
 
 gui::Floats<2> node::AnimationCurve::getBounds() const

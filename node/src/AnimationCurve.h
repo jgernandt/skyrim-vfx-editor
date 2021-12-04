@@ -69,6 +69,7 @@ namespace node
 
 		virtual void onInsert(int pos) override;
 		virtual void onErase(int pos) override;
+		virtual void onMove(int from, int to) override;
 
 		gui::Floats<2> getBounds() const;
 
