@@ -31,7 +31,7 @@ namespace node
 	class FloatKeyEditor final : 
 		public gui::Popup, 
 		public gui::MouseHandler,
-		public gui::ComponentListener,
+		public gui::CompositeListener,
 		public gui::KeyListener
 	{
 	public:
@@ -76,7 +76,7 @@ namespace node
 
 		virtual void onMouseMove(const gui::Floats<2>& pos) override;
 
-		virtual void onRemoveChild(gui::IComponent* c, gui::Component* source) override;
+		virtual void onRemoveChild(gui::IComponent* c, gui::Composite* source) override;
 
 		void setActiveKey(Selection::iterator key);
 

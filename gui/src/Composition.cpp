@@ -273,7 +273,7 @@ void gui::Composite::addChild(ComponentPtr&& c)
 		c->setParent(this);
 		m_children.push_back(std::move(c));
 
-		Observable<Component>::signal(Event<Component>{ Event<Component>::ADD_CHILD, this, m_children.back().get() });
+		Observable<Composite>::signal(Event<Composite>{ Event<Composite>::ADD_CHILD, this, m_children.back().get() });
 	}
 }
 
@@ -285,7 +285,7 @@ void gui::Composite::insertChild(int pos, std::unique_ptr<IComponent>&& c)
 		c->setParent(this);
 		m_children.insert(m_children.begin() + pos, std::move(c));
 
-		Observable<Component>::signal(Event<Component>{ Event<Component>::ADD_CHILD, this, m_children[pos].get() });
+		Observable<Composite>::signal(Event<Composite>{ Event<Composite>::ADD_CHILD, this, m_children[pos].get() });
 	}
 }
 
@@ -299,7 +299,7 @@ void gui::Composite::eraseChild(int pos)
 	m_children[pos]->setParent(nullptr);
 	m_children.erase(m_children.begin() + pos);
 
-	Observable<Component>::signal(Event<Component>{ Event<Component>::REMOVE_CHILD, this, child });//child will be destroyed before calling this
+	Observable<Composite>::signal(Event<Composite>{ Event<Composite>::REMOVE_CHILD, this, child });//child will be destroyed before calling this
 }
 
 void gui::Composite::moveChild(int pos, int to)
@@ -321,7 +321,7 @@ void gui::Composite::moveChild(int pos, int to)
 
 		m_children[to] = std::move(tmp);
 
-		Observable<Component>::signal(Event<Component>{ Event<Component>::MOVE_CHILD, this, m_children[to].get() });
+		Observable<Composite>::signal(Event<Composite>{ Event<Composite>::MOVE_CHILD, this, m_children[to].get() });
 	}
 }
 
@@ -336,7 +336,7 @@ gui::ComponentPtr gui::Composite::removeChild(IComponent* c)
 		ret = std::move(*it);
 		m_children.erase(it);
 
-		Observable<Component>::signal(Event<Component>{ Event<Component>::REMOVE_CHILD, this, ret.get() });
+		Observable<Composite>::signal(Event<Composite>{ Event<Composite>::REMOVE_CHILD, this, ret.get() });
 	}
 
 	return ret;

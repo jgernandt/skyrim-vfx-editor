@@ -159,7 +159,7 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	auto series = std::make_unique<AnimationCurve>(ctlr, data);
 	m_data = series.get();
 	m_plot->getPlotArea().getAxes().addChild(std::move(series));
-	m_data->addComponentListener(*this);
+	m_data->addCompositeListener(*this);
 
 	//determine limits
 	gui::Floats<2> xlims = 
@@ -268,7 +268,7 @@ node::FloatKeyEditor::~FloatKeyEditor()
 	m_ctlr->phase.removeListener(m_phaseLsnr);
 
 	if (m_data)
-		m_data->removeComponentListener(*this);
+		m_data->removeCompositeListener(*this);
 
 	m_plot->getPlotArea().removeKeyListener(*this);
 }
@@ -555,7 +555,7 @@ void node::FloatKeyEditor::updateAxisUnits()
 	m_plot->getPlotArea().getAxes().setMinorUnits(minor);
 }
 
-void node::FloatKeyEditor::onRemoveChild(gui::IComponent* c, gui::Component* source)
+void node::FloatKeyEditor::onRemoveChild(gui::IComponent* c, gui::Composite* source)
 {
 	//If c was selected, it must be removed from selection immediately (it may no longer exist).
 	if (m_activeItem != m_selection.end() && *m_activeItem == c) {

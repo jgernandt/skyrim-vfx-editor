@@ -23,11 +23,11 @@
 
 namespace gui
 {
-	class Component;
+	class Composite;
 }
 
 template<>
-struct Event<gui::Component>
+struct Event<gui::Composite>
 {
 	enum {
 		ADD_CHILD,
@@ -36,44 +36,43 @@ struct Event<gui::Component>
 
 	} type{ ADD_CHILD };
 
-	gui::Component* source{ nullptr };
+	gui::Composite* source{ nullptr };
 	gui::IComponent* component{ nullptr };
 };
 
 template<>
-class IListener<gui::Component>
+class IListener<gui::Composite>
 {
 public:
 	virtual ~IListener() = default;
 
-	void receive(const Event<gui::Component>& e, Observable<gui::Component>&)
+	void receive(const Event<gui::Composite>& e, Observable<gui::Composite>&)
 	{
 		switch (e.type) {
-		case Event<gui::Component>::ADD_CHILD:
+		case Event<gui::Composite>::ADD_CHILD:
 			onAddChild(e.component, e.source);
 			break;
-		case Event<gui::Component>::REMOVE_CHILD:
+		case Event<gui::Composite>::REMOVE_CHILD:
 			onRemoveChild(e.component, e.source);
 			break;
-		case Event<gui::Component>::MOVE_CHILD:
+		case Event<gui::Composite>::MOVE_CHILD:
 			onMoveChild(e.component, e.source);
 			break;
 		}
 	}
 
-	virtual void onAddChild(gui::IComponent* c, gui::Component* source) {}
+	virtual void onAddChild(gui::IComponent* c, gui::Composite* source) {}
 	//c may have been destroyed when sending this. Stupid?
-	virtual void onRemoveChild(gui::IComponent* c, gui::Component* source) {}
-	virtual void onMoveChild(gui::IComponent* c, gui::Component* source) {}
+	virtual void onRemoveChild(gui::IComponent* c, gui::Composite* source) {}
+	virtual void onMoveChild(gui::IComponent* c, gui::Composite* source) {}
 };
 
 namespace gui
 {
-	using ComponentListener = IListener<gui::Component>;
+	using CompositeListener = IListener<gui::Composite>;
 
 	class Component : 
 		public IComponent, 
-		public Observable<Component>,
 		public Observable<Keyboard>
 	{
 	public:
@@ -131,11 +130,8 @@ namespace gui
 
 		virtual void handle(Event<Keyboard>& e) override;
 
-		//for convenience
-		void addComponentListener(ComponentListener& l) { Observable<Component>::addListener(l); }
 		void addKeyListener(KeyListener& l) { Observable<Keyboard>::addListener(l); }
 
-		void removeComponentListener(ComponentListener& l) { Observable<Component>::removeListener(l); }
 		void removeKeyListener(KeyListener& l) { Observable<Keyboard>::removeListener(l); }
 
 	protected:
@@ -171,7 +167,9 @@ namespace gui
 		bool m_mouseFocus{ false };
 	};
 
-	class Composite : public Component
+	class Composite : 
+		public Component,
+		public Observable<Composite>
 	{
 	public:
 		typedef std::vector<ComponentPtr> ChildList;
@@ -195,6 +193,9 @@ namespace gui
 		const ChildList& getChildren() const { return m_children; }
 
 		virtual void handle(Event<Keyboard>& e) override;
+
+		void addCompositeListener(CompositeListener& l) { Observable<Composite>::addListener(l); }
+		void removeCompositeListener(CompositeListener& l) { Observable<Composite>::removeListener(l); }
 
 	private:
 		ChildList m_children;
