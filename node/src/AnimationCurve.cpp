@@ -259,27 +259,9 @@ public:
 };
 
 node::KeyHandle::KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index) :
-	m_timeLsnr{ this, &m_translation[0] },
-	m_valueLsnr{ this,  &m_translation[1] },
 	m_keys{ std::move(keys) },
-	//m_ctlr{ ctlr },
 	m_index{ index }
 {
-	assert(m_keys);
-	m_keys->at(m_index).time.addListener(m_timeLsnr);
-	m_keys->at(m_index).value.addListener(m_valueLsnr);
-	m_translation = { m_keys->at(m_index).time.get(), m_keys->at(m_index).value.get() };
-}
-
-node::KeyHandle::~KeyHandle()
-{
-	assert(m_keys);
-
-	//We should have been invalidated if our key has been erased.
-	if (!m_invalid) {
-		m_keys->at(m_index).time.removeListener(m_timeLsnr);
-		m_keys->at(m_index).value.removeListener(m_valueLsnr);
-	}
 }
 
 void node::KeyHandle::frame(gui::FrameDrawer& fd)
@@ -301,29 +283,12 @@ void node::KeyHandle::setTranslation(const gui::Floats<2>& t)
 	m_keys->at(m_index).value.set(t[1]);
 }
 
-void node::KeyHandle::onSet(const float& val)
+void node::KeyHandle::onSet(const float&)
 {
+	//We're listening to both time and value. Don't care which one was set.
 	assert(m_keys);
-	m_keys->at(m_index).time.set(val);
-}
-
-std::unique_ptr<gui::IComponent> node::KeyHandle::getActiveWidget() const
-{
-	return std::make_unique<ActiveWidget>(this);
-}
-
-std::unique_ptr<node::AnimationCurve::Operation> node::KeyHandle::getMoveOp(
-	const std::set<KeyHandle*>& keys) const
-{
-	std::vector<int> indices(keys.size());
-
-	int i = 0;
-	for (auto&& key : keys) {
-		indices[i] = key->getIndex();
-		i++;
-	}
-
-	return std::make_unique<MoveOp>(m_keys, std::move(indices));
+	m_translation = { m_keys->at(m_index).time.get(), m_keys->at(m_index).value.get() };
+	m_dirty = true;
 }
 
 float node::KeyHandle::eval(float t)
@@ -342,10 +307,65 @@ float node::KeyHandle::eval(float t)
 }
 
 
-template<>
-struct util::property_traits<node::KeyHandle::KeyProperty>
+node::CentreHandle::CentreHandle(ni_ptr<Vector<Key<float>>>&& keys, int index) :
+	KeyHandle{ std::move(keys), index }
 {
-	using property_type = node::KeyHandle::KeyProperty;
+	assert(m_keys);
+	m_keys->at(m_index).time.addListener(*this);
+	m_keys->at(m_index).value.addListener(*this);
+	m_translation = { m_keys->at(m_index).time.get(), m_keys->at(m_index).value.get() };
+}
+
+node::CentreHandle::~CentreHandle()
+{
+	assert(m_keys);
+
+	//We should have been invalidated if our key has been erased.
+	if (!m_invalid) {
+		m_keys->at(m_index).time.removeListener(*this);
+		m_keys->at(m_index).value.removeListener(*this);
+	}
+}
+
+std::unique_ptr<node::AnimationCurve::Operation> node::CentreHandle::getMoveOp(
+	const std::set<KeyHandle*>& keys) const
+{
+	std::vector<int> indices(keys.size());
+
+	int i = 0;
+	for (auto&& key : keys) {
+		indices[i] = key->getIndex();
+		i++;
+	}
+
+	return std::make_unique<MoveOp>(m_keys, std::move(indices));
+}
+
+float node::CentreHandle::getTime() const
+{
+	return m_keys->at(m_index).time.get();
+}
+
+void node::CentreHandle::setTime(float t)
+{
+	m_keys->at(m_index).time.set(t);
+}
+
+float node::CentreHandle::getValue() const
+{
+	return m_keys->at(m_index).value.get();
+}
+
+void node::CentreHandle::setValue(float val)
+{
+	m_keys->at(m_index).value.set(val);
+}
+
+
+template<>
+struct util::property_traits<node::AnimationCurve::KeyProperty>
+{
+	using property_type = node::AnimationCurve::KeyProperty;
 	using value_type = float;
 	using get_type = float;
 
@@ -359,134 +379,73 @@ struct util::property_traits<node::KeyHandle::KeyProperty>
 	}
 };
 
-template<>
-struct util::property_traits<node::KeyHandle::TimeWidget*>
+node::AnimationCurve::ActiveWidget::ActiveWidget(ni_ptr<Property<KeyType>>&& type, ni_ptr<Vector<Key<float>>>&& keys, int index) :
+	m_type{ std::move(type) }, m_keys{ std::move(keys) }, m_index{ index }
 {
-	using property_type = node::KeyHandle::TimeWidget*;
-	using value_type = float;
-	using get_type = float;
+	assert(m_type&& m_keys);
+	m_type->addListener(*this);
+	m_keys->addListener(*this);
 
-	static float get(property_type p) 
-	{ 
-		return static_cast<node::KeyHandle::ActiveWidget*>(p)->getTime();
-	}
-	static void set(property_type p, float val) 
-	{ 
-		static_cast<node::KeyHandle::ActiveWidget*>(p)->setTime(val);
-	}
-};
-template<>
-struct util::property_traits<node::KeyHandle::ValueWidget*>
+	createWidgets();
+}
+
+node::AnimationCurve::ActiveWidget::~ActiveWidget()
 {
-	using property_type = node::KeyHandle::ValueWidget*;
-	using value_type = float;
-	using get_type = float;
+	m_type->removeListener(*this);
+	m_keys->removeListener(*this);
+}
 
-	static float get(property_type p)
-	{
-		return static_cast<node::KeyHandle::ActiveWidget*>(p)->getValue();
-	}
-	static void set(property_type p, float val)
-	{
-		static_cast<node::KeyHandle::ActiveWidget*>(p)->setValue(val);
-	}
-};
-
-//Like the default, but instead of sending a command to set the property (TimeWidget*)
-//it sends a command to set a KeyProperty that is fetched from the KeyHandle*.
-//Unlike a TimeWidget*, a KeyProperty may safely be accessed at any later time.
-template<>
-struct gui::DefaultEventSink<node::KeyHandle::TimeWidget*>
+void node::AnimationCurve::ActiveWidget::onInsert(int i)
 {
-	using value_type = float;
+	if (i <= m_index) {
+		m_index++;
+		clearChildren();
+		createWidgets();
+	}
+}
 
-	void begin(node::KeyHandle::TimeWidget* p, IComponent* source) 
-	{
-		m_init = util::property_traits<node::KeyHandle::TimeWidget*>::get(p);
-	}
-	void update(node::KeyHandle::TimeWidget* p, IComponent* source, float val) 
-	{
-		static_assert(SINGLE_THREAD);
-		util::property_traits<node::KeyHandle::TimeWidget*>::set(p, val);
-	}
-	void end(node::KeyHandle::TimeWidget* p, IComponent* source) 
-	{
-		if (IInvoker* inv = source->getInvoker())
-			inv->queue(std::make_unique<DefaultSetCommand<node::KeyHandle::KeyProperty>>(
-				static_cast<node::KeyHandle::ActiveWidget*>(p)->getKeyProperty(&Key<float>::time),
-				static_cast<node::KeyHandle::ActiveWidget*>(p)->getTime(), 
-				m_init));
-	}
-
-	float m_init{ 0.0f };
-};
-template<>
-struct gui::DefaultEventSink<node::KeyHandle::ValueWidget*>
+void node::AnimationCurve::ActiveWidget::onErase(int i)
 {
-	using value_type = float;
-
-	void begin(node::KeyHandle::ValueWidget* p, IComponent* source)
-	{
-		m_init = util::property_traits<node::KeyHandle::ValueWidget*>::get(p);
+	if (i < m_index) {
+		m_index--;
+		clearChildren();
+		createWidgets();
 	}
-	void update(node::KeyHandle::ValueWidget* p, IComponent* source, float val)
-	{
-		static_assert(SINGLE_THREAD);
-		util::property_traits<node::KeyHandle::ValueWidget*>::set(p, val);
+	else if (i == m_index) {
+		m_index = -1;
+		clearChildren();
+		m_type->removeListener(*this);
+		m_keys->removeListener(*this);
 	}
-	void end(node::KeyHandle::ValueWidget* p, IComponent* source)
-	{
-		if (IInvoker* inv = source->getInvoker())
-			inv->queue(std::make_unique<DefaultSetCommand<node::KeyHandle::KeyProperty>>(
-				static_cast<node::KeyHandle::ActiveWidget*>(p)->getKeyProperty(&Key<float>::value),
-				static_cast<node::KeyHandle::ActiveWidget*>(p)->getValue(),
-				m_init));
-	}
+}
 
-	float m_init{ 0.0f };
-};
-
-node::KeyHandle::ActiveWidget::ActiveWidget(const KeyHandle* handle) : m_handle{ handle }
+void node::AnimationCurve::ActiveWidget::onSet(const KeyType& type)
 {
-	newChild<gui::Text>("Linear key");
+	clearChildren();
+	createWidgets();
+}
 
-	auto time = newChild<gui::DragInput<float, 1, TimeWidget*>>(static_cast<TimeWidget*>(this), "Time");
+void node::AnimationCurve::ActiveWidget::createWidgets()
+{
+	newChild<gui::Text>("Key");
+
+	auto time = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::time }, "Time");
 	time->setSensitivity(0.01f);
 	time->setNumberFormat("%.2f");
 
-	auto val = newChild<gui::DragInput<float, 1, ValueWidget*>>(static_cast<ValueWidget*>(this), "Value");
+	auto val = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::value }, "Value");
 	val->setSensitivity(0.01f);
 	val->setNumberFormat("%.2f");
-}
 
-float node::KeyHandle::ActiveWidget::getTime() const
-{
-	assert(m_handle && m_handle->m_keys);
-	return m_handle->m_keys->at(m_handle->m_index).time.get();
-}
+	if (m_type->get() == KEY_QUADRATIC) {
+		auto fwd = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::fwdTan }, "Fwd tangent");
+		fwd->setSensitivity(0.01f);
+		fwd->setNumberFormat("%.2f");
 
-void node::KeyHandle::ActiveWidget::setTime(float t)
-{
-	assert(m_handle && m_handle->m_keys);
-	m_handle->m_keys->at(m_handle->m_index).time.set(t);
-}
-
-float node::KeyHandle::ActiveWidget::getValue() const
-{
-	assert(m_handle && m_handle->m_keys);
-	return m_handle->m_keys->at(m_handle->m_index).value.get();
-}
-
-void node::KeyHandle::ActiveWidget::setValue(float val)
-{
-	assert(m_handle && m_handle->m_keys);
-	m_handle->m_keys->at(m_handle->m_index).value.set(val);
-}
-
-node::KeyHandle::KeyProperty node::KeyHandle::ActiveWidget::getKeyProperty(Property<float> Key<float>::* member) const
-{
-	assert(m_handle && m_handle->m_keys);
-	return KeyProperty{ m_handle->m_keys, m_handle->m_index, member };
+		auto bwd = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::bwdTan }, "Bwd tangent");
+		bwd->setSensitivity(0.01f);
+		bwd->setNumberFormat("%.2f");
+	}
 }
 
 
@@ -498,7 +457,7 @@ node::AnimationCurve::AnimationCurve(const ni_ptr<NiTimeController>& ctlr, const
 
 	int i = 0;
 	for (auto&& key : m_data->keys)
-		newChild<KeyHandle>(make_ni_ptr(m_data, &NiFloatData::keys), i++);
+		newChild<CentreHandle>(make_ni_ptr(m_data, &NiFloatData::keys), i++);
 }
 
 node::AnimationCurve::~AnimationCurve()
@@ -643,7 +602,7 @@ void node::AnimationCurve::onInsert(int pos)
 	assert(pos >= 0 && size_t(pos) <= getChildren().size());
 
 	//Insert handle at pos
-	insertChild(pos, std::make_unique<KeyHandle>(make_ni_ptr(m_data, &NiFloatData::keys), pos));
+	insertChild(pos, std::make_unique<CentreHandle>(make_ni_ptr(m_data, &NiFloatData::keys), pos));
 
 	//Handles after pos must update their index
 	for (int i = pos + 1; (size_t)i < getChildren().size(); i++)
@@ -710,6 +669,12 @@ gui::Floats<2> node::AnimationCurve::getBounds() const
 			result[1] = key.value.get();
 	}
 	return result;
+}
+
+std::unique_ptr<gui::IComponent> node::AnimationCurve::getKeyWidget(int index)
+{
+	return std::make_unique<ActiveWidget>(
+		make_ni_ptr(m_data, &NiFloatData::keyType), make_ni_ptr(m_data, &NiFloatData::keys), index);
 }
 
 std::unique_ptr<gui::ICommand> node::AnimationCurve::getInsertOp(const gui::Floats<2>& pos) const

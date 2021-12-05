@@ -290,7 +290,7 @@ void node::FloatKeyEditor::setActiveKey(Selection::iterator key)
 	}
 
 	if (key != m_selection.end()) {
-		m_activePanel->addChild((*key)->getActiveWidget());
+		m_activePanel->addChild(m_data->getKeyWidget((*key)->getIndex()));
 		(*key)->setActive(true);
 	}
 	m_activeItem = key;

@@ -63,6 +63,46 @@ namespace node
 			virtual void update(const gui::Floats<2>& local_move) = 0;
 		};
 
+		//For use in our active widgets. We specialise property_traits
+		//to get/set keys->at(index).*member
+		struct KeyProperty
+		{
+			const ni_ptr<Vector<Key<float>>> keys;
+			int index;
+			Property<float> Key<float>::* member;
+		};
+
+		class ActiveWidget final :
+			public gui::Composite,
+			public VectorListener<Key<float>>,
+			public PropertyListener<KeyType>
+		{
+		public:
+			ActiveWidget(ni_ptr<Property<KeyType>>&& type, ni_ptr<Vector<Key<float>>>&& keys, int index);
+			~ActiveWidget();
+
+			//Keep our index correct
+			virtual void onInsert(int i) override;
+			virtual void onErase(int i) override;
+
+			//Show widgets for all relevant fields only
+			virtual void onSet(const KeyType& type) override;
+
+			float getTime() const { return m_keys->at(m_index).time.get(); }
+			void setTime(float t) { m_keys->at(m_index).time.set(t); }
+
+			float getValue() const { return m_keys->at(m_index).value.get(); }
+			void setValue(float val) { m_keys->at(m_index).value.set(val); }
+
+		private:
+			void createWidgets();
+
+		private:
+			const ni_ptr<Property<KeyType>> m_type;
+			const ni_ptr<Vector<Key<float>>> m_keys;
+			int m_index;
+		};
+
 	public:
 		AnimationCurve(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data);
 		~AnimationCurve();
@@ -74,6 +114,8 @@ namespace node
 		virtual void onMove(int from, int to) override;
 
 		gui::Floats<2> getBounds() const;
+
+		std::unique_ptr<gui::IComponent> getKeyWidget(int index);
 
 		std::unique_ptr<gui::ICommand> getEraseOp(const std::set<KeyHandle*>& keys) const;
 		std::unique_ptr<gui::ICommand> getInsertOp(const gui::Floats<2>& pos) const;
@@ -103,51 +145,9 @@ namespace node
 
 	class KeyHandle : public gui::Component, public PropertyListener<float>
 	{
-		class Listener final : public PropertyListener<float>
-		{
-		public:
-			Listener(KeyHandle* owner, float* target) : m_owner{ owner }, m_target{ target } {}
-			virtual void onSet(const float& val) { *m_target = val; m_owner->setDirty(); }
-
-		private:
-			KeyHandle* m_owner;
-			float* m_target;
-		};
-
-	public:
-		//For use in our active widgets. We specialise property_traits
-		//to get/set keys->at(index).*member
-		struct KeyProperty
-		{
-			const ni_ptr<Vector<Key<float>>> keys;
-			int index;
-			Property<float> Key<float>::* member;
-		};
-
-		//Second time I use this stupid method. There has to be a nicer way!
-		class TimeWidget {};
-		class ValueWidget {};
-		class ActiveWidget final :
-			public gui::Composite, public TimeWidget, public ValueWidget
-		{
-		public:
-			ActiveWidget(const KeyHandle* handle);
-
-			float getTime() const;
-			void setTime(float t);
-
-			float getValue() const;
-			void setValue(float val);
-
-			KeyProperty getKeyProperty(Property<float> Key<float>::*member) const;
-
-		private:
-			const KeyHandle* const m_handle;
-		};
-
 	public:
 		KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index);
-		virtual ~KeyHandle();
+		virtual ~KeyHandle() = default;
 
 		virtual void frame(gui::FrameDrawer& fd) override;
 		virtual void setTranslation(const gui::Floats<2>& t) override;
@@ -157,9 +157,7 @@ namespace node
 		void setActive(bool on) { m_active = on; }
 		void setSelected(bool on) { m_selected = on; }
 
-		std::unique_ptr<gui::IComponent> getActiveWidget() const;
-
-		std::unique_ptr<AnimationCurve::Operation> getMoveOp(const std::set<KeyHandle*>& keys) const;
+		virtual std::unique_ptr<AnimationCurve::Operation> getMoveOp(const std::set<KeyHandle*>& keys) const = 0;
 
 		int getIndex() const { return m_index; }
 		void setIndex(int i) { m_index = i; }
@@ -171,15 +169,28 @@ namespace node
 
 		void setDirty() { m_dirty = true; }
 
-	private:
-		Listener m_timeLsnr;
-		Listener m_valueLsnr;
+	protected:
 		const ni_ptr<Vector<Key<float>>> m_keys;
-		Interpolant m_interpolant;
 		int m_index;
+
 		bool m_selected{ false };
 		bool m_active{ false };
 		bool m_dirty{ true };
 		bool m_invalid{ false };
+	};
+
+	class CentreHandle final : public KeyHandle
+	{
+	public:
+		CentreHandle(ni_ptr<Vector<Key<float>>>&& keys, int index);
+		~CentreHandle();
+
+		virtual std::unique_ptr<AnimationCurve::Operation> getMoveOp(const std::set<KeyHandle*>& keys) const override;
+
+		float getTime() const;
+		void setTime(float t);
+
+		float getValue() const;
+		void setValue(float val);
 	};
 }
