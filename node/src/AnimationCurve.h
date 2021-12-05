@@ -28,34 +28,7 @@ namespace node
 		ACTIVE
 	};
 
-	//We don't need this anymore, just store points and length in AnimationCurve
-	struct AnimationClip
-	{
-		int size() { return points.size(); }
-
-		float time(int i) const
-		{
-			assert(i >= 0);
-			return points[i][0];
-		}
-
-		float value(int i) const
-		{
-			assert(i >= 0);
-			return points[i][1];
-		}
-
-		gui::Floats<2>& operator[](int i) { return points[i]; }
-		const gui::Floats<2>& operator[](int i) const { return points[i]; }
-		gui::Floats<2>& front() { return points.front(); }
-		gui::Floats<2>& back() { return points.back(); }
-
-		std::vector<gui::Floats<2>> points;
-		float length{ 0.0f };
-	};
-
-	class HandleRoot;
-	class KeyHandle;
+	class AnimationKey;
 
 	class AnimationCurve final :
 		public gui::Composite,
@@ -83,8 +56,8 @@ namespace node
 		SelectionState getSelectionState() const { return m_selectionState; }
 		void setSelectionState(SelectionState state) { m_selectionState = state; }
 
-		HandleRoot* getActive() const;
-		std::vector<HandleRoot*> getSelected() const;
+		AnimationKey* getActive() const;
+		std::vector<AnimationKey*> getSelected() const;
 
 		ni_ptr<Vector<Key<float>>> getKeysPtr() const;
 		ni_ptr<Property<KeyType>> getTypePtr() const;
@@ -92,7 +65,7 @@ namespace node
 
 		gui::Floats<2> getBounds() const;
 
-		std::unique_ptr<gui::ICommand> getEraseOp(const std::vector<HandleRoot*>& keys) const;
+		std::unique_ptr<gui::ICommand> getEraseOp(const std::vector<AnimationKey*>& keys) const;
 		std::unique_ptr<gui::ICommand> getInsertOp(const gui::Floats<2>& pos) const;
 
 		void setAxisLimits(const gui::Floats<2>& lims) { m_axisLims = lims; }
@@ -103,30 +76,21 @@ namespace node
 	private:
 		const ni_ptr<NiTimeController> m_ctlr;
 		const ni_ptr<NiFloatData> m_data;
-		AnimationClip m_clip;
 		gui::Floats<2> m_axisLims;
 		SelectionState m_selectionState{ SelectionState::NOT_SELECTED };
-	};
 
-	class Interpolant
-	{
-	public:
-		Interpolant(float m = 0.0f, float k = 1.0f) : m_m{ m }, m_k{ k } {}
-		//should this be in normalised time?
-		float eval(float t) const { return t <= 0.0f ? m_m : t >= 1.0f ? m_m + m_k : m_m + t * m_k; }
-
-		float m_m;
-		float m_k;
+		std::vector<gui::Floats<2>> m_clipPoints;
+		float m_clipLength{ 0.0f };
 	};
 
 	//Root of the key handle. Responsible for positioning at the correct time/value,
 	//and for interpolating to the next key.
 	//Parents the interactive widgets.
-	class HandleRoot final : public gui::Composite, public PropertyListener<float>
+	class AnimationKey final : public gui::Composite, public PropertyListener<float>
 	{
 	public:
-		HandleRoot(AnimationCurve& curve, int index);
-		~HandleRoot();
+		AnimationKey(AnimationCurve& curve, int index);
+		~AnimationKey();
 
 		virtual void setTranslation(const gui::Floats<2>& t) override;
 
@@ -168,7 +132,7 @@ namespace node
 		public PropertyListener<KeyType>
 	{
 	public:
-		KeyWidget(HandleRoot& key);
+		KeyWidget(AnimationKey& key);
 		~KeyWidget();
 
 		//Keep our index correct
@@ -185,7 +149,7 @@ namespace node
 
 	private:
 		//We need this if we want to set handle types (aligned/free)
-		HandleRoot* m_key;
+		AnimationKey* m_key;
 		//We need these to listen to type and index changes.
 		//We need to store them in order to unregister.
 		const ni_ptr<Property<KeyType>> m_type;
@@ -197,10 +161,10 @@ namespace node
 	class KeyHandle : public gui::Component
 	{
 	public:
-		KeyHandle(HandleRoot& root) : m_root{ &root } {}
+		KeyHandle(AnimationKey& root) : m_root{ &root } {}
 		virtual ~KeyHandle() = default;
 
-		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(std::vector<HandleRoot*>&& keys) = 0;
+		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(std::vector<AnimationKey*>&& keys) = 0;
 
 		SelectionState getSelectionState() const { return m_root->getSelectionState(); }
 		void setSelectionState(SelectionState state) { m_root->setSelectionState(state); }
@@ -209,15 +173,15 @@ namespace node
 		std::unique_ptr<gui::IComponent> getWidget();
 
 	protected:
-		HandleRoot* const m_root;//we could just static_cast our parent
+		AnimationKey* const m_root;//we could just static_cast our parent
 	};
 
 	//Interactive widget for key time/value.
 	class CentreHandle final : public KeyHandle
 	{
 	public:
-		CentreHandle(HandleRoot& root) : KeyHandle{ root } {}
+		CentreHandle(AnimationKey& root) : KeyHandle{ root } {}
 		virtual void frame(gui::FrameDrawer& fd) override;
-		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(std::vector<HandleRoot*>&& keys) override;
+		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(std::vector<AnimationKey*>&& keys) override;
 	};
 }

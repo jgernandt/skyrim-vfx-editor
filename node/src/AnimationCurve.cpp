@@ -267,7 +267,7 @@ node::AnimationCurve::AnimationCurve(const ni_ptr<NiTimeController>& ctlr, const
 
 	int i = 0;
 	for (auto&& key : m_data->keys)
-		newChild<HandleRoot>(*this, i++);
+		newChild<AnimationKey>(*this, i++);
 }
 
 node::AnimationCurve::~AnimationCurve()
@@ -303,26 +303,26 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 		N = 1;
 	}
 	else {
-		offset = static_cast<int>(std::floor((lims[0] - startTime) / m_clip.length));
-		N = static_cast<int>(std::ceil((lims[1] - startTime) / m_clip.length)) - offset;
+		offset = static_cast<int>(std::floor((lims[0] - startTime) / m_clipLength));
+		N = static_cast<int>(std::ceil((lims[1] - startTime) / m_clipLength)) - offset;
 	}
 
-	if (m_clip.length <= 0.0f || lims[0] == lims[1])
+	if (m_clipLength <= 0.0f || lims[0] == lims[1])
 		return;//nothing to draw
 	else {
 
 		//To hold the final curve
 		std::vector<gui::Floats<2>> curve;
-		curve.reserve(N * m_clip.size() + 2);
+		curve.reserve(N * m_clipPoints.size() + 2);
 
 		//Only valid/relevant on Clamp
 		if (clamp && lims[0] < startTime) {
-			curve.push_back({ lims[0], m_clip.front()[1] });
-			curve.push_back(m_clip.front());
+			curve.push_back({ lims[0], m_clipPoints.front()[1] });
+			curve.push_back(m_clipPoints.front());
 		}
 
 		for (int i = 0; i < N; i++) {
-			float t_offset = (i + offset) * m_clip.length;
+			float t_offset = (i + offset) * m_clipLength;
 
 			//push t_offset as a transform and input points in global space directly?
 
@@ -332,9 +332,9 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 
 			if (lim0 < startTime && lim1 > stopTime) {
 				//Whole curve is visible (in x at least, let's worry about y later).
-				for (int i = 0; i < (int)m_clip.size(); i++) {
-					float t = m_clip.time(i) + t_offset;
-					float v = m_clip.value(i);
+				for (int i = 0; i < (int)m_clipPoints.size(); i++) {
+					float t = m_clipPoints[i][0] + t_offset;
+					float v = m_clipPoints[i][1];
 					if (curve.empty() || curve.back()[0] != t || curve.back()[1] != v)
 						curve.push_back({ t, v });
 				}
@@ -345,15 +345,15 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 
 				int i = 0;
 				//skip clipped beginning
-				for (; i < (int)m_clip.size() - 1 && m_clip.time(i + 1) <= lim0; i++) {}
+				for (; i < (int)m_clipPoints.size() - 1 && m_clipPoints[i + 1][0] <= lim0; i++) {}
 
 				//May also be clipped in upper end; include only as long as previous is less than lim1
-				for (; i < (int)m_clip.size(); i++) {
-					if (i != 0 && m_clip.time(i - 1) >= lim1)
+				for (; i < (int)m_clipPoints.size(); i++) {
+					if (i != 0 && m_clipPoints[i - 1][0] >= lim1)
 						break;
 
-					float t = m_clip.time(i) + t_offset;
-					float v = m_clip.value(i);
+					float t = m_clipPoints[i][0] + t_offset;
+					float v = m_clipPoints[i][1];
 					if (curve.empty() || curve.back()[0] != t || curve.back()[1] != v)
 						curve.push_back({ t, v });
 				}
@@ -362,13 +362,13 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 				//This is the end of the curve (lim1 <= clip.length)
 				//Include as long as previous is less than lim1
 				//We skip the first point if it is a duplicate
-				for (int i = 0; i < (int)m_clip.size(); i++) {
+				for (int i = 0; i < (int)m_clipPoints.size(); i++) {
 
-					if (i != 0 && m_clip.time(i - 1) >= lim1)
+					if (i != 0 && m_clipPoints[i - 1][0] >= lim1)
 						break;
 
-					float t = m_clip.time(i) + t_offset;
-					float v = m_clip.value(i);
+					float t = m_clipPoints[i][0] + t_offset;
+					float v = m_clipPoints[i][1];
 					if (curve.empty() || curve.back()[0] != t || curve.back()[1] != v)
 						curve.push_back({ t, v });
 				}
@@ -377,7 +377,7 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 
 		//Only valid/relevant on Clamp
 		if (clamp && lims[1] > stopTime) {
-			curve.push_back({ lims[1], m_clip.back()[1] });
+			curve.push_back({ lims[1], m_clipPoints.back()[1] });
 		}
 
 		gui::Floats<2> tl1;
@@ -414,15 +414,15 @@ void node::AnimationCurve::onInsert(int pos)
 	assert(pos >= 0 && size_t(pos) <= getChildren().size());
 
 	//Insert handle at pos
-	insertChild(pos, std::make_unique<HandleRoot>(*this, pos));
+	insertChild(pos, std::make_unique<AnimationKey>(*this, pos));
 
 	//Handles after pos must update their index
 	for (int i = pos + 1; (size_t)i < getChildren().size(); i++)
-		static_cast<HandleRoot*>(getChildren()[i].get())->setIndex(i);
+		static_cast<AnimationKey*>(getChildren()[i].get())->setIndex(i);
 
 	//The handle right before pos must refresh its interpolation
 	if (pos != 0)
-		static_cast<HandleRoot*>(getChildren()[pos - 1].get())->setDirty();
+		static_cast<AnimationKey*>(getChildren()[pos - 1].get())->setDirty();
 }
 
 void node::AnimationCurve::onErase(int pos)
@@ -430,18 +430,18 @@ void node::AnimationCurve::onErase(int pos)
 	assert(pos >= 0 && size_t(pos) < getChildren().size());
 
 	//The handle at i = pos is invalidated
-	static_cast<HandleRoot*>(getChildren()[pos].get())->invalidate();
+	static_cast<AnimationKey*>(getChildren()[pos].get())->invalidate();
 
 	//Erase invalidated handle
 	eraseChild(pos);
 
 	//Handles at i > pos must update their index
 	for (int i = pos; (size_t)i < getChildren().size(); i++)
-		static_cast<HandleRoot*>(getChildren()[i].get())->setIndex(i);
+		static_cast<AnimationKey*>(getChildren()[i].get())->setIndex(i);
 
 	//The handle at i = pos - 1 must refresh
 	if (pos != 0)
-		static_cast<HandleRoot*>(getChildren()[pos - 1].get())->setDirty();
+		static_cast<AnimationKey*>(getChildren()[pos - 1].get())->setDirty();
 }
 
 void node::AnimationCurve::onMove(int from, int to)
@@ -462,20 +462,20 @@ void node::AnimationCurve::onMove(int from, int to)
 	}
 
 	for (int i = low; i < high + 1; i++)
-		static_cast<HandleRoot*>(getChildren()[i].get())->setIndex(i);
+		static_cast<AnimationKey*>(getChildren()[i].get())->setIndex(i);
 
 	//The handle before min(from, to) must refresh
 	if (low != 0)
-		static_cast<HandleRoot*>(getChildren()[low].get())->setDirty();
+		static_cast<AnimationKey*>(getChildren()[low].get())->setDirty();
 	//The handle at max(from, to) must refresh
-	static_cast<HandleRoot*>(getChildren()[high].get())->setDirty();
+	static_cast<AnimationKey*>(getChildren()[high].get())->setDirty();
 }
 
-node::HandleRoot* node::AnimationCurve::getActive() const
+node::AnimationKey* node::AnimationCurve::getActive() const
 {
-	HandleRoot* result = nullptr;
+	AnimationKey* result = nullptr;
 	for (auto&& child : getChildren()) {
-		if (auto key = static_cast<HandleRoot*>(child.get()); key->getSelectionState() == SelectionState::ACTIVE) {
+		if (auto key = static_cast<AnimationKey*>(child.get()); key->getSelectionState() == SelectionState::ACTIVE) {
 			result = key;
 			break;
 		}
@@ -483,11 +483,11 @@ node::HandleRoot* node::AnimationCurve::getActive() const
 	return result;
 }
 
-std::vector<node::HandleRoot*> node::AnimationCurve::getSelected() const
+std::vector<node::AnimationKey*> node::AnimationCurve::getSelected() const
 {
-	std::vector<HandleRoot*> result;
+	std::vector<AnimationKey*> result;
 	for (auto&& child : getChildren()) {
-		if (auto key = static_cast<HandleRoot*>(child.get()); key->getSelectionState() != SelectionState::NOT_SELECTED) {
+		if (auto key = static_cast<AnimationKey*>(child.get()); key->getSelectionState() != SelectionState::NOT_SELECTED) {
 			result.push_back(key);
 		}
 	}
@@ -525,11 +525,11 @@ std::unique_ptr<gui::ICommand> node::AnimationCurve::getInsertOp(const gui::Floa
 	return std::make_unique<InsertOp>(make_ni_ptr(m_data, &NiFloatData::keys), index, pos);
 }
 
-std::unique_ptr<gui::ICommand> node::AnimationCurve::getEraseOp(const std::vector<HandleRoot*>& keys) const
+std::unique_ptr<gui::ICommand> node::AnimationCurve::getEraseOp(const std::vector<AnimationKey*>& keys) const
 {
 	std::vector<int> indices(keys.size());
 	int i = 0;
-	for (HandleRoot* key : keys) {
+	for (AnimationKey* key : keys) {
 		assert(key && getChildren()[key->getIndex()].get() == key);//it must be one of our keys
 		indices[i++] = key->getIndex();
 	}
@@ -543,13 +543,13 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 	float tStart = m_ctlr->startTime.get();
 	float tStop = m_ctlr->stopTime.get();
 
-	m_clip.length = reverse ? 2.0f * (tStop - tStart) : tStop - tStart;
+	m_clipLength = reverse ? 2.0f * (tStop - tStart) : tStop - tStart;
 
-	m_clip.points.clear();
+	m_clipPoints.clear();
 
 	if (m_data->keys.size() == 0) {
-		m_clip.points.push_back({ tStart, 0.0f });
-		m_clip.points.push_back({ reverse ? tStart + m_clip.length : tStop, 0.0f });
+		m_clipPoints.push_back({ tStart, 0.0f });
+		m_clipPoints.push_back({ reverse ? tStart + m_clipLength : tStop, 0.0f });
 	}
 	else {
 		//We assume strictly increasing time values. Might enforce that later.
@@ -560,8 +560,8 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 
 		//if the first key is greater than tStart, special treatment is required
 		if (float t = m_data->keys.front().time.get(); t > tStart) {
-			m_clip.points.push_back({ tStart, 0.0f });
-			m_clip.points.push_back({ std::min(t, tStop), 0.0f });
+			m_clipPoints.push_back({ tStart, 0.0f });
+			m_clipPoints.push_back({ std::min(t, tStop), 0.0f });
 			stopReverse = 1;
 		}
 
@@ -585,10 +585,10 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 				t = std::max(t, tStart);
 
 				//Feels stupid with this indirection here, but it will help with quadratics
-				float v = static_cast<HandleRoot*>(getChildren()[i].get())->eval(tau);
+				float v = static_cast<AnimationKey*>(getChildren()[i].get())->eval(tau);
 
-				if (m_clip.points.empty() || m_clip.points.back()[0] != t || m_clip.points.back()[1] != v)
-					m_clip.points.push_back({ t, v });
+				if (m_clipPoints.empty() || m_clipPoints.back()[0] != t || m_clipPoints.back()[1] != v)
+					m_clipPoints.push_back({ t, v });
 			}
 			else {
 				//evaluate clamped to tStop
@@ -602,25 +602,25 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 					else
 						tau = 1.0f;
 
-					float v = static_cast<HandleRoot*>(getChildren()[i - 1].get())->eval(tau);
+					float v = static_cast<AnimationKey*>(getChildren()[i - 1].get())->eval(tau);
 
-					if (m_clip.points.empty() || m_clip.points.back()[0] != t || m_clip.points.back()[1] != v)
-						m_clip.points.push_back({ t, v });
+					if (m_clipPoints.empty() || m_clipPoints.back()[0] != t || m_clipPoints.back()[1] != v)
+						m_clipPoints.push_back({ t, v });
 				}
 				break;
 			}
 		}
 
 		//if the last point is less than tStop, clamp it to the end
-		if (m_clip.points.back()[0] < tStop)
-			m_clip.points.push_back({ tStop, m_clip.points.back()[1] });
+		if (m_clipPoints.back()[0] < tStop)
+			m_clipPoints.push_back({ tStop, m_clipPoints.back()[1] });
 
 		if (reverse) {
-			for (i = m_clip.points.size() - 2; i > stopReverse; i--)
-				m_clip.points.push_back({ 2.0f * tStop - m_clip.points[i][0], m_clip.points[i][1] });
+			for (i = m_clipPoints.size() - 2; i > stopReverse; i--)
+				m_clipPoints.push_back({ 2.0f * tStop - m_clipPoints[i][0], m_clipPoints[i][1] });
 
 			if (i != -1)
-				m_clip.points.push_back({ m_clip.length + tStart, m_clip.points.back()[1] });
+				m_clipPoints.push_back({ m_clipLength + tStart, m_clipPoints.back()[1] });
 		}
 
 		//if we were quadratic we might instead:
@@ -635,7 +635,7 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 }
 
 
-node::HandleRoot::HandleRoot(AnimationCurve& curve, int index) :
+node::AnimationKey::AnimationKey(AnimationCurve& curve, int index) :
 	m_curve{ &curve },
 	m_index{ index }
 {
@@ -646,7 +646,7 @@ node::HandleRoot::HandleRoot(AnimationCurve& curve, int index) :
 	newChild<CentreHandle>(*this);
 }
 
-node::HandleRoot::~HandleRoot()
+node::AnimationKey::~AnimationKey()
 {
 	//We should have been invalidated if our key has been erased.
 	if (!m_invalid) {
@@ -655,21 +655,21 @@ node::HandleRoot::~HandleRoot()
 	}
 }
 
-void node::HandleRoot::setTranslation(const gui::Floats<2>& t)
+void node::AnimationKey::setTranslation(const gui::Floats<2>& t)
 {
 	//is anyone actually calling this?
 	key().time.set(t[0]);
 	key().value.set(t[1]);
 }
 
-void node::HandleRoot::onSet(const float&)
+void node::AnimationKey::onSet(const float&)
 {
 	//We're listening to both time and value. Don't care which one was set.
 	m_translation = { key().time.get(), key().value.get() };
 	m_dirty = true;
 }
 
-float node::HandleRoot::eval(float t)
+float node::AnimationKey::eval(float t)
 {
 	if (t <= 0.0f) {
 		return key().value.get();
@@ -806,11 +806,11 @@ struct gui::DefaultEventSink<KeyTimeProperty>
 			inv->queue(std::move(m_op));
 	}
 
-	float m_init;
+	float m_init{ 0.0f };
 	std::unique_ptr<MoveOp> m_op;
 };
 
-node::KeyWidget::KeyWidget(HandleRoot& key) :
+node::KeyWidget::KeyWidget(AnimationKey& key) :
 	m_key{ &key },
 	m_type{ m_key->curve().getTypePtr() },
 	m_keys{ m_key->curve().getKeysPtr() },
@@ -917,7 +917,7 @@ void node::CentreHandle::frame(gui::FrameDrawer& fd)
 }
 
 std::unique_ptr<node::AnimationCurve::MoveOperation> node::CentreHandle::getMoveOp(
-	std::vector<HandleRoot*>&& keys)
+	std::vector<AnimationKey*>&& keys)
 {
 	std::vector<int> indices(keys.size());
 
