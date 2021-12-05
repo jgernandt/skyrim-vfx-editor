@@ -124,19 +124,21 @@ namespace node
 				mods.push_back(mod.get());
 			ctor.addModConnections(&obj, std::move(mods));
 
-			//We expect that shader and alpha properties have already been added if missing.
-			assert(obj.shaderProperty.assigned() && obj.alphaProperty.assigned());
-			ctor.addConnection(ConnectionInfo{ 
-				&obj, 
-				obj.shaderProperty.assigned().get(), 
-				ParticleSystem::SHADER, 
-				EffectShader::GEOMETRY });
+			if (auto&& shader = obj.shaderProperty.assigned()) {
+				ctor.addConnection(ConnectionInfo{
+					&obj,
+					shader.get(),
+					ParticleSystem::SHADER,
+					EffectShader::GEOMETRY });
+			}
 
-			ctor.addConnection(ConnectionInfo{
-				&obj,
-				obj.alphaProperty.assigned().get(),
-				ParticleSystem::ALPHA,
-				"" });
+			if (auto&& alpha = obj.alphaProperty.assigned()) {
+				ctor.addConnection(ConnectionInfo{
+					&obj,
+					alpha.get(),
+					ParticleSystem::ALPHA,
+					"" });
+			}
 
 			return true;
 		}
