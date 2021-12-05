@@ -276,13 +276,15 @@ void node::FloatKeyEditor::onClose()
 
 void node::FloatKeyEditor::onKeyDown(gui::key_t key)
 {
-	if (key == 'X' || key == gui::KEY_DEL) {
-		//Erase selected
+	if (m_currentOp == Op::NONE) {
+		if (key == 'X' || key == gui::KEY_DEL) {
+			//Erase selected
 
-		//for each selected curve:
-		//(except it should be packed into one command - we'll figure that out when we get there)
-		if (gui::IInvoker* inv = getInvoker())
-			inv->queue(m_curve->getEraseOp(m_curve->getSelected()));
+			//for each selected curve:
+			//(except it should be packed into one command - we'll figure that out when we get there)
+			if (gui::IInvoker* inv = getInvoker())
+				inv->queue(m_curve->getEraseOp(m_curve->getSelected()));
+		}
 	}
 }
 
@@ -461,18 +463,19 @@ bool node::FloatKeyEditor::onMouseUp(gui::Mouse::Button button)
 
 bool node::FloatKeyEditor::onMouseWheel(float delta)
 {
-	assert(m_plot);
+	if (m_currentOp == Op::NONE) {
+		assert(m_plot);
 
-	float scaleFactor = std::pow(SCALE_BASE, delta);
+		float scaleFactor = std::pow(SCALE_BASE, delta);
 
-	gui::Floats<2> pivot = m_plot->getPlotArea().fromGlobalSpace(gui::Mouse::getPosition());
-	gui::Floats<2> T = m_plot->getPlotArea().getAxes().getTranslation();
-	m_plot->getPlotArea().getAxes().setTranslation(pivot - (pivot - T) * scaleFactor);
-	m_plot->getPlotArea().getAxes().scale({ scaleFactor, scaleFactor });
+		gui::Floats<2> pivot = m_plot->getPlotArea().fromGlobalSpace(gui::Mouse::getPosition());
+		gui::Floats<2> T = m_plot->getPlotArea().getAxes().getTranslation();
+		m_plot->getPlotArea().getAxes().setTranslation(pivot - (pivot - T) * scaleFactor);
+		m_plot->getPlotArea().getAxes().scale({ scaleFactor, scaleFactor });
 
-	updateAxisUnits();
-	m_curve->setAxisLimits(m_plot->getPlotArea().getXLimits());
-
+		updateAxisUnits();
+		m_curve->setAxisLimits(m_plot->getPlotArea().getXLimits());
+	}
 	return true;
 }
 
