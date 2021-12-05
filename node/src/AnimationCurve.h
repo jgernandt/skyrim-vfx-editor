@@ -179,8 +179,9 @@ namespace node
 		//Show widgets for all relevant fields only
 		virtual void onSet(const KeyType& type) override;
 
-	private:
-		void createWidgets();
+		int getIndex() const { return m_index; }
+		const ni_ptr<Vector<Key<float>>>& getKeysPtr() const { return m_keys; }
+		Key<float>& key() { return m_keys->at(m_index); }
 
 	private:
 		//We need this if we want to set handle types (aligned/free)

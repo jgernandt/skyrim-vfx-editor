@@ -161,14 +161,14 @@ public:
 			//Reorder keys if needed
 			if (dir == 1) {
 				for (int i = (int)m_currentI.size() - 1; i >= 0; i--) {
-					assert(m_finalI[i] >= m_currentI[i]);
+					//assert(m_finalI[i] >= m_currentI[i]);
 					m_target->move(m_currentI[i], m_finalI[i]);
 					m_currentI[i] = m_finalI[i];
 				}
 			}
 			else if (dir == -1) {
 				for (size_t i = 0; i < m_currentI.size(); i++) {
-					assert(m_finalI[i] <= m_currentI[i]);
+					//assert(m_finalI[i] <= m_currentI[i]);
 					m_target->move(m_currentI[i], m_finalI[i]);
 					m_currentI[i] = m_finalI[i];
 				}
@@ -191,14 +191,14 @@ public:
 
 		if (m_move[0] < 0.0f) {
 			for (int i = (int)m_currentI.size() - 1; i >= 0; i--) {
-				assert(m_initI[i] >= m_currentI[i]);
+				//assert(m_initI[i] >= m_currentI[i]);
 				m_target->move(m_currentI[i], m_initI[i]);
 				m_currentI[i] = m_initI[i];
 			}
 		}
 		else if (m_move[0] > 0.0f) {
 			for (size_t i = 0; i < m_currentI.size(); i++) {
-				assert(m_initI[i] <= m_currentI[i]);
+				//assert(m_initI[i] <= m_currentI[i]);
 				m_target->move(m_currentI[i], m_initI[i]);
 				m_currentI[i] = m_initI[i];
 			}
@@ -684,8 +684,7 @@ float node::HandleRoot::eval(float t)
 }
 
 
-//For use in widgets editing key properties.
-//We specialise property_traits to get/set keys->at(index).*member
+//This will be sent to the command queue, and can safely be accessed after the widget is destroyed
 struct KeyProperty
 {
 	const ni_ptr<Vector<Key<float>>> keys;
@@ -710,6 +709,107 @@ struct util::property_traits<KeyProperty>
 	}
 };
 
+
+//Input widgets need to follow order changes, so it fetches the key from the parent component
+struct KeyInputProperty
+{
+	node::KeyWidget* widget;
+	Property<float> Key<float>::* member;
+};
+
+template<>
+struct util::property_traits<KeyInputProperty>
+{
+	using property_type = KeyInputProperty;
+	using value_type = float;
+	using get_type = float;
+
+	static float get(property_type p)
+	{
+		return (p.widget->key().*p.member).get();
+	}
+	static void set(property_type p, float val)
+	{
+		(p.widget->key().*p.member).set(val);
+	}
+};
+
+template<>
+struct gui::DefaultEventSink<KeyInputProperty>
+{
+	using value_type = float;
+
+	void begin(const KeyInputProperty& p, IComponent*)
+	{
+		m_init = util::property_traits<KeyInputProperty>::get(p);
+	}
+	void update(KeyInputProperty& p, IComponent*, const value_type& val)
+	{
+		//updates will use whatever key the parent component is currently pointing at
+		util::property_traits<KeyInputProperty>::set(p, val);
+	}
+	void end(KeyInputProperty& p, IComponent* source)
+	{
+		//Lock us to a specific key before queueing
+		if (IInvoker* inv = source->getInvoker())
+			inv->queue(std::make_unique<DefaultSetCommand<KeyProperty>>(
+				KeyProperty{ p.widget->getKeysPtr(), p.widget->getIndex(), p.member },
+				util::property_traits<KeyInputProperty>::get(p),
+				m_init));
+	}
+
+	float m_init;
+};
+
+//The time input should use the same move operation as mouse dragging, to handle order changes.
+struct KeyTimeProperty
+{
+	node::KeyWidget* widget;
+};
+
+template<>
+struct util::property_traits<KeyTimeProperty>
+{
+	using property_type = KeyTimeProperty;
+	using value_type = float;
+	using get_type = float;
+
+	static float get(property_type p)
+	{
+		return p.widget->key().time.get();
+	}
+	static void set(property_type p, float val)
+	{
+		p.widget->key().time.set(val);
+	}
+};
+
+template<>
+struct gui::DefaultEventSink<KeyTimeProperty>
+{
+	using value_type = float;
+
+	void begin(const KeyTimeProperty& p, IComponent*)
+	{
+		m_init = p.widget->key().time.get();
+		m_op = std::make_unique<MoveOp>(p.widget->getKeysPtr(), std::vector<int>{ p.widget->getIndex() });
+	}
+	void update(KeyTimeProperty&, IComponent*, const value_type& val)
+	{
+		//here we let the move operation itself keep track of the key
+		if (m_op)
+			m_op->update({ val - m_init, 0.0f });
+	}
+	void end(KeyTimeProperty&, IComponent* source)
+	{
+		if (IInvoker* inv = source->getInvoker())
+			inv->queue(std::move(m_op));
+	}
+
+	float m_init;
+	std::unique_ptr<MoveOp> m_op;
+};
+
 node::KeyWidget::KeyWidget(HandleRoot& key) :
 	m_key{ &key },
 	m_type{ m_key->curve().getTypePtr() },
@@ -720,7 +820,17 @@ node::KeyWidget::KeyWidget(HandleRoot& key) :
 	m_type->addListener(*this);
 	m_keys->addListener(*this);
 
-	createWidgets();
+	newChild<gui::Text>("Key");
+
+	auto time = newChild<gui::DragInput<float, 1, KeyTimeProperty>>(KeyTimeProperty{ this }, "Time");
+	time->setSensitivity(0.01f);
+	time->setNumberFormat("%.2f");
+
+	auto val = newChild<gui::DragInput<float, 1, KeyInputProperty>>(KeyInputProperty{ this, &Key<float>::value }, "Value");
+	val->setSensitivity(0.01f);
+	val->setNumberFormat("%.2f");
+
+	onSet(m_type->get());
 }
 
 node::KeyWidget::~KeyWidget()
@@ -731,20 +841,14 @@ node::KeyWidget::~KeyWidget()
 
 void node::KeyWidget::onInsert(int i)
 {
-	if (i <= m_index) {
+	if (i <= m_index)
 		m_index++;
-		clearChildren();
-		createWidgets();
-	}
 }
 
 void node::KeyWidget::onErase(int i)
 {
-	if (i < m_index) {
+	if (i < m_index)
 		m_index--;
-		clearChildren();
-		createWidgets();
-	}
 	else if (i == m_index) {
 		m_key = nullptr;
 		m_index = -1;
@@ -756,49 +860,37 @@ void node::KeyWidget::onErase(int i)
 
 void node::KeyWidget::onMove(int from, int to)
 {
-	if (from == m_index) {
+	if (from == m_index)
 		m_index = to;
-		clearChildren();
-		createWidgets();
+	else if (from < m_index) {
+		if (to >= m_index)
+			m_index--;
 	}
-	else if (from < m_index && to >= m_index) {
-		m_index--;
-		clearChildren();
-		createWidgets();
-	}
-	else if (from > m_index && to <= m_index) {
+	else if (to <= m_index)
 		m_index++;
-		clearChildren();
-		createWidgets();
-	}
 }
 
 void node::KeyWidget::onSet(const KeyType& type)
 {
-	clearChildren();
-	createWidgets();
-}
+	//Title, time and value should never be removed
+	assert(getChildren().size() >= 3);
 
-void node::KeyWidget::createWidgets()
-{
-	newChild<gui::Text>("Key");
+	if (type == KEY_QUADRATIC) {
+		//add tangents
+		if (getChildren().size() < 4) {
+			auto fwd = newChild<gui::DragInput<float, 1, KeyInputProperty>>(KeyInputProperty{ this, &Key<float>::fwdTan }, "Fwd tangent");
+			fwd->setSensitivity(0.01f);
+			fwd->setNumberFormat("%.2f");
 
-	auto time = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::time }, "Time");
-	time->setSensitivity(0.01f);
-	time->setNumberFormat("%.2f");
-
-	auto val = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::value }, "Value");
-	val->setSensitivity(0.01f);
-	val->setNumberFormat("%.2f");
-
-	if (m_type->get() == KEY_QUADRATIC) {
-		auto fwd = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::fwdTan }, "Fwd tangent");
-		fwd->setSensitivity(0.01f);
-		fwd->setNumberFormat("%.2f");
-
-		auto bwd = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::bwdTan }, "Bwd tangent");
-		bwd->setSensitivity(0.01f);
-		bwd->setNumberFormat("%.2f");
+			auto bwd = newChild<gui::DragInput<float, 1, KeyInputProperty>>(KeyInputProperty{ this, &Key<float>::bwdTan }, "Bwd tangent");
+			bwd->setSensitivity(0.01f);
+			bwd->setNumberFormat("%.2f");
+		}
+	}
+	else {
+		//remove tangents
+		for (int i = (int)getChildren().size() - 1; i > 2; i--)
+			eraseChild(i);
 	}
 }
 
