@@ -109,7 +109,7 @@ public:
 	}
 };
 
-class MoveOp final : public node::AnimationCurve::Operation
+class MoveOp final : public node::AnimationCurve::MoveOperation
 {
 	const ni_ptr<Vector<Key<float>>> m_target;
 
@@ -207,7 +207,7 @@ public:
 	}
 	virtual bool reversible() const override
 	{
-		return m_move[0] != 0.0f && m_move[1] != 0.0f;
+		return m_move[0] != 0.0f || m_move[1] != 0.0f;
 	}
 
 	virtual void update(const gui::Floats<2>& local_move) override
@@ -258,196 +258,6 @@ public:
 	}
 };
 
-node::KeyHandle::KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index) :
-	m_keys{ std::move(keys) },
-	m_index{ index }
-{
-}
-
-void node::KeyHandle::frame(gui::FrameDrawer& fd)
-{
-	assert(m_keys);
-	//We want to scale with PlotArea, not Axes. Not so easy right now. 
-	//We'll just not scale at all.
-	fd.circle(
-		fd.toGlobal(m_translation),
-		3.0f,
-		m_selected ? m_active ? ACTIVE_COL : SELECTED_COL : UNSELECTED_COL,
-		true);
-}
-
-void node::KeyHandle::setTranslation(const gui::Floats<2>& t)
-{
-	assert(m_keys);
-	m_keys->at(m_index).time.set(t[0]);
-	m_keys->at(m_index).value.set(t[1]);
-}
-
-void node::KeyHandle::onSet(const float&)
-{
-	//We're listening to both time and value. Don't care which one was set.
-	assert(m_keys);
-	m_translation = { m_keys->at(m_index).time.get(), m_keys->at(m_index).value.get() };
-	m_dirty = true;
-}
-
-float node::KeyHandle::eval(float t)
-{
-	assert(m_keys);
-	if (t <= 0.0f) {
-		return m_keys->at(m_index).value.get();
-	}
-	else if (t >= 1.0f) {
-		return m_index < (int)m_keys->size() - 1 ? m_keys->at(m_index + 1).value.get() : m_keys->at(m_index).value.get();
-	}
-	else {
-		float v0 = m_keys->at(m_index).value.get();
-		return m_index < (int)m_keys->size() - 1 ? v0 + t * (m_keys->at(m_index + 1).value.get() - v0) : v0;
-	}
-}
-
-
-node::CentreHandle::CentreHandle(ni_ptr<Vector<Key<float>>>&& keys, int index) :
-	KeyHandle{ std::move(keys), index }
-{
-	assert(m_keys);
-	m_keys->at(m_index).time.addListener(*this);
-	m_keys->at(m_index).value.addListener(*this);
-	m_translation = { m_keys->at(m_index).time.get(), m_keys->at(m_index).value.get() };
-}
-
-node::CentreHandle::~CentreHandle()
-{
-	assert(m_keys);
-
-	//We should have been invalidated if our key has been erased.
-	if (!m_invalid) {
-		m_keys->at(m_index).time.removeListener(*this);
-		m_keys->at(m_index).value.removeListener(*this);
-	}
-}
-
-std::unique_ptr<node::AnimationCurve::Operation> node::CentreHandle::getMoveOp(
-	const std::set<KeyHandle*>& keys) const
-{
-	std::vector<int> indices(keys.size());
-
-	int i = 0;
-	for (auto&& key : keys) {
-		indices[i] = key->getIndex();
-		i++;
-	}
-
-	return std::make_unique<MoveOp>(m_keys, std::move(indices));
-}
-
-float node::CentreHandle::getTime() const
-{
-	return m_keys->at(m_index).time.get();
-}
-
-void node::CentreHandle::setTime(float t)
-{
-	m_keys->at(m_index).time.set(t);
-}
-
-float node::CentreHandle::getValue() const
-{
-	return m_keys->at(m_index).value.get();
-}
-
-void node::CentreHandle::setValue(float val)
-{
-	m_keys->at(m_index).value.set(val);
-}
-
-
-template<>
-struct util::property_traits<node::AnimationCurve::KeyProperty>
-{
-	using property_type = node::AnimationCurve::KeyProperty;
-	using value_type = float;
-	using get_type = float;
-
-	static float get(property_type p)
-	{
-		return (p.keys->at(p.index).*p.member).get();
-	}
-	static void set(property_type p, float val)
-	{
-		(p.keys->at(p.index).*p.member).set(val);
-	}
-};
-
-node::AnimationCurve::ActiveWidget::ActiveWidget(ni_ptr<Property<KeyType>>&& type, ni_ptr<Vector<Key<float>>>&& keys, int index) :
-	m_type{ std::move(type) }, m_keys{ std::move(keys) }, m_index{ index }
-{
-	assert(m_type&& m_keys);
-	m_type->addListener(*this);
-	m_keys->addListener(*this);
-
-	createWidgets();
-}
-
-node::AnimationCurve::ActiveWidget::~ActiveWidget()
-{
-	m_type->removeListener(*this);
-	m_keys->removeListener(*this);
-}
-
-void node::AnimationCurve::ActiveWidget::onInsert(int i)
-{
-	if (i <= m_index) {
-		m_index++;
-		clearChildren();
-		createWidgets();
-	}
-}
-
-void node::AnimationCurve::ActiveWidget::onErase(int i)
-{
-	if (i < m_index) {
-		m_index--;
-		clearChildren();
-		createWidgets();
-	}
-	else if (i == m_index) {
-		m_index = -1;
-		clearChildren();
-		m_type->removeListener(*this);
-		m_keys->removeListener(*this);
-	}
-}
-
-void node::AnimationCurve::ActiveWidget::onSet(const KeyType& type)
-{
-	clearChildren();
-	createWidgets();
-}
-
-void node::AnimationCurve::ActiveWidget::createWidgets()
-{
-	newChild<gui::Text>("Key");
-
-	auto time = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::time }, "Time");
-	time->setSensitivity(0.01f);
-	time->setNumberFormat("%.2f");
-
-	auto val = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::value }, "Value");
-	val->setSensitivity(0.01f);
-	val->setNumberFormat("%.2f");
-
-	if (m_type->get() == KEY_QUADRATIC) {
-		auto fwd = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::fwdTan }, "Fwd tangent");
-		fwd->setSensitivity(0.01f);
-		fwd->setNumberFormat("%.2f");
-
-		auto bwd = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::bwdTan }, "Bwd tangent");
-		bwd->setSensitivity(0.01f);
-		bwd->setNumberFormat("%.2f");
-	}
-}
-
 
 node::AnimationCurve::AnimationCurve(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data) :
 	m_ctlr{ ctlr }, m_data{ data }
@@ -457,12 +267,14 @@ node::AnimationCurve::AnimationCurve(const ni_ptr<NiTimeController>& ctlr, const
 
 	int i = 0;
 	for (auto&& key : m_data->keys)
-		newChild<CentreHandle>(make_ni_ptr(m_data, &NiFloatData::keys), i++);
+		newChild<HandleRoot>(*this, i++);
 }
 
 node::AnimationCurve::~AnimationCurve()
 {
 	m_data->keys.removeListener(*this);
+	//we need the children destroyed while we still exist
+	clearChildren();
 }
 
 void node::AnimationCurve::frame(gui::FrameDrawer& fd)
@@ -602,15 +414,15 @@ void node::AnimationCurve::onInsert(int pos)
 	assert(pos >= 0 && size_t(pos) <= getChildren().size());
 
 	//Insert handle at pos
-	insertChild(pos, std::make_unique<CentreHandle>(make_ni_ptr(m_data, &NiFloatData::keys), pos));
+	insertChild(pos, std::make_unique<HandleRoot>(*this, pos));
 
 	//Handles after pos must update their index
 	for (int i = pos + 1; (size_t)i < getChildren().size(); i++)
-		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i);
+		static_cast<HandleRoot*>(getChildren()[i].get())->setIndex(i);
 
 	//The handle right before pos must refresh its interpolation
 	if (pos != 0)
-		static_cast<KeyHandle*>(getChildren()[pos - 1].get())->setDirty();
+		static_cast<HandleRoot*>(getChildren()[pos - 1].get())->setDirty();
 }
 
 void node::AnimationCurve::onErase(int pos)
@@ -618,18 +430,18 @@ void node::AnimationCurve::onErase(int pos)
 	assert(pos >= 0 && size_t(pos) < getChildren().size());
 
 	//The handle at i = pos is invalidated
-	static_cast<KeyHandle*>(getChildren()[pos].get())->invalidate();
+	static_cast<HandleRoot*>(getChildren()[pos].get())->invalidate();
 
 	//Erase invalidated handle
 	eraseChild(pos);
 
 	//Handles at i > pos must update their index
 	for (int i = pos; (size_t)i < getChildren().size(); i++)
-		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i);
+		static_cast<HandleRoot*>(getChildren()[i].get())->setIndex(i);
 
 	//The handle at i = pos - 1 must refresh
 	if (pos != 0)
-		static_cast<KeyHandle*>(getChildren()[pos - 1].get())->setDirty();
+		static_cast<HandleRoot*>(getChildren()[pos - 1].get())->setDirty();
 }
 
 void node::AnimationCurve::onMove(int from, int to)
@@ -650,13 +462,46 @@ void node::AnimationCurve::onMove(int from, int to)
 	}
 
 	for (int i = low; i < high + 1; i++)
-		static_cast<KeyHandle*>(getChildren()[i].get())->setIndex(i);
+		static_cast<HandleRoot*>(getChildren()[i].get())->setIndex(i);
 
 	//The handle before min(from, to) must refresh
 	if (low != 0)
-		static_cast<KeyHandle*>(getChildren()[low].get())->setDirty();
+		static_cast<HandleRoot*>(getChildren()[low].get())->setDirty();
 	//The handle at max(from, to) must refresh
-	static_cast<KeyHandle*>(getChildren()[high].get())->setDirty();
+	static_cast<HandleRoot*>(getChildren()[high].get())->setDirty();
+}
+
+node::HandleRoot* node::AnimationCurve::getActive() const
+{
+	HandleRoot* result = nullptr;
+	for (auto&& child : getChildren()) {
+		if (auto key = static_cast<HandleRoot*>(child.get()); key->getSelectionState() == SelectionState::ACTIVE) {
+			result = key;
+			break;
+		}
+	}
+	return result;
+}
+
+std::vector<node::HandleRoot*> node::AnimationCurve::getSelected() const
+{
+	std::vector<HandleRoot*> result;
+	for (auto&& child : getChildren()) {
+		if (auto key = static_cast<HandleRoot*>(child.get()); key->getSelectionState() != SelectionState::NOT_SELECTED) {
+			result.push_back(key);
+		}
+	}
+	return result;
+}
+
+ni_ptr<Vector<Key<float>>> node::AnimationCurve::getKeysPtr() const
+{
+	return make_ni_ptr(m_data, &NiFloatData::keys);
+}
+
+ni_ptr<Property<KeyType>> node::AnimationCurve::getTypePtr() const
+{
+	return make_ni_ptr(m_data, &NiFloatData::keyType);
 }
 
 gui::Floats<2> node::AnimationCurve::getBounds() const
@@ -671,12 +516,6 @@ gui::Floats<2> node::AnimationCurve::getBounds() const
 	return result;
 }
 
-std::unique_ptr<gui::IComponent> node::AnimationCurve::getKeyWidget(int index)
-{
-	return std::make_unique<ActiveWidget>(
-		make_ni_ptr(m_data, &NiFloatData::keyType), make_ni_ptr(m_data, &NiFloatData::keys), index);
-}
-
 std::unique_ptr<gui::ICommand> node::AnimationCurve::getInsertOp(const gui::Floats<2>& pos) const
 {
 	//Locate the first key with larger time and insert before it.
@@ -686,13 +525,12 @@ std::unique_ptr<gui::ICommand> node::AnimationCurve::getInsertOp(const gui::Floa
 	return std::make_unique<InsertOp>(make_ni_ptr(m_data, &NiFloatData::keys), index, pos);
 }
 
-std::unique_ptr<gui::ICommand> node::AnimationCurve::getEraseOp(const std::set<KeyHandle*>& keys) const
+std::unique_ptr<gui::ICommand> node::AnimationCurve::getEraseOp(const std::vector<HandleRoot*>& keys) const
 {
 	std::vector<int> indices(keys.size());
 	int i = 0;
-	for (KeyHandle* key : keys) {
-		assert(key);
-		//We could search for this handle among our children, to assure it's ours. No point right now, though.
+	for (HandleRoot* key : keys) {
+		assert(key && getChildren()[key->getIndex()].get() == key);//it must be one of our keys
 		indices[i++] = key->getIndex();
 	}
 
@@ -747,7 +585,7 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 				t = std::max(t, tStart);
 
 				//Feels stupid with this indirection here, but it will help with quadratics
-				float v = static_cast<KeyHandle*>(getChildren()[i].get())->eval(tau);
+				float v = static_cast<HandleRoot*>(getChildren()[i].get())->eval(tau);
 
 				if (m_clip.points.empty() || m_clip.points.back()[0] != t || m_clip.points.back()[1] != v)
 					m_clip.points.push_back({ t, v });
@@ -764,7 +602,7 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 					else
 						tau = 1.0f;
 
-					float v = static_cast<KeyHandle*>(getChildren()[i - 1].get())->eval(tau);
+					float v = static_cast<HandleRoot*>(getChildren()[i - 1].get())->eval(tau);
 
 					if (m_clip.points.empty() || m_clip.points.back()[0] != t || m_clip.points.back()[1] != v)
 						m_clip.points.push_back({ t, v });
@@ -794,4 +632,208 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 		//We should produce a list of lines.
 	}
 
+}
+
+
+node::HandleRoot::HandleRoot(AnimationCurve& curve, int index) :
+	m_curve{ &curve },
+	m_index{ index }
+{
+	key().time.addListener(*this);
+	key().value.addListener(*this);
+	m_translation = { key().time.get(), key().value.get() };
+
+	newChild<CentreHandle>(*this);
+}
+
+node::HandleRoot::~HandleRoot()
+{
+	//We should have been invalidated if our key has been erased.
+	if (!m_invalid) {
+		key().time.removeListener(*this);
+		key().value.removeListener(*this);
+	}
+}
+
+void node::HandleRoot::setTranslation(const gui::Floats<2>& t)
+{
+	//is anyone actually calling this?
+	key().time.set(t[0]);
+	key().value.set(t[1]);
+}
+
+void node::HandleRoot::onSet(const float&)
+{
+	//We're listening to both time and value. Don't care which one was set.
+	m_translation = { key().time.get(), key().value.get() };
+	m_dirty = true;
+}
+
+float node::HandleRoot::eval(float t)
+{
+	if (t <= 0.0f) {
+		return key().value.get();
+	}
+	else if (t >= 1.0f) {
+		return m_index < (int)m_curve->keys().size() - 1 ? m_curve->keys().at(m_index + 1).value.get() : key().value.get();
+	}
+	else {
+		float v0 = key().value.get();
+		return m_index < (int)m_curve->keys().size() - 1 ? v0 + t * (m_curve->keys().at(m_index + 1).value.get() - v0) : v0;
+	}
+}
+
+
+//For use in widgets editing key properties.
+//We specialise property_traits to get/set keys->at(index).*member
+struct KeyProperty
+{
+	const ni_ptr<Vector<Key<float>>> keys;
+	int index;
+	Property<float> Key<float>::* member;
+};
+
+template<>
+struct util::property_traits<KeyProperty>
+{
+	using property_type = KeyProperty;
+	using value_type = float;
+	using get_type = float;
+
+	static float get(property_type p)
+	{
+		return (p.keys->at(p.index).*p.member).get();
+	}
+	static void set(property_type p, float val)
+	{
+		(p.keys->at(p.index).*p.member).set(val);
+	}
+};
+
+node::KeyWidget::KeyWidget(HandleRoot& key) :
+	m_key{ &key },
+	m_type{ m_key->curve().getTypePtr() },
+	m_keys{ m_key->curve().getKeysPtr() },
+	m_index{ m_key->getIndex() }
+{
+	assert(m_type && m_keys);
+	m_type->addListener(*this);
+	m_keys->addListener(*this);
+
+	createWidgets();
+}
+
+node::KeyWidget::~KeyWidget()
+{
+	m_type->removeListener(*this);
+	m_keys->removeListener(*this);
+}
+
+void node::KeyWidget::onInsert(int i)
+{
+	if (i <= m_index) {
+		m_index++;
+		clearChildren();
+		createWidgets();
+	}
+}
+
+void node::KeyWidget::onErase(int i)
+{
+	if (i < m_index) {
+		m_index--;
+		clearChildren();
+		createWidgets();
+	}
+	else if (i == m_index) {
+		m_key = nullptr;
+		m_index = -1;
+		clearChildren();
+		m_type->removeListener(*this);
+		m_keys->removeListener(*this);
+	}
+}
+
+void node::KeyWidget::onMove(int from, int to)
+{
+	if (from == m_index) {
+		m_index = to;
+		clearChildren();
+		createWidgets();
+	}
+	else if (from < m_index && to >= m_index) {
+		m_index--;
+		clearChildren();
+		createWidgets();
+	}
+	else if (from > m_index && to <= m_index) {
+		m_index++;
+		clearChildren();
+		createWidgets();
+	}
+}
+
+void node::KeyWidget::onSet(const KeyType& type)
+{
+	clearChildren();
+	createWidgets();
+}
+
+void node::KeyWidget::createWidgets()
+{
+	newChild<gui::Text>("Key");
+
+	auto time = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::time }, "Time");
+	time->setSensitivity(0.01f);
+	time->setNumberFormat("%.2f");
+
+	auto val = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::value }, "Value");
+	val->setSensitivity(0.01f);
+	val->setNumberFormat("%.2f");
+
+	if (m_type->get() == KEY_QUADRATIC) {
+		auto fwd = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::fwdTan }, "Fwd tangent");
+		fwd->setSensitivity(0.01f);
+		fwd->setNumberFormat("%.2f");
+
+		auto bwd = newChild<gui::DragInput<float, 1, KeyProperty>>(KeyProperty{ m_keys, m_index, &Key<float>::bwdTan }, "Bwd tangent");
+		bwd->setSensitivity(0.01f);
+		bwd->setNumberFormat("%.2f");
+	}
+}
+
+
+std::unique_ptr<gui::IComponent> node::KeyHandle::getWidget()
+{
+	return std::make_unique<KeyWidget>(*m_root);
+}
+
+
+void node::CentreHandle::frame(gui::FrameDrawer& fd)
+{
+	//We want to scale with PlotArea, not Axes. Not so easy right now. 
+	//We'll just not scale at all.
+	gui::ColRGBA col;
+	if (auto state = getSelectionState(); state == SelectionState::ACTIVE)
+		col = ACTIVE_COL;
+	else if (state == SelectionState::SELECTED)
+		col = SELECTED_COL;
+	else
+		col = UNSELECTED_COL;
+
+	fd.circle(fd.toGlobal(m_translation), 3.0f, col, true);
+}
+
+std::unique_ptr<node::AnimationCurve::MoveOperation> node::CentreHandle::getMoveOp(
+	std::vector<HandleRoot*>&& keys)
+{
+	std::vector<int> indices(keys.size());
+
+	int i = 0;
+	for (auto&& key : keys) {
+		indices[i] = key->getIndex();
+		i++;
+	}
+
+	return std::make_unique<MoveOp>(m_root->curve().getKeysPtr(), std::move(indices));
 }

@@ -31,7 +31,6 @@ namespace node
 	class FloatKeyEditor final : 
 		public gui::Popup, 
 		public gui::MouseHandler,
-		public gui::CompositeListener,
 		public gui::KeyListener
 	{
 	public:
@@ -76,10 +75,6 @@ namespace node
 
 		virtual void onMouseMove(const gui::Floats<2>& pos) override;
 
-		virtual void onRemoveChild(gui::IComponent* c, gui::Composite* source) override;
-
-		void setActiveKey(Selection::iterator key);
-
 	private:
 		void drag(const gui::Floats<2>& pos);
 		void pan(const gui::Floats<2>& pos);
@@ -94,7 +89,8 @@ namespace node
 		PhaseListener m_phaseLsnr;
 
 		gui::Plot* m_plot{ nullptr };
-		AnimationCurve* m_data{ nullptr };
+		gui::Composite* m_activePanel{ nullptr };
+		AnimationCurve* m_curve{ nullptr };
 
 		enum class Op
 		{
@@ -103,9 +99,6 @@ namespace node
 			PAN,
 			ZOOM,
 		};
-		Selection m_selection;
-		Selection::iterator m_activeItem{ m_selection.end() };
-		gui::Composite* m_activePanel{ nullptr };
 
 		//temp data for handling mouse input
 		gui::Floats<2> m_clickPoint;//point clicked in global coords
@@ -113,7 +106,7 @@ namespace node
 		gui::Floats<2> m_startT;//axis translation at the time of clicking
 		Op m_currentOp{ Op::NONE };
 
-		std::unique_ptr<AnimationCurve::Operation> m_op;
-		bool m_dragThresholdPassed{ false };
+		KeyHandle* m_clicked{ nullptr };
+		std::unique_ptr<AnimationCurve::MoveOperation> m_op;
 	};
 }

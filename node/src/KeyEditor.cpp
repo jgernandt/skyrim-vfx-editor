@@ -157,9 +157,8 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	m_plot = plot_panel->newChild<gui::Plot>();
 
 	auto series = std::make_unique<AnimationCurve>(ctlr, data);
-	m_data = series.get();
+	m_curve = series.get();
 	m_plot->getPlotArea().getAxes().addChild(std::move(series));
-	m_data->addCompositeListener(*this);
 
 	//determine limits
 	gui::Floats<2> xlims = 
@@ -183,8 +182,8 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	}
 	m_plot->getPlotArea().setXLimits(xlims);
 
-	if (m_data) {
-		gui::Floats<2> ylims = m_data->getBounds();
+	if (m_curve) {
+		gui::Floats<2> ylims = m_curve->getBounds();
 		if (float diff = ylims[1] - ylims[0]; diff > 0.0f) {
 			ylims[0] -= 0.25f * diff;
 			ylims[1] += 0.25f * diff;
@@ -198,7 +197,7 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	}
 
 	updateAxisUnits();
-	m_data->setAxisLimits(xlims);
+	m_curve->setAxisLimits(xlims);
 
 	m_plot->getPlotArea().addKeyListener(*this);
 	m_plot->getPlotArea().setMouseHandler(this);
@@ -252,11 +251,11 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	m_activePanel->setTranslation({ 648.0f, 220.0f });
 	
 	//Clip-space transform listeners
-	m_freqLsnr.setTarget(m_data);
+	m_freqLsnr.setTarget(m_curve);
 	ctlr->frequency.addListener(m_freqLsnr);
 	m_freqLsnr.onSet(ctlr->frequency.get());
 
-	m_phaseLsnr.setTarget(m_data);
+	m_phaseLsnr.setTarget(m_curve);
 	ctlr->phase.addListener(m_phaseLsnr);
 	m_phaseLsnr.onSet(ctlr->phase.get());
 }
@@ -267,9 +266,6 @@ node::FloatKeyEditor::~FloatKeyEditor()
 	m_ctlr->frequency.removeListener(m_freqLsnr);
 	m_ctlr->phase.removeListener(m_phaseLsnr);
 
-	if (m_data)
-		m_data->removeCompositeListener(*this);
-
 	m_plot->getPlotArea().removeKeyListener(*this);
 }
 
@@ -278,32 +274,15 @@ void node::FloatKeyEditor::onClose()
 	asyncInvoke<gui::RemoveChild>(this, getParent(), false);
 }
 
-void node::FloatKeyEditor::setActiveKey(Selection::iterator key)
-{
-	//To continue what we've done so far, we should send all composition
-	//changes to the invoker.
-
-	assert(m_activePanel);
-	if (m_activeItem != m_selection.end()) {
-		m_activePanel->clearChildren();
-		(*m_activeItem)->setActive(false);
-	}
-
-	if (key != m_selection.end()) {
-		m_activePanel->addChild(m_data->getKeyWidget((*key)->getIndex()));
-		(*key)->setActive(true);
-	}
-	m_activeItem = key;
-}
-
 void node::FloatKeyEditor::onKeyDown(gui::key_t key)
 {
 	if (key == 'X' || key == gui::KEY_DEL) {
 		//Erase selected
-		if (!m_selection.empty()) {
-			if (gui::IInvoker* inv = getInvoker())
-				inv->queue(m_data->getEraseOp(m_selection));
-		}
+
+		//for each selected curve:
+		//(except it should be packed into one command - we'll figure that out when we get there)
+		if (gui::IInvoker* inv = getInvoker())
+			inv->queue(m_curve->getEraseOp(m_curve->getSelected()));
 	}
 }
 
@@ -318,10 +297,10 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 			//InsertOp
 
 			//clicked point in key space
-			gui::Floats<2> p = m_data->fromGlobalSpace(gui::Mouse::getPosition());
+			gui::Floats<2> p = m_curve->fromGlobalSpace(gui::Mouse::getPosition());
 
 			if (gui::IInvoker* inv = getInvoker())
-				inv->queue(m_data->getInsertOp(p));
+				inv->queue(m_curve->getInsertOp(p));
 
 			return true;
 		}
@@ -337,46 +316,78 @@ bool node::FloatKeyEditor::onMouseDown(gui::Mouse::Button button)
 			KeyHandle* object = dynamic_cast<KeyHandle*>(v.result);
 
 			if (object) {
+
+				//get curve from object (need to if we have more than one)
+				auto curve = object->getCurve();
+				//get selection state from object
+				auto state = object->getSelectionState();
+
 				if (gui::Keyboard::isDown(gui::KEY_SHIFT)) {
-					if (auto res = m_selection.insert(object); !res.second) {
-						//shift+clicked selected object
-						//remove from selection
-						if (m_activeItem == res.first)
-							setActiveKey(m_selection.end());
-						m_selection.erase(res.first);
-						object->setSelected(false);
+
+					if (state == SelectionState::NOT_SELECTED) {
+						//shift+click unselected = add to selection and make active
+
+						//set curve active
+						//set object selected/active (how? directly or via curve?)
+						//who removes active state on currently active key?
+						if (auto active = curve->getActive())
+							active->setSelectionState(SelectionState::SELECTED);
+
+						curve->setSelectionState(SelectionState::ACTIVE);
+						object->setSelectionState(SelectionState::ACTIVE);
+
+						//get widget for object
+						m_activePanel->clearChildren();
+						m_activePanel->addChild(object->getWidget());
 					}
 					else {
-						//shift+clicked non-selected object
-						//add to selection
-						object->setSelected(true);
-						setActiveKey(res.first);
+						//shift+click selected = remove from selection
+
+						if (curve->getSelectionState() == SelectionState::ACTIVE)//if we had many curves
+							if (object->getSelectionState() == SelectionState::ACTIVE)
+								m_activePanel->clearChildren();
+
+						object->setSelectionState(SelectionState::NOT_SELECTED);//should this report to curve?
+						//curve->setSelectionState(SelectionState::NOT_SELECTED);//or should we set ourselves?
 					}
 				}
 				else {
-					if (auto it = m_selection.find(object); it != m_selection.end()) {
-						//clicked selected object
-						//start dragging selection (if threshold is passed)
+					if (state == SelectionState::NOT_SELECTED) {
+						//click unselected = select (clear other selected) and start dragging
 
-						//if we release before reaching the drag threshold, should clear
-						//other selected objects
-						setActiveKey(it);
+						//clear all selections
+						for (auto selected : curve->getSelected())
+							selected->setSelectionState(SelectionState::NOT_SELECTED);
+						
+						//select object
+						curve->setSelectionState(SelectionState::ACTIVE);
+						object->setSelectionState(SelectionState::ACTIVE);
+
+						//get widget for object
+						m_activePanel->clearChildren();
+						m_activePanel->addChild(object->getWidget());
 					}
 					else {
-						//clicked non-selected object
-						//set selection and start dragging (if threshold is passed)
-						for (auto&& o : m_selection)
-							o->setSelected(false);
-						setActiveKey(m_selection.end());
-						m_selection.clear();
-						setActiveKey(m_selection.insert(object).first);
-						object->setSelected(true);
+						//click selected = set active and start dragging
+						//if drag threshold is not passed, clear other selected
+
+						if (auto active = curve->getActive())
+							active->setSelectionState(SelectionState::SELECTED);
+
+						curve->setSelectionState(SelectionState::ACTIVE);
+						object->setSelectionState(SelectionState::ACTIVE);
+
+						//get widget for object
+						m_activePanel->clearChildren();
+						m_activePanel->addChild(object->getWidget());
 					}
-					//start dragging
+
+					//save temp data
 					gui::Mouse::setCapture(&m_plot->getPlotArea());
 					m_clickPoint = gui::Mouse::getPosition();
-					m_dragThresholdPassed = false;
 					m_currentOp = Op::DRAG;
+
+					m_clicked = object;
 				}
 			}
 			//else clear selection? Or not?
@@ -410,23 +421,28 @@ bool node::FloatKeyEditor::onMouseUp(gui::Mouse::Button button)
 
 	if (button == gui::Mouse::Button::LEFT) {
 		if (result = m_currentOp == Op::DRAG) {
-			if (!m_dragThresholdPassed) {
-				//they released before reaching the drag threshold, should clear
-				//other selected objects
-				Selection newSelection;
-				m_activeItem = newSelection.insert(m_selection.extract(m_activeItem)).position;
-				for (auto&& obj : m_selection) {
-					assert(obj);
-					obj->setSelected(false);
-				}
-				m_selection = std::move(newSelection);
-			}
-			else {
-				//send final move op
+			if (m_op) {
 				if (gui::IInvoker* inv = getInvoker())
 					inv->queue(std::move(m_op));
 			}
+			else {
+				//they released before reaching the drag threshold, should clear
+				//other selected objects
 
+				if (m_clicked) {
+					//clear all selections
+					for (auto selected : m_clicked->getCurve()->getSelected())
+						selected->setSelectionState(SelectionState::NOT_SELECTED);
+
+					//reselect object
+					m_clicked->setSelectionState(SelectionState::ACTIVE);
+
+					//active widget should have been set already
+				}
+				//else the move command was issued by an as of yet not existing alternative input
+			}
+
+			m_clicked = nullptr;
 			m_currentOp = Op::NONE;
 			assert(m_plot && gui::Mouse::getCapture() == &m_plot->getPlotArea());
 			gui::Mouse::setCapture(nullptr);
@@ -455,7 +471,7 @@ bool node::FloatKeyEditor::onMouseWheel(float delta)
 	m_plot->getPlotArea().getAxes().scale({ scaleFactor, scaleFactor });
 
 	updateAxisUnits();
-	m_data->setAxisLimits(m_plot->getPlotArea().getXLimits());
+	m_curve->setAxisLimits(m_plot->getPlotArea().getXLimits());
 
 	return true;
 }
@@ -477,24 +493,13 @@ void node::FloatKeyEditor::onMouseMove(const gui::Floats<2>& pos)
 
 void node::FloatKeyEditor::drag(const gui::Floats<2>& pos)
 {
-	assert(!m_selection.empty());//should be checked before starting a move op
-
-	if (!m_dragThresholdPassed &&
-		(std::abs(pos[0] - m_clickPoint[0]) >= DRAG_THRESHOLD ||
+	if (m_op)
+		m_op->update(m_curve->fromGlobalSpace(pos) - m_curve->fromGlobalSpace(m_clickPoint));
+	else if (m_clicked && (std::abs(pos[0] - m_clickPoint[0]) >= DRAG_THRESHOLD ||
 		std::abs(pos[1] - m_clickPoint[1]) >= DRAG_THRESHOLD))
 	{
-		assert(!m_selection.empty());
-
-		m_dragThresholdPassed = true;
-		if (m_activeItem != m_selection.end())
-			m_op = (*m_activeItem)->getMoveOp(m_selection);
-		else
-			m_op = (*m_selection.begin())->getMoveOp(m_selection);
-	}
-
-	if (m_dragThresholdPassed) {
-		if (m_op)
-			m_op->update(m_data->fromGlobalSpace(pos) - m_data->fromGlobalSpace(m_clickPoint));
+		m_op = m_clicked->getMoveOp(m_clicked->getCurve()->getSelected());
+		m_op->update(m_curve->fromGlobalSpace(pos) - m_curve->fromGlobalSpace(m_clickPoint));
 	}
 }
 
@@ -504,7 +509,7 @@ void node::FloatKeyEditor::pan(const gui::Floats<2>& pos)
 	gui::Floats<2> delta = m_plot->getPlotArea().fromGlobalSpace(pos) - m_clickPoint;
 	m_plot->getPlotArea().getAxes().setTranslation(m_startT + delta);
 
-	m_data->setAxisLimits(m_plot->getPlotArea().getXLimits());
+	m_curve->setAxisLimits(m_plot->getPlotArea().getXLimits());
 }
 
 void node::FloatKeyEditor::zoom(const gui::Floats<2>& pos)
@@ -519,7 +524,7 @@ void node::FloatKeyEditor::zoom(const gui::Floats<2>& pos)
 	m_plot->getPlotArea().getAxes().setScale(m_startS * factor);
 
 	updateAxisUnits();
-	m_data->setAxisLimits(m_plot->getPlotArea().getXLimits());
+	m_curve->setAxisLimits(m_plot->getPlotArea().getXLimits());
 }
 
 void node::FloatKeyEditor::updateAxisUnits()
@@ -553,18 +558,6 @@ void node::FloatKeyEditor::updateAxisUnits()
 
 	m_plot->getPlotArea().getAxes().setMajorUnits(major);
 	m_plot->getPlotArea().getAxes().setMinorUnits(minor);
-}
-
-void node::FloatKeyEditor::onRemoveChild(gui::IComponent* c, gui::Composite* source)
-{
-	//If c was selected, it must be removed from selection immediately (it may no longer exist).
-	if (m_activeItem != m_selection.end() && *m_activeItem == c) {
-		m_selection.erase(m_activeItem);
-		m_activeItem = m_selection.end();
-		m_activePanel->clearChildren();
-	}
-	else if (auto it = m_selection.find(static_cast<KeyHandle*>(c)); it != m_selection.end())
-		m_selection.erase(it);
 }
 
 //Phase and frequency are the inverse transform of the data series

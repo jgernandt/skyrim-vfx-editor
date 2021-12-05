@@ -21,6 +21,14 @@
 
 namespace node
 {
+	enum class SelectionState
+	{
+		NOT_SELECTED,
+		SELECTED,
+		ACTIVE
+	};
+
+	//We don't need this anymore, just store points and length in AnimationCurve
 	struct AnimationClip
 	{
 		int size() { return points.size(); }
@@ -46,6 +54,7 @@ namespace node
 		float length{ 0.0f };
 	};
 
+	class HandleRoot;
 	class KeyHandle;
 
 	class AnimationCurve final :
@@ -54,53 +63,11 @@ namespace node
 		public nif::VectorListener<Key<float>>
 	{
 	public:
-		class Operation : public gui::ICommand
+		class MoveOperation : public gui::ICommand
 		{
 		public:
-			virtual ~Operation() = default;
-			//Tailored to MoveOp specifically, we'll see how useful it turns out in general.
-			//Update the total move of this op.
-			virtual void update(const gui::Floats<2>& local_move) = 0;
-		};
-
-		//For use in our active widgets. We specialise property_traits
-		//to get/set keys->at(index).*member
-		struct KeyProperty
-		{
-			const ni_ptr<Vector<Key<float>>> keys;
-			int index;
-			Property<float> Key<float>::* member;
-		};
-
-		class ActiveWidget final :
-			public gui::Composite,
-			public VectorListener<Key<float>>,
-			public PropertyListener<KeyType>
-		{
-		public:
-			ActiveWidget(ni_ptr<Property<KeyType>>&& type, ni_ptr<Vector<Key<float>>>&& keys, int index);
-			~ActiveWidget();
-
-			//Keep our index correct
-			virtual void onInsert(int i) override;
-			virtual void onErase(int i) override;
-
-			//Show widgets for all relevant fields only
-			virtual void onSet(const KeyType& type) override;
-
-			float getTime() const { return m_keys->at(m_index).time.get(); }
-			void setTime(float t) { m_keys->at(m_index).time.set(t); }
-
-			float getValue() const { return m_keys->at(m_index).value.get(); }
-			void setValue(float val) { m_keys->at(m_index).value.set(val); }
-
-		private:
-			void createWidgets();
-
-		private:
-			const ni_ptr<Property<KeyType>> m_type;
-			const ni_ptr<Vector<Key<float>>> m_keys;
-			int m_index;
+			virtual ~MoveOperation() = default;
+			virtual void update(const gui::Floats<2>& local_move) {}
 		};
 
 	public:
@@ -113,11 +80,19 @@ namespace node
 		virtual void onErase(int pos) override;
 		virtual void onMove(int from, int to) override;
 
+		SelectionState getSelectionState() const { return m_selectionState; }
+		void setSelectionState(SelectionState state) { m_selectionState = state; }
+
+		HandleRoot* getActive() const;
+		std::vector<HandleRoot*> getSelected() const;
+
+		ni_ptr<Vector<Key<float>>> getKeysPtr() const;
+		ni_ptr<Property<KeyType>> getTypePtr() const;
+		Vector<Key<float>>& keys() { return m_data->keys; }
+
 		gui::Floats<2> getBounds() const;
 
-		std::unique_ptr<gui::IComponent> getKeyWidget(int index);
-
-		std::unique_ptr<gui::ICommand> getEraseOp(const std::set<KeyHandle*>& keys) const;
+		std::unique_ptr<gui::ICommand> getEraseOp(const std::vector<HandleRoot*>& keys) const;
 		std::unique_ptr<gui::ICommand> getInsertOp(const gui::Floats<2>& pos) const;
 
 		void setAxisLimits(const gui::Floats<2>& lims) { m_axisLims = lims; }
@@ -130,6 +105,7 @@ namespace node
 		const ni_ptr<NiFloatData> m_data;
 		AnimationClip m_clip;
 		gui::Floats<2> m_axisLims;
+		SelectionState m_selectionState{ SelectionState::NOT_SELECTED };
 	};
 
 	class Interpolant
@@ -143,54 +119,104 @@ namespace node
 		float m_k;
 	};
 
-	class KeyHandle : public gui::Component, public PropertyListener<float>
+	//Root of the key handle. Responsible for positioning at the correct time/value,
+	//and for interpolating to the next key.
+	//Parents the interactive widgets.
+	class HandleRoot final : public gui::Composite, public PropertyListener<float>
 	{
 	public:
-		KeyHandle(ni_ptr<Vector<Key<float>>>&& keys, int index);
-		virtual ~KeyHandle() = default;
+		HandleRoot(AnimationCurve& curve, int index);
+		~HandleRoot();
 
-		virtual void frame(gui::FrameDrawer& fd) override;
 		virtual void setTranslation(const gui::Floats<2>& t) override;
 
 		virtual void onSet(const float& val) override;
 
-		void setActive(bool on) { m_active = on; }
-		void setSelected(bool on) { m_selected = on; }
-
-		virtual std::unique_ptr<AnimationCurve::Operation> getMoveOp(const std::set<KeyHandle*>& keys) const = 0;
+		AnimationCurve& curve() { return *m_curve; }
+		Key<float>& key() { return m_curve->keys().at(m_index); }
 
 		int getIndex() const { return m_index; }
-		void setIndex(int i) { m_index = i; }
+		void setIndex(int i) { m_index = i; }//track this ourselves instead?
+
+		SelectionState getSelectionState() const { return m_selectionState; }
+		void setSelectionState(SelectionState state) { m_selectionState = state; }
+
+		AnimationCurve* getCurve() const { return m_curve; }
 
 		//evaluate the interpolation at time t (normalised to the time interval)
 		float eval(float t);
 
 		void invalidate() { m_invalid = true; }
-
+		bool getDirty() const { return m_dirty; }
 		void setDirty() { m_dirty = true; }
 
 	protected:
-		const ni_ptr<Vector<Key<float>>> m_keys;
+		AnimationCurve* const m_curve;
+		//const ni_ptr<Vector<Key<float>>> m_keys;//drop this?
 		int m_index;
 
-		bool m_selected{ false };
-		bool m_active{ false };
+		SelectionState m_selectionState{ SelectionState::NOT_SELECTED };
+
 		bool m_dirty{ true };
 		bool m_invalid{ false };
 	};
 
+	//A widget for inputting key properties. Used in the side panel of the key editor.
+	class KeyWidget final :
+		public gui::Composite,
+		public VectorListener<Key<float>>,
+		public PropertyListener<KeyType>
+	{
+	public:
+		KeyWidget(HandleRoot& key);
+		~KeyWidget();
+
+		//Keep our index correct
+		virtual void onInsert(int i) override;
+		virtual void onErase(int i) override;
+		virtual void onMove(int from, int to) override;
+
+		//Show widgets for all relevant fields only
+		virtual void onSet(const KeyType& type) override;
+
+	private:
+		void createWidgets();
+
+	private:
+		//We need this if we want to set handle types (aligned/free)
+		HandleRoot* m_key;
+		//We need these to listen to type and index changes.
+		//We need to store them in order to unregister.
+		const ni_ptr<Property<KeyType>> m_type;
+		const ni_ptr<Vector<Key<float>>> m_keys;
+		int m_index;
+	};
+
+	//Base type of an interactive key widget.
+	class KeyHandle : public gui::Component
+	{
+	public:
+		KeyHandle(HandleRoot& root) : m_root{ &root } {}
+		virtual ~KeyHandle() = default;
+
+		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(std::vector<HandleRoot*>&& keys) = 0;
+
+		SelectionState getSelectionState() const { return m_root->getSelectionState(); }
+		void setSelectionState(SelectionState state) { m_root->setSelectionState(state); }
+
+		AnimationCurve* getCurve() const { return m_root->getCurve(); }
+		std::unique_ptr<gui::IComponent> getWidget();
+
+	protected:
+		HandleRoot* const m_root;//we could just static_cast our parent
+	};
+
+	//Interactive widget for key time/value.
 	class CentreHandle final : public KeyHandle
 	{
 	public:
-		CentreHandle(ni_ptr<Vector<Key<float>>>&& keys, int index);
-		~CentreHandle();
-
-		virtual std::unique_ptr<AnimationCurve::Operation> getMoveOp(const std::set<KeyHandle*>& keys) const override;
-
-		float getTime() const;
-		void setTime(float t);
-
-		float getValue() const;
-		void setValue(float val);
+		CentreHandle(HandleRoot& root) : KeyHandle{ root } {}
+		virtual void frame(gui::FrameDrawer& fd) override;
+		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(std::vector<HandleRoot*>&& keys) override;
 	};
 }
