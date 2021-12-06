@@ -118,6 +118,9 @@ namespace node
 
 		AnimationCurve* getCurve() const { return m_curve; }
 
+		HandleType getHandleType() const { return m_handleType; }
+		void setHandleType(HandleType type) { m_handleType = type; }
+
 		//evaluate the interpolation at time t (normalised to the time interval)
 		float eval(float t);
 
@@ -159,6 +162,8 @@ namespace node
 		int getIndex() const { return m_index; }
 		const ni_ptr<Vector<Key<float>>>& getKeysPtr() const { return m_keys; }
 		Key<float>& key() { return m_keys->at(m_index); }
+		AnimationKey::HandleType getHandleType() const { return m_key->getHandleType(); }
+		void setHandleType(AnimationKey::HandleType type) { m_key->setHandleType(type); }
 
 	private:
 		//We need this if we want to set handle types (aligned/free)

@@ -739,6 +739,9 @@ node::AnimationKey::AnimationKey(AnimationCurve& curve, int index) :
 	m_curve{ &curve },
 	m_index{ index }
 {
+	if (key().fwdTan.get() != key().bwdTan.get())
+		m_handleType = HandleType::FREE;
+
 	key().time.addListener(*this);
 	key().value.addListener(*this);
 	m_translation = { key().time.get(), key().value.get() };
@@ -938,6 +941,130 @@ struct gui::DefaultEventSink<KeyTimeProperty>
 	std::unique_ptr<CentreMoveOp> m_op;
 };
 
+//So should the tangents (this design is becoming very impractical...)
+struct KeyFwdTanProperty
+{
+	node::KeyWidget* widget;
+};
+
+template<>
+struct util::property_traits<KeyFwdTanProperty>
+{
+	using property_type = KeyFwdTanProperty;
+	using value_type = float;
+	using get_type = float;
+
+	static float get(property_type p)
+	{
+		return p.widget->key().fwdTan.get();
+	}
+	static void set(property_type p, float val)
+	{
+		p.widget->key().fwdTan.set(val);
+	}
+};
+
+template<>
+struct gui::DefaultEventSink<KeyFwdTanProperty>
+{
+	using value_type = float;
+
+	void begin(const KeyFwdTanProperty& p, IComponent*)
+	{
+		m_init = p.widget->key().fwdTan.get();
+		m_op = std::make_unique<FwdMoveOp>(
+			p.widget->getKeysPtr(),
+			p.widget->getIndex(),
+			p.widget->getHandleType() == node::AnimationKey::HandleType::ALIGNED);
+	}
+	void update(KeyFwdTanProperty& p, IComponent*, const value_type& val)
+	{
+		if (m_op)
+			m_op->update({ p.widget->key().time.get() + 1.0f, p.widget->key().value.get() + val });
+	}
+	void end(KeyFwdTanProperty&, IComponent* source)
+	{
+		if (IInvoker* inv = source->getInvoker())
+			inv->queue(std::move(m_op));
+	}
+
+	float m_init{ 0.0f };
+	std::unique_ptr<FwdMoveOp> m_op;
+};
+
+struct KeyBwdTanProperty
+{
+	node::KeyWidget* widget;
+};
+
+template<>
+struct util::property_traits<KeyBwdTanProperty>
+{
+	using property_type = KeyBwdTanProperty;
+	using value_type = float;
+	using get_type = float;
+
+	static float get(property_type p)
+	{
+		return p.widget->key().bwdTan.get();
+	}
+	static void set(property_type p, float val)
+	{
+		p.widget->key().bwdTan.set(val);
+	}
+};
+
+template<>
+struct gui::DefaultEventSink<KeyBwdTanProperty>
+{
+	using value_type = float;
+
+	void begin(const KeyBwdTanProperty& p, IComponent*)
+	{
+		m_init = p.widget->key().fwdTan.get();
+		m_op = std::make_unique<BwdMoveOp>(
+			p.widget->getKeysPtr(),
+			p.widget->getIndex(),
+			p.widget->getHandleType() == node::AnimationKey::HandleType::ALIGNED);
+	}
+	void update(KeyBwdTanProperty& p, IComponent*, const value_type& val)
+	{
+		if (m_op)
+			m_op->update({ p.widget->key().time.get() - 1.0f, p.widget->key().value.get() - val });
+	}
+	void end(KeyBwdTanProperty&, IComponent* source)
+	{
+		if (IInvoker* inv = source->getInvoker())
+			inv->queue(std::move(m_op));
+	}
+
+	float m_init{ 0.0f };
+	std::unique_ptr<BwdMoveOp> m_op;
+};
+
+struct HandleTypeProperty
+{
+	node::KeyWidget* widget;
+};
+
+template<>
+struct util::property_traits<HandleTypeProperty>
+{
+	using property_type = HandleTypeProperty;
+	using value_type = bool;
+	using get_type = bool;
+
+	static bool get(property_type p)
+	{
+		return p.widget->getHandleType() == node::AnimationKey::HandleType::ALIGNED;
+	}
+	static void set(property_type p, bool aligned)
+	{
+		p.widget->setHandleType(
+			aligned ? node::AnimationKey::HandleType::ALIGNED : node::AnimationKey::HandleType::FREE);
+	}
+};
+
 node::KeyWidget::KeyWidget(AnimationKey& key) :
 	m_key{ &key },
 	m_type{ m_key->curve().getTypePtr() },
@@ -1005,14 +1132,17 @@ void node::KeyWidget::onSet(const KeyType& type)
 
 	if (type == KEY_QUADRATIC) {
 		//add tangents
-		if (getChildren().size() < 4) {
-			auto fwd = newChild<gui::DragInput<float, 1, KeyInputProperty>>(KeyInputProperty{ this, &Key<float>::fwdTan }, "Fwd tangent");
+		if (getChildren().size() == 3) {
+			auto fwd = newChild<gui::DragInput<float, 1, KeyFwdTanProperty>>(KeyFwdTanProperty{ this }, "Fwd tangent");
 			fwd->setSensitivity(0.01f);
 			fwd->setNumberFormat("%.2f");
 
-			auto bwd = newChild<gui::DragInput<float, 1, KeyInputProperty>>(KeyInputProperty{ this, &Key<float>::bwdTan }, "Bwd tangent");
+			auto bwd = newChild<gui::DragInput<float, 1, KeyBwdTanProperty>>(KeyBwdTanProperty{ this }, "Bwd tangent");
 			bwd->setSensitivity(0.01f);
 			bwd->setNumberFormat("%.2f");
+
+			newChild<gui::Checkbox<bool, 1, HandleTypeProperty, node::Converter, gui::SyncEventSink>>(
+				HandleTypeProperty{ this }, "Align tangents");
 		}
 	}
 	else {
@@ -1096,7 +1226,6 @@ void node::BwdTangentHandle::frame(gui::FrameDrawer& fd)
 
 	fd.setPen(&pen);
 	fd.drawLine(tmp1, tmp5, true);
-	//pen.colour = { 0.0f, 0.0f, 0.0f, 1.0f };
 	fd.drawCircle(tmp4, HANDLE_RADIUS, true);
 	fd.setPen(nullptr);
 }
@@ -1105,7 +1234,8 @@ std::unique_ptr<node::AnimationCurve::MoveOperation> node::BwdTangentHandle::get
 	std::vector<AnimationKey*>&& keys, const gui::Floats<2>& pos)
 {
 	//We ignore other selected items and only move ourselves
-	return std::make_unique<BwdMoveOp>(m_root->curve().getKeysPtr(), m_root->getIndex());
+	return std::make_unique<BwdMoveOp>(
+		m_root->curve().getKeysPtr(), m_root->getIndex(), m_root->getHandleType() == AnimationKey::HandleType::ALIGNED);
 }
 
 
@@ -1142,7 +1272,6 @@ void node::FwdTangentHandle::frame(gui::FrameDrawer& fd)
 
 	fd.setPen(&pen);
 	fd.drawLine(tmp1, tmp5, true);
-	//pen.colour = { 0.0f, 0.0f, 0.0f, 1.0f };
 	fd.drawCircle(tmp4, HANDLE_RADIUS, true);
 	fd.setPen(nullptr);
 }
@@ -1151,5 +1280,6 @@ std::unique_ptr<node::AnimationCurve::MoveOperation> node::FwdTangentHandle::get
 	std::vector<AnimationKey*>&&, const gui::Floats<2>&)
 {
 	//We ignore other selected items and only move ourselves
-	return std::make_unique<FwdMoveOp>(m_root->curve().getKeysPtr(), m_root->getIndex());
+	return std::make_unique<FwdMoveOp>(
+		m_root->curve().getKeysPtr(), m_root->getIndex(), m_root->getHandleType() == AnimationKey::HandleType::ALIGNED);
 }
