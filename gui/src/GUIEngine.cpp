@@ -175,6 +175,80 @@ void gui::backend::ImGuiWinD3D10::triangle(const Floats<2>& p1, const Floats<2>&
 				gui_type_conversion<ImU32>::from(col));
 }
 
+void gui::backend::ImGuiWinD3D10::setBrush(Brush* brush)
+{
+	m_brush = brush;
+}
+
+void gui::backend::ImGuiWinD3D10::setPen(Pen* pen)
+{
+	m_pen = pen;
+}
+
+void gui::backend::ImGuiWinD3D10::drawCircle(const Floats<2>& centre, float radius, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList) {
+		if (global) {
+			if (m_brush) {
+				drawList->AddCircleFilled(
+					gui_type_conversion<ImVec2>::from(centre),
+					radius,
+					gui_type_conversion<ImU32>::from(m_brush->colour));
+			}
+			if (m_pen) {
+				drawList->AddCircle(
+					gui_type_conversion<ImVec2>::from(centre),
+					radius,
+					gui_type_conversion<ImU32>::from(m_pen->colour),
+					0,
+					m_pen->width);
+			}
+		}
+		else {
+			if (m_brush) {
+				drawList->AddCircleFilled(
+					gui_type_conversion<ImVec2>::from(toGlobal(centre)),
+					radius * getCurrentScale()[0],//Only using x scale here (we could do geom average until we have ellipses)
+					gui_type_conversion<ImU32>::from(m_brush->colour));
+			}
+			if (m_pen) {
+				drawList->AddCircle(
+					gui_type_conversion<ImVec2>::from(toGlobal(centre)),
+					radius * getCurrentScale()[0],
+					gui_type_conversion<ImU32>::from(m_pen->colour),
+					0,
+					m_pen->width);
+			}
+		}
+	}
+}
+
+void gui::backend::ImGuiWinD3D10::drawLine(const Floats<2>& p1, const Floats<2>& p2, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList) {
+		if (global) {
+			if (m_pen) {
+				drawList->AddLine(
+					gui_type_conversion<ImVec2>::from(p1),
+					gui_type_conversion<ImVec2>::from(p2),
+					gui_type_conversion<ImU32>::from(m_pen->colour),
+					m_pen->width);
+			}
+		}
+		else {
+			if (m_pen) {
+				drawList->AddLine(
+					gui_type_conversion<ImVec2>::from(toGlobal(p1)),
+					gui_type_conversion<ImVec2>::from(toGlobal(p2)),
+					gui_type_conversion<ImU32>::from(m_pen->colour),
+					m_pen->width);
+			}
+		}
+	}
+}
+
 util::CallWrapper gui::backend::ImGuiWinD3D10::pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect)
 {
 	Floats<2> min = toGlobal({ std::min(p1[0], p2[0]), std::min(p1[1], p2[1]) });

@@ -51,6 +51,11 @@ namespace gui
 				const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br, bool global) override;
 			virtual void triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col, bool global) override;
 
+			virtual void setBrush(Brush* brush) override;
+			virtual void setPen(Pen* pen) override;
+			virtual void drawCircle(const Floats<2>& centre, float radius, bool global = false) override;
+			virtual void drawLine(const Floats<2>& p1, const Floats<2>& p2, bool global = false) override;
+
 			[[nodiscard]] virtual util::CallWrapper pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) override;
 			[[nodiscard]] virtual util::CallWrapper pushTransform(const Floats<2>& translation, const Floats<2>& scale) override;
 
@@ -97,6 +102,9 @@ namespace gui
 			std::stack<float> m_uiScale;
 			Layer m_layer{ Layer::WINDOW };
 			Floats<2> m_lastMousePos{ 0.0f, 0.0f };
+
+			Brush* m_brush{ nullptr };
+			Pen* m_pen{ nullptr };
 
 			std::vector<char> m_fontBuf;
 			std::filesystem::path m_defaultFontPath;

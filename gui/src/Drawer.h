@@ -73,6 +73,19 @@ namespace gui
 		bool m_drawing{ false };
 	};
 
+	//To avoid having so many different draw functions with so many parameters:
+
+	struct Pen
+	{
+		ColRGBA colour;
+		float width;
+	};
+
+	struct Brush
+	{
+		ColRGBA colour;
+	};
+
 	class FrameDrawer
 	{
 	public:
@@ -88,6 +101,12 @@ namespace gui
 		virtual void rectangleGradient(const Floats<2>& p1, const Floats<2>& p2,
 			const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br, bool global = false) = 0;
 		virtual void triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col, bool global = false) = 0;
+
+		//New take on draw calls, testing for now. May move to this system later.
+		virtual void setBrush(Brush*) = 0;
+		virtual void setPen(Pen*) = 0;
+		virtual void drawCircle(const Floats<2>& centre, float radius, bool global = false) = 0;
+		virtual void drawLine(const Floats<2>& p1, const Floats<2>& p2, bool global = false) = 0;
 
 		//Push a clip region to use for future draw calls. Returns an object that restores the previous region on destruction.
 		[[nodiscard]] virtual util::CallWrapper pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) = 0;
