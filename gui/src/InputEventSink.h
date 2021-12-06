@@ -85,4 +85,25 @@ namespace gui
 
         value_type m_init{ value_type() };
     };
+
+    //Invokes all commands immediately
+    template<typename PropertyType>
+    struct SyncEventSink
+    {
+
+        using value_type = typename util::property_traits<PropertyType>::value_type;
+
+        void begin(const PropertyType& p, IComponent* source)
+        {
+            m_init = util::property_traits<PropertyType>::get(p);
+        }
+        void update(PropertyType& p, IComponent* source, const value_type& val)
+        {
+            static_assert(SINGLE_THREAD);
+            util::property_traits<PropertyType>::set(p, val);
+        }
+        void end(PropertyType& p, IComponent* source) {}
+
+        value_type m_init{ value_type() };
+    };
 }
