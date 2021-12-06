@@ -109,24 +109,26 @@ public:
 	}
 };
 
-class MoveOp final : public node::AnimationCurve::MoveOperation
+class CentreMoveOp final : public node::AnimationCurve::MoveOperation
 {
 	const ni_ptr<Vector<Key<float>>> m_target;
 
-	std::vector<gui::Floats<2>> m_initPos;
 	std::vector<int> m_initI;
+	std::vector<gui::Floats<2>> m_initPos;
 
-	std::vector<gui::Floats<2>> m_currentPos;
 	std::vector<int> m_currentI;
+	std::vector<gui::Floats<2>> m_currentPos;
 
 	std::vector<int> m_finalI;
 
+	const gui::Floats<2> m_start;
 	gui::Floats<2> m_move{ 0.0f, 0.0f };
+
 	bool m_dirty{ false };
 
 public:
-	MoveOp(const ni_ptr<Vector<Key<float>>>& target, std::vector<int>&& indices) :
-		m_target{ target }, m_initI{ std::move(indices) }
+	CentreMoveOp(const ni_ptr<Vector<Key<float>>>& target, std::vector<int>&& indices, const gui::Floats<2>& init_pos) :
+		m_target{ target }, m_initI{ std::move(indices) }, m_start{ init_pos }
 	{
 		assert(target);
 
@@ -210,12 +212,12 @@ public:
 		return m_move[0] != 0.0f || m_move[1] != 0.0f;
 	}
 
-	virtual void update(const gui::Floats<2>& local_move) override
+	virtual void update(const gui::Floats<2>& local_pos) override
 	{
 		static_assert(SINGLE_THREAD);
 
-		if (local_move.matrix() != m_move.matrix()) {
-			if (float delta = local_move[0] - m_move[0]; delta >= 0.0f) {
+		if (gui::Floats<2> local_move = local_pos - m_start; local_move.matrix() != m_move.matrix()) {
+			if (local_move[0] - m_move[0] >= 0.0f) {
 				//moving toward non-negative time, go through keys in descending order
 				for (int i = (int)m_currentI.size() - 1; i >= 0; i--) {
 					m_currentPos[i] = m_initPos[i] + local_move;
@@ -255,6 +257,104 @@ public:
 			m_dirty = true;
 			execute();
 		}
+	}
+};
+
+class FwdMoveOp final : public node::AnimationCurve::MoveOperation
+{
+	const ni_ptr<Vector<Key<float>>> m_target;
+	const int m_index;
+
+	float m_init;
+	float m_current;
+	float m_bwdInit;
+
+	const bool m_align;
+
+public:
+	FwdMoveOp(const ni_ptr<Vector<Key<float>>>& target, int index, bool align = false) :
+		m_target{ target }, m_index{ index }, m_align{ align }
+	{
+		assert(m_target && m_index >= 0 && (size_t)m_index < m_target->size());
+		m_init = target->at(m_index).fwdTan.get();
+		m_current = m_init;
+		if (m_align)
+			m_bwdInit = target->at(m_index).bwdTan.get();
+	}
+
+	virtual void execute() override
+	{
+		m_target->at(m_index).fwdTan.set(m_current);
+		if (m_align)
+			m_target->at(m_index).bwdTan.set(m_current);
+	}
+	virtual void reverse() override
+	{
+		m_target->at(m_index).fwdTan.set(m_init);
+		if (m_align)
+			m_target->at(m_index).bwdTan.set(m_bwdInit);
+	}
+	virtual bool reversible() const override
+	{
+		return m_current != m_init;
+	}
+
+	virtual void update(const gui::Floats<2>& local_pos) override
+	{
+		float dv = local_pos[1] - m_target->at(m_index).value.get();
+		float dt = local_pos[0] - m_target->at(m_index).time.get();
+		m_current = dt > 0.0f ? dv / dt : std::copysign(1000.0f, dv);
+
+		execute();
+	}
+};
+
+class BwdMoveOp final : public node::AnimationCurve::MoveOperation
+{
+	const ni_ptr<Vector<Key<float>>> m_target;
+	const int m_index;
+
+	float m_init;
+	float m_current;
+	float m_fwdInit;
+
+	const bool m_align;
+
+public:
+	BwdMoveOp(const ni_ptr<Vector<Key<float>>>& target, int index, bool align = false) :
+		m_target{ target }, m_index{ index }, m_align{ align }
+	{
+		assert(m_target&& m_index >= 0 && (size_t)m_index < m_target->size());
+		m_init = target->at(m_index).bwdTan.get();
+		m_current = m_init;
+		if (m_align)
+			m_fwdInit = target->at(m_index).fwdTan.get();
+	}
+
+	virtual void execute() override
+	{
+		m_target->at(m_index).bwdTan.set(m_current);
+		if (m_align)
+			m_target->at(m_index).fwdTan.set(m_current);
+	}
+	virtual void reverse() override
+	{
+		m_target->at(m_index).bwdTan.set(m_init);
+		if (m_align)
+			m_target->at(m_index).fwdTan.set(m_fwdInit);
+	}
+	virtual bool reversible() const override
+	{
+		return m_current != m_init;
+	}
+
+	virtual void update(const gui::Floats<2>& local_pos) override
+	{
+		float dv = local_pos[1] - m_target->at(m_index).value.get();
+		float dt = local_pos[0] - m_target->at(m_index).time.get();
+		m_current = dt < 0.0f ? dv / dt : std::copysign(1000.0f, -dv);
+
+		execute();
 	}
 };
 
@@ -644,10 +744,18 @@ node::AnimationKey::AnimationKey(AnimationCurve& curve, int index) :
 	m_translation = { key().time.get(), key().value.get() };
 
 	newChild<CentreHandle>(*this);
+
+	m_curve->keyType().addListener(*this);
+	onSet(m_curve->keyType().get());
 }
 
 node::AnimationKey::~AnimationKey()
 {
+	m_curve->keyType().removeListener(*this);
+
+	//Children need to unregister while we are still alive
+	clearChildren();
+
 	//We should have been invalidated if our key has been erased.
 	if (!m_invalid) {
 		key().time.removeListener(*this);
@@ -667,6 +775,23 @@ void node::AnimationKey::onSet(const float&)
 	//We're listening to both time and value. Don't care which one was set.
 	m_translation = { key().time.get(), key().value.get() };
 	m_dirty = true;
+}
+
+void node::AnimationKey::onSet(const KeyType& val)
+{
+	//Add/remove tangent handles
+	assert(getChildren().size() >= 1);
+	if (val == KEY_QUADRATIC) {
+		if (getChildren().size() == 1) {
+			newChild<BwdTangentHandle>(*this);
+			newChild<FwdTangentHandle>(*this);
+		}
+	}
+	else {
+		//remove tangent handles, if any
+		for (int i = (int)getChildren().size() - 1; i > 0; i--)
+			eraseChild(i);
+	}
 }
 
 float node::AnimationKey::eval(float t)
@@ -792,13 +917,16 @@ struct gui::DefaultEventSink<KeyTimeProperty>
 	void begin(const KeyTimeProperty& p, IComponent*)
 	{
 		m_init = p.widget->key().time.get();
-		m_op = std::make_unique<MoveOp>(p.widget->getKeysPtr(), std::vector<int>{ p.widget->getIndex() });
+		m_op = std::make_unique<CentreMoveOp>(
+			p.widget->getKeysPtr(), 
+			std::vector<int>{ p.widget->getIndex(), },
+			gui::Floats<2>{ m_init, p.widget->key().value.get() });
 	}
-	void update(KeyTimeProperty&, IComponent*, const value_type& val)
+	void update(KeyTimeProperty& p, IComponent*, const value_type& val)
 	{
 		//here we let the move operation itself keep track of the key
 		if (m_op)
-			m_op->update({ val - m_init, 0.0f });
+			m_op->update({ val, p.widget->key().value.get() });
 	}
 	void end(KeyTimeProperty&, IComponent* source)
 	{
@@ -807,7 +935,7 @@ struct gui::DefaultEventSink<KeyTimeProperty>
 	}
 
 	float m_init{ 0.0f };
-	std::unique_ptr<MoveOp> m_op;
+	std::unique_ptr<CentreMoveOp> m_op;
 };
 
 node::KeyWidget::KeyWidget(AnimationKey& key) :
@@ -905,19 +1033,21 @@ void node::CentreHandle::frame(gui::FrameDrawer& fd)
 {
 	//We want to scale with PlotArea, not Axes. Not so easy right now. 
 	//We'll just not scale at all.
-	gui::ColRGBA col;
+	gui::Brush brush;
 	if (auto state = getSelectionState(); state == SelectionState::ACTIVE)
-		col = ACTIVE_COL;
+		brush.colour = ACTIVE_COL;
 	else if (state == SelectionState::SELECTED)
-		col = SELECTED_COL;
+		brush.colour = SELECTED_COL;
 	else
-		col = UNSELECTED_COL;
+		brush.colour = UNSELECTED_COL;
 
-	fd.circle(fd.toGlobal(m_translation), 3.0f, col, true);
+	fd.setBrush(&brush);
+	fd.drawCircle(fd.toGlobal(m_translation), 3.0f, true);
+	fd.setBrush(nullptr);
 }
 
 std::unique_ptr<node::AnimationCurve::MoveOperation> node::CentreHandle::getMoveOp(
-	std::vector<AnimationKey*>&& keys)
+	std::vector<AnimationKey*>&& keys, const gui::Floats<2>& pos)
 {
 	std::vector<int> indices(keys.size());
 
@@ -927,5 +1057,99 @@ std::unique_ptr<node::AnimationCurve::MoveOperation> node::CentreHandle::getMove
 		i++;
 	}
 
-	return std::make_unique<MoveOp>(m_root->curve().getKeysPtr(), std::move(indices));
+	return std::make_unique<CentreMoveOp>(m_root->curve().getKeysPtr(), std::move(indices), pos);
+}
+
+constexpr float HANDLE_LENGTH = 30.0f;
+constexpr float HANDLE_RADIUS = 3.0f;
+
+node::BwdTangentHandle::BwdTangentHandle(AnimationKey& root) : KeyHandle(root)
+{
+}
+
+node::BwdTangentHandle::~BwdTangentHandle()
+{
+}
+
+void node::BwdTangentHandle::frame(gui::FrameDrawer& fd)
+{
+	//(t, v) of this key is (0, 0) in our space
+	gui::Floats<2> tmp1 = fd.toGlobal({ 0.0f, 0.0f });
+	gui::Floats<2> tmp2 = fd.toGlobal({ -1.0f, -m_root->key().bwdTan.get() });
+	//tmp2 - tmp1 is some vector parallel with our desired handle
+	gui::Floats<2> tmp3 = (tmp2 - tmp1).matrix().normalized().array();
+	gui::Floats<2> tmp4 = tmp1 + HANDLE_LENGTH * (tmp2 - tmp1).matrix().normalized().array();
+	gui::Floats<2> tmp5 = tmp1 + (HANDLE_LENGTH - HANDLE_RADIUS) * (tmp2 - tmp1).matrix().normalized().array();
+	//need to set translation so we can be clicked
+	m_translation = fd.toLocal(tmp4);
+
+	//We want to scale with PlotArea, not Axes. Not so easy right now. 
+	//We'll just not scale at all.
+	gui::Pen pen;
+	pen.width = 1.0f;
+	if (auto state = getSelectionState(); state == SelectionState::ACTIVE)
+		pen.colour = ACTIVE_COL;
+	else if (state == SelectionState::SELECTED)
+		pen.colour = SELECTED_COL;
+	else
+		pen.colour = UNSELECTED_COL;
+
+	fd.setPen(&pen);
+	fd.drawLine(tmp1, tmp5, true);
+	//pen.colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+	fd.drawCircle(tmp4, HANDLE_RADIUS, true);
+	fd.setPen(nullptr);
+}
+
+std::unique_ptr<node::AnimationCurve::MoveOperation> node::BwdTangentHandle::getMoveOp(
+	std::vector<AnimationKey*>&& keys, const gui::Floats<2>& pos)
+{
+	//We ignore other selected items and only move ourselves
+	return std::make_unique<BwdMoveOp>(m_root->curve().getKeysPtr(), m_root->getIndex());
+}
+
+
+node::FwdTangentHandle::FwdTangentHandle(AnimationKey& root) : KeyHandle(root)
+{
+}
+
+node::FwdTangentHandle::~FwdTangentHandle()
+{
+}
+
+void node::FwdTangentHandle::frame(gui::FrameDrawer& fd)
+{
+	//(t, v) of this key is (0, 0) in our space
+	gui::Floats<2> tmp1 = fd.toGlobal({ 0.0f, 0.0f });
+	gui::Floats<2> tmp2 = fd.toGlobal({ 1.0f, m_root->key().fwdTan.get() });
+	//tmp2 - tmp1 is some vector parallel with our desired handle
+	gui::Floats<2> tmp3 = (tmp2 - tmp1).matrix().normalized().array();
+	gui::Floats<2> tmp4 = tmp1 + HANDLE_LENGTH * (tmp2 - tmp1).matrix().normalized().array();
+	gui::Floats<2> tmp5 = tmp1 + (HANDLE_LENGTH - HANDLE_RADIUS) * (tmp2 - tmp1).matrix().normalized().array();
+	//need to set translation so we can be clicked
+	m_translation = fd.toLocal(tmp4);
+
+	//We want to scale with PlotArea, not Axes. Not so easy right now. 
+	//We'll just not scale at all.
+	gui::Pen pen;
+	pen.width = 1.0f;
+	if (auto state = getSelectionState(); state == SelectionState::ACTIVE)
+		pen.colour = ACTIVE_COL;
+	else if (state == SelectionState::SELECTED)
+		pen.colour = SELECTED_COL;
+	else
+		pen.colour = UNSELECTED_COL;
+
+	fd.setPen(&pen);
+	fd.drawLine(tmp1, tmp5, true);
+	//pen.colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+	fd.drawCircle(tmp4, HANDLE_RADIUS, true);
+	fd.setPen(nullptr);
+}
+
+std::unique_ptr<node::AnimationCurve::MoveOperation> node::FwdTangentHandle::getMoveOp(
+	std::vector<AnimationKey*>&&, const gui::Floats<2>&)
+{
+	//We ignore other selected items and only move ourselves
+	return std::make_unique<FwdMoveOp>(m_root->curve().getKeysPtr(), m_root->getIndex());
 }

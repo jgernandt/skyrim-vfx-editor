@@ -32,7 +32,6 @@ namespace node
 
 	class AnimationCurve final :
 		public gui::Composite,
-		public nif::PropertyListener<KeyType>,
 		public nif::VectorListener<Key<float>>
 	{
 	public:
@@ -40,7 +39,7 @@ namespace node
 		{
 		public:
 			virtual ~MoveOperation() = default;
-			virtual void update(const gui::Floats<2>& local_move) {}
+			virtual void update(const gui::Floats<2>& local_pos) {}
 		};
 
 	public:
@@ -62,6 +61,7 @@ namespace node
 		ni_ptr<Vector<Key<float>>> getKeysPtr() const;
 		ni_ptr<Property<KeyType>> getTypePtr() const;
 		Vector<Key<float>>& keys() { return m_data->keys; }
+		Property<KeyType>& keyType() { return m_data->keyType; }
 
 		gui::Floats<2> getBounds() const;
 
@@ -86,8 +86,18 @@ namespace node
 	//Root of the key handle. Responsible for positioning at the correct time/value,
 	//and for interpolating to the next key.
 	//Parents the interactive widgets.
-	class AnimationKey final : public gui::Composite, public PropertyListener<float>
+	class AnimationKey final : 
+		public gui::Composite, 
+		public PropertyListener<float>,
+		public nif::PropertyListener<KeyType>
 	{
+	public:
+		enum class HandleType
+		{
+			ALIGNED,
+			FREE,
+		};
+
 	public:
 		AnimationKey(AnimationCurve& curve, int index);
 		~AnimationKey();
@@ -95,6 +105,7 @@ namespace node
 		virtual void setTranslation(const gui::Floats<2>& t) override;
 
 		virtual void onSet(const float& val) override;
+		virtual void onSet(const KeyType& val) override;
 
 		AnimationCurve& curve() { return *m_curve; }
 		Key<float>& key() { return m_curve->keys().at(m_index); }
@@ -111,15 +122,17 @@ namespace node
 		float eval(float t);
 
 		void invalidate() { m_invalid = true; }
+
 		bool getDirty() const { return m_dirty; }
 		void setDirty() { m_dirty = true; }
 
 	protected:
 		AnimationCurve* const m_curve;
-		//const ni_ptr<Vector<Key<float>>> m_keys;//drop this?
 		int m_index;
 
 		SelectionState m_selectionState{ SelectionState::NOT_SELECTED };
+
+		HandleType m_handleType{ HandleType::ALIGNED };
 
 		bool m_dirty{ true };
 		bool m_invalid{ false };
@@ -164,7 +177,8 @@ namespace node
 		KeyHandle(AnimationKey& root) : m_root{ &root } {}
 		virtual ~KeyHandle() = default;
 
-		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(std::vector<AnimationKey*>&& keys) = 0;
+		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(
+			std::vector<AnimationKey*>&& keys, const gui::Floats<2>& pos) = 0;
 
 		SelectionState getSelectionState() const { return m_root->getSelectionState(); }
 		void setSelectionState(SelectionState state) { m_root->setSelectionState(state); }
@@ -182,6 +196,27 @@ namespace node
 	public:
 		CentreHandle(AnimationKey& root) : KeyHandle{ root } {}
 		virtual void frame(gui::FrameDrawer& fd) override;
-		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(std::vector<AnimationKey*>&& keys) override;
+		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(
+			std::vector<AnimationKey*>&& keys, const gui::Floats<2>& pos) override;
+	};
+
+	class BwdTangentHandle final : public KeyHandle
+	{
+	public:
+		BwdTangentHandle(AnimationKey& root);
+		~BwdTangentHandle();
+		virtual void frame(gui::FrameDrawer& fd) override;
+		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(
+			std::vector<AnimationKey*>&& keys, const gui::Floats<2>& pos) override;
+	};
+
+	class FwdTangentHandle final : public KeyHandle
+	{
+	public:
+		FwdTangentHandle(AnimationKey& root);
+		~FwdTangentHandle();
+		virtual void frame(gui::FrameDrawer& fd) override;
+		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(
+			std::vector<AnimationKey*>&& keys, const gui::Floats<2>& pos) override;
 	};
 }

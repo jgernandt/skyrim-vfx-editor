@@ -497,12 +497,12 @@ void node::FloatKeyEditor::onMouseMove(const gui::Floats<2>& pos)
 void node::FloatKeyEditor::drag(const gui::Floats<2>& pos)
 {
 	if (m_op)
-		m_op->update(m_curve->fromGlobalSpace(pos) - m_curve->fromGlobalSpace(m_clickPoint));
+		m_op->update(m_curve->fromGlobalSpace(pos));
 	else if (m_clicked && (std::abs(pos[0] - m_clickPoint[0]) >= DRAG_THRESHOLD ||
 		std::abs(pos[1] - m_clickPoint[1]) >= DRAG_THRESHOLD))
 	{
-		m_op = m_clicked->getMoveOp(m_clicked->getCurve()->getSelected());
-		m_op->update(m_curve->fromGlobalSpace(pos) - m_curve->fromGlobalSpace(m_clickPoint));
+		m_op = m_clicked->getMoveOp(m_clicked->getCurve()->getSelected(), m_curve->fromGlobalSpace(m_clickPoint));
+		m_op->update(m_curve->fromGlobalSpace(pos));
 	}
 }
 
