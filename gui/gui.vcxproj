@@ -29,6 +29,7 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="src\ColourBar.h" />
     <ClInclude Include="src\CompositionActions.h" />
+    <ClInclude Include="src\DebugWindow.h" />
     <ClInclude Include="src\Devices.h" />
     <ClInclude Include="src\Drawer.h" />
     <ClInclude Include="src\Graph.h" />
@@ -124,6 +125,7 @@
     <ClCompile Include="src\Composition.cpp" />
     <ClCompile Include="src\ConnectionHandler.cpp" />
     <ClCompile Include="src\Connector.cpp" />
+    <ClCompile Include="src\DebugWindow.cpp" />
     <ClCompile Include="src\DragInput.cpp" />
     <ClCompile Include="src\DragInputImGui.cpp" />
     <ClCompile Include="src\Drawer.cpp" />

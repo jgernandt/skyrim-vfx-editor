@@ -32,6 +32,9 @@
 #include <thread>
 #include <vector>
 
+#include "DebugWindow.h"
+#include "widgets.h"
+
 #include "nif.h"
 
 #define EIGEN_MPL2_ONLY
