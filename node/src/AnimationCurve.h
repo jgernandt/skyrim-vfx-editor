@@ -73,7 +73,7 @@ namespace node
 		void setAxisLimits(const gui::Floats<2>& lims) { m_axisLims = lims; }
 
 	private:
-		void buildClip(const gui::Floats<2>& lims, float resolution);
+		void buildClip(const gui::Floats<2>& lims, const gui::Floats<2>& resolution);
 
 	private:
 		const ni_ptr<NiTimeController> m_ctlr;
@@ -125,12 +125,18 @@ namespace node
 
 		//evaluate the interpolation at time t (normalised to the time interval)
 		float eval(float t);
+		//Returns the extrema of a quadratic interpolation (in normalised time),
+		//or NaN if the extrema are outside the interval.
+		gui::Floats<2> getExtrema();
 
 		void invalidate() { m_invalid = true; }
 		bool valid() const { return !m_invalid; }
 
 		bool getDirty() const { return m_dirty; }
 		void setDirty() { m_dirty = true; }
+
+	private:
+		void recalculate();
 
 	protected:
 		AnimationCurve* const m_curve;
@@ -140,8 +146,8 @@ namespace node
 
 		HandleType m_handleType{ HandleType::ALIGNED };
 
-		float pLo[3];
-		float pHi[3];
+		float m_pLo[3];
+		float m_pHi[3];
 
 		bool m_dirty{ true };
 		bool m_invalid{ false };
