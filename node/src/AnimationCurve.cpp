@@ -26,6 +26,9 @@ constexpr gui::ColRGBA ACTIVE_COL{ 1.0f, 1.0f, 1.0f, 1.0f };
 constexpr gui::ColRGBA SELECTED_COL{ 1.0f, 0.8f, 0.0f, 1.0f };
 constexpr gui::ColRGBA UNSELECTED_COL{ 0.0f, 0.0f, 0.0f, 1.0f };
 
+constexpr float HANDLE_LENGTH = 30.0f;
+constexpr float HANDLE_RADIUS = 3.0f;
+
 class EraseOp final : public gui::ICommand
 {
 	const ni_ptr<Vector<Key<float>>> m_target;
@@ -566,7 +569,7 @@ void node::AnimationCurve::onMove(int from, int to)
 
 	//The handle before min(from, to) must refresh
 	if (low != 0)
-		static_cast<AnimationKey*>(getChildren()[low].get())->setDirty();
+		static_cast<AnimationKey*>(getChildren()[low - 1].get())->setDirty();
 	//The handle at max(from, to) must refresh
 	static_cast<AnimationKey*>(getChildren()[high].get())->setDirty();
 }
@@ -592,6 +595,12 @@ std::vector<node::AnimationKey*> node::AnimationCurve::getSelected() const
 		}
 	}
 	return result;
+}
+
+node::AnimationKey& node::AnimationCurve::animationKey(int i) const
+{
+	assert(i >= 0 && (size_t)i < getChildren().size());
+	return *static_cast<AnimationKey*>(getChildren()[i].get());
 }
 
 ni_ptr<Vector<Key<float>>> node::AnimationCurve::getKeysPtr() const
@@ -639,6 +648,7 @@ std::unique_ptr<gui::ICommand> node::AnimationCurve::getEraseOp(const std::vecto
 
 void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolution)
 {
+	KeyType type = m_data->keyType.get();
 	bool reverse = m_ctlr->flags.hasRaised(CTLR_LOOP_REVERSE);
 	float tStart = m_ctlr->startTime.get();
 	float tStop = m_ctlr->stopTime.get();
@@ -652,10 +662,6 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 		m_clipPoints.push_back({ reverse ? tStart + m_clipLength : tStop, 0.0f });
 	}
 	else {
-		//We assume strictly increasing time values. Might enforce that later.
-		//Come to think of it, we should probably just assume non-decreasing.
-		//There may be valid uses for equal-time keys.
-
 		int stopReverse = -1;
 
 		//if the first key is greater than tStart, special treatment is required
@@ -665,55 +671,118 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 			stopReverse = 1;
 		}
 
-		//Now proceed until the next key is not less than tStart, or we reach the last key
+		//if the first key is greater than tStop, we're done
 		int i = 0;
-		for (; i < (int)m_data->keys.size() - 1 && m_data->keys.at(i + 1).time.get() < tStart; i++) {}
-		int first = i;//save for mirroring
+		if (m_data->keys.at(i).time.get() < tStop) {
 
-		//evaluate this and every following key, clamped to tStart (only really needed for the first)
-		//break if we pass tStop
-		for (; i < (int)m_data->keys.size(); i++) {
-			if (float t = m_data->keys.at(i).time.get(); t < tStop) {
-				//if this is not the last key and t is less than tStart, interpolate
-				float tau;
-				if (i < (int)m_data->keys.size() - 1 && t < tStart) {
-					tau = (tStart - t) / (m_data->keys.at(i + 1).time.get() - t);
+			//Now proceed until the next key is greater than tStart, or we reach the last key.
+			//This is the first relevant key.
+			for (; i < (int)m_data->keys.size() - 1 && m_data->keys.at(i + 1).time.get() <= tStart; i++) {}
+
+			//keys.at(i) is less than tStop
+
+			for (; i < (int)m_data->keys.size(); i++) {
+
+				float t = m_data->keys.at(i).time.get();
+
+				float tBegin;
+				float tauBegin;
+				if (t < tStart) {
+					tBegin = tStart;
+					tauBegin = (tStart - t) / (m_data->keys.at(i + 1).time.get() - t);
 				}
-				else
-					tau = 0.0f;
+				else {
+					tBegin = t;
+					tauBegin = 0.0f;
+				}
 
-				t = std::max(t, tStart);
+				if (type == KEY_QUADRATIC) {
+					//push from tBegin up to (not including) tEnd
+					//if tEnd == tStop, push them too and break
 
-				//Feels stupid with this indirection here, but it will help with quadratics
-				float v = static_cast<AnimationKey*>(getChildren()[i].get())->eval(tau);
+					float tEnd;
+					float tauEnd;
 
-				if (m_clipPoints.empty() || m_clipPoints.back()[0] != t || m_clipPoints.back()[1] != v)
-					m_clipPoints.push_back({ t, v });
-			}
-			else {
-				//evaluate clamped to tStop
-				//if this is the first key, we have what we need already
-				if (i > 0) {
-					float tau;
-					if (t > tStop) {
-						tau = (tStop - m_data->keys.at(i - 1).time.get()) / (t - m_data->keys.at(i - 1).time.get());
-						t = tStop;
+					if (i == (int)m_data->keys.size() - 1) {
+						tEnd = tBegin;
+						tauEnd = tauBegin;
+					}
+					else if (m_data->keys.at(i + 1).time.get() > tStop) {
+						tEnd = tStop;
+						tauEnd = (tStop - t) / (m_data->keys.at(i + 1).time.get() - t);
+					}
+					else {
+						tEnd = m_data->keys.at(i + 1).time.get();
+						tauEnd = 1.0f;
+					}
+
+					auto key = static_cast<AnimationKey*>(getChildren()[i].get());
+
+					if (tEnd > tBegin) {
+						//number of segments should be determined by the on-screen resolution
+						//(and possibly the curvature of the polynomial).
+						//For now, just pick a number.
+						float N = 10.0f;//segments in whole interval
+
+						float mid = 0.5f * (t + m_data->keys.at(i + 1).time.get());
+
+						//segments in lower half
+						float lo_width = 0.5f - tauBegin;
+						int lo_res = static_cast<int>(std::ceil(N * std::max(lo_width, 0.0f)));
+						float lo_delta_tau = lo_width / lo_res;
+						float lo_delta_t = (mid - tBegin) / lo_res;
+						//segments in upper half
+						float hi_width = tauEnd - 0.5f;
+						int hi_res = static_cast<int>(std::ceil(N * std::max(hi_width, 0.0f)));
+						float hi_delta_tau = hi_width / hi_res;
+						float hi_delta_t = (tEnd - mid) / hi_res;
+
+						for (int j = 0; j < lo_res; j++) {
+							float v = key->eval(tauBegin + j * lo_delta_tau);
+							m_clipPoints.push_back({ tBegin + j * lo_delta_t, v });
+						}
+						for (int j = 0; j < hi_res; j++) {
+							float v = key->eval(0.5f + j * hi_delta_tau);
+							m_clipPoints.push_back({ mid + j * hi_delta_t, v });
+						}
+					}
+					else {
+						//we only need at tBegin
+						m_clipPoints.push_back({ tBegin, key->eval(tauBegin) });
+					}
+
+					if (tEnd == tStop) {
+						m_clipPoints.push_back({ tEnd, key->eval(tauEnd) });
+						break;
+					}
+				}
+				else {
+					//push at tBegin
+					//if t >= tStop, this is the last relevant key
+					float v;
+
+					if (tBegin >= tStop) {
+						assert(i > 0);//sanity check
+						tauBegin = (tStop - m_data->keys.at(i - 1).time.get()) / (tBegin - m_data->keys.at(i - 1).time.get());
+						tBegin = tStop;
+						v = static_cast<AnimationKey*>(getChildren()[i - 1].get())->eval(tauBegin);
 					}
 					else
-						tau = 1.0f;
+						v = static_cast<AnimationKey*>(getChildren()[i].get())->eval(tauBegin);
 
-					float v = static_cast<AnimationKey*>(getChildren()[i - 1].get())->eval(tau);
+					//we only need this check on the first push? No, the keys could be equal.
+					if (m_clipPoints.empty() || m_clipPoints.back()[0] != tBegin || m_clipPoints.back()[1] != v)
+						m_clipPoints.push_back({ tBegin, v });
 
-					if (m_clipPoints.empty() || m_clipPoints.back()[0] != t || m_clipPoints.back()[1] != v)
-						m_clipPoints.push_back({ t, v });
+					if (tBegin == tStop)
+						break;
 				}
-				break;
 			}
-		}
 
-		//if the last point is less than tStop, clamp it to the end
-		if (m_clipPoints.back()[0] < tStop)
-			m_clipPoints.push_back({ tStop, m_clipPoints.back()[1] });
+			//if the last point is less than tStop, clamp it to the end
+			if (m_clipPoints.back()[0] < tStop)
+				m_clipPoints.push_back({ tStop, m_clipPoints.back()[1] });
+		}
 
 		if (reverse) {
 			for (i = m_clipPoints.size() - 2; i > stopReverse; i--)
@@ -775,9 +844,11 @@ void node::AnimationKey::setTranslation(const gui::Floats<2>& t)
 
 void node::AnimationKey::onSet(const float&)
 {
-	//We're listening to both time and value. Don't care which one was set.
+	//We're listening to time and value. Don't care which one was set.
 	m_translation = { key().time.get(), key().value.get() };
-	m_dirty = true;
+	setDirty();
+	if (m_index != 0)
+		m_curve->animationKey(m_index - 1).setDirty();
 }
 
 void node::AnimationKey::onSet(const KeyType& val)
@@ -795,20 +866,68 @@ void node::AnimationKey::onSet(const KeyType& val)
 		for (int i = (int)getChildren().size() - 1; i > 0; i--)
 			eraseChild(i);
 	}
+	setDirty();
+}
+
+void node::AnimationKey::setIndex(int i)
+{
+	m_index = i;
+	setDirty();
 }
 
 float node::AnimationKey::eval(float t)
 {
-	if (t <= 0.0f) {
-		return key().value.get();
+	if (KeyType type = m_curve->keyType().get(); type == KEY_LINEAR) {
+		m_dirty = false;
+
+		if (t <= 0.0f) {
+			return key().value.get();
+		}
+		else if (t >= 1.0f) {
+			return m_index < (int)m_curve->keys().size() - 1 ? m_curve->keys().at(m_index + 1).value.get() : key().value.get();
+		}
+		else {
+			float v0 = key().value.get();
+			return m_index < (int)m_curve->keys().size() - 1 ? v0 + t * (m_curve->keys().at(m_index + 1).value.get() - v0) : v0;
+		}
 	}
-	else if (t >= 1.0f) {
-		return m_index < (int)m_curve->keys().size() - 1 ? m_curve->keys().at(m_index + 1).value.get() : key().value.get();
+	else if (type == KEY_QUADRATIC) {
+		//we need to hear time, value, fwdTan of this key and time, value bwdTan of next
+		if (m_dirty) {
+			pLo[0] = key().value.get();
+
+			if (m_index < (int)m_curve->keys().size() - 1) {
+				float h = m_curve->keys().at(m_index + 1).time.get() - key().time.get();
+				float y1 = m_curve->keys().at(m_index + 1).value.get();
+				float yp1 = m_curve->keys().at(m_index + 1).bwdTan.get() * h;
+				
+				pLo[1] = key().fwdTan.get() * h;
+
+				pHi[1] = 4 * (y1 - pLo[0]) - pLo[1] - 2 * yp1;
+				pHi[2] = 0.5f * (yp1 - pHi[1]);
+				pHi[0] = y1 - pHi[1] - pHi[2];
+
+				pLo[2] = pHi[1] + pHi[2] - pLo[1];
+			}
+
+			m_dirty = false;
+		}
+
+		if (t <= 0.0f) {
+			return pLo[0];
+		}
+		else if (t < 0.5f) {
+			return pLo[0] + t * (pLo[1] + t * pLo[2]);
+		}
+		else if (t < 1.0f) {
+			return pHi[0] + t * (pHi[1] + t * pHi[2]);
+		}
+		else {
+			return pHi[0] + pHi[1] + pHi[2];
+		}
 	}
-	else {
-		float v0 = key().value.get();
-		return m_index < (int)m_curve->keys().size() - 1 ? v0 + t * (m_curve->keys().at(m_index + 1).value.get() - v0) : v0;
-	}
+	else
+		return 0.0f;
 }
 
 
@@ -1190,15 +1309,16 @@ std::unique_ptr<node::AnimationCurve::MoveOperation> node::CentreHandle::getMove
 	return std::make_unique<CentreMoveOp>(m_root->curve().getKeysPtr(), std::move(indices), pos);
 }
 
-constexpr float HANDLE_LENGTH = 30.0f;
-constexpr float HANDLE_RADIUS = 3.0f;
-
 node::BwdTangentHandle::BwdTangentHandle(AnimationKey& root) : KeyHandle(root)
 {
+	assert(m_root);
+	m_root->key().bwdTan.addListener(*this);
 }
 
 node::BwdTangentHandle::~BwdTangentHandle()
 {
+	if (m_root->valid())
+		m_root->key().bwdTan.removeListener(*this);
 }
 
 void node::BwdTangentHandle::frame(gui::FrameDrawer& fd)
@@ -1238,13 +1358,23 @@ std::unique_ptr<node::AnimationCurve::MoveOperation> node::BwdTangentHandle::get
 		m_root->curve().getKeysPtr(), m_root->getIndex(), m_root->getHandleType() == AnimationKey::HandleType::ALIGNED);
 }
 
+void node::BwdTangentHandle::onSet(const float&)
+{
+	if (int i = m_root->getIndex(); i != 0)
+		m_root->curve().animationKey(i - 1).setDirty();
+}
+
 
 node::FwdTangentHandle::FwdTangentHandle(AnimationKey& root) : KeyHandle(root)
 {
+	assert(m_root);
+	m_root->key().fwdTan.addListener(*this);
 }
 
 node::FwdTangentHandle::~FwdTangentHandle()
 {
+	if (m_root->valid())
+		m_root->key().fwdTan.removeListener(*this);
 }
 
 void node::FwdTangentHandle::frame(gui::FrameDrawer& fd)
@@ -1282,4 +1412,9 @@ std::unique_ptr<node::AnimationCurve::MoveOperation> node::FwdTangentHandle::get
 	//We ignore other selected items and only move ourselves
 	return std::make_unique<FwdMoveOp>(
 		m_root->curve().getKeysPtr(), m_root->getIndex(), m_root->getHandleType() == AnimationKey::HandleType::ALIGNED);
+}
+
+void node::FwdTangentHandle::onSet(const float&)
+{
+	m_root->setDirty();
 }

@@ -58,6 +58,8 @@ namespace node
 		AnimationKey* getActive() const;
 		std::vector<AnimationKey*> getSelected() const;
 
+		AnimationKey& animationKey(int i) const;
+
 		ni_ptr<Vector<Key<float>>> getKeysPtr() const;
 		ni_ptr<Property<KeyType>> getTypePtr() const;
 		Vector<Key<float>>& keys() { return m_data->keys; }
@@ -111,7 +113,7 @@ namespace node
 		Key<float>& key() { return m_curve->keys().at(m_index); }
 
 		int getIndex() const { return m_index; }
-		void setIndex(int i) { m_index = i; }//track this ourselves instead?
+		void setIndex(int i);//track this ourselves instead?
 
 		SelectionState getSelectionState() const { return m_selectionState; }
 		void setSelectionState(SelectionState state) { m_selectionState = state; }
@@ -125,6 +127,7 @@ namespace node
 		float eval(float t);
 
 		void invalidate() { m_invalid = true; }
+		bool valid() const { return !m_invalid; }
 
 		bool getDirty() const { return m_dirty; }
 		void setDirty() { m_dirty = true; }
@@ -136,6 +139,9 @@ namespace node
 		SelectionState m_selectionState{ SelectionState::NOT_SELECTED };
 
 		HandleType m_handleType{ HandleType::ALIGNED };
+
+		float pLo[3];
+		float pHi[3];
 
 		bool m_dirty{ true };
 		bool m_invalid{ false };
@@ -205,7 +211,7 @@ namespace node
 			std::vector<AnimationKey*>&& keys, const gui::Floats<2>& pos) override;
 	};
 
-	class BwdTangentHandle final : public KeyHandle
+	class BwdTangentHandle final : public KeyHandle, public PropertyListener<float>
 	{
 	public:
 		BwdTangentHandle(AnimationKey& root);
@@ -213,9 +219,10 @@ namespace node
 		virtual void frame(gui::FrameDrawer& fd) override;
 		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(
 			std::vector<AnimationKey*>&& keys, const gui::Floats<2>& pos) override;
+		virtual void onSet(const float&) override;
 	};
 
-	class FwdTangentHandle final : public KeyHandle
+	class FwdTangentHandle final : public KeyHandle, public PropertyListener<float>
 	{
 	public:
 		FwdTangentHandle(AnimationKey& root);
@@ -223,5 +230,6 @@ namespace node
 		virtual void frame(gui::FrameDrawer& fd) override;
 		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(
 			std::vector<AnimationKey*>&& keys, const gui::Floats<2>& pos) override;
+		virtual void onSet(const float&) override;
 	};
 }
