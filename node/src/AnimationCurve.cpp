@@ -727,23 +727,23 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 						float mid = 0.5f * (t + m_data->keys.at(i + 1).time.get());
 
 						//segments in lower half
-						float lo_width = 0.5f - tauBegin;
+						float lo_width = std::min(0.5f, tauEnd) - tauBegin;
 						int lo_res = static_cast<int>(std::ceil(N * std::max(lo_width, 0.0f)));
 						float lo_delta_tau = lo_width / lo_res;
-						float lo_delta_t = (mid - tBegin) / lo_res;
+						float lo_delta_t = (std::min(mid, tEnd) - tBegin) / lo_res;
 						//segments in upper half
-						float hi_width = tauEnd - 0.5f;
+						float hi_width = tauEnd - std::max(0.5f, tauBegin);
 						int hi_res = static_cast<int>(std::ceil(N * std::max(hi_width, 0.0f)));
 						float hi_delta_tau = hi_width / hi_res;
-						float hi_delta_t = (tEnd - mid) / hi_res;
+						float hi_delta_t = (tEnd - std::max(mid, tBegin)) / hi_res;
 
 						for (int j = 0; j < lo_res; j++) {
 							float v = key->eval(tauBegin + j * lo_delta_tau);
 							m_clipPoints.push_back({ tBegin + j * lo_delta_t, v });
 						}
 						for (int j = 0; j < hi_res; j++) {
-							float v = key->eval(0.5f + j * hi_delta_tau);
-							m_clipPoints.push_back({ mid + j * hi_delta_t, v });
+							float v = key->eval(std::max(0.5f, tauBegin) + j * hi_delta_tau);
+							m_clipPoints.push_back({ std::max(mid, tBegin) + j * hi_delta_t, v });
 						}
 					}
 					else {
