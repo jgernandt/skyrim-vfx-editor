@@ -756,7 +756,7 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 						break;
 					}
 				}
-				else {
+				else if (type == KEY_LINEAR) {
 					//push at tBegin
 					//if t >= tStop, this is the last relevant key
 					float v;
@@ -777,6 +777,25 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 					if (tBegin == tStop)
 						break;
 				}
+				else {
+					//Constant or unsupported
+					//push at tBegin and at tEnd (unless equal, or last key)
+					if (tBegin < tStop) {
+
+						float v = m_data->keys.at(i).value.get();
+						if (m_clipPoints.empty() || m_clipPoints.back()[0] != tBegin || m_clipPoints.back()[1] != v)
+							m_clipPoints.push_back({ tBegin, v });
+
+						if (i < (int)m_data->keys.size() - 1) {
+							float t_next = m_data->keys.at(i + 1).time.get();
+							if (t_next > tBegin && t_next < tStop) {
+								m_clipPoints.push_back({ t_next, v });
+							}
+						}
+					}
+					else
+						break;
+				}
 			}
 
 			//if the last point is less than tStop, clamp it to the end
@@ -791,14 +810,6 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, float resolutio
 			if (i != -1)
 				m_clipPoints.push_back({ m_clipLength + tStart, m_clipPoints.back()[1] });
 		}
-
-		//if we were quadratic we might instead:
-		//*Recalculate the limits to global and determine the resolution of the interval.
-		// From it, decide how many line segments we want to split it into.
-		//*Call the Handle to evaluate the interpolant at the given points
-
-		//If we were constant we should not produce a continuous curve at all. 
-		//We should produce a list of lines.
 	}
 
 }
@@ -878,8 +889,6 @@ void node::AnimationKey::setIndex(int i)
 float node::AnimationKey::eval(float t)
 {
 	if (KeyType type = m_curve->keyType().get(); type == KEY_LINEAR) {
-		m_dirty = false;
-
 		if (t <= 0.0f) {
 			return key().value.get();
 		}
@@ -892,7 +901,6 @@ float node::AnimationKey::eval(float t)
 		}
 	}
 	else if (type == KEY_QUADRATIC) {
-		//we need to hear time, value, fwdTan of this key and time, value bwdTan of next
 		if (m_dirty) {
 			pLo[0] = key().value.get();
 
@@ -926,8 +934,8 @@ float node::AnimationKey::eval(float t)
 			return pHi[0] + pHi[1] + pHi[2];
 		}
 	}
-	else
-		return 0.0f;
+	else //Constant or unsupported
+		return key().value.get();
 }
 
 
