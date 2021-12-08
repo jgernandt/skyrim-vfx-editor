@@ -29,12 +29,12 @@ namespace nodes
 	{
 	public:
 
-		//Target should receive Set<NiExtraData> (multi)
+		//Target should receive Set<NiExtraData> (single)
 		TEST_METHOD(Target)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiExtraData>();
-			SetReceiverTest(std::make_unique<node::DummyExtraData>(obj), *obj, node::ExtraData::TARGET, true);
+			SetReceiverTest(std::make_unique<node::DummyExtraData>(obj), *obj, node::ExtraData::TARGET, false);
 		}
 	};
 

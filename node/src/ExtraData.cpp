@@ -27,7 +27,7 @@ using namespace node;
 node::ExtraData::TargetField::TargetField(const std::string& name, NodeBase& node, const ni_ptr<NiExtraData>& obj) :
 	Field(name), m_rvr(obj)
 {
-	connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::MultiConnector>(m_sdr, m_rvr));
+	connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sdr, m_rvr));
 }
 
 node::ExtraData::ExtraData(const ni_ptr<NiExtraData>& obj)
