@@ -155,4 +155,5 @@ namespace nif
 
 	template<> [[nodiscard]] std::shared_ptr<NiExtraData> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiStringExtraData> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiStringsExtraData> File::create();
 }

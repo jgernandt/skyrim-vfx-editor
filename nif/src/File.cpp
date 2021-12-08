@@ -101,6 +101,7 @@ template<> [[nodiscard]] std::shared_ptr<NiPSysEmitterCtlr> File::create() { ret
 
 template<> [[nodiscard]] std::shared_ptr<NiExtraData> File::create() { return make_ni<NiExtraData>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<NiStringExtraData> File::create() { return make_ni<NiStringExtraData>(nullptr); }
+template<> [[nodiscard]] std::shared_ptr<NiStringsExtraData> File::create() { return make_ni<NiStringsExtraData>(nullptr); }
 
 std::map<size_t, nif::File::CreateFcn> nif::File::s_typeRegistry;
 void nif::File::registerTypes()
@@ -155,6 +156,7 @@ void nif::File::registerTypes()
 
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiExtraData::TYPE)] = &make_NiObject<nif::NiExtraData>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiStringExtraData::TYPE)] = &make_NiObject<nif::NiStringExtraData>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiStringsExtraData::TYPE)] = &make_NiObject<nif::NiStringsExtraData>;
 }
 
 namespace Niflib

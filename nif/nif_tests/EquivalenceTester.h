@@ -193,4 +193,10 @@ namespace common
 	{
 		bool operator() (const NiStringExtraData& object, const Niflib::NiStringExtraData* native, File& file);
 	};
+
+	template<>
+	struct EquivalenceTester<NiStringsExtraData> : VerticalTraverser<NiStringsExtraData, EquivalenceTester>
+	{
+		bool operator() (const NiStringsExtraData& object, const Niflib::NiStringsExtraData* native, File& file);
+	};
 }

@@ -133,6 +133,7 @@ namespace nif
 
 	struct NiExtraData;
 	struct NiStringExtraData;
+	struct NiStringsExtraData;
 }
 
 namespace Niflib
@@ -187,4 +188,5 @@ namespace Niflib
 
 	class NiExtraData;
 	class NiStringExtraData;
+	class NiStringsExtraData;
 }

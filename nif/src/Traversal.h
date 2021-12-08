@@ -73,6 +73,7 @@ namespace nif
 
 		virtual void traverse(NiExtraData& obj) {}
 		virtual void traverse(NiStringExtraData& obj) {}
+		virtual void traverse(NiStringsExtraData& obj) {}
 		//etc.
 	};
 
@@ -206,6 +207,7 @@ namespace nif
 
 		virtual void traverse(NiExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiStringExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiStringsExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 	};
 	
 	//A variant that calls a separate function object instead of a member function.

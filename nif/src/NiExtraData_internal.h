@@ -45,4 +45,16 @@ namespace nif
 	{
 		bool operator() (const NiStringExtraData& object, Niflib::NiStringExtraData* native, const File& file);
 	};
+
+	//NiStringsExtraData
+	template<> struct type_map<Niflib::NiStringsExtraData> { using type = NiStringsExtraData; };
+	template<> struct type_map<NiStringsExtraData> { using type = Niflib::NiStringsExtraData; };
+	template<> struct ReadSyncer<NiStringsExtraData> : VerticalTraverser<NiStringsExtraData, ReadSyncer>
+	{
+		bool operator() (NiStringsExtraData& object, const Niflib::NiStringsExtraData* native, File& file);
+	};
+	template<> struct WriteSyncer<NiStringsExtraData> : VerticalTraverser<NiStringsExtraData, WriteSyncer>
+	{
+		bool operator() (const NiStringsExtraData& object, Niflib::NiStringsExtraData* native, const File& file);
+	};
 }

@@ -51,6 +51,7 @@
 #include "obj/NiPSysUpdateCtlr.h"
 
 #include "obj/NiStringExtraData.h"
+#include "obj/NiStringsExtraData.h"
 
 #include "obj/BSEffectShaderProperty.h"
 #include "obj/NiAlphaProperty.h"

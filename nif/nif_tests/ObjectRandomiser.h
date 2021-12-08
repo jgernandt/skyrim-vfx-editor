@@ -371,4 +371,11 @@ namespace common
 		bool operator() (NiStringExtraData& object, File& file, std::mt19937& rng);
 		bool operator() (const NiStringExtraData&, Niflib::NiStringExtraData* native, File& file, std::mt19937& rng);
 	};
+
+	template<>
+	struct Randomiser<NiStringsExtraData> : VerticalTraverser<NiStringsExtraData, Randomiser>
+	{
+		bool operator() (NiStringsExtraData& object, File& file, std::mt19937& rng);
+		bool operator() (const NiStringsExtraData&, Niflib::NiStringsExtraData* native, File& file, std::mt19937& rng);
+	};
 }
