@@ -20,55 +20,42 @@
 #include "GravityModifier.h"
 #include "widget_types.h"
 
-class node::GravityModifier::GravityObjectField final : public Field
+using namespace node;
+using namespace nif;
+
+class GravityObjectField final : public Field
 {
+	Receiver<void> m_rcvr;
+	Sender<Ptr<NiNode>> m_sndr;
+
 public:
-	GravityObjectField(const std::string& name, GravityModifier& node) :
-		Field(name), m_sndr(node.object().gravityObject())
+	GravityObjectField(const std::string& name, NodeBase& node, ni_ptr<Ptr<NiNode>>&& obj) :
+		Field(name), m_sndr(*obj) //old format
 	{
 		connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
 	}
-
-private:
-	Receiver<void> m_rcvr;
-	Sender<IAssignable<nif::NiNode>> m_sndr;
 };
 
-/*class node::GravityModifier::ForceTypeField final : public Field
+class StrengthField final : public Field
 {
 public:
-	ForceTypeField(const std::string& name, GravityModifier& node) :
+	StrengthField(const std::string& name, NodeBase& node, ni_ptr<Property<float>>&& obj) :
 		Field(name)
 	{
-		using widget_type = gui::Selector<nif::ForceType, IProperty<nif::ForceType>>;
-		widget = node.newChild<widget_type>(node.object().forceType(), name,
-			widget_type::ItemList{
-				{ nif::FORCE_PLANAR, "Planar" },
-				{ nif::FORCE_SPHERICAL, "Spherical" } });
-	}
-
-};*/
-
-class node::GravityModifier::StrengthField final : public Field
-{
-public:
-	StrengthField(const std::string& name, GravityModifier& node) :
-		Field(name)
-	{
-		widget = node.newChild<DragFloat>(node.object().strength(), name);
+		widget = node.newChild<DragFloat>(obj, name);
 		static_cast<DragFloat*>(widget)->setSensitivity(0.1f);
 		static_cast<DragFloat*>(widget)->setNumberFormat("%.2f");
 	}
 };
 
-class node::GravityModifier::DecayField final : public Field
+class DecayField final : public Field
 {
 public:
-	DecayField(const std::string& name, GravityModifier& node) :
+	DecayField(const std::string& name, NodeBase& node, ni_ptr<Property<float>>&& obj) :
 		Field(name)
 	{
 		//(planar symmetry unless world aligned)
-		widget = node.newChild<DragFloat>(node.object().decay(), name);
+		widget = node.newChild<DragFloat>(obj, name);
 		static_cast<DragFloat*>(widget)->setSensitivity(0.005f);
 		static_cast<DragFloat*>(widget)->setLowerLimit(0.0f);
 		static_cast<DragFloat*>(widget)->setNumberFormat("%.2f");
@@ -76,82 +63,79 @@ public:
 	}
 };
 
-class node::GravityModifier::TurbulenceField final : public Field
+class TurbulenceField final : public Field
 {
 public:
-	TurbulenceField(const std::string& name, GravityModifier& node) :
+	TurbulenceField(const std::string& name, NodeBase& node, ni_ptr<Property<float>>&& obj) :
 		Field(name)
 	{
-		widget = node.newChild<DragFloat>(node.object().turbulence(), name);
+		widget = node.newChild<DragFloat>(obj, name);
 		static_cast<DragFloat*>(widget)->setSensitivity(0.005f);
 		static_cast<DragFloat*>(widget)->setLowerLimit(0.0f);
 		static_cast<DragFloat*>(widget)->setNumberFormat("%.2f");
 	}
 };
 
-class node::GravityModifier::TurbulenceScaleField final : public Field
+class TurbulenceScaleField final : public Field
 {
 public:
-	TurbulenceScaleField(const std::string& name, GravityModifier& node) :
+	TurbulenceScaleField(const std::string& name, NodeBase& node, ni_ptr<Property<float>>&& obj) :
 		Field(name)
 	{
-		widget = node.newChild<DragFloat>(node.object().turbulenceScale(), name);
+		widget = node.newChild<DragFloat>(obj, name);
 		static_cast<DragFloat*>(widget)->setSensitivity(0.005f);
 		static_cast<DragFloat*>(widget)->setLowerLimit(0.0f);
 		static_cast<DragFloat*>(widget)->setNumberFormat("%.2f");
 	}
 };
 
-node::GravityModifier::GravityModifier(std::unique_ptr<nif::NiPSysGravityModifier>&& obj) :
-	Modifier(std::move(obj))
+node::GravityModifier::GravityModifier(const ni_ptr<NiPSysGravityModifier>& obj) :
+	Modifier(obj)
 {
-	addTargetField(std::make_shared<ReqDevice<Requirement::MOVEMENT>>(*this));
-
 	newChild<gui::Separator>();
 
-	newField<GravityObjectField>(GRAVITY_OBJECT, *this);
-	newField<StrengthField>(STRENGTH, *this);
-	newField<DecayField>(DECAY, *this);
-	newField<TurbulenceField>(TURBULENCE, *this);
-	newField<TurbulenceScaleField>(TURBULENCE_SCALE, *this);
+	m_objectField = newField<GravityObjectField>(GRAVITY_OBJECT, *this, 
+		make_ni_ptr(obj, &NiPSysGravityModifier::gravityObject));
+
+	m_strengthField = newField<StrengthField>(STRENGTH, *this,
+		make_ni_ptr(obj, &NiPSysGravityModifier::strength));
+
+	m_decayField = newField<DecayField>(DECAY, *this,
+		make_ni_ptr(obj, &NiPSysGravityModifier::decay));
+
+	m_turbField = newField<TurbulenceField>(TURBULENCE, *this,
+		make_ni_ptr(obj, &NiPSysGravityModifier::turbulence));
+
+	m_turbScaleField = newField<TurbulenceScaleField>(TURBULENCE_SCALE, *this,
+		make_ni_ptr(obj, &NiPSysGravityModifier::turbulenceScale));
 }
 
-nif::NiPSysGravityModifier& node::GravityModifier::object()
-{
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiPSysGravityModifier*>(getObjects()[0].get());
-}
-
-class node::PlanarForceField::GravityAxisField final : public Field
+class GravityAxisField final : public Field
 {
 public:
-	GravityAxisField(const std::string& name, GravityModifier& node) :
+	GravityAxisField(const std::string& name, NodeBase& node, 
+		ni_ptr<Property<nif::Floats<3>>>&& axis, ni_ptr<Property<bool>>&& aligned) :
 		Field(name)
 	{
-		node.newChild<gui::Text>(GRAVITY_AXIS);
+		node.newChild<gui::Text>(PlanarForceField::GRAVITY_AXIS);
 		std::array<std::string, 3> labels{ "X", "Y", "Z" };
-		auto w = node.newChild<DragInputH<nif::Floats<3>, 3>>(node.object().gravityAxis(), labels);
+		auto w = node.newChild<DragInputH<nif::Floats<3>, 3>>(axis, labels);
 		w->setSensitivity(0.01f);
-		node.newChild<Checkbox>(node.object().worldAligned(), WORLD_ALIGNED);
+		node.newChild<Checkbox>(aligned, PlanarForceField::WORLD_ALIGNED);
 	}
 };
 
-node::PlanarForceField::PlanarForceField() :
-	PlanarForceField(std::make_unique<nif::NiPSysGravityModifier>())
-{
-	object().active().set(true);
-	object().forceType().set(nif::FORCE_PLANAR);
-	object().gravityAxis().set({ 0.0f, 0.0f, 1.0f });
-}
 
-node::PlanarForceField::PlanarForceField(std::unique_ptr<nif::NiPSysGravityModifier>&& obj) :
-	GravityModifier(std::move(obj))
+node::PlanarForceField::PlanarForceField(const ni_ptr<NiPSysGravityModifier>& obj) :
+	GravityModifier(obj)
 {
 	setTitle("Planar force field");
 	setSize({ WIDTH, HEIGHT });
 
 	newChild<gui::Separator>();
-	newField<GravityAxisField>(GRAVITY_AXIS, *this);
+	m_axisField = newField<GravityAxisField>(GRAVITY_AXIS, *this,
+		make_ni_ptr(obj, &NiPSysGravityModifier::gravityAxis),
+		make_ni_ptr(obj, &NiPSysGravityModifier::worldAligned));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
@@ -159,16 +143,15 @@ node::PlanarForceField::PlanarForceField(std::unique_ptr<nif::NiPSysGravityModif
 	getField(GRAVITY_OBJECT)->connector->setTranslation({ 0.0f, 90.0f });
 }
 
-node::SphericalForceField::SphericalForceField() :
-	SphericalForceField(std::make_unique<nif::NiPSysGravityModifier>())
+node::PlanarForceField::~PlanarForceField()
 {
-	object().active().set(true);
-	object().forceType().set(nif::FORCE_SPHERICAL);
-	object().gravityAxis().set({ 0.0f, 0.0f, 1.0f });
+	disconnect();
 }
 
-node::SphericalForceField::SphericalForceField(std::unique_ptr<nif::NiPSysGravityModifier>&& obj) :
-	GravityModifier(std::move(obj))
+
+
+node::SphericalForceField::SphericalForceField(const ni_ptr<NiPSysGravityModifier>& obj) :
+	GravityModifier(obj)
 {
 	setTitle("Spherical force field");
 	setSize({ WIDTH, HEIGHT });
@@ -177,4 +160,9 @@ node::SphericalForceField::SphericalForceField(std::unique_ptr<nif::NiPSysGravit
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
 	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 	getField(GRAVITY_OBJECT)->connector->setTranslation({ 0.0f, 90.0f });
+}
+
+node::SphericalForceField::~SphericalForceField()
+{
+	disconnect();
 }

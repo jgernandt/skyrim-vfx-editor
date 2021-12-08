@@ -18,29 +18,30 @@
 
 #pragma once
 #include "Modifier.h"
-#include "NiPSysEmitter.h"
 
 namespace node
 {
-	class Emitter : public Modifier
+	using namespace nif;
+
+	class Emitter : 
+		public Modifier, 
+		public PropertyListener<ColRGBA>
 	{
 	protected:
-		Emitter(std::unique_ptr<nif::NiPSysEmitter>&& obj,
-			std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-			std::unique_ptr<nif::NiFloatInterpolator>&& iplr,
-			std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr);
+		Emitter(
+			const ni_ptr<NiPSysEmitter>& obj,
+			const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+			const ni_ptr<NiFloatInterpolator>& iplr,
+			const ni_ptr<NiBoolInterpolator>& vis_iplr);
 
 	public:
 		virtual ~Emitter();
 
-		virtual nif::NiPSysEmitter& object() override;
-		nif::NiPSysEmitterCtlr& controller();
-		//nif::NiFloatInterpolator& brIplr();//our default interpolator
-		//nif::NiBoolInterpolator& visIplr();//our default interpolator
+		virtual void onSet(const nif::ColRGBA& col) override;
 
 	public:
-		constexpr static const char* BIRTH_RATE = "BirthRate";
-		constexpr static const char* LIFE_SPAN = "LifeSpan";
+		constexpr static const char* BIRTH_RATE = "Birth rate";
+		constexpr static const char* LIFE_SPAN = "Life span";
 		constexpr static const char* SIZE = "Size";
 		constexpr static const char* COLOUR = "Colour";
 		constexpr static const char* SPEED = "Speed";
@@ -48,59 +49,6 @@ namespace node
 		constexpr static const char* ELEVATION = "Elevation";
 
 	private:
-
-		//We want to set the colour and lifetime requirement dynamically. Because we can.
-		class Device : 
-			public Modifier::Device
-		{
-		public:
-			Device(Emitter& node);
-			virtual ~Device() = default;
-
-			virtual void onConnect(IModifiable & ifc) override;
-			virtual void onDisconnect(IModifiable & ifc) override;
-
-		private:
-			class ColourActivator final : public IPropertyListener<nif::ColRGBA>
-			{
-			public:
-				ColourActivator(IProperty<nif::ColRGBA>& prop) : m_prop{ prop } {}
-
-				virtual void onSet(const nif::ColRGBA& f) override;
-
-				void activate(ISet<Requirement>* target);
-				void deactivate();
-
-			private:
-				IProperty<nif::ColRGBA>& m_prop;
-				ISet<Requirement>* m_target{ nullptr };
-				bool m_active{ false };
-			};
-
-			class LifeMoveActivator final : public IPropertyListener<float>
-			{
-			public:
-				LifeMoveActivator(IProperty<float>& prop, IProperty<float>& var, Requirement req) :
-					m_prop{ prop }, m_var{ var }, m_req{ req } {}
-
-				virtual void onSet(const float& f) override;
-
-				void activate(ISet<Requirement>* target);
-				void deactivate();
-
-			private:
-				IProperty<float>& m_prop;
-				IProperty<float>& m_var;
-				Requirement m_req;
-				ISet<Requirement>* m_target{ nullptr };
-				bool m_active{ false };
-			};
-
-			ColourActivator m_col;
-			LifeMoveActivator m_life;
-			LifeMoveActivator m_move;
-		};
-
 		class BirthRateField;
 		class LifeSpanField;
 		class SizeField;
@@ -109,24 +57,30 @@ namespace node
 		class AzimuthField;
 		class ElevationField;
 
-		nif::NiPSysEmitterCtlr* m_ctlr{ nullptr };
-		std::unique_ptr<ModifierNameListener> m_modNameLsnr;
+		ni_ptr<NiBoolInterpolator> m_visIplr;
 
-		//until we have a field to manage this:
-		std::unique_ptr<nif::NiBoolInterpolator> m_visIplr;
+		bool m_colActive{ false };
+
+		std::unique_ptr<Field> m_birthRateField;
+		std::unique_ptr<Field> m_lifeSpanField;
+		std::unique_ptr<Field> m_sizeField;
+		std::unique_ptr<Field> m_colField;
+		std::unique_ptr<Field> m_speedField;
+		std::unique_ptr<Field> m_azimField;
+		std::unique_ptr<Field> m_elevField;
 	};
 
 	class VolumeEmitter : public Emitter
 	{
 	protected:
-		VolumeEmitter(std::unique_ptr<nif::NiPSysVolumeEmitter>&& obj,
-			std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr,
-			std::unique_ptr<nif::NiFloatInterpolator>&& iplr,
-			std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr);
+		VolumeEmitter(
+			const ni_ptr<NiPSysVolumeEmitter>& obj,
+			const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+			const ni_ptr<NiFloatInterpolator>& iplr,
+			const ni_ptr<NiBoolInterpolator>& vis_iplr);
 
 	public:
 		virtual ~VolumeEmitter() = default;
-		virtual nif::NiPSysVolumeEmitter& object() override;
 
 	public:
 		constexpr static const char* EMITTER_OBJECT = "Emitter object";
@@ -135,29 +89,32 @@ namespace node
 		class EmitterObjectField final : public Field
 		{
 		public:
-			EmitterObjectField(const std::string& name, VolumeEmitter& node);
+			EmitterObjectField(const std::string& name, NodeBase& node, 
+				ni_ptr<Ptr<NiNode>>&& emitterObject);
 
 		private:
 			Receiver<void> m_rvr;
-			Sender<IAssignable<nif::NiNode>> m_sdr;
+			Sender<Ptr<NiNode>> m_sdr;
 		};
 		class EmitterMetricField final : public Field
 		{
 		public:
-			EmitterMetricField(const std::string& name, VolumeEmitter& node, IProperty<float>& prop);
+			EmitterMetricField(const std::string& name, NodeBase& node, 
+				ni_ptr<Property<float>>&& prop);
 		};
+
+		std::unique_ptr<Field> m_emitterObjField;
 	};
 
 	class BoxEmitter final : public VolumeEmitter
 	{
 	public:
-		BoxEmitter();
-
-		virtual nif::NiPSysBoxEmitter& object() override;
-		BoxEmitter(std::unique_ptr<nif::NiPSysBoxEmitter>&& obj,
-			std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr = std::unique_ptr<nif::NiPSysEmitterCtlr>(),
-			std::unique_ptr<nif::NiFloatInterpolator>&& iplr = std::unique_ptr<nif::NiFloatInterpolator>(),
-			std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr = std::unique_ptr<nif::NiBoolInterpolator>());
+		BoxEmitter(
+			const ni_ptr<NiPSysBoxEmitter>& obj,
+			const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+			const ni_ptr<NiFloatInterpolator>& iplr,
+			const ni_ptr<NiBoolInterpolator>& vis_iplr);
+		~BoxEmitter();
 
 	public:
 		constexpr static const char* BOX_WIDTH = "Width (X)";
@@ -166,19 +123,22 @@ namespace node
 
 		constexpr static float WIDTH = 180.0f;
 		constexpr static float HEIGHT = 385.0f;
+
+	private:
+		std::unique_ptr<Field> m_widthField;
+		std::unique_ptr<Field> m_heightField;
+		std::unique_ptr<Field> m_depthField;
 	};
 
 	class CylinderEmitter final : public VolumeEmitter
 	{
 	public:
-		CylinderEmitter();
-		CylinderEmitter(std::unique_ptr<nif::NiPSysCylinderEmitter>&& obj,
-			std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr = std::unique_ptr<nif::NiPSysEmitterCtlr>(),
-			std::unique_ptr<nif::NiFloatInterpolator>&& iplr = std::unique_ptr<nif::NiFloatInterpolator>(),
-			std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr = std::unique_ptr<nif::NiBoolInterpolator>());
-
-	public:
-		virtual nif::NiPSysCylinderEmitter& object() override;
+		CylinderEmitter(
+			const ni_ptr<NiPSysCylinderEmitter>& obj,
+			const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+			const ni_ptr<NiFloatInterpolator>& iplr,
+			const ni_ptr<NiBoolInterpolator>& vis_iplr);
+		~CylinderEmitter();
 
 	public:
 		constexpr static const char* CYL_RADIUS = "Radius (XY)";
@@ -186,24 +146,29 @@ namespace node
 
 		constexpr static float WIDTH = 180.0f;
 		constexpr static float HEIGHT = 365.0f;
+
+	private:
+		std::unique_ptr<Field> m_radiusField;
+		std::unique_ptr<Field> m_lengthField;
 	};
 
 	class SphereEmitter final : public VolumeEmitter
 	{
 	public:
-		SphereEmitter();
-		SphereEmitter(std::unique_ptr<nif::NiPSysSphereEmitter>&& obj,
-			std::unique_ptr<nif::NiPSysEmitterCtlr>&& ctlr = std::unique_ptr<nif::NiPSysEmitterCtlr>(),
-			std::unique_ptr<nif::NiFloatInterpolator>&& iplr = std::unique_ptr<nif::NiFloatInterpolator>(),
-			std::unique_ptr<nif::NiBoolInterpolator>&& vis_iplr = std::unique_ptr<nif::NiBoolInterpolator>());
-
-	public:
-		virtual nif::NiPSysSphereEmitter& object() override;
+		SphereEmitter(
+			const ni_ptr<NiPSysSphereEmitter>& obj,
+			const ni_ptr<NiPSysEmitterCtlr>& ctlr,
+			const ni_ptr<NiFloatInterpolator>& iplr,
+			const ni_ptr<NiBoolInterpolator>& vis_iplr);
+		~SphereEmitter();
 
 	public:
 		constexpr static const char* SPH_RADIUS = "Radius";
 
 		constexpr static float WIDTH = 180.0f;
 		constexpr static float HEIGHT = 345.0f;
+
+	private:
+		std::unique_ptr<Field> m_radiusField;
 	};
 }

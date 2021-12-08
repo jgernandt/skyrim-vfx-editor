@@ -34,5 +34,6 @@ namespace gui
 	constexpr unsigned int WIDGET_RELEASED = 4;
 
 	//Implemented in ColourInput
-	float getDefaultHeight();
+	float getDefaultHeight();//scaled with the ui
+	float getDefaultHeightConst();//not scaled
 }

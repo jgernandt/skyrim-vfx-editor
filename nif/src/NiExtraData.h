@@ -21,40 +21,19 @@
 
 namespace nif
 {
-	class NiExtraData : public NiObject
+	struct NiExtraData : NiTraversable<NiExtraData, NiObject>
 	{
-	public:
-		NiExtraData(native::NiExtraData* obj);
-		NiExtraData(const NiExtraData& other) = delete;
+		Property<std::string> name;
 
-		virtual ~NiExtraData() = default;
-
-		NiExtraData& operator=(const NiExtraData&) = delete;
-
-		native::NiExtraData& getNative() const;
-
-		IProperty<std::string>& name() { return m_name; }
-
-	private:
-		Property<std::string> m_name;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	class NiStringExtraData : public NiExtraData
+	struct NiStringExtraData : NiTraversable<NiStringExtraData, NiExtraData>
 	{
-	public:
-		NiStringExtraData();
-		NiStringExtraData(native::NiStringExtraData* obj);
-		NiStringExtraData(const NiStringExtraData& other) = delete;
+		Property<std::string> value;
 
-		virtual ~NiStringExtraData() = default;
-
-		NiStringExtraData& operator=(const NiStringExtraData&) = delete;
-
-		native::NiStringExtraData& getNative() const;
-
-		IProperty<std::string>& value() { return m_value; }
-
-	private:
-		Property<std::string> m_value;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 }

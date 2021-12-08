@@ -21,38 +21,35 @@
 
 namespace node
 {
+	using namespace nif;
+
 	class GravityModifier : public Modifier
 	{
+	protected:
+		GravityModifier(const ni_ptr<NiPSysGravityModifier>& obj);
+
 	public:
 		virtual ~GravityModifier() = default;
-	protected:
-		GravityModifier(std::unique_ptr<nif::NiPSysGravityModifier>&& obj);
 
-	public:
-		virtual nif::NiPSysGravityModifier& object() override;
-
-	public:
 		constexpr static const char* GRAVITY_OBJECT = "Field object";
-		//constexpr static const char* FORCE_TYPE = "Symmetry";
 		constexpr static const char* STRENGTH = "Strength";
 		constexpr static const char* DECAY = "Decay";
 		constexpr static const char* TURBULENCE = "Turbulence";
 		constexpr static const char* TURBULENCE_SCALE = "Turbulence scale";
 
 	private:
-		class GravityObjectField;
-		class DecayField;
-		class StrengthField;
-		class TurbulenceField;
-		class TurbulenceScaleField;
-
+		std::unique_ptr<Field> m_objectField;
+		std::unique_ptr<Field> m_strengthField;
+		std::unique_ptr<Field> m_decayField;
+		std::unique_ptr<Field> m_turbField;
+		std::unique_ptr<Field> m_turbScaleField;
 	};
 
 	class PlanarForceField final : public GravityModifier
 	{
 	public:
-		PlanarForceField();
-		PlanarForceField(std::unique_ptr<nif::NiPSysGravityModifier>&& obj);
+		PlanarForceField(const ni_ptr<NiPSysGravityModifier>& obj);
+		~PlanarForceField();
 
 		constexpr static const char* GRAVITY_AXIS = "Direction";
 		constexpr static const char* WORLD_ALIGNED = "World aligned";
@@ -61,15 +58,14 @@ namespace node
 		constexpr static float HEIGHT = 280.0f;
 
 	private:
-		class GravityAxisField;
-		//class WorldAlignedField;
+		std::unique_ptr<Field> m_axisField;
 	};
 
 	class SphericalForceField final : public GravityModifier
 	{
 	public:
-		SphericalForceField();
-		SphericalForceField(std::unique_ptr<nif::NiPSysGravityModifier>&& obj);
+		SphericalForceField(const ni_ptr<NiPSysGravityModifier>& obj);
+		~SphericalForceField();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 210.0f;

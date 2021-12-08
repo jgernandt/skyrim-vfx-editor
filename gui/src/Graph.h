@@ -20,52 +20,125 @@
 #include "Widget.h"
 #include "Drawer.h"
 
-//These should be templated or subclassed/decorated to allow different behaviour. Let's start with this.
 namespace gui
 {
-	class Curve;
-
-	class PlotArea : public Composite
-	{
-	public:
-		virtual ~PlotArea() = default;
-		virtual void frame(FrameDrawer& fd) override;
-
-		void addCurve(std::unique_ptr<Curve>&& curve);
-		void removeCurve(Curve* curve);
-
-		//{ x_min, x_max, y_min, y_max }
-		Floats<4> getLimits() const { return { m_xlim[0], m_xlim[1], m_ylim[0], m_ylim[1] }; }
-
-		//Convert plot-local coordinates to screen space. Call from a child, or it may lag one frame.
-		Floats<2> localToScreen(const Floats<2>& p) const;
-		//Don't know if it makes sense to expose these (but our controls want them)
-		Floats<2> getScale() const { return m_scale; }
-		Floats<2> getTranslation() const { return m_translation; }
-
-	private:
-		std::vector<std::unique_ptr<Curve>> m_curves;
-
-		Floats<2> m_majorGrid{ 1.0f, 1.0f };
-		float m_majorGridWidth{ 1.0f };
-
-		//Axis limits, local coords
-		Floats<2> m_xlim{ 0.0f, 1.0f };
-		Floats<2> m_ylim{ 0.0f, 1.0f };
-
-		//position of local origin in screen space (updates every frame)
-		Floats<2> m_translation{ 0.0f, 0.0f };
-		//length of the local unit in screen space coords (updates every frame)
-		Floats<2> m_scale{ 1.0f, 1.0f };
-
-	};
-
 	class Curve
 	{
 	public:
 		virtual ~Curve() = default;
 		//This is an inert graphical component, so this api makes sense (?)
 		virtual void draw(Drawer&) const = 0;
+	};
+
+	//Log axes could work too. We can't use the built-in linear transform, 
+	//but we could wrap the FrameDrawer in a logarithmic one, which forwards
+	//everything but the transform calls to the original.
+	class Axes : public Composite
+	{
+	public:
+		virtual ~Axes() = default;
+
+		virtual void frame(FrameDrawer& fd) override;
+
+		void addCurve(std::unique_ptr<Curve>&& curve);
+		std::unique_ptr<Curve> removeCurve(Curve* curve);
+		std::unique_ptr<Curve> removeCurve(int index);
+
+		Floats<2> getMajorUnits() const { return m_majorUnit; }
+		void setMajorUnits(const Floats<2>& units) { m_majorUnit = units; }
+		Floats<2> getMinorUnits() const { return m_minorUnit; }
+		void setMinorUnits(const Floats<2>& units) { m_minorUnit = units; }
+
+		float getMajorUnitX() const { return m_majorUnit[0]; }
+		void setMajorUnitX(float f) { m_majorUnit[0] = f; }
+		float getMinorUnitX() const { return m_minorUnit[0]; }
+		void setMinorUnitX(float f) { m_minorUnit[0] = f; }
+
+		float getMajorUnitY() const { return m_majorUnit[1]; }
+		void setMajorUnitY(float f) { m_majorUnit[1] = f; }
+		float getMinorUnitY() const { return m_minorUnit[1]; }
+		void setMinorUnitY(float f) { m_minorUnit[1] = f; }
+
+		//Returns the grid points in order from lims[0] to lims[1]
+		std::vector<float> getGridPointsMajorX(const Floats<2>& lims) const;
+		std::vector<float> getGridPointsMajorY(const Floats<2>& lims) const;
+		std::vector<float> getGridPointsMinorX(const Floats<2>& lims) const;
+		std::vector<float> getGridPointsMinorY(const Floats<2>& lims) const;
+
+	private:
+		std::vector<std::unique_ptr<Curve>> m_curves;
+		Floats<2> m_majorUnit{ 1.0f, 1.0f };
+		Floats<2> m_minorUnit{ 0.25f, 0.25f };
+	};
+
+	class PlotArea : public Composite
+	{
+	public:
+		PlotArea();
+		virtual ~PlotArea() = default;
+
+		virtual void frame(FrameDrawer& fd) override;
+
+		//deal with someone trying to remove our axes
+		virtual ComponentPtr removeChild(IComponent* c) override;
+		virtual void clearChildren() override;
+
+		virtual void setSize(const Floats<2>& size) override;
+
+		Axes& getAxes() const;
+
+		void addCurve(std::unique_ptr<Curve>&& curve);
+		void removeCurve(Curve* curve);
+
+		Floats<2> getXLimits() const;
+		void setXLimits(const Floats<2>& lims);
+		//Y limits follow normal plotting conventions (axis goes from bottom to top)
+		Floats<2> getYLimits() const;
+		void setYLimits(const Floats<2>& lims);
+	};
+
+
+	class Plot : public Composite
+	{
+	public:
+		Plot();
+		virtual ~Plot() = default;
+
+		virtual void frame(FrameDrawer& fd) override;
+
+		//deal with someone trying to remove our plot area or labels
+		virtual ComponentPtr removeChild(IComponent* c) override;
+		virtual void clearChildren() override;
+
+		PlotArea& getPlotArea() const;//access to set limits
+
+		//labels are replaceable widgets
+		IComponent& getXLabels() const;
+		void setXLabels(ComponentPtr&& c);
+		IComponent& getYLabels() const;
+		void setYLabels(ComponentPtr&& c);
+
+	private:
+		//store this as a replaceable object, rather than subclassing (not on us though, should be on PlotArea and label widgets)
+		//IComponent* m_inputHandler;
+	};
+
+	class CustomXLabels final : public Component
+	{
+	public:
+		struct AxisLabel
+		{
+			std::string label;
+			float value;
+			float alignment{ 0.5f };
+		};
+	public:
+		CustomXLabels(const Axes& axes, std::vector<AxisLabel>&& labels);
+		virtual void frame(FrameDrawer& fd) override;
+		
+	private:
+		const gui::Axes& m_axes;
+		std::vector<AxisLabel> m_labels;
 	};
 
 
@@ -84,22 +157,20 @@ namespace gui
 	class SimpleHandles : public Component
 	{
 	public:
-		SimpleHandles(const PlotArea& area, const std::vector<Floats<2>>& points) : 
-			m_area{ area }, m_points{ points } {}
+		SimpleHandles(const std::vector<Floats<2>>& points) : 
+			m_points{ points } {}
 		virtual ~SimpleHandles() = default;
 
 		virtual void frame(FrameDrawer& fd) override;
 
-		virtual void onClick(size_t, MouseButton) = 0;
+		virtual void onClick(size_t, Mouse::Button) = 0;
 		virtual void onMove(size_t, const Floats<2>& pos) = 0;
-		virtual void onRelease(size_t, MouseButton) = 0;
+		virtual void onRelease(size_t, Mouse::Button) = 0;
 
 	protected:
 		const std::vector<Floats<2>>& m_points;
 
 	private:
-		const PlotArea& m_area;//we need some sensible way to limit test
-
 		float m_handleSize{ 5.0f };
 		constexpr static float s_buttonMult{ 3.0f };//invisible button size = handle size x this
 	};

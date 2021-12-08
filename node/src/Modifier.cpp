@@ -21,91 +21,72 @@
 #include "style.h"
 #include "widget_types.h"
 
-node::Modifier::Modifier(std::unique_ptr<nif::NiPSysModifier>&& obj) :
-	NodeBase(std::move(obj))
+using namespace nif;
+
+node::Modifier::Modifier(const ni_ptr<NiPSysModifier>& obj) :
+	m_device(obj),
+	m_nameUpdater(make_ni_ptr(obj, &NiPSysModifier::name))
 {
+	assert(obj);
+
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_Modifier);
 	setColour(COL_TITLE_ACTIVE, TitleCol_ModifierActive);
+
+	obj->order.addListener(m_nameUpdater);
+	m_nameUpdater.onSet(obj->order.get());
+
+	m_targetField = newField<NextModField>(NEXT_MODIFIER, *this, m_device);
+	m_nextField = newField<TargetField>(TARGET, *this, m_device);
 }
 
 node::Modifier::~Modifier()
 {
-	for (auto&& l : m_lsnrs) {
-		assert(l);
-		object().name().removeListener(*l);
-	}
 }
 
-nif::NiPSysModifier& node::Modifier::object()
+void node::Modifier::addController(const ni_ptr<nif::NiPSysModifierCtlr>& ctlr)
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiPSysModifier*>(getObjects()[0].get());
+	if (ctlr)
+		m_device.addController(ctlr);
 }
 
-void node::Modifier::addUnknownController(std::unique_ptr<nif::NiPSysModifierCtlr>&& ctlr)
+std::vector<NiPSysModifierCtlr*> node::Modifier::getControllers() const
 {
-	if (ctlr) {
-		m_lsnrs.push_back(std::make_unique<ModifierNameListener>(ctlr->modifierName()));
-		object().name().addListener(*m_lsnrs.back());
-		NodeBase::addController(std::move(ctlr));
-	}
-}
-
-void node::Modifier::addTargetField(std::shared_ptr<Device>&& device)
-{
-	newField<NextModField>(NEXT_MODIFIER, *this, device);
-	newField<TargetField>(TARGET, *this, device);
+	return m_device.getControllers();
 }
 
 
-void node::Modifier::OrderListener::onInsert(const ISequence<nif::NiPSysModifier>&, size_t pos)
+node::Modifier::NameUpdater::NameUpdater(ni_ptr<Property<std::string>>&& name) :
+	m_name{ std::move(name) }
 {
-	if (pos <= m_order.get()) {
-		//we have been pushed back
-		size_t order = m_order.get() + 1;
-		m_order.set(order);
-	}
-	//else ignore
+	assert(m_name);
 }
 
-void node::Modifier::OrderListener::onErase(const ISequence<nif::NiPSysModifier>&, size_t pos)
+void node::Modifier::NameUpdater::onSet(const unsigned int& i)
 {
-	//if pos == order, we were erased ourselves!
-	if (pos < m_order.get()) {
-		//we have been pulled forward
-		size_t order = m_order.get() - 1;
-		m_order.set(order);
-	}
-	//else ignore
+	m_name->set("Modifier:" + std::to_string(i));
 }
 
-void node::Modifier::NameListener::onSet(const unsigned int& i)
+node::Modifier::Device::Device(const ni_ptr<NiPSysModifier>& obj) :
+	m_mod{ obj }
 {
-	m_name.set("Modifier:" + std::to_string(i));
+	assert(m_mod);
+	m_mod->active.set(true);//should be controllable somehow
 }
 
 void node::Modifier::Device::onConnect(IModifiable& ifc)
 {
-	m_mod.active().set(true);
-	size_t order = ifc.modifiers().insert(-1, m_mod);
+	assert(!m_ifc);
+	m_ifc = &ifc;
 
-	ifc.modifiers().addListener(m_modLsnr);//update order if sequence changes
-	m_mod.order().addListener(m_ordLsnr);//update name if order changes
+	ifc.addModifier(m_mod);
 
-	m_mod.order().set(order);
+	for (auto&& item : m_ctlrs)
+		ifc.addController(item.first);
 
-	for (auto&& ctlr : m_node.getControllers()) {
-		assert(ctlr);
-		ifc.controllers().insert(-1, *ctlr);
-	}
-
-	//Controllers may be attached/detached when we are already connected. This means that
-	//*we need to store our target
-	//*we need to be informed of/listen to controller additions
-	//If we listen to NodeBase add/remove controller:
-	//onAdd: ifc.controllers.find(node.getControllers().back()), insert after it
-	//onRemove: find controller, erase
+	for (auto&& req : m_reqs)
+		if (req.second > 0)
+			ifc.addRequirement(req.first);
 
 	//pass on last
 	SequentialDevice::onConnect(ifc);
@@ -113,49 +94,106 @@ void node::Modifier::Device::onConnect(IModifiable& ifc)
 
 void node::Modifier::Device::onDisconnect(IModifiable& ifc)
 {
+	assert(m_ifc == &ifc);
+
 	//pass on first
 	SequentialDevice::onDisconnect(ifc);
 
-	for (auto&& ctlr : m_node.getControllers()) {
-		assert(ctlr);
-		if (size_t pos = ifc.controllers().find(*ctlr); pos != -1)
-			ifc.controllers().erase(pos);
+	for (auto&& req : m_reqs)
+		if (req.second > 0)
+			ifc.removeRequirement(req.first);
+
+	for (auto&& item : m_ctlrs)
+		ifc.removeController(item.first.get());
+
+	ifc.removeModifier(m_mod.get());
+
+	m_ifc = nullptr;
+}
+
+void node::Modifier::Device::addController(const ni_ptr<NiPSysModifierCtlr>& ctlr)
+{
+	//Add the controller to our list and register for it to receive name changes from NiPSysModifier.
+	//If we are connected, add the controller to our target.
+	if (ctlr) {
+		auto up = [&ctlr](const ControllerPair& item) { return item.first == ctlr; };
+		if (std::find_if(m_ctlrs.begin(), m_ctlrs.end(), up) == m_ctlrs.end()) {
+			m_ctlrs.push_back(
+				{ ctlr, std::make_unique<PropertySyncer<std::string>>(make_ni_ptr(ctlr, &NiPSysModifierCtlr::modifierName)) });
+
+			m_mod->name.addListener(*m_ctlrs.back().second);
+			m_ctlrs.back().second->onSet(m_mod->name.get());
+			if (m_ifc)
+				m_ifc->addController(ctlr);
+		}
 	}
-
-	ifc.modifiers().removeListener(m_modLsnr);
-	m_mod.order().removeListener(m_ordLsnr);
-
-	assert(ifc.modifiers().find(m_mod) == m_mod.order().get());
-	ifc.modifiers().erase(m_mod.order().get());
-
-	m_mod.order().set(-1);
-	m_mod.name().set(std::string());
 }
 
-
-node::Modifier::TargetField::TargetField(const std::string& name, Modifier& node, const std::shared_ptr<Device>& device) :
-	Field(name), m_device{ device }
+void node::Modifier::Device::removeController(nif::NiPSysModifierCtlr* ctlr)
 {
-	assert(m_device);
-	connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, *m_device));
+	//addController in reverse order, essentially
+	if (ctlr) {
+		auto up = [ctlr](const ControllerPair& item) { return item.first.get() == ctlr; };
+		if (auto it = std::find_if(m_ctlrs.begin(), m_ctlrs.end(), up); it != m_ctlrs.end()) {
+			if (m_ifc)
+				m_ifc->removeController(it->first.get());
+
+			m_mod->name.removeListener(*it->second);
+			m_ctlrs.erase(it);
+		}
+	}
 }
 
-node::Modifier::NextModField::NextModField(const std::string& name, Modifier& node, const std::shared_ptr<Device>& device) :
-	Field(name), m_device{ device }
+std::vector<NiPSysModifierCtlr*> node::Modifier::Device::getControllers() const
 {
-	assert(m_device);
-	connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(*m_device, m_rcvr));
+	std::vector<NiPSysModifierCtlr*> out;
+	out.reserve(m_ctlrs.size());
+	for (auto&& pair : m_ctlrs)
+		out.push_back(pair.first.get());
+	return out;
+}
+
+void node::Modifier::Device::addRequirement(ModRequirement req)
+{
+	int count = ++m_reqs[req];//inserts int() at req if the entry does not yet exist
+	if (m_ifc && count == 1)
+		m_ifc->addRequirement(req);
+}
+
+void node::Modifier::Device::removeRequirement(ModRequirement req)
+{
+	int count = --m_reqs[req];
+	assert(count >= 0);
+	if (m_ifc)
+		m_ifc->removeRequirement(req);
 }
 
 
-node::DummyModifier::DummyModifier(std::unique_ptr<nif::NiPSysModifier>&& obj) :
+node::Modifier::TargetField::TargetField(const std::string& name, Modifier& node, Device& rcvr) :
+	Field(name), m_rcvr{ rcvr }
+{
+	connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
+}
+
+node::Modifier::NextModField::NextModField(const std::string& name, Modifier& node, Device& sndr) :
+	Field(name), m_sndr{ sndr }
+{
+	connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
+}
+
+
+node::DummyModifier::DummyModifier(const ni_ptr<nif::NiPSysModifier>& obj) :
 	Modifier(std::move(obj))
 {
 	setTitle("Unknown modifier");
 	setSize({ WIDTH, HEIGHT });
-	addTargetField(std::make_shared<Device>(*this));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
 	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
+}
+
+node::DummyModifier::~DummyModifier()
+{
+	disconnect();
 }

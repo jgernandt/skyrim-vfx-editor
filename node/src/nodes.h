@@ -17,6 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
+#include "Controllers.h"
 #include "Emitters.h"
 #include "ExtraData.h"
 #include "GravityModifier.h"

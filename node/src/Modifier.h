@@ -17,14 +17,12 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "node_concepts.h"
-#include "node_traits.h"
-#include "DeviceImpl.h"
 #include "NodeBase.h"
-#include "NiPSysModifier.h"
 
 namespace node
 {
+	using namespace nif;
+
 	class IModifiable;
 
 	class Modifier : public NodeBase
@@ -32,164 +30,104 @@ namespace node
 	protected:
 		class Device;
 
-	public:
-		enum class Requirement
-		{
-			NONE,
-			COLOUR,
-			LIFETIME,
-			MOVEMENT,
-			ROTATION,
-			UPDATE,//Not really a modifier requirement
-		};
-
 	protected:
-		Modifier(std::unique_ptr<nif::NiPSysModifier>&& obj);
+		Modifier(const ni_ptr<NiPSysModifier>& obj);
 
 	public:
 		virtual ~Modifier();
-		virtual nif::NiPSysModifier& object() override;
 
-		void addUnknownController(std::unique_ptr<nif::NiPSysModifierCtlr>&& ctlr);
-
-	protected:
-		void addTargetField(std::shared_ptr<Device>&& device);
+		void addController(const ni_ptr<NiPSysModifierCtlr>& ctlr);
+		std::vector<NiPSysModifierCtlr*> getControllers() const;
 
 	public:
 		constexpr static const char* TARGET = "Target";
 		constexpr static const char* NEXT_MODIFIER = "Next modifier";
 
-		//Updates modifier order to match position in the sequence
-		class OrderListener : public ISequenceListener<nif::NiPSysModifier>
-		{
-		public:
-			OrderListener(IProperty<unsigned int>& order) :
-				m_order{ order } {}
-
-			virtual void onInsert(const ISequence<nif::NiPSysModifier>&, size_t pos) override;
-			virtual void onErase(const ISequence<nif::NiPSysModifier>&, size_t pos) override;
-
-		private:
-			IProperty<unsigned int>& m_order;
-		};
-
 		//Updates modifier name to match its order
-		class NameListener : public IPropertyListener<unsigned int>
+		class NameUpdater : public PropertyListener<unsigned int>
 		{
 		public:
-			NameListener(IProperty<std::string>& name) :
-				m_name{ name } {}
+			NameUpdater(ni_ptr<Property<std::string>>&& name);
 
 			virtual void onSet(const unsigned int& i) override;
 
 		private:
-			IProperty<std::string>& m_name;
-		};
-
-		//Updates one string to match another string (useful for the modifier name on a NiPSysModifierCtlr)
-		class ModifierNameListener : public IPropertyListener<std::string>
-		{
-		public:
-			ModifierNameListener(IProperty<std::string>& name) :
-				m_name{ name } {}
-
-			virtual void onSet(const std::string& s) override { m_name.set(s); }
-
-		private:
-			IProperty<std::string>& m_name;
+			const ni_ptr<Property<std::string>> m_name;
 		};
 
 	protected:
-		//Derive from this to add functionality (controllers, requirements)
-		class Device : public SequentialDevice<IModifiable>
+		class Device final : public SequentialDevice<IModifiable>
 		{
 		public:
-			Device(Modifier& node) :
-				m_node{ node }, m_mod{ node.object() }, m_modLsnr{ m_mod.order() }, m_ordLsnr{ m_mod.name() } {}
-			virtual ~Device() = default;
+			Device(const ni_ptr<NiPSysModifier>& obj);
 
 			virtual void onConnect(IModifiable& ifc) override;
 			virtual void onDisconnect(IModifiable& ifc) override;
 
-		protected:
-			//NodeBase will survive us. Modifier will not.
-			NodeBase& m_node;
-			nif::NiPSysModifier& m_mod;
-			OrderListener m_modLsnr;
-			NameListener m_ordLsnr;
-		};
+			//Add a controller to our connected interface (current or future).
+			//Also registers the controller to receive name changes.
+			void addController(const ni_ptr<NiPSysModifierCtlr>& ctlr);
+			void removeController(NiPSysModifierCtlr* ctlr);
+			std::vector<NiPSysModifierCtlr*> getControllers() const;
 
-		template<Requirement Req>
-		class ReqDevice : public Device
-		{
-		public:
-			ReqDevice(Modifier& node) : Device(node) {}
-			virtual ~ReqDevice() = default;
+			//Add a requirement to our connected interface (current or future).
+			void addRequirement(ModRequirement req);
+			void removeRequirement(ModRequirement req);
 
-			virtual void onConnect(IModifiable& ifc) override;
-			virtual void onDisconnect(IModifiable& ifc) override;
+		private:
+			const ni_ptr<NiPSysModifier> m_mod;
+
+			//Listens to our connected sequence and keeps our order correct
+			//OrderUpdater m_orderUpdater;
+
+			//Controllers and requirements may change dynamically
+			using ControllerPair = std::pair<ni_ptr<NiPSysModifierCtlr>, std::unique_ptr<PropertySyncer<std::string>>>;
+			std::vector<ControllerPair> m_ctlrs;
+			std::map<ModRequirement, int> m_reqs;
+
+			//Our connected interface
+			IModifiable* m_ifc{ nullptr };
 		};
 
 		class TargetField final : public Field
 		{
 		public:
-			TargetField(const std::string& name, Modifier& node, const std::shared_ptr<Device>& device);
+			TargetField(const std::string& name, Modifier& node, Device& rcvr);
 
 		private:
-			std::shared_ptr<Device> m_device;
+			Device& m_rcvr;
 			Sender<void> m_sndr;
 		};
 
 		class NextModField final : public Field
 		{
 		public:
-			NextModField(const std::string& name, Modifier& node, const std::shared_ptr<Device>& device);
+			NextModField(const std::string& name, Modifier& node, Device& sndr);
 
 		private:
-			std::shared_ptr<Device> m_device;
+			Device& m_sndr;
 			Receiver<void> m_rcvr;
 		};
 
+	protected:
+		Device m_device;
+
 	private:
-		//For our unknown controllers:
-		std::vector<std::unique_ptr<ModifierNameListener>> m_lsnrs;
+		//Name should always match our order, to ensure local uniqueness
+		NameUpdater m_nameUpdater;
+
+		std::unique_ptr<Field> m_targetField;
+		std::unique_ptr<Field> m_nextField;
 	};
-
-	class IModifiable
-	{
-	public:
-		virtual ~IModifiable() = default;
-
-		virtual ISequence<nif::NiPSysModifier>& modifiers() = 0;
-		virtual ISequence<nif::NiTimeController>& controllers() = 0;
-		virtual ISet<Modifier::Requirement>& requirements() = 0;
-
-		//When connecting a mod: 
-		//*insert the modifier
-		//*insert the controller, if any
-		//*specify any requirements
-		//*set your own order from the return of insert. This way it will reach listeners.
-		//*listen to the sequence to learn about order changes
-	};
-
-	template<Modifier::Requirement Req>
-	inline void node::Modifier::ReqDevice<Req>::onConnect(IModifiable& ifc)
-	{
-		ifc.requirements().add(Req);
-		Device::onConnect(ifc);
-	}
-	template<Modifier::Requirement Req>
-	inline void node::Modifier::ReqDevice<Req>::onDisconnect(IModifiable& ifc)
-	{
-		Device::onDisconnect(ifc);
-		ifc.requirements().remove(Req);
-	}
 
 
 	class DummyModifier final : public Modifier
 	{
 	public:
-		DummyModifier(std::unique_ptr<nif::NiPSysModifier>&& obj);
+		using default_object = NiPSysModifier;
+
+		DummyModifier(const ni_ptr<NiPSysModifier>& obj);
+		~DummyModifier();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 80.0f;

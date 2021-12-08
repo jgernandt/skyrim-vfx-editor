@@ -21,19 +21,78 @@
 #include <list>
 #include <map>
 #include <vector>
-#include "nif_types.h"
+#include "nif.h"
 #include "ConnectionHandler.h"
 #include "nodes.h"
 
 namespace node
 {
-	class Constructor
+	using namespace nif;
+
+	struct ConnectionInfo
+	{
+		NiObject* object1;
+		NiObject* object2;
+		std::string field1;
+		std::string field2;
+
+		//possibly:
+		int target{ -1 };//for controllers
+	};
+
+	class Constructor : public HorizontalTraverser<Constructor>
 	{
 	public:
-		Constructor() {}
+		Constructor(File& file) : m_file{ file } {}//throw if unsupprtoed version
+
+		template<typename T> void invoke(T& obj);
+
+		std::vector<std::string>& warnings() { return m_warnings; }
+
+		//should transfer ownership of our nodes to target and resolve our connections
+		//(the caller is responsible for making sure target is a valid receiver).
+		//Arranging of the nodes can be disabled (for testing, mostly).
+		void extractNodes(gui::ConnectionHandler& target, bool arrange = true);
+
+
+		//Used during traversal
+
+		void addConnection(const node::ConnectionInfo& info);
+		void addModConnections(NiParticleSystem* target, std::vector<NiPSysModifier*>&& mods);
+
+		void addNode(NiObject* obj, std::unique_ptr<NodeBase>&& node);
+
+		void pushObject(const ni_ptr<NiObject>& obj) { m_objectStack.push_back(obj); }
+		void popObject() { m_objectStack.pop_back(); }
+		ni_ptr<NiObject> getObject() const;
+
+		File& getFile() { return m_file; }
+
+	private:
+		File& m_file;
+
+		std::vector<ConnectionInfo> m_connections;
+		std::map<NiParticleSystem*, std::vector<NiPSysModifier*>> m_modConnections;
+
+		std::vector<std::unique_ptr<NodeBase>> m_nodes;
+		std::map<NiObject*, int> m_objectMap;//maps processed objects to an index in m_nodes (-1 if none)
+
+		//Traverse stack
+		std::vector<ni_ptr<NiObject>> m_objectStack;
+
+		//Traverse history
+		std::set<NiObject*> m_traversed;
+
+		std::vector<std::string> m_warnings;
+	};
+
+	/*class Constructor
+	{
+	public:
+		Constructor(nif::File& file) : m_file{ file } {}
 		~Constructor() {}
 
-		void makeRoot(const nif::ni_ptr<nif::native::NiObject>& root);
+		void makeRoot();
 
 		std::vector<std::string>& warnings() { return m_warnings; }
 
@@ -65,7 +124,7 @@ namespace node
 
 		//To resolve manager controlled interpolators, I expect this will need access to some strings,
 		//or maybe just the target controller
-		void EP_process(nif::native::NiInterpolator* obj) {}
+		void EP_process(nif::native::NiInterpolator* obj, const nif::NiTimeController& ctlr);
 
 	private:
 		struct Connection
@@ -75,7 +134,7 @@ namespace node
 			std::string field1;
 			std::string field2;
 		};
-
+		nif::File& m_file;
 		std::vector<std::unique_ptr<NodeBase>> m_nodes;
 		std::map<nif::native::NiObject*, int> m_objectMap;//maps processed objects to an index in m_nodes (-1 if none)
 		std::vector<std::string> m_warnings;
@@ -84,5 +143,5 @@ namespace node
 		//For clone operations
 		constexpr static unsigned int s_version = 0x14020007;
 		constexpr static unsigned int s_userVersion = 12;
-	};
+	};*/
 }

@@ -17,16 +17,41 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "node_concepts.h"
+#include "nif_data.h"
 #include "traits.h"
 
 template<typename T>
-struct util::property_traits<IProperty<T>>
+struct util::property_traits<T*>
 {
-	using property_type = IProperty<T>;
+	using property_type = T*;
+	using value_type = T;
+	using get_type = T;
+
+	static T get(T* p) { return *p; }
+	static void set(T* p, const T& data) { *p = data; }
+	static void set(T* p, T&& data) { *p = std::move(data); }
+};
+
+template<typename T>
+struct util::property_traits<nif::ni_ptr<nif::Property<T>>>
+{
+	using property_type = nif::ni_ptr<nif::Property<T>>;
+	using value_type = T;
+	using get_type = T;
+
+	static T get(const property_type& p) { return p->get(); }
+	static void set(property_type& p, const T& data) { p->set(data); }
+	static void set(property_type& p, T&& data) { p->set(std::move(data)); }
+};
+
+template<typename T>
+struct util::property_traits<nif::Property<T>>
+{
+	using property_type = nif::Property<T>;
 	using value_type = T;
 	using get_type = T;
 
 	static T get(const property_type& p) { return p.get(); }
 	static void set(property_type& p, const T& data) { p.set(data); }
+	static void set(property_type& p, T&& data) { p.set(std::move(data)); }
 };

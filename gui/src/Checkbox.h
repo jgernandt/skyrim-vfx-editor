@@ -21,7 +21,7 @@
 
 #include "Widget.h"
 #include "UniqueLabel.h"
-
+#include "InputEventSink.h"
 
 namespace gui
 {
@@ -51,7 +51,12 @@ namespace gui
     };
 
     //More flexible checkbox
-    template<typename T, size_t N, typename PropertyType, template<typename> typename ConverterType = GuiConverter>
+    template<
+        typename T, 
+        size_t N,
+        typename PropertyType,
+        template<typename> typename ConverterType = GuiConverter,
+        template<typename> typename EventSink = DefaultEventSink>
     class Checkbox final : public Component
     {
     private:
@@ -63,12 +68,13 @@ namespace gui
         static_assert(std::is_integral<element_type>::value, "element is not integral");
 
         using get_type = typename util::property_traits<PropertyType>::get_type;
+        using set_type = typename util::property_traits<PropertyType>::value_type;
         using converted_type = decltype(util::type_conversion<T, ConverterType<T>>::from(std::declval<get_type>()));
         static_assert(std::is_assignable<T&, converted_type>::value, "property return cannot be assigned to value type");
 
     public:
-        Checkbox(PropertyType& p, const std::string& label) : m_property{ p }, m_labels(label) {}
-        Checkbox(PropertyType& p, const std::array<std::string, N>& labels) : m_property{ p }, m_labels(labels) {}
+        Checkbox(const PropertyType& p, const std::string& label) : m_property{ p }, m_labels(label) {}
+        Checkbox(const PropertyType& p, const std::array<std::string, N>& labels) : m_property{ p }, m_labels(labels) {}
 
         virtual void frame(FrameDrawer& fd) override
         {
@@ -76,8 +82,11 @@ namespace gui
                 util::property_traits<PropertyType>::get(m_property));
 
             for (size_t i = 0; i < N; i++) {
-                if (backend::Checkbox(m_labels[i], &util::array_traits<T>::at(data, i)))
-                    asyncInvoke<SetProperty<T, PropertyType, ConverterType>>(m_property, data, true);
+                if (backend::Checkbox(m_labels[i], &util::array_traits<T>::at(data, i))) {
+                    m_sink.begin(m_property, this);
+                    m_sink.update(m_property, this, util::type_conversion<set_type, ConverterType<set_type>>::from(data));
+                    m_sink.end(m_property, this);
+                }
             }
         }
 
@@ -85,8 +94,9 @@ namespace gui
         virtual Floats<2> getSizeHint() const override { return backend::getCheckboxSize(m_labels[0]); }
 
     protected:
-        PropertyType& m_property;
+        PropertyType m_property;
         UniqueLabel<N> m_labels;
+        EventSink<PropertyType> m_sink;
     };
 
     

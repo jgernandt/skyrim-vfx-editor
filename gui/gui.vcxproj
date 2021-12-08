@@ -29,6 +29,7 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="src\ColourBar.h" />
     <ClInclude Include="src\CompositionActions.h" />
+    <ClInclude Include="src\DebugWindow.h" />
     <ClInclude Include="src\Devices.h" />
     <ClInclude Include="src\Drawer.h" />
     <ClInclude Include="src\Graph.h" />
@@ -45,10 +46,10 @@
     <ClInclude Include="src\Connector.h" />
     <ClInclude Include="src\ConnectorActions.h" />
     <ClInclude Include="src\DragInput.h" />
-    <ClInclude Include="src\FramePadded.h" />
     <ClInclude Include="src\IComponent.h" />
     <ClInclude Include="src\IInvoker.h" />
     <ClInclude Include="src\input.h" />
+    <ClInclude Include="src\InputEventSink.h" />
     <ClInclude Include="src\Item.h" />
     <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\Number.h" />
@@ -62,7 +63,6 @@
     <ClInclude Include="src\Switch.h" />
     <ClInclude Include="src\Text.h" />
     <ClInclude Include="src\TextInput.h" />
-    <ClInclude Include="src\Toggled.h" />
     <ClInclude Include="src\UniqueLabel.h" />
     <ClInclude Include="src\Visitor.h" />
     <ClInclude Include="src\Widget.h" />
@@ -125,10 +125,10 @@
     <ClCompile Include="src\Composition.cpp" />
     <ClCompile Include="src\ConnectionHandler.cpp" />
     <ClCompile Include="src\Connector.cpp" />
+    <ClCompile Include="src\DebugWindow.cpp" />
     <ClCompile Include="src\DragInput.cpp" />
     <ClCompile Include="src\DragInputImGui.cpp" />
     <ClCompile Include="src\Drawer.cpp" />
-    <ClCompile Include="src\FramePadded.cpp" />
     <ClCompile Include="src\Graph.cpp" />
     <ClCompile Include="src\GUIEngine.cpp" />
     <ClCompile Include="src\gui_types.cpp" />
@@ -151,7 +151,6 @@
     <ClCompile Include="src\Switch.cpp" />
     <ClCompile Include="src\Text.cpp" />
     <ClCompile Include="src\TextInput.cpp" />
-    <ClCompile Include="src\Toggled.cpp" />
     <ClCompile Include="src\Visitor.cpp" />
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
@@ -231,11 +230,11 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SINGLE_THREAD;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>imgui\; imgui\backends;imgui\misc\cpp\;..\math\src; ..\math\eigen;..\util</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>imgui\; imgui\backends;imgui\misc\cpp\;..\math\src; ..\math\eigen;..\common</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -250,11 +249,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SINGLE_THREAD;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>imgui\; imgui\backends;imgui\misc\cpp\;..\math\src; ..\math\eigen;..\util</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>imgui\; imgui\backends;imgui\misc\cpp\;..\math\src; ..\math\eigen;..\common</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -270,11 +269,11 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SINGLE_THREAD;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>imgui\; imgui\backends;imgui\misc\cpp\;..\math\src; ..\math\eigen;..\util</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>imgui\; imgui\backends;imgui\misc\cpp\;..\math\src; ..\math\eigen;..\common</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -289,11 +288,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SINGLE_THREAD;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>imgui\; imgui\backends;imgui\misc\cpp\;..\math\src; ..\math\eigen;..\util</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>imgui\; imgui\backends;imgui\misc\cpp\;..\math\src; ..\math\eigen;..\common</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>

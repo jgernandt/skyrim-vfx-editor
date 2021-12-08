@@ -17,24 +17,34 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
+#include "Observable.h"
 #include "gui_types.h"
 
 namespace gui
 {
-	enum class MouseButton
+	class IComponent;
+
+	using key_t = int;
+	constexpr key_t KEY_SHIFT = 0x10;
+	constexpr key_t KEY_CTRL = 0x11;
+	constexpr key_t KEY_ALT = 0x12;
+
+	constexpr key_t KEY_DEL = 0x2E;
+
+	class Keyboard
 	{
-		NONE,
-		LEFT,
-		MIDDLE,
-		RIGHT,
-		EXTRA1,
-		EXTRA2,
+	public:
+		static bool isDown(key_t key);
+
+		static IComponent* getCapture() { return s_capturing; }
+		static void setCapture(IComponent* c) { s_capturing = c; }
+
+	private:
+		static IComponent* s_capturing;
 	};
 
-	int guiToImGuiButton(gui::MouseButton button);
+	using KeyListener = IListener<Keyboard>;
 
-	//I think this is better (as a general idea) than to go via the FrameDrawer/GUIEngine.
-	//Needs some work, though.
 	class Mouse
 	{
 	public:
@@ -53,5 +63,63 @@ namespace gui
 		static Floats<2> getPosition();
 		static void setPosition(const Floats<2>& pos) {}
 		static float getWheelDelta() { return 0.0f; }
+
+		static IComponent* getCapture() { return s_capturing; }
+		static void setCapture(IComponent* c) { s_capturing = c; }
+
+	private:
+		static IComponent* s_capturing;
 	};
+
+	class MouseHandler
+	{
+	public:
+		virtual ~MouseHandler() = default;
+
+		virtual bool onMouseDown(Mouse::Button) { return false; }
+		virtual bool onMouseUp(Mouse::Button) { return false; }
+		virtual bool onMouseWheel(float) { return false; }
+
+		virtual void onMouseMove(const Floats<2>& pos) {}
+		virtual void onMouseEnter() {}
+		virtual void onMouseLeave() {}
+
+	};
+
+
+	int guiToImGuiButton(Mouse::Button button);
 }
+
+template<>
+struct Event<gui::Keyboard>
+{
+	enum {
+		DOWN,
+		UP,
+
+	} type{ DOWN };
+
+	gui::key_t key{ 0 };
+};
+
+template<>
+class IListener<gui::Keyboard>
+{
+public:
+	virtual ~IListener() = default;
+
+	void receive(const ::Event<gui::Keyboard>& e, ::Observable<gui::Keyboard>&)
+	{
+		switch (e.type) {
+		case ::Event<gui::Keyboard>::DOWN:
+			onKeyDown(e.key);
+			break;
+		case ::Event<gui::Keyboard>::UP:
+			onKeyUp(e.key);
+			break;
+		}
+	}
+
+	virtual void onKeyDown(gui::key_t key) {}
+	virtual void onKeyUp(gui::key_t key) {}
+};

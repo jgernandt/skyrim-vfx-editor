@@ -1,48 +1,40 @@
+//Copyright 2021 Jonas Gernandt
+//
+//This file is part of SVFX Editor, a program for creating visual effects
+//in the NetImmerse format.
+//
+//SVFX Editor is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+//SVFX Editor is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
+
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "CommonTests.h"
-#include "Mocks.h"
-#include "nodes.h"
+#include "nodes_internal.h"
 
-namespace nif
+namespace nodes
 {
-	TEST_CLASS(ExtraDataTests)
+	using namespace nif;
+
+	TEST_CLASS(ExtraData)
 	{
 	public:
 
-		TEST_METHOD(Name)
-		{
-			nif::NiStringExtraData obj;
-			nif::NiExtraData& objref = obj;
-			StringPropertyTest(objref.name());
-		}
-	};
-
-	TEST_CLASS(StringExtraDataTests)
-	{
-	public:
-
-		TEST_METHOD(Value)
-		{
-			nif::NiStringExtraData obj;
-			StringPropertyTest(obj.value());
-		}
-	};
-}
-
-
-namespace node
-{
-	TEST_CLASS(ExtraDataTests)
-	{
-	public:
-
-		//Target should receive ISet<NiExtraData> (multi)
+		//Target should receive Set<NiExtraData> (multi)
 		TEST_METHOD(Target)
 		{
-			std::unique_ptr<ExtraData> node = std::make_unique<StringData>();
-			nif::NiExtraData& obj = node->object();
-			SetReceiverTest(ExtraData::TARGET, true, std::move(node), obj);
+			File file{ File::Version::SKYRIM_SE };
+			auto obj = file.create<NiExtraData>();
+			SetReceiverTest(std::make_unique<node::DummyExtraData>(obj), *obj, node::ExtraData::TARGET, true);
 		}
 	};
 }

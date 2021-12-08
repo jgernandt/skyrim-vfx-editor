@@ -30,13 +30,13 @@ namespace gui
 
 	public:
 		//If reversible, reverts to the value of prop at the time of execution
-		SetProperty(PropertyType& prop, const T& val, bool reversible) :
+		SetProperty(const PropertyType& prop, const T& val, bool reversible) :
 			m_property{ prop }, m_value{ val }, m_oldValue{ T() }, m_reversible{ reversible }, m_async{ false } {}
 
 		//Reverts to the value old, regardless of the current value of the property
 		//(wouldn't really make sense to set reversible = false here, but requiring the argument makes for a convenient
 		//way to disambiguate the call when T = bool)
-		SetProperty(PropertyType& prop, const T& val, const T& old, bool reversible) :
+		SetProperty(const PropertyType& prop, const T& val, const T& old, bool reversible) :
 			m_property{ prop }, m_value{ val }, m_oldValue{ old }, m_reversible{ reversible }, m_async{ true } {}
 
 		virtual void execute() override
@@ -62,7 +62,7 @@ namespace gui
 		}
 
 	protected:
-		PropertyType& m_property;
+		PropertyType m_property;
 		T m_value;
 		T m_oldValue;
 		bool m_reversible;

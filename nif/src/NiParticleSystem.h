@@ -17,121 +17,35 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "BSEffectShaderProperty.h"
-#include "NiAVObject.h"
+#include "NiObject.h"
 
 namespace nif
 {
-	class NiPSysModifier;
-
-	class NiPSysData : public NiObject
+	struct NiParticleSystem : NiTraversable<NiParticleSystem, NiAVObject>
 	{
-	public:
-		NiPSysData();
-		NiPSysData(native::NiPSysData* obj);
-		NiPSysData(const NiPSysData&) = delete;
+		Ref<NiPSysData> data;
+		Sequence<NiPSysModifier> modifiers;
+		Ref<BSShaderProperty> shaderProperty;
+		Ref<NiAlphaProperty> alphaProperty;
+		Property<bool> worldSpace;
 
-		virtual ~NiPSysData() = default;
-
-		NiPSysData& operator=(const NiPSysData&) = delete;
-
-		native::NiPSysData& getNative() const;
-
-		IProperty<unsigned short>& maxCount() { return m_maxCount; }
-		IProperty<std::vector<SubtextureOffset>>& subtexOffsets() { return m_subtexOffsets; }
-		IProperty<bool>& hasColour() { return m_hasColour; }
-		IProperty<bool>& hasRotationAngles() { return m_hasRotationAngles; }
-		IProperty<bool>& hasRotationSpeeds() { return m_hasRotationSpeeds; }
-
-	private:
-		Property<unsigned short> m_maxCount;
-
-		struct SubtexOffsets : PropertyBase<std::vector<SubtextureOffset>>
-		{
-			SubtexOffsets(NiPSysData& super) : m_super{ super } {}
-
-			virtual std::vector<SubtextureOffset> get() const override;
-			virtual void set(const std::vector<SubtextureOffset>& offsets) override;
-
-			NiPSysData& m_super;
-
-		} m_subtexOffsets;
-
-		Property<bool> m_hasColour;
-		Property<bool> m_hasRotationAngles;
-		Property<bool> m_hasRotationSpeeds;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+	template<> struct Forwarder<NiParticleSystem> : VerticalTraverser<NiParticleSystem, Forwarder>
+	{
+		bool operator() (NiParticleSystem& object, NiTraverser& traverser);
 	};
 
-	class NiParticleSystem : public NiAVObject
+	struct NiPSysData : NiTraversable<NiPSysData, NiObject>
 	{
-	public:
-		NiParticleSystem();
-		NiParticleSystem(native::NiParticleSystem* obj);
-		NiParticleSystem(const NiParticleSystem&) = delete;
+		Property<unsigned short> maxCount;
+		Property<std::vector<SubtextureOffset>> subtexOffsets;
+		Property<bool> hasColour;
+		Property<bool> hasRotationAngles;
+		Property<bool> hasRotationSpeeds;
 
-		virtual ~NiParticleSystem() = default;
-
-		NiParticleSystem& operator=(const NiParticleSystem&) = delete;
-
-		native::NiParticleSystem& getNative() const;
-
-		IAssignable<NiPSysData>& data() { return m_data; }
-
-		ISequence<NiPSysModifier>& modifiers() { return m_modifiers; }
-
-		IAssignable<BSEffectShaderProperty>& shaderProperty() { return m_shader; }
-		IAssignable<NiAlphaProperty>& alphaProperty() { return m_alpha; }
-
-		IProperty<bool>& worldSpace() { return m_worldSpace; }
-
-	private:
-		struct Data final : AssignableBase<NiPSysData>
-		{
-			Data(NiParticleSystem& super) : m_super{ super } {}
-
-			virtual void assign(NiPSysData* data) override;
-			virtual bool isAssigned(NiPSysData* data) const override;
-
-			NiParticleSystem& m_super;
-
-		} m_data;
-
-		struct Modifiers final : SequenceBase<NiPSysModifier>
-		{
-			Modifiers(NiParticleSystem& super) : m_super{ super } {}
-
-			virtual size_t insert(size_t pos, const NiPSysModifier& mod) override;
-			virtual size_t erase(size_t pos) override;
-			virtual size_t find(const NiPSysModifier& mod) const override;
-			virtual size_t size() const override;
-
-			NiParticleSystem& m_super;
-
-		} m_modifiers;
-
-		struct ShaderProperty final : AssignableBase<BSEffectShaderProperty>
-		{
-			ShaderProperty(NiParticleSystem& super) : m_super{ super } {}
-
-			virtual void assign(BSEffectShaderProperty* shader) override;
-			virtual bool isAssigned(BSEffectShaderProperty* shader) const override;
-
-			NiParticleSystem& m_super;
-
-		} m_shader;
-
-		struct AlphaProperty final : AssignableBase<NiAlphaProperty>
-		{
-			AlphaProperty(NiParticleSystem& super) : m_super{ super } {}
-
-			virtual void assign(NiAlphaProperty* alpha) override;
-			virtual bool isAssigned(NiAlphaProperty* alpha) const override;
-
-			NiParticleSystem& m_super;
-
-		} m_alpha;
-
-		Property<bool> m_worldSpace;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
-
 }

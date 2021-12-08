@@ -108,13 +108,7 @@
     <ClInclude Include="src\Separator.h">
       <Filter>Header Files\Widgets</Filter>
     </ClInclude>
-    <ClInclude Include="src\FramePadded.h">
-      <Filter>Header Files\Modifiers</Filter>
-    </ClInclude>
     <ClInclude Include="src\Switch.h">
-      <Filter>Header Files\Modifiers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Toggled.h">
       <Filter>Header Files\Modifiers</Filter>
     </ClInclude>
     <ClInclude Include="src\Text.h">
@@ -192,6 +186,12 @@
     <ClInclude Include="src\input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\InputEventSink.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DebugWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Visitor.cpp">
@@ -215,9 +215,6 @@
     <ClCompile Include="src\Item.cpp">
       <Filter>Source Files\Modifiers</Filter>
     </ClCompile>
-    <ClCompile Include="src\FramePadded.cpp">
-      <Filter>Source Files\Modifiers</Filter>
-    </ClCompile>
     <ClCompile Include="src\Popup.cpp">
       <Filter>Source Files\Widgets</Filter>
     </ClCompile>
@@ -226,9 +223,6 @@
     </ClCompile>
     <ClCompile Include="src\Text.cpp">
       <Filter>Source Files\Widgets</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Toggled.cpp">
-      <Filter>Source Files\Modifiers</Filter>
     </ClCompile>
     <ClCompile Include="src\Switch.cpp">
       <Filter>Source Files\Modifiers</Filter>
@@ -287,9 +281,6 @@
     <ClCompile Include="src\DragInputImGui.cpp">
       <Filter>Source Files\Backend</Filter>
     </ClCompile>
-    <ClCompile Include="src\Subwindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Number.cpp">
       <Filter>Source Files\Widgets</Filter>
     </ClCompile>
@@ -309,6 +300,12 @@
       <Filter>Source Files\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="src\input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Subwindow.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DebugWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

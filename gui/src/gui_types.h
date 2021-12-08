@@ -43,6 +43,12 @@ namespace gui
 		static T convert(From&& f) { return util::DefaultConverter<T>::convert(std::forward<From>(f)); }
 	};
 
+	template<>
+	struct GuiConverter<unsigned int>
+	{
+		static unsigned int convert(const ColRGBA& col);
+	};
+
 	template<typename T>
 	using gui_type_conversion = util::type_conversion<T, GuiConverter<T>>;
 
@@ -55,6 +61,7 @@ namespace gui
 	struct GuiConverter<std::array<float, 4>>
 	{
 		static std::array<float, 4> convert(const ImVec4& f);
+		static std::array<float, 4> convert(unsigned int col);//for colours
 	};
 
 	template<>

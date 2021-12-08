@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Objects">
+      <UniqueIdentifier>{79620291-9ab8-4e7a-9885-8e4c1a50586f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Objects">
+      <UniqueIdentifier>{22be1c92-31d9-4dcc-8c10-026a27b61458}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Data fields">
+      <UniqueIdentifier>{c0627712-5abd-4442-b600-9ea1a87cfb13}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\nif_types.h">
@@ -24,40 +33,73 @@
     <ClInclude Include="src\File.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\NiAVObject.h">
+    <ClInclude Include="src\nif_backend.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\NiNode.h">
+    <ClInclude Include="src\Assignable.h">
+      <Filter>Header Files\Data fields</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Property.h">
+      <Filter>Header Files\Data fields</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Set.h">
+      <Filter>Header Files\Data fields</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sequence.h">
+      <Filter>Header Files\Data fields</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Vector.h">
+      <Filter>Header Files\Data fields</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nif_objects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\NiParticleSystem.h">
+    <ClInclude Include="src\nif.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\NiObject.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="src\FlagSet.h">
+      <Filter>Header Files\Data fields</Filter>
     </ClInclude>
-    <ClInclude Include="src\NiExtraData.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="src\List.h">
+      <Filter>Header Files\Data fields</Filter>
     </ClInclude>
-    <ClInclude Include="src\NiObjectNET.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\NiPSysEmitter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\nif_concepts.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\NiPSysModifier.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\BSEffectShaderProperty.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="src\NiProperties.h">
+      <Filter>Header Files\Objects</Filter>
     </ClInclude>
     <ClInclude Include="src\NiController.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NiExtraData.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NiNode.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NiObject.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NiParticleSystem.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NiPSysEmitter.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NiPSysModifier.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Traversal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\nif_backend.h">
+    <ClInclude Include="src\nif_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nif_conversions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nif_traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nif_internal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -71,32 +113,58 @@
     <ClCompile Include="src\File.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\NiAVObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\NiParticleSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\NiNode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\NiExtraData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\NiObjectNET.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\NiPSysEmitter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\NiPSysModifier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\BSEffectShaderProperty.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\NiProperties.cpp">
+      <Filter>Source Files\Objects</Filter>
     </ClCompile>
     <ClCompile Include="src\NiController.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Objects</Filter>
     </ClCompile>
+    <ClCompile Include="src\NiExtraData.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NiNode.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NiObject.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NiParticleSystem.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NiPSysEmitter.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NiPSysModifier.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\File.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="src\NiObject_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiController_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiExtraData_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiNode_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiParticleSystem_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiProperties_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiPSysModifier_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
+    <None Include="src\NiPSysEmitter_internal.h">
+      <Filter>Header Files\Objects</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -64,12 +64,198 @@ gui::backend::ImGuiWinD3D10::~ImGuiWinD3D10()
 	ImGui::DestroyContext();
 }
 
-void gui::backend::ImGuiWinD3D10::pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect)
+void gui::backend::ImGuiWinD3D10::circle(const Floats<2>& centre, float radius, const ColRGBA& col, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList)
+		if (global)
+			drawList->AddCircleFilled(
+				gui_type_conversion<ImVec2>::from(centre),
+				radius,
+				gui_type_conversion<ImU32>::from(col));
+		else
+			drawList->AddCircleFilled(
+				gui_type_conversion<ImVec2>::from(toGlobal(centre)),
+				radius * getCurrentScale()[0],			//Only using x scale here (we could do geom average until we have ellipses)
+				gui_type_conversion<ImU32>::from(col));
+}
+
+//Or our pointer reinterpretation wouldn't work!
+static_assert(sizeof(ImVec2) == sizeof(gui::Floats<2>) && sizeof(ImVec2) == 8);
+
+void gui::backend::ImGuiWinD3D10::curve(const std::vector<gui::Floats<2>>& data, const ColRGBA& col, float width, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList) {
+		if (global) {
+			drawList->AddPolyline(
+				reinterpret_cast<const ImVec2*>(data.data()),
+				data.size(),
+				gui_type_conversion<ImU32>::from(col),
+				0,
+				width);
+		}
+		else
+			assert(false);//I don't know if we want this option
+	}
+}
+
+void gui::backend::ImGuiWinD3D10::line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList)
+		if (global)
+			drawList->AddLine(
+				gui_type_conversion<ImVec2>::from(p1),
+				gui_type_conversion<ImVec2>::from(p2),
+				gui_type_conversion<ImU32>::from(col),
+				width);
+		else
+			drawList->AddLine(
+				gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+				gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
+				gui_type_conversion<ImU32>::from(col),
+				width);
+}
+
+void gui::backend::ImGuiWinD3D10::rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList)
+		if (global)
+			drawList->AddRectFilled(
+				gui_type_conversion<ImVec2>::from(p1),
+				gui_type_conversion<ImVec2>::from(p2),
+				gui_type_conversion<ImU32>::from(col));
+		else
+			drawList->AddRectFilled(
+				gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+				gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
+				gui_type_conversion<ImU32>::from(col));
+}
+
+void gui::backend::ImGuiWinD3D10::rectangleGradient(const Floats<2>& p1, const Floats<2>& p2, 
+	const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList)
+		if (global)
+			drawList->AddRectFilledMultiColor(
+				gui_type_conversion<ImVec2>::from(p1),
+				gui_type_conversion<ImVec2>::from(p2),
+				gui_type_conversion<ImU32>::from(tl),
+				gui_type_conversion<ImU32>::from(tr),
+				gui_type_conversion<ImU32>::from(br),
+				gui_type_conversion<ImU32>::from(bl));
+		else
+			drawList->AddRectFilledMultiColor(
+				gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+				gui_type_conversion<ImVec2>::from(toGlobal(p2)),
+				gui_type_conversion<ImU32>::from(tl), 
+				gui_type_conversion<ImU32>::from(tr), 
+				gui_type_conversion<ImU32>::from(br), 
+				gui_type_conversion<ImU32>::from(bl));
+}
+
+void gui::backend::ImGuiWinD3D10::triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList)
+		if (global)
+			drawList->AddTriangleFilled(
+				gui_type_conversion<ImVec2>::from(p1),
+				gui_type_conversion<ImVec2>::from(p2),
+				gui_type_conversion<ImVec2>::from(p3),
+				gui_type_conversion<ImU32>::from(col));
+		else
+			drawList->AddTriangleFilled(
+				gui_type_conversion<ImVec2>::from(toGlobal(p1)), 
+				gui_type_conversion<ImVec2>::from(toGlobal(p2)), 
+				gui_type_conversion<ImVec2>::from(toGlobal(p3)), 
+				gui_type_conversion<ImU32>::from(col));
+}
+
+void gui::backend::ImGuiWinD3D10::setBrush(Brush* brush)
+{
+	m_brush = brush;
+}
+
+void gui::backend::ImGuiWinD3D10::setPen(Pen* pen)
+{
+	m_pen = pen;
+}
+
+void gui::backend::ImGuiWinD3D10::drawCircle(const Floats<2>& centre, float radius, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList) {
+		if (global) {
+			if (m_brush) {
+				drawList->AddCircleFilled(
+					gui_type_conversion<ImVec2>::from(centre),
+					radius,
+					gui_type_conversion<ImU32>::from(m_brush->colour));
+			}
+			if (m_pen) {
+				drawList->AddCircle(
+					gui_type_conversion<ImVec2>::from(centre),
+					radius,
+					gui_type_conversion<ImU32>::from(m_pen->colour),
+					0,
+					m_pen->width);
+			}
+		}
+		else {
+			if (m_brush) {
+				drawList->AddCircleFilled(
+					gui_type_conversion<ImVec2>::from(toGlobal(centre)),
+					radius * getCurrentScale()[0],//Only using x scale here (we could do geom average until we have ellipses)
+					gui_type_conversion<ImU32>::from(m_brush->colour));
+			}
+			if (m_pen) {
+				drawList->AddCircle(
+					gui_type_conversion<ImVec2>::from(toGlobal(centre)),
+					radius * getCurrentScale()[0],
+					gui_type_conversion<ImU32>::from(m_pen->colour),
+					0,
+					m_pen->width);
+			}
+		}
+	}
+}
+
+void gui::backend::ImGuiWinD3D10::drawLine(const Floats<2>& p1, const Floats<2>& p2, bool global)
+{
+	ImDrawList* drawList = getDrawList(m_layer);
+	if (drawList) {
+		if (global) {
+			if (m_pen) {
+				drawList->AddLine(
+					gui_type_conversion<ImVec2>::from(p1),
+					gui_type_conversion<ImVec2>::from(p2),
+					gui_type_conversion<ImU32>::from(m_pen->colour),
+					m_pen->width);
+			}
+		}
+		else {
+			if (m_pen) {
+				drawList->AddLine(
+					gui_type_conversion<ImVec2>::from(toGlobal(p1)),
+					gui_type_conversion<ImVec2>::from(toGlobal(p2)),
+					gui_type_conversion<ImU32>::from(m_pen->colour),
+					m_pen->width);
+			}
+		}
+	}
+}
+
+util::CallWrapper gui::backend::ImGuiWinD3D10::pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect)
 {
 	Floats<2> min = toGlobal({ std::min(p1[0], p2[0]), std::min(p1[1], p2[1]) });
 	Floats<2> max = toGlobal({ std::max(p1[0], p2[0]), std::max(p1[1], p2[1]) });
 	ImGui::PushClipRect({ min[0], min[1] }, { max[0], max[1] }, intersect);
-	auto vp = ImGui::GetMainViewport();
+
+	return util::CallWrapper(&ImGuiWinD3D10::popClipArea, this);
 }
 
 void gui::backend::ImGuiWinD3D10::popClipArea()
@@ -77,7 +263,7 @@ void gui::backend::ImGuiWinD3D10::popClipArea()
 	ImGui::PopClipRect();
 }
 
-void gui::backend::ImGuiWinD3D10::pushTransform(const Floats<2>& translation, const Floats<2>& scale)
+util::CallWrapper gui::backend::ImGuiWinD3D10::pushTransform(const Floats<2>& translation, const Floats<2>& scale)
 {
 	if (m_transform.empty())
 		m_transform.push({ translation[0], translation[1], scale[0], scale[1] });
@@ -89,6 +275,8 @@ void gui::backend::ImGuiWinD3D10::pushTransform(const Floats<2>& translation, co
 			T[2] * scale[0],
 			T[3] * scale[1] });
 	}
+
+	return util::CallWrapper(&ImGuiWinD3D10::popTransform, this);
 }
 
 void gui::backend::ImGuiWinD3D10::popTransform()
@@ -183,7 +371,7 @@ void gui::backend::ImGuiWinD3D10::popUIScale()
 	m_uiScale.pop();
 }
 
-bool gui::backend::ImGuiWinD3D10::isMouseDown(MouseButton btn) const
+bool gui::backend::ImGuiWinD3D10::isMouseDown(Mouse::Button btn) const
 {
 	return ImGui::IsMouseDown(guiToImGuiButton(btn));
 }
@@ -199,15 +387,16 @@ gui::Floats<2> gui::backend::ImGuiWinD3D10::getMousePosition() const
 	return toLocal(gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos));
 }
 
-bool gui::backend::ImGuiWinD3D10::isWheelCaptured() const
+bool gui::backend::ImGuiWinD3D10::isWheelHandled() const
 {
-	ImGuiContext* c = ImGui::GetCurrentContext();
-	return c ? c->ActiveIdUsingMouseWheel || c->HoveredIdUsingMouseWheel : false;
+	return m_wheelHandled;
+	//ImGuiContext* c = ImGui::GetCurrentContext();
+	//return c ? c->ActiveIdUsingMouseWheel || c->HoveredIdUsingMouseWheel : false;
 }
 
-void gui::backend::ImGuiWinD3D10::setCaptureWheel()
+void gui::backend::ImGuiWinD3D10::setWheelHandled()
 {
-	assert(false);//TODO
+	m_wheelHandled = true;
 }
 
 float gui::backend::ImGuiWinD3D10::getWheelDelta() const
@@ -261,6 +450,7 @@ void UpdateFontTexture();
 void gui::backend::ImGuiWinD3D10::beginFrame()
 {
 	m_lastMousePos = gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos);
+	m_wheelHandled = false;
 
 	bool rebuild = false;
 	if (m_reloadSecond) {
@@ -303,6 +493,8 @@ void gui::backend::ImGuiWinD3D10::endFrame()
 	}
 	ImGui::End();
 #endif
+
+	assert(m_clipArea.empty() && m_transform.empty());//or we forgot to pop it
 
 	//This seems like a reliable way to keep the main menu bar on top. Haven't noticed any side effects yet.
 	ImGui::BringWindowToDisplayFront(ImGui::FindWindowByName("##MainMenuBar"));

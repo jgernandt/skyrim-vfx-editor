@@ -45,31 +45,36 @@ static_assert(RGB2BEG_MAX + DELTA + DELTA <= 1.0f);
 static_assert(ALPHA2END_MIN - DELTA >= 0.0f);
 static_assert(ALPHA2BEG_MAX + DELTA <= 1.0f);
 
-class node::SimpleColourModifier::ColourField final : public Field
+using namespace nif;
+using namespace node;
+
+class ColourField final : public Field
 {
 public:
-	ColourField(const std::string& name, SimpleColourModifier& node) : 
+	ColourField(const std::string& name, NodeBase& node, const ni_ptr<BSPSysSimpleColorModifier>& obj) : 
 		Field(name),
-		m_obj{ node.object() },
-		m_end1Less(node.object().rgb1End()),
-		m_begin2Less(node.object().rgb2Begin()),
-		m_end2Less(node.object().rgb2End()),
-		m_a2BegLess(node.object().alpha2Begin()),
-		m_begin2Gr(node.object().rgb2Begin()),
-		m_end2Gr(node.object().rgb2End()),
-		m_begin3Gr(node.object().rgb3Begin()),
-		m_a2EndGr(node.object().alpha2End())
+		m_obj{ obj },
+		m_end1Less(m_obj->col1.RGBend),
+		m_begin2Less(m_obj->col2.RGBbegin),
+		m_end2Less(m_obj->col2.RGBend),
+		m_a2BegLess(m_obj->col2.Abegin),
+		m_begin2Gr(m_obj->col2.RGBbegin),
+		m_end2Gr(m_obj->col2.RGBend),
+		m_begin3Gr(m_obj->col3.RGBbegin),
+		m_a2EndGr(m_obj->col2.Aend)
 	{
+		assert(m_obj);
+
 		//Limit our props to [0, 1], increasing by at least DELTA
-		std::array<IProperty<float>*, 4> rgbs{ &m_obj.rgb1End(), &m_obj.rgb2Begin(), &m_obj.rgb2End(), &m_obj.rgb3Begin() };
+		std::array<Property<float>*, 4> rgbs{ &m_obj->col1.RGBend, &m_obj->col2.RGBbegin, &m_obj->col2.RGBend, &m_obj->col3.RGBbegin };
 		for (int i = 0; i < 4; i++)
 			rgbs[i]->set(std::min(std::max(rgbs[i]->get(), i > 0 ? rgbs[i - 1]->get() + DELTA : 0.0f), 1.0f - (3 - i) * DELTA));
 
-		std::array<IProperty<float>*, 2> alphas{ &m_obj.alpha2Begin(), &m_obj.alpha2End() };
+		std::array<Property<float>*, 2> alphas{ &m_obj->col2.Abegin, &m_obj->col2.Aend };
 		alphas[0]->set(std::min(std::max(alphas[0]->get(), 0.0f), 1.0f - DELTA));
 		alphas[1]->set(std::min(std::max(alphas[1]->get(), alphas[0]->get() + DELTA), 1.0f));
 
-		auto grad = node.newChild<gui::ColourBar>(std::make_unique<Gradient>(node.object()));
+		auto grad = node.newChild<gui::ColourBar>(std::make_unique<Gradient>(m_obj));
 		auto labels = node.newChild<gui::Item>(std::make_unique<gui::MarginAlign>());
 		labels->newChild<gui::Text>("Birth");
 		labels->newChild<gui::Text>("Death");
@@ -82,47 +87,49 @@ public:
 		node.newChild<AlphaHandle>(*grad, alphas, 1, gui::Floats<2>{ ALPHA2END_MIN, ALPHA2END_MAX });
 
 		auto cols = node.newChild<gui::Item>(std::make_unique<gui::MarginAlign>());
-		cols->newChild<ColourInput>(node.object().col1(), "");
-		cols->newChild<ColourInput>(node.object().col2(), "");
-		cols->newChild<ColourInput>(node.object().col3(), "");
+		cols->newChild<ColourInput>(make_ni_ptr(m_obj, &m_obj->col1.value), "");
+		cols->newChild<ColourInput>(make_ni_ptr(m_obj, &m_obj->col2.value), "");
+		cols->newChild<ColourInput>(make_ni_ptr(m_obj, &m_obj->col3.value), "");
 
-		m_obj.rgb1End().addListener(m_begin2Gr);
+		m_obj->col1.RGBend.addListener(m_begin2Gr);
 
-		m_obj.rgb2Begin().addListener(m_end1Less);
-		m_obj.rgb2Begin().addListener(m_end2Gr);
+		m_obj->col2.RGBbegin.addListener(m_end1Less);
+		m_obj->col2.RGBbegin.addListener(m_end2Gr);
 
-		m_obj.rgb2End().addListener(m_begin2Less);
-		m_obj.rgb2End().addListener(m_begin3Gr);
+		m_obj->col2.RGBend.addListener(m_begin2Less);
+		m_obj->col2.RGBend.addListener(m_begin3Gr);
 
-		m_obj.rgb3Begin().addListener(m_end2Less);
+		m_obj->col3.RGBbegin.addListener(m_end2Less);
 
-		m_obj.alpha2End().addListener(m_a2BegLess);
-		m_obj.alpha2Begin().addListener(m_a2EndGr);
+		m_obj->col2.Aend.addListener(m_a2BegLess);
+		m_obj->col2.Abegin.addListener(m_a2EndGr);
 	}
 
 	~ColourField()
 	{
-		m_obj.rgb1End().removeListener(m_begin2Gr);
+		m_obj->col1.RGBend.removeListener(m_begin2Gr);
 
-		m_obj.rgb2Begin().removeListener(m_end1Less);
-		m_obj.rgb2Begin().removeListener(m_end2Gr);
+		m_obj->col2.RGBbegin.removeListener(m_end1Less);
+		m_obj->col2.RGBbegin.removeListener(m_end2Gr);
 
-		m_obj.rgb2End().removeListener(m_begin2Less);
-		m_obj.rgb2End().removeListener(m_begin3Gr);
+		m_obj->col2.RGBend.removeListener(m_begin2Less);
+		m_obj->col2.RGBend.removeListener(m_begin3Gr);
 
-		m_obj.rgb3Begin().removeListener(m_end2Less);
+		m_obj->col3.RGBbegin.removeListener(m_end2Less);
 
-		m_obj.alpha2End().removeListener(m_a2BegLess);
-		m_obj.alpha2Begin().removeListener(m_a2EndGr);
+		m_obj->col2.Aend.removeListener(m_a2BegLess);
+		m_obj->col2.Abegin.removeListener(m_a2EndGr);
 	}
 
 private:
 	//If listening to a source property, sets a target property to the same if Compare(source, target) returns true
 	template<typename Compare>
-	class Limiter final : public IPropertyListener<float>
+	class Limiter final : public PropertyListener<float>
 	{
+		Property<float>& m_dest;
+
 	public:
-		Limiter(IProperty<float>& dest) : m_dest{ dest } {}
+		Limiter(Property<float>& dest) : m_dest{ dest } {}
 
 		virtual void onSet(const float& sourceVal) override
 		{
@@ -137,27 +144,26 @@ private:
 				}
 			}
 		}
-
-	private:
-		IProperty<float>& m_dest;
 	};
 
 	class Gradient final : public gui::ColourGradient
 	{
+		const ni_ptr<BSPSysSimpleColorModifier> m_obj;
+
 	public:
-		Gradient(const nif::BSPSysSimpleColorModifier& obj) : m_obj{ obj } {}
+		Gradient(const ni_ptr<BSPSysSimpleColorModifier>& obj) : m_obj{ obj } { assert(m_obj); }
 
 		virtual void draw(gui::Drawer& d) const override 
 		{
-			float alpha2Begin = m_obj.alpha2Begin().get();
-			float alpha2End = m_obj.alpha2End().get();
-			float rgb1End = m_obj.rgb1End().get();
-			float rgb2Begin = m_obj.rgb2Begin().get();
-			float rgb2End = m_obj.rgb2End().get();
-			float rgb3Begin = m_obj.rgb3Begin().get();
-			nif::ColRGBA col1 = m_obj.col1().get();
-			nif::ColRGBA col2 = m_obj.col2().get();
-			nif::ColRGBA col3 = m_obj.col3().get();
+			float alpha2Begin = m_obj->col2.Abegin.get();
+			float alpha2End = m_obj->col2.Aend.get();
+			float rgb1End = m_obj->col1.RGBend.get();
+			float rgb2Begin = m_obj->col2.RGBbegin.get();
+			float rgb2End = m_obj->col2.RGBend.get();
+			float rgb3Begin = m_obj->col3.RGBbegin.get();
+			ColRGBA col1 = m_obj->col1.value.get();
+			ColRGBA col2 = m_obj->col2.value.get();
+			ColRGBA col3 = m_obj->col3.value.get();
 
 			assert(alpha2Begin >= 0.0f);
 			assert(alpha2End > alpha2Begin && alpha2End <= 1.0f);
@@ -166,7 +172,7 @@ private:
 			assert(rgb2End > rgb2Begin);
 			assert(rgb3Begin > rgb2End && rgb3Begin <= 1.0f);
 
-			std::vector<std::pair<float, nif::ColRGBA>> stops;
+			std::vector<std::pair<float, ColRGBA>> stops;
 			stops.reserve(8);
 			//Insert colour stops
 			stops.push_back({ 0.0f, col1 });
@@ -249,21 +255,25 @@ private:
 			}
 			d.end();
 		}
-
-	private:
-		const nif::BSPSysSimpleColorModifier& m_obj;
 	};
 
 	template<size_t N>
 	class EditStop final : public gui::ICommand
 	{
+		std::array<Property<float>*, N> m_props;
+		int m_index;
+		float m_value;
+		std::array<float, N> m_olds{ 0.0f };
+		bool m_reversible;
+		bool m_async;
+
 	public:
 		//If reversible, reverts to the values of props at the time of execution
-		EditStop(const std::array<IProperty<float>*, N>& props, int index, float val, bool reversible) :
+		EditStop(const std::array<Property<float>*, N>& props, int index, float val, bool reversible) :
 			m_props{ props }, m_index{ index }, m_value{ val }, m_reversible{ reversible }, m_async{ false } {}
 
 		//Reverts to the values olds, regardless of the current values of the properties
-		EditStop(const std::array<IProperty<float>*, N>& props, int index, float val, const std::array<float, N>& olds) :
+		EditStop(const std::array<Property<float>*, N>& props, int index, float val, const std::array<float, N>& olds) :
 			m_props{ props }, m_index{ index }, m_value{ val }, m_olds{ olds }, m_reversible{ true }, m_async{ true } {}
 
 		virtual void execute() override
@@ -283,20 +293,18 @@ private:
 		{
 			return m_reversible && m_value != m_olds[m_index];
 		}
-
-	protected:
-		std::array<IProperty<float>*, N> m_props;
-		int m_index;
-		float m_value;
-		std::array<float, N> m_olds{ 0.0f };
-		bool m_reversible;
-		bool m_async;
 	};
 
 	class RGBHandle final : public gui::Handle
 	{
+		const gui::IComponent& m_gradient;
+		std::array<Property<float>*, 4> m_props;
+		int m_index;
+		gui::Floats<2> m_lims;
+		std::array<float, 4> m_tmps{ 0.0f };
+
 	public:
-		RGBHandle(const gui::IComponent& gradient, std::array<IProperty<float>*, 4> props, int index, const gui::Floats<2>& limits) :
+		RGBHandle(const gui::IComponent& gradient, std::array<Property<float>*, 4> props, int index, const gui::Floats<2>& limits) :
 			m_gradient{ gradient }, m_props{ props }, m_index{ index }, m_lims{ limits }
 		{ 
 			m_size = { 10.0f, 10.0f }; 
@@ -324,9 +332,9 @@ private:
 			d.end();
 		}
 
-		virtual void onClick(gui::MouseButton button) override
+		virtual void onClick(gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT)
+			if (button == gui::Mouse::Button::LEFT)
 				for (size_t i = 0; i < m_props.size(); i++)
 					m_tmps[i] = m_props[i]->get();
 		}
@@ -337,24 +345,23 @@ private:
 				asyncInvoke<EditStop<4>>(m_props, m_index, newVal, false);
 			}
 		}
-		virtual void onRelease(gui::MouseButton button) override
+		virtual void onRelease(gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT)
+			if (button == gui::Mouse::Button::LEFT)
 				asyncInvoke<EditStop<4>>(m_props, m_index, m_props[m_index]->get(), m_tmps);
 		}
-
-	private:
-		const gui::IComponent& m_gradient;
-		std::array<IProperty<float>*, 4> m_props;
-		int m_index;
-		gui::Floats<2> m_lims;
-		std::array<float, 4> m_tmps{ 0.0f };
 	};
 
 	class AlphaHandle final : public gui::Handle
 	{
+		const gui::IComponent& m_gradient;
+		std::array<Property<float>*, 2> m_props;
+		int m_index;
+		gui::Floats<2> m_lims;
+		std::array<float, 2> m_tmps{ 0.0f };
+
 	public:
-		AlphaHandle(const gui::IComponent& gradient, std::array<IProperty<float>*, 2> props, int index, const gui::Floats<2>& limits) :
+		AlphaHandle(const gui::IComponent& gradient, std::array<Property<float>*, 2> props, int index, const gui::Floats<2>& limits) :
 			m_gradient{ gradient }, m_props{ props }, m_index{ index }, m_lims{ limits }
 		{
 			m_size = { 10.0f, 10.0f };
@@ -382,9 +389,9 @@ private:
 			d.end();
 		}
 
-		virtual void onClick(gui::MouseButton button) override
+		virtual void onClick(gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT)
+			if (button == gui::Mouse::Button::LEFT)
 				for (size_t i = 0; i < m_props.size(); i++)
 					m_tmps[i] = m_props[i]->get();
 		}
@@ -395,21 +402,14 @@ private:
 				asyncInvoke<EditStop<2>>(m_props, m_index, newVal, false);
 			}
 		}
-		virtual void onRelease(gui::MouseButton button) override
+		virtual void onRelease(gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT)
+			if (button == gui::Mouse::Button::LEFT)
 				asyncInvoke<EditStop<2>>(m_props, m_index, m_props[m_index]->get(), m_tmps);
 		}
-
-	private:
-		const gui::IComponent& m_gradient;
-		std::array<IProperty<float>*, 2> m_props;
-		int m_index;
-		gui::Floats<2> m_lims;
-		std::array<float, 2> m_tmps{ 0.0f };
 	};
 
-	nif::BSPSysSimpleColorModifier& m_obj;
+	ni_ptr<BSPSysSimpleColorModifier> m_obj;
 
 	Limiter<std::less_equal<float>> m_end1Less;
 	Limiter<std::less_equal<float>> m_begin2Less;
@@ -422,40 +422,24 @@ private:
 	Limiter<std::greater_equal<float>> m_a2EndGr;
 };
 
-node::SimpleColourModifier::SimpleColourModifier() :
-	SimpleColourModifier(std::make_unique<nif::BSPSysSimpleColorModifier>())
-{
-	object().col1().set({ 1.0f, 0.0f, 0.0f, 0.0f });
-	object().col2().set(nif::COL_GREEN);
-	object().col3().set({ 0.0f, 0.0f, 1.0f, 0.0f });
-
-	object().rgb1End().set(0.2f);
-	object().rgb2Begin().set(0.4f);
-	object().rgb2End().set(0.6f);
-	object().rgb3Begin().set(0.8f);
-
-	object().alpha2Begin().set(0.1f);
-	object().alpha2End().set(0.9f);
-}
-
-node::SimpleColourModifier::SimpleColourModifier(std::unique_ptr<nif::BSPSysSimpleColorModifier>&& obj) :
-	Modifier(std::move(obj))
+node::SimpleColourModifier::SimpleColourModifier(const ni_ptr<BSPSysSimpleColorModifier>& obj) :
+	Modifier(obj)
 {
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Colour modifier");
 
-	addTargetField(std::make_shared<ReqDevice<Requirement::COLOUR>>(*this));
+	m_device.addRequirement(ModRequirement::COLOUR);
+
 	newChild<gui::Separator>();
 	newChild<gui::VerticalSpacing>(2);
-	newField<ColourField>("Colour", *this);
+	m_colField = newField<ColourField>("Colour", *this, obj);
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
 	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 }
 
-nif::BSPSysSimpleColorModifier& node::SimpleColourModifier::object()
+node::SimpleColourModifier::~SimpleColourModifier()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::BSPSysSimpleColorModifier*>(getObjects()[0].get());
+	disconnect();
 }

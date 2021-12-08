@@ -711,6 +711,9 @@ It is free, and you are welcome to redistribute and/or modify it under certain c
 
     auto frame = newChild<gui::Subwindow>();
     frame->setSize({ 550.0f, 400.0f });
+    frame->setTranslation({ 8.0f, 24.0f });
+    frame->setStyle(gui::Window::Style::SCROLLABLE, true);
+
     auto text = frame->newChild<gui::Text>(std::move(s));
     text->setWrap();
     frame->newChild<gui::Button>("Details", std::bind(&AboutBox::openGPL, this));
@@ -764,6 +767,9 @@ It is free, and you are welcome to redistribute and/or modify it under certain c
 
         auto frame0 = m_gplDetail->newChild<gui::Subwindow>();
         frame0->setSize({ 0.0f, 400.0f });
+        frame0->setTranslation({ 8.0f, 24.0f });
+        frame0->setStyle(gui::Window::Style::SCROLLABLE, true);
+
         text = frame0->newChild<gui::Text>(GPL1);
         text->setWrap();
         text = frame0->newChild<gui::Text>(GPL2);
@@ -804,6 +810,9 @@ SOFTWARE.";
 
         auto frame2 = m_imguiDetail->newChild<gui::Subwindow>();
         frame2->setSize({ 0.0f, 400.0f });
+        frame2->setTranslation({ 8.0f, 24.0f });
+        frame2->setStyle(gui::Window::Style::SCROLLABLE, true);
+
         text = frame2->newChild<gui::Text>(std::move(s));
         text->setWrap();
 
@@ -853,6 +862,9 @@ POSSIBILITY OF SUCH DAMAGE.";
 
         auto frame2 = m_niflibDetail->newChild<gui::Subwindow>();
         frame2->setSize({ 0.0f, 400.0f });
+        frame2->setTranslation({ 8.0f, 24.0f });
+        frame2->setStyle(gui::Window::Style::SCROLLABLE, true);
+
         text = frame2->newChild<gui::Text>(std::move(s));
         text->setWrap();
 

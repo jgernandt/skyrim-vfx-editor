@@ -51,7 +51,7 @@ namespace gui
 		static_assert(std::is_assignable<T&, converted_type>::value, "property return cannot be assigned to value type");
 
 	public:
-		ColourInput(PropertyType& p, const std::string& label) : m_property{ p }, m_label(label) {}
+		ColourInput(const PropertyType& p, const std::string& label) : m_property{ p }, m_label(label) {}
 
 		virtual void frame(FrameDrawer& fd) override
 		{
@@ -86,7 +86,7 @@ namespace gui
 		}
 
 	private:
-		PropertyType& m_property;
+		PropertyType m_property;
 		UniqueLabel<1> m_label;
 		T m_tmp{ T() };
 	};

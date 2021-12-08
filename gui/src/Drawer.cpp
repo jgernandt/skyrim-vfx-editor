@@ -19,7 +19,7 @@
 #include "pch.h"
 #include "Drawer.h"
 
-ImDrawList* getDrawList(gui::Layer l)
+ImDrawList* gui::getDrawList(gui::Layer l)
 {
 	switch (l) {
 	case gui::Layer::BACKGROUND:
@@ -76,7 +76,7 @@ void gui::Drawer::end()
 	}
 }
 
-void gui::Drawer::pushClipArea(float x1, float y1, float x2, float y2)
+/*void gui::Drawer::pushClipArea(float x1, float y1, float x2, float y2)
 {
 	assert(!m_drawing);
 
@@ -115,11 +115,47 @@ void gui::Drawer::pushClipArea(float x1, float y1, float x2, float y2)
 	}
 
 	m_clipArea.push(global);
-}
+}*/
 
-void gui::Drawer::pushClipArea(const Floats<2>& xlims, const Floats<2>& ylims)
+void gui::Drawer::pushClipArea(const Floats<2>& p1, const Floats<2>& p2)
 {
-	pushClipArea(xlims[0], ylims[0], xlims[1], ylims[1]);
+	assert(!m_drawing);
+
+	//We apply our currently pushed transform to the passed points, so that the clip area is always expressed in global coords
+	Floats<4> global;
+	if (m_transform.empty())
+		global = { p1[0], p1[1], p2[0], p2[1] };
+	else
+		global = {
+			m_transform.top()[0] + m_transform.top()[2] * p1[0],
+			m_transform.top()[1] + m_transform.top()[3] * p1[1],
+			m_transform.top()[0] + m_transform.top()[2] * p2[0],
+			m_transform.top()[1] + m_transform.top()[3] * p2[1] };
+
+	//Intersection test
+	if (!m_clipArea.empty()) {
+		if (global[0] > m_clipArea.top()[0] && global[0] > m_clipArea.top()[2])
+			global[0] = std::max(m_clipArea.top()[0], m_clipArea.top()[2]);
+		else if (global[0] < m_clipArea.top()[0] && global[0] < m_clipArea.top()[2])
+			global[0] = std::min(m_clipArea.top()[0], m_clipArea.top()[2]);
+
+		if (global[1] > m_clipArea.top()[1] && global[1] > m_clipArea.top()[3])
+			global[1] = std::max(m_clipArea.top()[1], m_clipArea.top()[3]);
+		else if (global[1] < m_clipArea.top()[1] && global[1] < m_clipArea.top()[3])
+			global[1] = std::min(m_clipArea.top()[1], m_clipArea.top()[3]);
+
+		if (global[2] > m_clipArea.top()[0] && global[2] > m_clipArea.top()[2])
+			global[2] = std::max(m_clipArea.top()[0], m_clipArea.top()[2]);
+		else if (global[2] < m_clipArea.top()[0] && global[2] < m_clipArea.top()[2])
+			global[2] = std::min(m_clipArea.top()[0], m_clipArea.top()[2]);
+
+		if (global[3] > m_clipArea.top()[1] && global[3] > m_clipArea.top()[3])
+			global[3] = std::max(m_clipArea.top()[1], m_clipArea.top()[3]);
+		else if (global[3] < m_clipArea.top()[1] && global[3] < m_clipArea.top()[3])
+			global[3] = std::min(m_clipArea.top()[1], m_clipArea.top()[3]);
+	}
+
+	m_clipArea.push(global);
 }
 
 void gui::Drawer::popClipArea()

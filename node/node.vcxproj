@@ -19,48 +19,56 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\AnimationCurve.h" />
     <ClInclude Include="src\AVObject.h" />
+    <ClInclude Include="src\AVObject_internal.h" />
     <ClInclude Include="src\Constructor.h" />
-    <ClInclude Include="src\Controls.h" />
-    <ClInclude Include="src\DeviceImpl.h" />
+    <ClInclude Include="src\Controllers.h" />
+    <ClInclude Include="src\Controllers_internal.h" />
+    <ClInclude Include="src\Emitters_internal.h" />
+    <ClInclude Include="src\ExtraData_internal.h" />
+    <ClInclude Include="src\Modifiers_internal.h" />
+    <ClInclude Include="src\nodes_internal.h" />
+    <ClInclude Include="src\node_conversions.h" />
+    <ClInclude Include="src\node_devices.h" />
     <ClInclude Include="src\Emitters.h" />
     <ClInclude Include="src\ExtraData.h" />
     <ClInclude Include="src\GravityModifier.h" />
+    <ClInclude Include="src\KeyEditor.h" />
     <ClInclude Include="src\Modifier.h" />
-    <ClInclude Include="src\ModifierRequirements.h" />
     <ClInclude Include="src\Node.h" />
     <ClInclude Include="src\NodeBase.h" />
     <ClInclude Include="src\Editor.h" />
     <ClInclude Include="src\nodes.h" />
     <ClInclude Include="src\node_concepts.h" />
+    <ClInclude Include="src\Node_internal.h" />
     <ClInclude Include="src\ParticleSystem.h" />
     <ClInclude Include="src\Positioner.h" />
+    <ClInclude Include="src\PSys_internal.h" />
     <ClInclude Include="src\RotationModifier.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\node_traits.h" />
     <ClInclude Include="src\ScaleModifier.h" />
     <ClInclude Include="src\Shaders.h" />
+    <ClInclude Include="src\Shaders_internal.h" />
     <ClInclude Include="src\SimpleColourModifier.h" />
     <ClInclude Include="src\style.h" />
     <ClInclude Include="src\widget_types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\AnimationCurve.cpp" />
     <ClCompile Include="src\AVObject.cpp" />
-    <ClCompile Include="src\Constructor.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\math\eigen; ..\math\src; ..\util; ..\gui\src; ..\nif\src; ..\nif\niflib\include;</AdditionalIncludeDirectories>
-    </ClCompile>
-    <ClCompile Include="src\Controls.cpp" />
+    <ClCompile Include="src\Constructor.cpp" />
+    <ClCompile Include="src\Controllers.cpp" />
     <ClCompile Include="src\Emitters.cpp" />
     <ClCompile Include="src\ExtraData.cpp" />
     <ClCompile Include="src\GravityModifier.cpp" />
+    <ClCompile Include="src\KeyEditor.cpp" />
     <ClCompile Include="src\Modifier.cpp" />
-    <ClCompile Include="src\ModifierRequirements.cpp" />
     <ClCompile Include="src\Node.cpp" />
     <ClCompile Include="src\NodeBase.cpp" />
     <ClCompile Include="src\Editor.cpp" />
+    <ClCompile Include="src\node_conversions.cpp" />
     <ClCompile Include="src\ParticleSystem.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -76,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+    <None Include="src\Constructor.inl" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\gui\gui.vcxproj">
@@ -161,11 +170,11 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SINGLE_THREAD;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\LBFGSpp\include; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\common; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -180,11 +189,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SINGLE_THREAD;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\LBFGSpp\include; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\common; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -200,11 +209,11 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SINGLE_THREAD;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\LBFGSpp\include; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\common; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -219,11 +228,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SINGLE_THREAD;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\math\eigen; ..\math\LBFGSpp\include; ..\math\src; ..\util; ..\gui\src; ..\nif\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\math\eigen; ..\math\src; ..\common; ..\gui\src; ..\nif\src;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>

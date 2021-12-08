@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\impl">
+      <UniqueIdentifier>{4c9c37ff-4995-46ef-bfb3-d7fd1c965ceb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -33,9 +36,6 @@
     <ClCompile Include="ControllerTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BSEffectShaderPropertyTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -45,11 +45,35 @@
     <ClCompile Include="ParticleSystemTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ForcefieldTests.cpp">
+    <ClCompile Include="objects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NodeConstructorTests.cpp">
+    <ClCompile Include="NiNodeImpl.cpp">
+      <Filter>Source Files\impl</Filter>
+    </ClCompile>
+    <ClCompile Include="NiBaseImpl.cpp">
+      <Filter>Source Files\impl</Filter>
+    </ClCompile>
+    <ClCompile Include="NiExtraDataImpl.cpp">
+      <Filter>Source Files\impl</Filter>
+    </ClCompile>
+    <ClCompile Include="NiParticleSystemImpl.cpp">
+      <Filter>Source Files\impl</Filter>
+    </ClCompile>
+    <ClCompile Include="ModifiersImpl.cpp">
+      <Filter>Source Files\impl</Filter>
+    </ClCompile>
+    <ClCompile Include="ConstructorTests.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PropertiesImpl.cpp">
+      <Filter>Source Files\impl</Filter>
+    </ClCompile>
+    <ClCompile Include="EmittersImpl.cpp">
+      <Filter>Source Files\impl</Filter>
+    </ClCompile>
+    <ClCompile Include="ControllersImpl.cpp">
+      <Filter>Source Files\impl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -59,7 +83,22 @@
     <ClInclude Include="CommonTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Mocks.h">
+    <ClInclude Include="ConnectorTester.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestConstructor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FactoryTester.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ForwardTester.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ModifiersTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestSetup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

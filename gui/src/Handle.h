@@ -33,9 +33,9 @@ namespace gui
 
 		virtual void frame(FrameDrawer& fd) override;
 
-		virtual void onClick(MouseButton) = 0;
+		virtual void onClick(Mouse::Button) = 0;
 		virtual void onMove(const Floats<2>& delta) = 0;
-		virtual void onRelease(MouseButton) = 0;
+		virtual void onRelease(Mouse::Button) = 0;
 
 		bool isActive() const { return m_active; }
 		bool isHovered() const { return m_hovered; }

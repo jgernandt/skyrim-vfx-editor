@@ -17,25 +17,20 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "node_concepts.h"
-#include "node_traits.h"
-#include "DeviceImpl.h"
 #include "NodeBase.h"
-
-#include "NiExtraData.h"
 
 namespace node
 {
+	using namespace nif;
+
 	class ExtraData : public NodeBase
 	{
 	protected:
-		ExtraData(std::unique_ptr<nif::NiExtraData>&& obj);
+		ExtraData(const ni_ptr<NiExtraData>& obj);
 
 	public:
 		virtual ~ExtraData() = default;
-		virtual nif::NiExtraData& object() override;
 
-	public:
 		constexpr static const char* TARGET = "Targets";
 		constexpr static const char* NAME = "Name";
 
@@ -43,38 +38,34 @@ namespace node
 		class TargetField final : public Field
 		{
 		public:
-			TargetField(const std::string& name, ExtraData& node);
+			TargetField(const std::string& name, NodeBase& node, const ni_ptr<NiExtraData>& obj);
 
 		private:
-			SetReceiver<nif::NiExtraData> m_rvr;
+			SetReceiver<NiExtraData> m_rvr;
 			Sender<void> m_sdr;
 		};
 
-		class NameField final : public Field
-		{
-		public:
-			NameField(const std::string& name, ExtraData& node);
-		};
+		std::unique_ptr<Field> m_targetField;
 	};
 
 	class StringDataShared : public ExtraData
 	{
 	protected:
-		StringDataShared(std::unique_ptr<nif::NiStringExtraData>&& obj);
+		StringDataShared(const ni_ptr<NiStringExtraData>& obj);
 
 	public:
 		virtual ~StringDataShared() = default;
-		virtual nif::NiStringExtraData& object() override;
 
-	public:
 		constexpr static const char* VALUE = "Value";
 	};
 
 	class StringData final : public StringDataShared
 	{
 	public:
-		StringData();
-		StringData(std::unique_ptr<nif::NiStringExtraData>&& obj);
+		using default_object = NiStringExtraData;
+
+		StringData(const ni_ptr<NiStringExtraData>& obj);
+		~StringData();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 140.0f;
@@ -83,12 +74,12 @@ namespace node
 	class WeaponTypeData final : public StringDataShared
 	{
 	public:
-		WeaponTypeData();
-		WeaponTypeData(std::unique_ptr<nif::NiStringExtraData>&& obj);
+		using default_object = NiStringExtraData;
 
-	public:
+		WeaponTypeData(const ni_ptr<NiStringExtraData>& obj);
+		~WeaponTypeData();
+
 		constexpr static const char* TYPE = "Type";
-
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 90.0f;
 	};
@@ -96,7 +87,8 @@ namespace node
 	class DummyExtraData final : public ExtraData
 	{
 	public:
-		DummyExtraData(std::unique_ptr<nif::NiExtraData>&& obj);
+		DummyExtraData(const ni_ptr<NiExtraData>& obj);
+		~DummyExtraData();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 90.0f;

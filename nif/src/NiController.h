@@ -17,145 +17,158 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "NiObjectNET.h"
+#include "NiObject.h"
 
 namespace nif
 {
-	class NiInterpolator : public NiObject
+	template<typename T>
+	struct Key
 	{
-	public:
-		NiInterpolator(native::NiInterpolator* obj);
-		NiInterpolator(const NiInterpolator&) = delete;
+		Key() = default;
+		Key(const Key<T>&) = delete;
+		Key(Key<T>&& other) noexcept { *this = std::move(other); }
 
-		virtual ~NiInterpolator() = default;
+		Key<T>& operator=(const Key<T>&) = delete;
+		Key<T>& operator=(Key<T>&& other) noexcept
+		{
+			time = std::move(other.time);
+			value = std::move(other.value);
+			fwdTan = std::move(other.fwdTan);
+			bwdTan = std::move(other.bwdTan);
+			tension = std::move(other.tension);
+			bias = std::move(other.bias);
+			continuity = std::move(other.continuity);
+			return *this;
+		}
 
-		NiInterpolator& operator=(const NiInterpolator&) = delete;
-
-		native::NiInterpolator& getNative() const;
+		Property<float> time;
+		Property<T> value;
+		Property<T> fwdTan;
+		Property<T> bwdTan;
+		Property<float> tension;
+		Property<float> bias;
+		Property<float> continuity;
 	};
 
-	class NiBoolData : public NiObject
+	struct NiBoolData : NiTraversable<NiBoolData, NiObject>
 	{
-	public:
-		NiBoolData();
-		NiBoolData(native::NiBoolData* obj);
-		NiBoolData(const NiBoolData&) = delete;
+		Property<KeyType> keyType;
+		Vector<Key<bool>> keys;
 
-		virtual ~NiBoolData() = default;
-
-		NiBoolData& operator=(const NiBoolData&) = delete;
-
-		native::NiBoolData& getNative() const;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	class NiBoolInterpolator : public NiInterpolator
+	struct NiFloatData : NiTraversable<NiFloatData, NiObject>
 	{
-	public:
-		NiBoolInterpolator();
-		NiBoolInterpolator(native::NiBoolInterpolator* obj);
-		NiBoolInterpolator(const NiBoolInterpolator&) = delete;
+		Property<KeyType> keyType;
+		Vector<Key<float>> keys;
 
-		virtual ~NiBoolInterpolator() = default;
-
-		NiBoolInterpolator& operator=(const NiBoolInterpolator&) = delete;
-
-		native::NiBoolInterpolator& getNative() const;
-
-		IProperty<bool>& value() { return m_value; }
-		const IProperty<bool>& value() const { return m_value; }
-
-		IAssignable<NiBoolData>& data() { return m_data; }
-		const IAssignable<NiBoolData>& data() const { return m_data; }
-
-	private:
-		Property<bool> m_value;
-		Assignable<NiBoolData> m_data;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	class NiFloatData : public NiObject
+	struct NiInterpolator : NiTraversable<NiInterpolator, NiObject> 
 	{
-	public:
-		NiFloatData();
-		NiFloatData(native::NiFloatData* obj);
-		NiFloatData(const NiFloatData&) = delete;
-
-		virtual ~NiFloatData() = default;
-
-		NiFloatData& operator=(const NiFloatData&) = delete;
-
-		native::NiFloatData& getNative() const;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	class NiFloatInterpolator : public NiInterpolator
+	struct NiBoolInterpolator : NiTraversable<NiBoolInterpolator, NiInterpolator>
 	{
-	public:
-		NiFloatInterpolator();
-		NiFloatInterpolator(native::NiFloatInterpolator* obj);
-		NiFloatInterpolator(const NiFloatInterpolator&) = delete;
+		Property<bool> value;
+		Ref<NiBoolData> data;
 
-		virtual ~NiFloatInterpolator() = default;
-
-		NiFloatInterpolator& operator=(const NiFloatInterpolator&) = delete;
-
-		native::NiFloatInterpolator& getNative() const;
-
-		IProperty<float>& value() { return m_value; }
-		const IProperty<float>& value() const { return m_value; }
-
-		IAssignable<NiFloatData>& data() { return m_data; }
-		const IAssignable<NiFloatData>& data() const { return m_data; }
-
-	private:
-		Property<float> m_value;
-		Assignable<NiFloatData> m_data;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+	template<> struct Forwarder<NiBoolInterpolator> : VerticalTraverser<NiBoolInterpolator, Forwarder>
+	{
+		bool operator() (NiBoolInterpolator& object, NiTraverser& traverser);
 	};
 
-	class NiTimeController : public NiObject
+	struct NiFloatInterpolator : NiTraversable<NiFloatInterpolator, NiInterpolator>
 	{
-	public:
-		NiTimeController(native::NiTimeController* obj);
-		NiTimeController(const NiTimeController&) = delete;
+		Property<float> value;
+		Ref<NiFloatData> data;
 
-		virtual ~NiTimeController() = default;
-
-		NiTimeController& operator=(const NiTimeController&) = delete;
-
-		native::NiTimeController& getNative() const;
-
-		//NiTimeController
-		//disallow assigning to these?
-		//IAssignable<NiTimeController>& nextCtlr();
-		//IAssignable<NiObjectNET>& target();
-		IProperty<unsigned short>& flags() { return m_flags; }
-		IProperty<float>& frequency() { return m_frequency; }
-		IProperty<float>& phase() { return m_phase; }
-		IProperty<float>& startTime() { return m_startTime; }
-		IProperty<float>& stopTime() { return m_stopTime; }
-
-	private:
-		Property<unsigned short> m_flags;
-		Property<float> m_frequency;
-		Property<float> m_phase;
-		Property<float> m_startTime;
-		Property<float> m_stopTime;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+	template<> struct Forwarder<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, Forwarder>
+	{
+		bool operator() (NiFloatInterpolator& object, NiTraverser& traverser);
 	};
 
-	class NiSingleInterpController : public NiTimeController
+	struct NiBlendInterpolator : NiTraversable<NiBlendInterpolator, NiInterpolator> 
 	{
-	public:
-		NiSingleInterpController(native::NiSingleInterpController* obj);
-		NiSingleInterpController(const NiSingleInterpController&) = delete;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
 
-		virtual ~NiSingleInterpController() = default;
+	struct NiBlendBoolInterpolator : NiTraversable<NiBlendBoolInterpolator, NiBlendInterpolator> 
+	{
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
 
-		NiSingleInterpController& operator=(const NiSingleInterpController&) = delete;
+	struct NiBlendFloatInterpolator : NiTraversable<NiBlendFloatInterpolator, NiBlendInterpolator> 
+	{
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+	
+	struct NiTimeController : NiTraversable<NiTimeController, NiObject>
+	{
+		//Leave this out? It makes less sense to us.
+		//Assignable<NiTimeController> nextCtlr;
 
-		native::NiSingleInterpController& getNative() const;
+		FlagSet<ControllerFlags> flags;
+		Property<float> frequency;
+		Property<float> phase;
+		Property<float> startTime;
+		Property<float> stopTime;
+		Ptr<NiObjectNET> target;
 
-		//NiSingleInterpController
-		IAssignable<NiInterpolator>& interpolator() { return m_iplr; }
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
 
-	private:
-		Assignable<NiInterpolator> m_iplr;
+	struct NiSingleInterpController : NiTraversable<NiSingleInterpController, NiTimeController>
+	{
+		Ref<NiInterpolator> interpolator;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+	template<> struct Forwarder<NiSingleInterpController> : VerticalTraverser<NiSingleInterpController, Forwarder>
+	{
+		bool operator() (NiSingleInterpController& object, NiTraverser& traverser);
+	};
+
+	struct NiPSysModifierCtlr : NiTraversable<NiPSysModifierCtlr, NiSingleInterpController>
+	{
+		Property<std::string> modifierName;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+
+	struct NiPSysUpdateCtlr : NiTraversable<NiPSysUpdateCtlr, NiTimeController>
+	{
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+
+	struct NiPSysEmitterCtlr : NiTraversable<NiPSysEmitterCtlr, NiPSysModifierCtlr>
+	{
+		Ref<NiInterpolator> visIplr;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+	template<> struct Forwarder<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, Forwarder>
+	{
+		bool operator() (NiPSysEmitterCtlr& object, NiTraverser& traverser);
 	};
 }

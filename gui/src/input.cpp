@@ -19,14 +19,20 @@
 #include "pch.h"
 #include "input.h"
 
-int gui::guiToImGuiButton(MouseButton button)
+#define WIN32_LEAN_AND_MEAN 
+#include <windows.h>
+
+gui::IComponent* gui::Keyboard::s_capturing = nullptr;
+gui::IComponent* gui::Mouse::s_capturing = nullptr;
+
+int gui::guiToImGuiButton(Mouse::Button button)
 {
 	switch (button) {
-	case MouseButton::LEFT:
+	case Mouse::Button::LEFT:
 		return ImGuiMouseButton_Left;
-	case MouseButton::MIDDLE:
+	case Mouse::Button::MIDDLE:
 		return ImGuiMouseButton_Middle;
-	case MouseButton::RIGHT:
+	case Mouse::Button::RIGHT:
 		return ImGuiMouseButton_Right;
 	default:
 		return -1;
@@ -36,4 +42,9 @@ int gui::guiToImGuiButton(MouseButton button)
 gui::Floats<2> gui::Mouse::getPosition()
 {
 	return gui_type_conversion<Floats<2>>::from(ImGui::GetIO().MousePos);
+}
+
+bool gui::Keyboard::isDown(key_t key)
+{
+	return GetKeyState(key) & 0x8000;
 }

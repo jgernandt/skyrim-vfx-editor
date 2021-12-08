@@ -18,27 +18,93 @@
 
 #pragma once
 #include <cassert>
-#include "nif_concepts.h"
+#include <map>
+#include "nif_data.h"
+#include "nif_types.h"
+#include "Traversal.h"
 
 namespace nif
 {
-	//These objects are effectively references. This is likely to cause confusion down the road.
-	class NiObject
+	//For the static mapping between Niflib types and our types
+	template<typename T>
+	struct type_map
 	{
-	public:
-		NiObject(native::NiObject* obj) : m_ptr(obj) { assert(obj); }//disallow null references
-		NiObject(const NiObject&) = delete;
-
-		virtual ~NiObject() = default;
-
-		NiObject& operator=(const NiObject&) = delete;
-
-		native::NiObject& getNative() const { return *m_ptr; }
-
-	protected:
-		ni_ptr<native::NiObject> m_ptr;
+		//Specialise with the member type
+		//using type = NiObject;
 	};
 
-	inline bool operator==(const NiObject& l, const NiObject& r) { return &l.getNative() == &r.getNative(); }
-	inline bool operator!=(const NiObject& l, const NiObject& r) { return !(l == r); }
+	//Forwards a horizontal traverser to subnodes
+	template<typename T>
+	struct Forwarder : VerticalTraverser<T, Forwarder>
+	{
+		bool operator() (T& object, NiTraverser& traverser) { return true; }
+	};
+
+	using ni_type = size_t;
+
+	struct NiObject : NiTraversable<NiObject, void>
+	{
+		NiObject();
+		NiObject(const NiObject&) = delete;
+		NiObject(NiObject&&) = delete;
+
+		~NiObject();
+
+		NiObject& operator=(const NiObject&) = delete;
+		NiObject& operator=(NiObject&&) = delete;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const { return TYPE; }
+	};
+
+	//We specialise this instead of requiring specialisations for each TraverserType<void>
+	template<template<typename> typename TraverserType>
+	struct VerticalTraverser<NiObject, TraverserType>
+	{
+		template<typename... Args>
+		bool down(NiObject& object, Args&&... args)
+		{
+			return static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
+		}
+		template<typename... Args>
+		bool up(NiObject& object, Args&&... args)
+		{
+			return static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
+		}
+	};
+
+
+	struct NiObjectNET : NiTraversable<NiObjectNET, NiObject>
+	{
+		Property<std::string> name;
+		Set<NiExtraData> extraData;
+		Sequence<NiTimeController> controllers;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+
+	template<> struct Forwarder<NiObjectNET> : VerticalTraverser<NiObjectNET, Forwarder>
+	{
+		bool operator() (NiObjectNET& object, NiTraverser& traverser);
+	};
+
+
+	struct Transform
+	{
+		Property<translation_t> translation;
+		Property<rotation_t> rotation;
+		Property<float> scale;
+	};
+
+	struct NiAVObject : NiTraversable<NiAVObject, NiObjectNET>
+	{
+		//flags is 32 bit, but it was 16 in Niflibs days. 
+		//I can't be bothered to fix that right now. Will later.
+		FlagSet<std::uint_fast32_t> flags;
+		Transform transform;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
 }

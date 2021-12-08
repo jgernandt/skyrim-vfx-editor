@@ -41,11 +41,23 @@ namespace gui
 			ImGuiWinD3D10();
 			~ImGuiWinD3D10();
 
-			virtual void pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) override;
-			virtual void popClipArea() override;
+			virtual void setTargetLayer(Layer l) override { m_layer = l; }
 
-			virtual void pushTransform(const Floats<2>& translation, const Floats<2>& scale) override;
-			virtual void popTransform() override;
+			virtual void circle(const Floats<2>& centre, float radius, const ColRGBA& col, bool global) override;
+			virtual void curve(const std::vector<gui::Floats<2>>& data, const ColRGBA& col, float width = 1.0f, bool global = false) override;
+			virtual void line(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, float width, bool global) override;
+			virtual void rectangle(const Floats<2>& p1, const Floats<2>& p2, const ColRGBA& col, bool global) override;
+			virtual void rectangleGradient(const Floats<2>& p1, const Floats<2>& p2,
+				const ColRGBA& tl, const ColRGBA& tr, const ColRGBA& bl, const ColRGBA& br, bool global) override;
+			virtual void triangle(const Floats<2>& p1, const Floats<2>& p2, const Floats<2>& p3, const ColRGBA& col, bool global) override;
+
+			virtual void setBrush(Brush* brush) override;
+			virtual void setPen(Pen* pen) override;
+			virtual void drawCircle(const Floats<2>& centre, float radius, bool global = false) override;
+			virtual void drawLine(const Floats<2>& p1, const Floats<2>& p2, bool global = false) override;
+
+			[[nodiscard]] virtual util::CallWrapper pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) override;
+			[[nodiscard]] virtual util::CallWrapper pushTransform(const Floats<2>& translation, const Floats<2>& scale) override;
 
 			virtual Floats<2> getCurrentTranslation() const override;
 			virtual Floats<2> getCurrentScale() const override;
@@ -57,12 +69,13 @@ namespace gui
 			virtual void pushUIScale(float scale) override;
 			virtual void popUIScale() override;
 
-			virtual bool isMouseDown(MouseButton btn) const override;
+			virtual bool isMouseDown(Mouse::Button btn) const override;
 			virtual Floats<2> getMouseMove() const override;
 			virtual Floats<2> getMousePosition() const override;
-			virtual bool isWheelCaptured() const override;
-			virtual void setCaptureWheel() override;
 			virtual float getWheelDelta() const override;
+
+			virtual bool isWheelHandled() const override;
+			virtual void setWheelHandled() override;
 
 			void initWin32Window(HWND hwnd);
 			void initDX10Window(ID3D10Device* device);
@@ -80,16 +93,27 @@ namespace gui
 			void setStyleColours();
 
 		private:
+			void popClipArea();
+			void popTransform();
+
+		private:
 			std::stack<Floats<4>> m_clipArea;
 			std::stack<Floats<4>> m_transform;
 			std::stack<float> m_uiScale;
+			Layer m_layer{ Layer::WINDOW };
 			Floats<2> m_lastMousePos{ 0.0f, 0.0f };
+
+			Brush* m_brush{ nullptr };
+			Pen* m_pen{ nullptr };
 
 			std::vector<char> m_fontBuf;
 			std::filesystem::path m_defaultFontPath;
 			float m_secondFontScale{ 1.0f };
 			bool m_reloadSecond{ false };
 
+			bool m_wheelHandled{ false };
+
+			//Debug
 			Timer<long long, std::micro> m_timer;
 			int m_frameCount{ 0 };
 			long long m_lastTime{ 0 };

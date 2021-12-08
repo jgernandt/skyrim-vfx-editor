@@ -75,12 +75,9 @@ private:
 	gui::Connector::StateMap m_stateChanges;
 };
 
-node::NodeBase::NodeBase(std::unique_ptr<nif::NiObject>&& obj) :
+node::NodeBase::NodeBase() :
 	Window(std::string()), m_leftCtlr(*this), m_rightCtlr(*this)
 {
-	assert(obj);
-	m_objects.push_back(std::move(obj));
-
 	setColour(Window::COL_POPUP, { 0.75f, 0.75f, 0.75f, 0.85f });
 	/*setColour(Window::COL_BACKGROUND, NodeCol_Background);
 	setColour(Window::COL_BORDER, NodeCol_Border);
@@ -92,32 +89,11 @@ node::NodeBase::NodeBase(std::unique_ptr<nif::NiObject>&& obj) :
 
 node::NodeBase::~NodeBase()
 {
-	//Disconnect all our fields
-	for (auto&& field : m_fields) {
-		assert(field.second);
-		if (field.second->connector)
-			field.second->connector->disconnect();
-	}
-
-	//The safest approach would be to destroy our children first, since some widgets may be referencing the objects. 
-	//However, they shouldn't be touching anything on destruction.
-	clearChildren();
-}
-
-void node::NodeBase::accept(gui::Visitor& v)
-{
-	v.visit(*this);
 }
 
 void node::NodeBase::onClose()
 {
 	asyncInvoke<DestroyAction>(*this);
-}
-
-nif::NiObject& node::NodeBase::object()
-{
-	assert(!m_objects.empty() && m_objects[0]);
-	return *m_objects[0];
 }
 
 gui::Connector* node::NodeBase::addConnector(const std::string& label, ConnectorType type, std::unique_ptr<gui::Connector>&& c)
@@ -131,14 +107,14 @@ gui::Connector* node::NodeBase::addConnector(const std::string& label, Connector
 			//upwards label to the left
 			result->setController(&m_leftCtlr);
 			if (!label.empty())
-				addChild(std::make_unique<gui::FramePadded>(std::make_unique<gui::Text>(label)));
+				addChild(std::make_unique<gui::Label>(label));
 		}
 		else {
 			//downwards to the right
 			result->setController(&m_rightCtlr);
 			if (!label.empty()) {
 				auto item = std::make_unique<gui::Item>(std::make_unique<gui::RightAlign>());
-				item->newChild<gui::FramePadded>(std::make_unique<gui::Text>(label));
+				item->newChild<gui::Label>(label);
 				addChild(std::move(item));
 			}
 		}
@@ -150,18 +126,18 @@ gui::Connector* node::NodeBase::addConnector(const std::string& label, Connector
 node::Field* node::NodeBase::getField(const std::string& name)
 {
 	if (auto it = m_fields.find(name); it != m_fields.end())
-		return it->second.get();
+		return it->second;
 	else
 		return nullptr;
 }
 
-void node::NodeBase::removeController(nif::NiTimeController* obj)
+void node::NodeBase::disconnect()
 {
-	if (auto it = std::find_if(m_controllers.begin(), m_controllers.end(),
-		[obj](const std::unique_ptr<nif::NiTimeController>& ptr) { return ptr.get() == obj; });
-		it != m_controllers.end())
-	{
-		m_controllers.erase(it);
+	//Disconnect all our fields
+	for (auto&& field : m_fields) {
+		assert(field.second);
+		if (field.second->connector)
+			field.second->connector->disconnect();
 	}
 }
 

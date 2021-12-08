@@ -17,69 +17,40 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "NiNode.h"
+#include "nif_internal.h"
 
-nif::NiNode::NiNode() : NiNode(new Niflib::NiNode)
+const size_t nif::NiNode::TYPE = std::hash<std::string>{}("NiNode");
+const size_t nif::BSFadeNode::TYPE = std::hash<std::string>{}("BSFadeNode");
+
+
+bool nif::Forwarder<nif::NiNode>::operator()(NiNode& object, NiTraverser& traverser)
 {
-	assert(getNative().GetType().IsSameType(Niflib::NiNode::TYPE));
-
-	static int count = 0;
-	getNative().SetName("Node" + std::to_string(++count));
-	getNative().SetFlags(14U);
-}
-
-nif::NiNode::NiNode(native::NiNode* obj) : NiAVObject(obj), m_children(*this) {}
-
-nif::native::NiNode& nif::NiNode::getNative() const
-{
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiNode::TYPE));
-	return static_cast<native::NiNode&>(*m_ptr);
-}
-
-nif::BSFadeNode::BSFadeNode() : BSFadeNode(new Niflib::BSFadeNode)
-{
-	assert(getNative().GetType().IsSameType(Niflib::BSFadeNode::TYPE));
-
-	static int count = 0;
-	getNative().SetName("FadeNode" + std::to_string(++count));
-	getNative().SetFlags(14U);
-}
-
-nif::BSFadeNode::BSFadeNode(native::BSFadeNode* obj) : NiNode(obj) {}
-
-nif::native::BSFadeNode& nif::BSFadeNode::getNative() const
-{
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::BSFadeNode::TYPE));
-	return static_cast<native::BSFadeNode&>(*m_ptr);
-}
-
-void nif::NiNode::NodeChildren::add(const NiAVObject& obj)
-{
-	if (!has(obj)) {
-		assert(!obj.getNative().GetParent());//Should be cleared before calling us
-		m_super.getNative().AddChild(&obj.getNative());
-		notifyAdd(obj);
+	for (auto&& child : object.children) {
+		assert(child);
+		child->receive(traverser);
 	}
+	return true;
 }
 
-void nif::NiNode::NodeChildren::remove(const NiAVObject& obj)
+bool nif::ReadSyncer<nif::NiNode>::operator()(NiNode& object, const Niflib::NiNode* native, File& file)
 {
-	if (has(obj)) {
-		m_super.getNative().RemoveChild(&obj.getNative());
-		notifyRemove(obj);
-	}
+	assert(native);
+
+	object.children.clear();
+	auto&& children = native->GetChildren();
+	for (auto&& child : children)
+		if (child)
+			object.children.add(file.get<NiAVObject>(child));
+
+	return true;
 }
 
-bool nif::NiNode::NodeChildren::has(const NiAVObject& obj) const
+bool nif::WriteSyncer<nif::NiNode>::operator()(const NiNode& object, Niflib::NiNode* native, const File& file)
 {
-	for (auto&& child : m_super.getNative().GetChildren())
-		if (child == &obj.getNative())
-			return true;
+	assert(native);
 
-	return false;
-}
-
-size_t nif::NiNode::NodeChildren::size() const
-{
-	return m_super.getNative().GetChildren().size();
+	native->ClearChildren();
+	for (auto&& child : object.children)
+		native->AddChild(file.getNative<NiAVObject>(child.get()));
+	return true;
 }

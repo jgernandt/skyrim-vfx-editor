@@ -17,32 +17,34 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "Controls.h"
 #include "AVObject.h"
 
 namespace node
 {
+	using namespace nif;
+
 	class NodeShared : public AVObject
 	{
 	protected:
-		NodeShared(std::unique_ptr<nif::NiNode>&& obj);
+		NodeShared(const ni_ptr<NiNode>& obj);
 
 	public:
 		virtual ~NodeShared() = default;
-		virtual nif::NiNode& object() override;
 
 	public:
 		constexpr static const char* CHILDREN = "Children";
 
 	protected:
 		class ChildField;
+
+		std::unique_ptr<Field> m_children;
 	};
 
 	class Node final : public NodeShared
 	{
 	public:
-		Node();
-		Node(std::unique_ptr<nif::NiNode>&& obj);
+		Node(const ni_ptr<NiNode>& obj);
+		~Node();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 180.0f;
@@ -51,10 +53,10 @@ namespace node
 	class Root final : public NodeShared
 	{
 	public:
-		Root();
-		Root(std::unique_ptr<nif::NiNode>&& obj);
+		Root(const ni_ptr<NiNode>& obj);
+		~Root();
 
 		constexpr static float WIDTH = 150.0f;
-		constexpr static float HEIGHT = 140.0f;
+		constexpr static float HEIGHT = 116.0f;
 	};
 }

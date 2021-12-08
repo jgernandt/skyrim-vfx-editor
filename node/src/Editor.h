@@ -24,14 +24,14 @@
 
 namespace node
 {
-	class Root;
+	using namespace nif;
 
 	class Editor final :
 		public gui::Composite
 	{
 	public:
 		Editor(const gui::Floats<2>& size);
-		Editor(const gui::Floats<2>& size, const nif::File& file);
+		Editor(const gui::Floats<2>& size, nif::File& file);
 		~Editor();
 
 		virtual void frame(gui::FrameDrawer& fd) override;
@@ -42,15 +42,18 @@ namespace node
 		class NodeRoot final : public gui::ConnectionHandler
 		{
 		public:
-			NodeRoot();
+			NodeRoot(nif::File& file) : m_file{ file } {}
 			virtual void frame(gui::FrameDrawer& fd) override;
 
 			std::unique_ptr<IComponent> createAddMenu();
 			template<typename T> void addNode();
+
+		private:
+			nif::File& m_file;
 		};
 
-		const nif::File::Version m_niVersion;
-		Root* m_rootNode{ nullptr };
+		nif::File* m_file{ nullptr };
+		ni_ptr<Property<std::string>> m_rootName;
 	};
 }
 

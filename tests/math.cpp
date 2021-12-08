@@ -1,9 +1,25 @@
+//Copyright 2021 Jonas Gernandt
+//
+//This file is part of SVFX Editor, a program for creating visual effects
+//in the NetImmerse format.
+//
+//SVFX Editor is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+//SVFX Editor is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
+
 #include "pch.h"
 #include "CppUnitTest.h"
 
 #include "Rotation.h"
-#include "nif_types.h"
-#include "nif_math.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -13,45 +29,18 @@ namespace math
 	{
 	public:
 
-		//Test the consistency of our conversion functions to and from Niflib::Matrix33
-		TEST_METHOD(Niflib_converters)
-		{
-			EulerOrder orders[6]{
-				EulerOrder::XYZ,
-				EulerOrder::YZX,
-				EulerOrder::ZXY,
-				EulerOrder::XZY,
-				EulerOrder::YXZ,
-				EulerOrder::ZYX, };
-
-			for (auto order : orders) {
-
-				Rotation::euler_type in{ 20.0f, 53.0f, -17.0f, order };
-				Rotation r1;
-				r1.setEuler(in);
-
-				Niflib::Matrix33 mat = nif::nif_type_conversion<Niflib::Matrix33>::from(r1);
-				Rotation r2 = nif::nif_type_conversion<Rotation>::from(mat);
-
-				Rotation::euler_type out = r2.getEuler(order);
-
-				for (size_t i = 0; i < in.size(); i++)
-					Assert::AreEqual(in[i].value, out[i].value, in[i].value * m_tolerance);
-			}
-		}
-
 		//Test the validity of our conversions between euler and the native quaternion format
 		TEST_METHOD(get_set_Euler)
 		{
 			//general case
 			{
 				std::vector<math::Rotation::euler_type> rots{
-					{ 20.0f, 53.0f, -17.0f, EulerOrder::XYZ },
-					{ 20.0f, 53.0f, -17.0f, EulerOrder::YZX },
-					{ 20.0f, 53.0f, -17.0f, EulerOrder::ZXY },
-					{ 20.0f, 53.0f, -17.0f, EulerOrder::XZY },
-					{ 20.0f, 53.0f, -17.0f, EulerOrder::YXZ },
-					{ 20.0f, 53.0f, -17.0f, EulerOrder::ZYX },
+					{ degf(20.0f), degf(53.0f), degf(-17.0f), EulerOrder::XYZ },
+					{ degf(20.0f), degf(53.0f), degf(-17.0f), EulerOrder::YZX },
+					{ degf(20.0f), degf(53.0f), degf(-17.0f), EulerOrder::ZXY },
+					{ degf(20.0f), degf(53.0f), degf(-17.0f), EulerOrder::XZY },
+					{ degf(20.0f), degf(53.0f), degf(-17.0f), EulerOrder::YXZ },
+					{ degf(20.0f), degf(53.0f), degf(-17.0f), EulerOrder::ZYX },
 				};
 
 				std::array<Quaternion, 6> blender{
@@ -69,12 +58,12 @@ namespace math
 			//singular case, single angle
 			{
 				std::vector<math::Rotation::euler_type> rots{
-					{ 47.0f, 90.0f, 0.0f, EulerOrder::XYZ },
-					{ 0.0f, 47.0f, 90.0f, EulerOrder::YZX },
-					{ 90.0f, 0.0f, 47.0f, EulerOrder::ZXY },
-					{ 47.0f, 0.0f, 90.0f, EulerOrder::XZY },
-					{ 90.0f, 47.0f, 0.0f, EulerOrder::YXZ },
-					{ 0.0f, 90.0f, 47.0f, EulerOrder::ZYX },
+					{ degf(47.0f), degf(90.0f), degf(0.0f), EulerOrder::XYZ },
+					{ degf(0.0f), degf(47.0f), degf(90.0f), EulerOrder::YZX },
+					{ degf(90.0f), degf(0.0f), degf(47.0f), EulerOrder::ZXY },
+					{ degf(47.0f), degf(0.0f), degf(90.0f), EulerOrder::XZY },
+					{ degf(90.0f), degf(47.0f), degf(0.0f), EulerOrder::YXZ },
+					{ degf(0.0f), degf(90.0f), degf(47.0f), EulerOrder::ZYX },
 				};
 
 				std::array<Quaternion, 6> blender{
@@ -90,12 +79,12 @@ namespace math
 			}
 			{
 				std::vector<math::Rotation::euler_type> rots{
-					{ 47.0f, -90.0f, 0.0f, EulerOrder::XYZ },
-					{ 0.0f, 47.0f, -90.0f, EulerOrder::YZX },
-					{ -90.0f, 0.0f, 47.0f, EulerOrder::ZXY },
-					{ 47.0f, 0.0f, -90.0f, EulerOrder::XZY },
-					{ -90.0f, 47.0f, 0.0f, EulerOrder::YXZ },
-					{ 0.0f, -90.0f, 47.0f, EulerOrder::ZYX },
+					{ degf(47.0f), degf(-90.0f), degf(0.0f), EulerOrder::XYZ },
+					{ degf(0.0f), degf(47.0f), degf(-90.0f), EulerOrder::YZX },
+					{ degf(-90.0f), degf(0.0f), degf(47.0f), EulerOrder::ZXY },
+					{ degf(47.0f), degf(0.0f), degf(-90.0f), EulerOrder::XZY },
+					{ degf(-90.0f), degf(47.0f), degf(0.0f), EulerOrder::YXZ },
+					{ degf(0.0f), degf(-90.0f), degf(47.0f), EulerOrder::ZYX },
 				};
 
 				std::array<Quaternion, 6> blender{
@@ -113,22 +102,22 @@ namespace math
 			//singular case, two angles
 			{
 				std::vector<math::Rotation::euler_type> in{
-					{ 47.0f, 90.0f, -21.0f, EulerOrder::XYZ },
-					{ -21.0f, 47.0f, 90.0f, EulerOrder::YZX },
-					{ 90.0f, -21.0f, 47.0f, EulerOrder::ZXY },
-					{ 47.0f, -21.0f, 90.0f, EulerOrder::XZY },
-					{ 90.0f, 47.0f, -21.0f, EulerOrder::YXZ },
-					{ -21.0f, 90.0f, 47.0f, EulerOrder::ZYX },
+					{ degf(47.0f), degf(90.0f), degf(-21.0f), EulerOrder::XYZ },
+					{ degf(-21.0f), degf(47.0f), degf(90.0f), EulerOrder::YZX },
+					{ degf(90.0f), degf(-21.0f), degf(47.0f), EulerOrder::ZXY },
+					{ degf(47.0f), degf(-21.0f), degf(90.0f), EulerOrder::XZY },
+					{ degf(90.0f), degf(47.0f), degf(-21.0f), EulerOrder::YXZ },
+					{ degf(-21.0f), degf(90.0f), degf(47.0f), EulerOrder::ZYX },
 				};
 				//The expected outcome threw me off for a while. The first and third axes will be antiparallel
 				//in a right-handed order, but parallel in a left-handed order (reverse at -90).
 				std::vector<math::Rotation::euler_type> expected{
-					{ 68.0f, 90.0f, 0.0f, EulerOrder::XYZ },
-					{ 0.0f, 68.0f, 90.0f, EulerOrder::YZX },
-					{ 90.0f, 0.0f, 68.0f, EulerOrder::ZXY },
-					{ 26.0f, 0.0f, 90.0f, EulerOrder::XZY },
-					{ 90.0f, 26.0f, 0.0f, EulerOrder::YXZ },
-					{ 0.0f, 90.0f, 26.0f, EulerOrder::ZYX },
+					{ degf(68.0f), degf(90.0f), degf(0.0f), EulerOrder::XYZ },
+					{ degf(0.0f), degf(68.0f), degf(90.0f), EulerOrder::YZX },
+					{ degf(90.0f), degf(0.0f), degf(68.0f), EulerOrder::ZXY },
+					{ degf(26.0f), degf(0.0f), degf(90.0f), EulerOrder::XZY },
+					{ degf(90.0f), degf(26.0f), degf(0.0f), EulerOrder::YXZ },
+					{ degf(0.0f), degf(90.0f), degf(26.0f), EulerOrder::ZYX },
 				};
 
 				std::array<Quaternion, 6> blender{
@@ -144,20 +133,20 @@ namespace math
 			}
 			{
 				std::vector<math::Rotation::euler_type> in{
-					{ 47.0f, -90.0f, -21.0f, EulerOrder::XYZ },
-					{ -21.0f, 47.0f, -90.0f, EulerOrder::YZX },
-					{ -90.0f, -21.0f, 47.0f, EulerOrder::ZXY },
-					{ 47.0f, -21.0f, -90.0f, EulerOrder::XZY },
-					{ -90.0f, 47.0f, -21.0f, EulerOrder::YXZ },
-					{ -21.0f, -90.0f, 47.0f, EulerOrder::ZYX },
+					{ degf(47.0f), degf(-90.0f), degf(-21.0f), EulerOrder::XYZ },
+					{ degf(-21.0f), degf(47.0f), degf(-90.0f), EulerOrder::YZX },
+					{ degf(-90.0f), degf(-21.0f), degf(47.0f), EulerOrder::ZXY },
+					{ degf(47.0f), degf(-21.0f), degf(-90.0f), EulerOrder::XZY },
+					{ degf(-90.0f), degf(47.0f), degf(-21.0f), EulerOrder::YXZ },
+					{ degf(-21.0f), degf(-90.0f), degf(47.0f), EulerOrder::ZYX },
 				};
 				std::vector<math::Rotation::euler_type> expected{
-					{ 26.0f, -90.0f, 0.0f, EulerOrder::XYZ },
-					{ 0.0f, 26.0f, -90.0f, EulerOrder::YZX },
-					{ -90.0f, 0.0f, 26.0f, EulerOrder::ZXY },
-					{ 68.0f, 0.0f, -90.0f, EulerOrder::XZY },
-					{ -90.0f, 68.0f, 0.0f, EulerOrder::YXZ },
-					{ 0.0f, -90.0f, 68.0f, EulerOrder::ZYX },
+					{ degf(26.0f), degf(-90.0f), degf(0.0f), EulerOrder::XYZ },
+					{ degf(0.0f), degf(26.0f), degf(-90.0f), EulerOrder::YZX },
+					{ degf(-90.0f), degf(0.0f), degf(26.0f), EulerOrder::ZXY },
+					{ degf(68.0f), degf(0.0f), degf(-90.0f), EulerOrder::XZY },
+					{ degf(-90.0f), degf(68.0f), degf(0.0f), EulerOrder::YXZ },
+					{ degf(0.0f), degf(-90.0f), degf(68.0f), EulerOrder::ZYX },
 				};
 
 				std::array<Quaternion, 6> blender{

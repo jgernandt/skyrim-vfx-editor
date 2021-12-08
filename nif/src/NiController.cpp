@@ -17,93 +17,221 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "NiController.h"
+#include "nif_internal.h"
 
-nif::NiInterpolator::NiInterpolator(native::NiInterpolator* obj) : NiObject(obj) {}
+const size_t nif::NiBoolData::TYPE = std::hash<std::string>{}("NiBoolData");
+const size_t nif::NiFloatData::TYPE = std::hash<std::string>{}("NiFloatData");
+const size_t nif::NiInterpolator::TYPE = std::hash<std::string>{}("NiInterpolator");
+const size_t nif::NiBoolInterpolator::TYPE = std::hash<std::string>{}("NiBoolInterpolator");
+const size_t nif::NiFloatInterpolator::TYPE = std::hash<std::string>{}("NiFloatInterpolator");
+const size_t nif::NiBlendInterpolator::TYPE = std::hash<std::string>{}("NiBlendInterpolator");
+const size_t nif::NiBlendBoolInterpolator::TYPE = std::hash<std::string>{}("NiBlendBoolInterpolator");
+const size_t nif::NiBlendFloatInterpolator::TYPE = std::hash<std::string>{}("NiBlendFloatInterpolator");
+const size_t nif::NiTimeController::TYPE = std::hash<std::string>{}("NiTimeController");
+const size_t nif::NiSingleInterpController::TYPE = std::hash<std::string>{}("NiSingleInterpController");
 
-nif::native::NiInterpolator& nif::NiInterpolator::getNative() const
+
+bool nif::ReadSyncer<nif::NiBoolData>::operator()(NiBoolData& object, const Niflib::NiBoolData* native, File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiInterpolator::TYPE));
-	return static_cast<native::NiInterpolator&>(*m_ptr);
+	assert(native);
+
+	object.keyType.set(nif_type_conversion<KeyType>::from(native->GetKeyType()));
+
+	object.keys.clear();
+	for (auto&& key : native->GetKeys()) {
+		object.keys.push_back();
+		object.keys.back().time.set(key.time);
+		object.keys.back().value.set(static_cast<bool>(key.data));
+		object.keys.back().fwdTan.set(static_cast<bool>(key.forward_tangent));
+		object.keys.back().bwdTan.set(static_cast<bool>(key.backward_tangent));
+		object.keys.back().tension.set(key.tension);
+		object.keys.back().bias.set(key.bias);
+		object.keys.back().continuity.set(key.continuity);
+	}
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiBoolData>::operator()(const NiBoolData& object, Niflib::NiBoolData* native, const File& file)
+{
+	assert(native);
+
+	native->SetKeyType(nif_type_conversion<Niflib::KeyType>::from(object.keyType.get()));
+
+	auto&& keys = native->GetKeysRef();
+	keys.clear();
+	for (auto&& key : object.keys) {
+		keys.push_back({ key.time.get(), key.value.get(), key.fwdTan.get(),
+			key.bwdTan.get(), key.tension.get(), key.bias.get(), key.continuity.get() });
+	}
+	return true;
 }
 
 
-nif::NiBoolData::NiBoolData() : NiBoolData(new Niflib::NiBoolData) {}
-nif::NiBoolData::NiBoolData(native::NiBoolData* obj) : NiObject(obj) {}
-
-nif::native::NiBoolData& nif::NiBoolData::getNative() const
+bool nif::ReadSyncer<nif::NiFloatData>::operator()(NiFloatData& object, const Niflib::NiFloatData* native, File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiBoolData::TYPE));
-	return static_cast<native::NiBoolData&>(*m_ptr);
+	assert(native);
+
+	object.keyType.set(nif_type_conversion<KeyType>::from(native->GetKeyType()));
+
+	object.keys.clear();
+	for (auto&& key : native->GetKeys()) {
+		object.keys.push_back();
+		object.keys.back().time.set(key.time);
+		object.keys.back().value.set(key.data);
+		object.keys.back().fwdTan.set(key.forward_tangent);
+		object.keys.back().bwdTan.set(key.backward_tangent);
+		object.keys.back().tension.set(key.tension);
+		object.keys.back().bias.set(key.bias);
+		object.keys.back().continuity.set(key.continuity);
+	}
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiFloatData>::operator()(const NiFloatData& object, Niflib::NiFloatData* native, const File& file)
+{
+	assert(native);
+
+	native->SetKeyType(nif_type_conversion<Niflib::KeyType>::from(object.keyType.get()));
+
+	auto&& keys = native->GetKeysRef();
+	keys.clear();
+	for (auto&& key : object.keys) {
+		keys.push_back({ key.time.get(), key.value.get(), key.fwdTan.get(),
+			key.bwdTan.get(), key.tension.get(), key.bias.get(), key.continuity.get() });
+	}
+	return true;
 }
 
 
-nif::NiBoolInterpolator::NiBoolInterpolator() : NiBoolInterpolator(new Niflib::NiBoolInterpolator) {}
-
-nif::NiBoolInterpolator::NiBoolInterpolator(native::NiBoolInterpolator* obj) :
-	NiInterpolator(obj),
-	m_value(&getNative(), &native::NiBoolInterpolator::GetBoolValue, &native::NiBoolInterpolator::SetBoolValue),
-	m_data(&getNative(), &native::NiBoolInterpolator::GetData, &native::NiBoolInterpolator::SetData)
+bool nif::Forwarder<nif::NiBoolInterpolator>::operator()(NiBoolInterpolator& object, NiTraverser& traverser)
 {
+	if (auto&& data = object.data.assigned())
+		data->receive(traverser);
+	return true;
 }
 
-nif::native::NiBoolInterpolator& nif::NiBoolInterpolator::getNative() const
+bool nif::ReadSyncer<nif::NiBoolInterpolator>::operator()(NiBoolInterpolator& object, const Niflib::NiBoolInterpolator* native, File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiBoolInterpolator::TYPE));
-	return static_cast<native::NiBoolInterpolator&>(*m_ptr);
+	assert(native);
+	object.value.set(native->GetBoolValue());
+	object.data.assign(file.get<NiBoolData>(native->GetData()));
+	return true;
 }
 
-
-nif::NiFloatData::NiFloatData() : NiFloatData(new Niflib::NiFloatData) {}
-nif::NiFloatData::NiFloatData(native::NiFloatData* obj) : NiObject(obj) {}
-
-nif::native::NiFloatData& nif::NiFloatData::getNative() const
+bool nif::WriteSyncer<nif::NiBoolInterpolator>::operator()(const NiBoolInterpolator& object, Niflib::NiBoolInterpolator* native, const File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiFloatData::TYPE));
-	return static_cast<native::NiFloatData&>(*m_ptr);
-}
-
-
-nif::NiFloatInterpolator::NiFloatInterpolator() : NiFloatInterpolator(new Niflib::NiFloatInterpolator) {}
-
-nif::NiFloatInterpolator::NiFloatInterpolator(native::NiFloatInterpolator* obj) : 
-	NiInterpolator(obj),
-	m_value(&getNative(), &native::NiFloatInterpolator::GetFloatValue, &native::NiFloatInterpolator::SetFloatValue),
-	m_data(&getNative(), &native::NiFloatInterpolator::GetData, &native::NiFloatInterpolator::SetData)
-{
-}
-
-nif::native::NiFloatInterpolator& nif::NiFloatInterpolator::getNative() const
-{
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiFloatInterpolator::TYPE));
-	return static_cast<native::NiFloatInterpolator&>(*m_ptr);
+	assert(native);
+	native->SetBoolValue(object.value.get());
+	native->SetData(file.getNative<NiBoolData>(object.data.assigned().get()));
+	return true;
 }
 
 
-nif::NiTimeController::NiTimeController(native::NiTimeController* obj) :
-	NiObject(obj),
-	m_flags(&getNative(), &native::NiTimeController::GetFlags, &native::NiTimeController::SetFlags),
-	m_frequency(&getNative(), &native::NiTimeController::GetFrequency, &native::NiTimeController::SetFrequency),
-	m_phase(&getNative(), &native::NiTimeController::GetPhase, &native::NiTimeController::SetPhase),
-	m_startTime(&getNative(), &native::NiTimeController::GetStartTime, &native::NiTimeController::SetStartTime),
-	m_stopTime(&getNative(), &native::NiTimeController::GetStopTime, &native::NiTimeController::SetStopTime)
-{}
-
-nif::native::NiTimeController& nif::NiTimeController::getNative() const
+bool nif::Forwarder<nif::NiFloatInterpolator>::operator()(NiFloatInterpolator& object, NiTraverser& traverser)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiTimeController::TYPE));
-	return static_cast<native::NiTimeController&>(*m_ptr);
+	if (auto&& data = object.data.assigned())
+		data->receive(traverser);
+	return true;
+}
+
+bool nif::ReadSyncer<nif::NiFloatInterpolator>::operator()(NiFloatInterpolator& object, const Niflib::NiFloatInterpolator* native, File& file)
+{
+	assert(native);
+	object.value.set(native->GetFloatValue());
+	object.data.assign(file.get<NiFloatData>(native->GetData()));
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiFloatInterpolator>::operator()(const NiFloatInterpolator& object, Niflib::NiFloatInterpolator* native, const File& file)
+{
+	assert(native);
+	native->SetFloatValue(object.value.get());
+	native->SetData(file.getNative<NiFloatData>(object.data.assigned().get()));
+	return true;
 }
 
 
-nif::NiSingleInterpController::NiSingleInterpController(native::NiSingleInterpController* obj) :
-	NiTimeController(obj),
-	m_iplr(&getNative(), &native::NiSingleInterpController::GetInterpolator, &native::NiSingleInterpController::SetInterpolator)
+bool nif::ReadSyncer<nif::NiTimeController>::operator()(NiTimeController& object, const Niflib::NiTimeController* native, File& file)
 {
+	assert(native);
+	object.flags.clear();
+	object.flags.raise(native->GetFlags());
+	object.frequency.set(native->GetFrequency());
+	object.phase.set(native->GetPhase());
+	object.startTime.set(native->GetStartTime());
+	object.stopTime.set(native->GetStopTime());
+	object.target.assign(file.get<NiObjectNET>(native->GetTarget()));
+	return true;
 }
 
-nif::native::NiSingleInterpController& nif::NiSingleInterpController::getNative() const
+bool nif::WriteSyncer<nif::NiTimeController>::operator()(const NiTimeController& object, Niflib::NiTimeController* native, const File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiSingleInterpController::TYPE));
-	return static_cast<native::NiSingleInterpController&>(*m_ptr);
+	assert(native);
+	native->SetFlags(static_cast<unsigned short>(object.flags.raised()));
+	native->SetFrequency(object.frequency.get());
+	native->SetPhase(object.phase.get());
+	native->SetStartTime(object.startTime.get());
+	native->SetStopTime(object.stopTime.get());
+	//We might not want to touch this, since Niflib sets it automatically.
+	native->SetTarget(file.getNative<NiObjectNET>(object.target.assigned().get()));
+	return true;
+}
+
+
+bool nif::Forwarder<nif::NiSingleInterpController>::operator()(NiSingleInterpController& object, NiTraverser& traverser)
+{
+	if (auto&& iplr = object.interpolator.assigned())
+		iplr->receive(traverser);
+	return true;
+}
+
+bool nif::ReadSyncer<nif::NiSingleInterpController>::operator()(NiSingleInterpController& object, const Niflib::NiSingleInterpController* native, File& file)
+{
+	assert(native);
+	object.interpolator.assign(file.get<NiInterpolator>(native->GetInterpolator()));
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiSingleInterpController>::operator()(const NiSingleInterpController& object, Niflib::NiSingleInterpController* native, const File& file)
+{
+	assert(native);
+	native->SetInterpolator(file.getNative<NiInterpolator>(object.interpolator.assigned().get()));
+	return true;
+}
+
+
+bool nif::ReadSyncer<nif::NiPSysModifierCtlr>::operator()(NiPSysModifierCtlr& object, const Niflib::NiPSysModifierCtlr* native, File& file)
+{
+	assert(native);
+	object.modifierName.set(native->GetModifierName());
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr& object, Niflib::NiPSysModifierCtlr* native, const File& file)
+{
+	assert(native);
+	native->SetModifierName(object.modifierName.get());
+	return true;
+}
+
+
+bool nif::Forwarder<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, NiTraverser& traverser)
+{
+	if (auto&& obj = object.visIplr.assigned())
+		obj->receive(traverser);
+	return true;
+}
+
+bool nif::ReadSyncer<nif::NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& object, const Niflib::NiPSysEmitterCtlr* native, File& file)
+{
+	assert(native);
+	object.visIplr.assign(file.get<NiInterpolator>(native->GetVisibilityInterpolator()));
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& object, Niflib::NiPSysEmitterCtlr* native, const File& file)
+{
+	assert(native);
+	native->SetVisibilityInterpolator(file.getNative<NiInterpolator>(object.visIplr.assigned().get()));
+	return true;
 }

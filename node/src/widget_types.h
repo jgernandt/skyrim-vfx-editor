@@ -19,22 +19,23 @@
 #pragma once
 #include "gui_types.h"
 #include "nif_types.h"
+#include "node_conversions.h"
 #include "node_traits.h"
 #include "widgets.h"
 
 namespace node
 {
-	using Checkbox = gui::Checkbox<bool, 1, IProperty<bool>, nif::NifConverter>;
+	using Checkbox = gui::Checkbox<bool, 1, nif::ni_ptr<nif::Property<bool>>>;
 
 	template<typename T, size_t N>
-	using DragInput = gui::DragInput<T, N, IProperty<T>, nif::NifConverter, gui::DefaultLayout>;
+	using DragInput = gui::DragInput<T, N, nif::ni_ptr<nif::Property<T>>, Converter, gui::DefaultLayout>;
 	template<typename T, size_t N>
-	using DragInputH = gui::DragInput<T, N, IProperty<T>, nif::NifConverter, gui::HorizontalLayout>;
+	using DragInputH = gui::DragInput<T, N, nif::ni_ptr<nif::Property<T>>, Converter, gui::HorizontalLayout>;
 
 	using DragFloat = DragInput<float, 1>;
 	using DragInt = DragInput<int, 1>;
 
-	using ColourInput = gui::ColourInput<nif::ColRGBA, IProperty<nif::ColRGBA>, nif::NifConverter>;
+	using ColourInput = gui::ColourInput<nif::ColRGBA, nif::ni_ptr<nif::Property<nif::ColRGBA>>, Converter>;
 
-	using StringInput = gui::TextInput<IProperty<std::string>>;
+	using StringInput = gui::TextInput<nif::ni_ptr<nif::Property<std::string>>>;
 }

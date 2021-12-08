@@ -17,52 +17,25 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "NiAVObject.h"
-#include "NiExtraData.h"
+#include "NiObject.h"
 
 namespace nif
 {
-	class NiNode : public NiAVObject
+	struct NiNode : NiTraversable<NiNode, NiAVObject>
 	{
-	public:
-		NiNode();
-		NiNode(native::NiNode* obj);
-		NiNode(const NiNode& other) = delete;
+		Set<NiAVObject> children;
 
-		virtual ~NiNode() = default;
-
-		NiNode& operator=(const NiNode&) = delete;
-
-		native::NiNode& getNative() const;
-
-		ISet<NiAVObject>& children() { return m_children; }
-
-	private:
-		struct NodeChildren : SetBase<NiAVObject>
-		{
-			NodeChildren(NiNode& super) : m_super{ super } {}
-
-			virtual void add(const NiAVObject& obj) override;
-			virtual void remove(const NiAVObject& obj) override;
-			virtual bool has(const NiAVObject& obj) const override;
-			virtual size_t size() const override;
-
-			NiNode& m_super;
-
-		} m_children;
+		static const ni_type TYPE;
+		virtual ni_type type() const { return TYPE; }
+	};
+	template<> struct Forwarder<NiNode> : VerticalTraverser<NiNode, Forwarder>
+	{
+		bool operator() (NiNode& object, NiTraverser& traverser);
 	};
 
-	class BSFadeNode : public NiNode
+	struct BSFadeNode : NiTraversable<BSFadeNode, NiNode> 
 	{
-	public:
-		BSFadeNode();
-		BSFadeNode(native::BSFadeNode* obj);
-		BSFadeNode(const BSFadeNode& other) = delete;
-
-		virtual ~BSFadeNode() = default;
-
-		BSFadeNode& operator=(const BSFadeNode&) = delete;
-
-		native::BSFadeNode& getNative() const;
+		static const ni_type TYPE;
+		virtual ni_type type() const { return TYPE; }
 	};
 }

@@ -18,194 +18,64 @@
 
 #pragma once
 #include "NiPSysModifier.h"
-#include "NiNode.h"
 
 namespace nif
 {
-	class NiPSysEmitterCtlr : public NiPSysModifierCtlr
+	struct NiPSysEmitter : NiTraversable<NiPSysEmitter, NiPSysModifier>
 	{
-	public:
-		NiPSysEmitterCtlr();
-		NiPSysEmitterCtlr(native::NiPSysEmitterCtlr* obj);
-		NiPSysEmitterCtlr(const NiPSysEmitterCtlr&) = delete;
+		Property<ColRGBA> colour;
 
-		virtual ~NiPSysEmitterCtlr() = default;
+		Property<float> lifeSpan;
+		Property<float> lifeSpanVar;
 
-		NiPSysEmitterCtlr& operator=(const NiPSysEmitterCtlr&) = delete;
+		Property<float> size;
+		Property<float> sizeVar;
 
-		native::NiPSysEmitterCtlr& getNative() const;
+		Property<float> speed;
+		Property<float> speedVar;
 
-		//NiPSysEmitterCtlr
-		IAssignable<NiInterpolator>& visIplr() { return m_visIplr; }
+		Property<math::degf> azimuth;
+		Property<math::degf> azimuthVar;
 
-	private:
-		Assignable<NiInterpolator> m_visIplr;
+		Property<math::degf> elevation;
+		Property<math::degf> elevationVar;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	class NiPSysEmitter : public NiPSysModifier
+	struct NiPSysVolumeEmitter : NiTraversable<NiPSysVolumeEmitter, NiPSysEmitter>
 	{
-	public:
-		NiPSysEmitter(native::NiPSysEmitter* obj);
-		NiPSysEmitter(const NiPSysEmitter&) = delete;
+		Ptr<NiNode> emitterObject;
 
-		virtual ~NiPSysEmitter() = default;
-
-		NiPSysEmitter& operator=(const NiPSysEmitter&) = delete;
-
-		native::NiPSysEmitter& getNative() const;
-
-		IProperty<ColRGBA>& colour() { return m_colour; }
-
-		IProperty<float>& lifeSpan() { return m_lifeSpan; }
-		IProperty<float>& lifeSpanVar() { return m_lifeSpanVar; }
-
-		IProperty<float>& size() { return m_size; }
-		IProperty<float>& sizeVar() { return m_sizeVar; }
-
-		IProperty<float>& speed() { return m_speed; }
-		IProperty<float>& speedVar() { return m_speedVar; }
-
-		IProperty<float>& azimuth() { return m_azimuth; }
-		IProperty<float>& azimuthVar() { return m_azimuthVar; }
-
-		IProperty<float>& elevation() { return m_elevation; }
-		IProperty<float>& elevationVar() { return m_elevationVar; }
-
-	private:
-
-		Property<ColRGBA, native::ColRGBA> m_colour;
-		Property<float> m_lifeSpan;
-		Property<float> m_lifeSpanVar;
-		Property<float> m_size;
-		Property<float> m_sizeVar;
-		Property<float> m_speed;
-		Property<float> m_speedVar;
-
-		struct EmitterAzimuth : PropertyBase<float>
-		{
-			EmitterAzimuth(NiPSysEmitter& super) : m_super{ super } {}
-
-			virtual float get() const override;
-			virtual void set(const float& f) override;
-
-			NiPSysEmitter& m_super;
-
-		} m_azimuth;
-
-		struct EmitterAzimuthVar : PropertyBase<float>
-		{
-			EmitterAzimuthVar(NiPSysEmitter& super) : m_super{ super } {}
-
-			virtual float get() const override;
-			virtual void set(const float& f) override;
-
-			NiPSysEmitter& m_super;
-
-		} m_azimuthVar;
-
-		struct EmitterElevation : PropertyBase<float>
-		{
-			EmitterElevation(NiPSysEmitter& super) : m_super{ super } {}
-
-			virtual float get() const override;
-			virtual void set(const float& f) override;
-
-			NiPSysEmitter& m_super;
-
-		} m_elevation;
-
-		struct EmitterElevationVar : PropertyBase<float>
-		{
-			EmitterElevationVar(NiPSysEmitter& super) : m_super{ super } {}
-
-			virtual float get() const override;
-			virtual void set(const float& f) override;
-
-			NiPSysEmitter& m_super;
-
-		} m_elevationVar;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	class NiNode;
-
-	class NiPSysVolumeEmitter : public NiPSysEmitter
+	struct NiPSysBoxEmitter : NiTraversable<NiPSysBoxEmitter, NiPSysVolumeEmitter>
 	{
-	public:
-		NiPSysVolumeEmitter(native::NiPSysVolumeEmitter* obj);
-		NiPSysVolumeEmitter(const NiPSysVolumeEmitter&) = delete;
+		Property<float> width;
+		Property<float> height;
+		Property<float> depth;
 
-		virtual ~NiPSysVolumeEmitter() = default;
-
-		NiPSysVolumeEmitter& operator=(const NiPSysVolumeEmitter&) = delete;
-
-		native::NiPSysVolumeEmitter& getNative() const;
-
-		IAssignable<NiNode>& emitterObject() { return m_emtrObj; }
-
-	private:
-		Assignable<NiNode> m_emtrObj;
-	};
-
-	class NiPSysBoxEmitter : public NiPSysVolumeEmitter
-	{
-	public:
-		NiPSysBoxEmitter();
-		NiPSysBoxEmitter(native::NiPSysBoxEmitter* obj);
-		NiPSysBoxEmitter(const NiPSysBoxEmitter&) = delete;
-
-		virtual ~NiPSysBoxEmitter() = default;
-
-		NiPSysBoxEmitter& operator=(const NiPSysBoxEmitter&) = delete;
-
-		native::NiPSysBoxEmitter& getNative() const;
-
-		IProperty<float>& width() { return m_width; }
-		IProperty<float>& height() { return m_height; }
-		IProperty<float>& depth() { return m_depth; }
-
-	private:
-		Property<float> m_width;
-		Property<float> m_height;
-		Property<float> m_depth;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 	
-	class NiPSysCylinderEmitter : public NiPSysVolumeEmitter
+	struct NiPSysCylinderEmitter : NiTraversable<NiPSysCylinderEmitter, NiPSysVolumeEmitter>
 	{
-	public:
-		NiPSysCylinderEmitter();
-		NiPSysCylinderEmitter(native::NiPSysCylinderEmitter* obj);
-		NiPSysCylinderEmitter(const NiPSysCylinderEmitter&) = delete;
+		Property<float> radius;
+		Property<float> length;
 
-		virtual ~NiPSysCylinderEmitter() = default;
-
-		NiPSysCylinderEmitter& operator=(const NiPSysCylinderEmitter&) = delete;
-
-		native::NiPSysCylinderEmitter& getNative() const;
-
-		IProperty<float>& radius() { return m_radius; }
-		IProperty<float>& height() { return m_height; }
-
-	private:
-		Property<float> m_radius;
-		Property<float> m_height;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	class NiPSysSphereEmitter : public NiPSysVolumeEmitter
+	struct NiPSysSphereEmitter : NiTraversable<NiPSysSphereEmitter, NiPSysVolumeEmitter>
 	{
-	public:
-		NiPSysSphereEmitter();
-		NiPSysSphereEmitter(native::NiPSysSphereEmitter* obj);
-		NiPSysSphereEmitter(const NiPSysSphereEmitter&) = delete;
+		Property<float> radius;
 
-		virtual ~NiPSysSphereEmitter() = default;
-
-		NiPSysSphereEmitter& operator=(const NiPSysSphereEmitter&) = delete;
-
-		native::NiPSysSphereEmitter& getNative() const;
-
-		IProperty<float>& radius() { return m_radius; }
-
-	private:
-		Property<float> m_radius;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 }

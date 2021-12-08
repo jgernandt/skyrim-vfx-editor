@@ -13,21 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\NiTypes">
-      <UniqueIdentifier>{1eda6d9a-407c-45c1-8639-fc9b28d86c8d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Nodes">
       <UniqueIdentifier>{e904cfb2-a49a-45f5-93f4-183c5d0dfb1b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Controls">
-      <UniqueIdentifier>{16499604-c752-4071-aff1-11512a7d75bc}</UniqueIdentifier>
+    <Filter Include="Source Files\Nodes">
+      <UniqueIdentifier>{d39648fd-2777-47f6-bd99-74e7acf75b5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Nodes\internal">
+      <UniqueIdentifier>{d6506ecd-b0bf-48c0-b583-95593cf98310}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\DeviceImpl.h">
+    <ClInclude Include="src\node_devices.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\style.h">
@@ -50,9 +50,6 @@
     </ClInclude>
     <ClInclude Include="src\Node.h">
       <Filter>Header Files\Nodes</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Controls.h">
-      <Filter>Header Files\Controls</Filter>
     </ClInclude>
     <ClInclude Include="src\ExtraData.h">
       <Filter>Header Files\Nodes</Filter>
@@ -90,10 +87,46 @@
     <ClInclude Include="src\SimpleColourModifier.h">
       <Filter>Header Files\Nodes</Filter>
     </ClInclude>
-    <ClInclude Include="src\ModifierRequirements.h">
+    <ClInclude Include="src\Positioner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Positioner.h">
+    <ClInclude Include="src\Controllers.h">
+      <Filter>Header Files\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\KeyEditor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node_conversions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nodes_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Node_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AVObject_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Controllers_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Modifiers_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Emitters_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Shaders_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PSys_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ExtraData_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AnimationCurve.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -107,53 +140,62 @@
     <ClCompile Include="src\NodeBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Node.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Controls.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ExtraData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Shaders.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AVObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ParticleSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Modifier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GravityModifier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ScaleModifier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SimpleColourModifier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Constructor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ModifierRequirements.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\RotationModifier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Emitters.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Positioner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\KeyEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node_conversions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AVObject.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Controllers.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Emitters.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ExtraData.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GravityModifier.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Modifier.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Node.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParticleSystem.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RotationModifier.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ScaleModifier.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SimpleColourModifier.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shaders.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AnimationCurve.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+    <None Include="src\Constructor.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -22,28 +22,48 @@
 
 #include "SplineInterpolant.h"
 
+using namespace nif;
+using namespace node;
+
 //We will fill out the scale values with time values and keep the resulting vector of points locally.
 //We then add one widget to control the points and one to add/remove points, both of which pass their actions back to us.
 //Not the most efficient design, since we're copying a whole new vector (back and forth) when changing one point.
 //We'd need some sort of iterator or random access property to make it better. No big deal, though.
-class node::ScaleModifier::ScaleField final : public Field, public IPropertyListener<std::vector<float>>
+class ScaleField final : 
+	public Field, public PropertyListener<std::vector<float>>, public gui::MouseHandler
 {
+	ni_ptr<Property<std::vector<float>>> m_scales;
+	std::vector<gui::Floats<2>> m_data;
+	gui::PlotArea* m_area{ nullptr };
+
 public:
-	ScaleField(const std::string& name, ScaleModifier& node) : Field(name), m_prop{ node.object().scales() }
+	ScaleField(const std::string& name, NodeBase& node, ni_ptr<Property<std::vector<float>>>&& scales) : 
+		Field(name), m_scales{ std::move(scales) }
 	{
+		assert(m_scales);
+
 		node.newChild<gui::Separator>();
 		node.newChild<gui::Text>("Scale");
-		auto area = node.newChild<gui::PlotArea>();
-		area->addCurve(std::make_unique<gui::SimpleCurve>(m_data));
-		area->addChild(std::make_unique<Controls>(*area, m_data, node.object().scales()));
+
+		auto plot = node.newChild<gui::Plot>();
+		m_area = &plot->getPlotArea();
+
+		plot->getPlotArea().setMouseHandler(this);
+
+		plot->getPlotArea().addCurve(std::make_unique<gui::SimpleCurve>(m_data));
+		plot->getPlotArea().getAxes().addChild(std::make_unique<Controls>(m_data, *m_scales));
+		std::vector<gui::CustomXLabels::AxisLabel> labels{ { "Birth", 0.0f, 0.0f }, { "Death", 1.0f, 1.0f } };
+		plot->setXLabels(std::make_unique<gui::CustomXLabels>(plot->getPlotArea().getAxes(), std::move(labels)));
+		//plot->setLimits({ 0.0f, 1.0f, 0.0f, 1.0f });
 
 		//segments +-
 		auto item = node.newChild<gui::Item>(std::make_unique<gui::RightAlign>());
 		item->newChild<gui::Text>("Segments");
-		item->newChild<RemoveButton>(node.object().scales());
-		item->newChild<AddButton>(node.object().scales());
+		item->newChild<RemoveButton>(*m_scales);
+		item->newChild<AddButton>(*m_scales);
 		
-		node.object().scales().addListener(*this);
+		m_scales->addListener(*this);
+		onSet(m_scales->get());
 	}
 
 	virtual void onSet(const std::vector<float>& v) override
@@ -60,11 +80,26 @@ public:
 			m_data.clear();
 	}
 
+	virtual bool onMouseWheel(float delta) override
+	{
+		assert(m_area);
+		gui::Floats<2> ylims = m_area->getYLimits();
+		ylims[1] = std::max(ylims[1] - delta, 1.0f);
+		m_area->setYLimits(ylims);
+
+		return true;
+	}
+
 private:
 	class EditPoint final : public gui::ICommand
 	{
+		Property<std::vector<float>>& m_trgt;
+		size_t m_index;
+		float m_from;
+		float m_to;
+
 	public:
-		EditPoint(IProperty<std::vector<float>>& trgt, size_t i, float to, float from) :
+		EditPoint(Property<std::vector<float>>& trgt, size_t i, float to, float from) :
 			m_trgt{ trgt }, m_index{ i }, m_from{ from }, m_to{ to } {}
 
 		virtual void execute() override 
@@ -82,17 +117,16 @@ private:
 			}
 		}
 		virtual bool reversible() const override { return m_from != m_to; }
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
-		size_t m_index;
-		float m_from;
-		float m_to;
 	};
+
 	class AddSegment final : public gui::ICommand
 	{
+		Property<std::vector<float>>& m_trgt;
+		std::vector<float> m_old;
+		std::vector<float> m_new;
+
 	public:
-		AddSegment(IProperty<std::vector<float>>& trgt) : m_trgt{ trgt } {}
+		AddSegment(Property<std::vector<float>>& trgt) : m_trgt{ trgt } {}
 
 		virtual void execute() override 
 		{
@@ -136,16 +170,16 @@ private:
 			m_trgt.set(m_old);
 		}
 		virtual bool reversible() const override { return true; }
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
-		std::vector<float> m_old;
-		std::vector<float> m_new;
 	};
+
 	class RemoveSegment final : public gui::ICommand
 	{
+		Property<std::vector<float>>& m_trgt;
+		std::vector<float> m_old;
+		std::vector<float> m_new;
+
 	public:
-		RemoveSegment(IProperty<std::vector<float>>& trgt) : m_trgt{ trgt } {}
+		RemoveSegment(Property<std::vector<float>>& trgt) : m_trgt{ trgt } {}
 
 		virtual void execute() override 
 		{
@@ -176,97 +210,79 @@ private:
 			m_trgt.set(m_old);
 		}
 		virtual bool reversible() const override { return m_old.size() > 2; }
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
-		std::vector<float> m_old;
-		std::vector<float> m_new;
 	};
 
 	class Controls : public gui::SimpleHandles
 	{
-	public:
-		Controls(const gui::PlotArea& area, const std::vector<gui::Floats<2>>& data, IProperty<std::vector<float>>& trgt) :
-			SimpleHandles(area, data), m_trgt{ trgt } {}
+		Property<std::vector<float>>& m_trgt;
+		float m_tmp{ 0.0f };
 
-		virtual void onClick(size_t i, gui::MouseButton button) override
+	public:
+		Controls(const std::vector<gui::Floats<2>>& data, Property<std::vector<float>>& trgt) :
+			SimpleHandles(data), m_trgt{ trgt } {}
+
+		virtual void onClick(size_t i, gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT)
+			if (button == gui::Mouse::Button::LEFT)
 				m_tmp = m_points[i][1];
 		}
 		virtual void onMove(size_t i, const gui::Floats<2>& pos) override
 		{
 			assert(i < m_points.size());
 
-			//we don't allow x movement
-			if (pos[1] != m_points[i][1])
-				asyncInvoke<EditPoint>(m_trgt, i, pos[1], pos[1]);
+			//we don't allow x movement, disallow negative y
+			if (float newY = std::max(pos[1], 0.0f); newY != m_points[i][1])
+				asyncInvoke<EditPoint>(m_trgt, i, newY, newY);
 		}
-		virtual void onRelease(size_t i, gui::MouseButton button) override
+		virtual void onRelease(size_t i, gui::Mouse::Button button) override
 		{
-			if (button == gui::MouseButton::LEFT) {
+			if (button == gui::Mouse::Button::LEFT) {
 				asyncInvoke<EditPoint>(m_trgt, i, m_points[i][1], m_tmp);
 				//m_tmp = 0.0f; //doesn't really matter
 			}
 		}
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
-		float m_tmp{ 0.0f };
 	};
 
 	class AddButton final : public gui::Button
 	{
+		Property<std::vector<float>>& m_trgt;
+
 	public:
-		AddButton(IProperty<std::vector<float>>& target) : Button("+"), m_trgt{ target }
+		AddButton(Property<std::vector<float>>& target) : Button("+"), m_trgt{ target }
 		{
 			setSize({ gui::getDefaultHeight(), gui::getDefaultHeight() });
 		}
 		virtual void onActivate() override { asyncInvoke<AddSegment>(m_trgt); }
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
 	};
 
 	class RemoveButton final : public gui::Button
 	{
+		Property<std::vector<float>>& m_trgt;
+
 	public:
-		RemoveButton(IProperty<std::vector<float>>& target) : Button("-"), m_trgt{ target }
+		RemoveButton(Property<std::vector<float>>& target) : Button("-"), m_trgt{ target }
 		{
 			setSize({ gui::getDefaultHeight(), gui::getDefaultHeight() });
 		}
 		virtual void onActivate() override { asyncInvoke<RemoveSegment>(m_trgt); }
-
-	private:
-		IProperty<std::vector<float>>& m_trgt;
 	};
-
-	IProperty<std::vector<float>>& m_prop;
-	std::vector<gui::Floats<2>> m_data;
 };
 
-node::ScaleModifier::ScaleModifier() : 
-	ScaleModifier(std::make_unique<nif::BSPSysScaleModifier>())
-{
-	object().scales().set({ 0.0f, 1.0f });
-}
-
-node::ScaleModifier::ScaleModifier(std::unique_ptr<nif::BSPSysScaleModifier>&& obj) :
-	Modifier(std::move(obj))
+node::ScaleModifier::ScaleModifier(const ni_ptr<BSPSysScaleModifier>& obj) :
+	Modifier(obj)
 {
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Scale modifier");
 
-	addTargetField(std::make_shared<Device>(*this));
-	newField<ScaleField>("Scale", *this);
+	m_scaleField = newField<ScaleField>("Scale", *this,
+		make_ni_ptr(obj, &BSPSysScaleModifier::scales));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
 	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
 }
 
-nif::BSPSysScaleModifier& node::ScaleModifier::object()
+node::ScaleModifier::~ScaleModifier()
 {
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::BSPSysScaleModifier*>(getObjects()[0].get());
+	disconnect();
 }

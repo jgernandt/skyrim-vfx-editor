@@ -19,31 +19,41 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Assignable.h" />
+    <ClInclude Include="src\FlagSet.h" />
+    <ClInclude Include="src\List.h" />
+    <ClInclude Include="src\nif.h" />
+    <ClInclude Include="src\nif_conversions.h" />
+    <ClInclude Include="src\nif_internal.h" />
+    <ClInclude Include="src\nif_traits.h" />
+    <ClInclude Include="src\nif_data.h" />
+    <ClInclude Include="src\nif_objects.h" />
+    <ClInclude Include="src\Traversal.h" />
+    <ClInclude Include="src\Vector.h" />
     <ClInclude Include="src\nif_backend.h" />
-    <ClInclude Include="src\BSEffectShaderProperty.h" />
+    <ClInclude Include="src\NiProperties.h" />
     <ClInclude Include="src\NiController.h" />
-    <ClInclude Include="src\nif_concepts.h" />
-    <ClInclude Include="src\NiAVObject.h" />
     <ClInclude Include="src\File.h" />
     <ClInclude Include="src\NiExtraData.h" />
     <ClInclude Include="src\nif_types.h" />
     <ClInclude Include="src\NiNode.h" />
     <ClInclude Include="src\NiObject.h" />
-    <ClInclude Include="src\NiObjectNET.h" />
     <ClInclude Include="src\NiParticleSystem.h" />
     <ClInclude Include="src\NiPSysEmitter.h" />
     <ClInclude Include="src\NiPSysModifier.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\Property.h" />
+    <ClInclude Include="src\Sequence.h" />
+    <ClInclude Include="src\Set.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\BSEffectShaderProperty.cpp" />
+    <ClCompile Include="src\NiProperties.cpp" />
     <ClCompile Include="src\File.cpp" />
-    <ClCompile Include="src\NiAVObject.cpp" />
     <ClCompile Include="src\NiController.cpp" />
     <ClCompile Include="src\NiExtraData.cpp" />
     <ClCompile Include="src\nif_conversions.cpp" />
     <ClCompile Include="src\NiNode.cpp" />
-    <ClCompile Include="src\NiObjectNET.cpp" />
+    <ClCompile Include="src\NiObject.cpp" />
     <ClCompile Include="src\NiParticleSystem.cpp" />
     <ClCompile Include="src\NiPSysEmitter.cpp" />
     <ClCompile Include="src\NiPSysModifier.cpp" />
@@ -58,6 +68,17 @@
     <ProjectReference Include="niflib\niflib.vcxproj">
       <Project>{afdff268-ac3d-4cb4-92a0-8fa5855abe75}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\File.inl" />
+    <None Include="src\NiController_internal.h" />
+    <None Include="src\NiExtraData_internal.h" />
+    <None Include="src\NiNode_internal.h" />
+    <None Include="src\NiObject_internal.h" />
+    <None Include="src\NiParticleSystem_internal.h" />
+    <None Include="src\NiProperties_internal.h" />
+    <None Include="src\NiPSysEmitter_internal.h" />
+    <None Include="src\NiPSysModifier_internal.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -140,7 +161,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -159,7 +180,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -179,7 +200,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -198,7 +219,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\util; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\common; ..\math\src; niflib\include; ..\math\eigen</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>

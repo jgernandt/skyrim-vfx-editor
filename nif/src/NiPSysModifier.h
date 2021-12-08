@@ -17,324 +17,108 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "NiObjectNET.h"
 #include "NiController.h"
-#include "NiParticleSystem.h"
-#include "NiNode.h"
 
 namespace nif
 {
-	class NiNode;
-	class NiParticleSystem;
-
-	class NiPSysModifierCtlr : public NiSingleInterpController
+	struct NiPSysModifier : NiTraversable<NiPSysModifier, NiObject>
 	{
-	public:
-		NiPSysModifierCtlr(native::NiPSysModifierCtlr* obj);
-		NiPSysModifierCtlr(const NiPSysModifierCtlr&) = delete;
+		Property<std::string> name;
+		Property<unsigned int> order;
+		Ptr<NiParticleSystem> target;
+		Property<bool> active;
 
-		virtual ~NiPSysModifierCtlr() = default;
-
-		NiPSysModifierCtlr& operator=(const NiPSysModifierCtlr&) = delete;
-
-		native::NiPSysModifierCtlr& getNative() const;
-
-		IProperty<std::string>& modifierName() { return m_modName; }
-
-	private:
-		Property<std::string> m_modName;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	class NiPSysModifier : public NiObject
+	struct NiPSysAgeDeathModifier : NiTraversable<NiPSysAgeDeathModifier, NiPSysModifier>
 	{
-	public:
-		NiPSysModifier(native::NiPSysModifier* obj);
-		NiPSysModifier(const NiPSysModifier&) = delete;
-
-		virtual ~NiPSysModifier() = default;
-
-		NiPSysModifier& operator=(const NiPSysModifier&) = delete;
-
-		native::NiPSysModifier& getNative() const;
-
-		IProperty<std::string>& name() { return m_name; }
-		const IProperty<std::string>& name() const { return m_name; }
-		
-		IProperty<unsigned int>& order() { return m_order; }
-		const IProperty<unsigned int>& order() const { return m_order; }
-
-		IAssignable<NiParticleSystem>& target() { return m_target; }
-		const IAssignable<NiParticleSystem>& target() const { return m_target; }
-
-		IProperty<bool>& active() { return m_active; }
-		const IProperty<bool>& active() const { return m_active; }
-
-	private:
-		Property<std::string> m_name;
-		Property<unsigned int> m_order;
-		Assignable<NiParticleSystem> m_target;
-		Property<bool> m_active;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	class NiPSysUpdateCtlr : public NiTimeController
+	struct NiPSysBoundUpdateModifier : NiTraversable<NiPSysBoundUpdateModifier, NiPSysModifier> 
 	{
-	public:
-		NiPSysUpdateCtlr();
-		NiPSysUpdateCtlr(native::NiPSysUpdateCtlr* obj);
-		NiPSysUpdateCtlr(const NiPSysUpdateCtlr&) = delete;
-
-		virtual ~NiPSysUpdateCtlr() = default;
-
-		NiPSysUpdateCtlr& operator=(const NiPSysUpdateCtlr&) = delete;
-
-		native::NiPSysUpdateCtlr& getNative() const;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	class NiPSysBoundUpdateModifier : public NiPSysModifier
+	struct NiPSysGravityModifier : NiTraversable<NiPSysGravityModifier, NiPSysModifier>
 	{
-	public:
-		NiPSysBoundUpdateModifier();
-		NiPSysBoundUpdateModifier(native::NiPSysBoundUpdateModifier* obj);
-		NiPSysBoundUpdateModifier(const NiPSysBoundUpdateModifier&) = delete;
+		Ptr<NiNode> gravityObject;
+		Property<Floats<3>> gravityAxis;
+		Property<float> decay;
+		Property<float> strength;
+		Property<ForceType> forceType;
+		Property<float> turbulence;
+		Property<float> turbulenceScale;
+		Property<bool> worldAligned;
 
-		virtual ~NiPSysBoundUpdateModifier() = default;
-
-		NiPSysBoundUpdateModifier& operator=(const NiPSysBoundUpdateModifier&) = delete;
-
-		native::NiPSysBoundUpdateModifier& getNative() const;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-
-	class NiPSysAgeDeathModifier : public NiPSysModifier
+	struct NiPSysPositionModifier : NiTraversable<NiPSysPositionModifier, NiPSysModifier> 
 	{
-	public:
-		NiPSysAgeDeathModifier();
-		NiPSysAgeDeathModifier(native::NiPSysAgeDeathModifier* obj);
-		NiPSysAgeDeathModifier(const NiPSysAgeDeathModifier&) = delete;
-
-		virtual ~NiPSysAgeDeathModifier() = default;
-
-		NiPSysAgeDeathModifier& operator=(const NiPSysAgeDeathModifier&) = delete;
-
-		native::NiPSysAgeDeathModifier& getNative() const;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	class NiPSysGravityModifier : public NiPSysModifier
+	struct NiPSysRotationModifier : NiTraversable<NiPSysRotationModifier, NiPSysModifier>
 	{
-	public:
-		NiPSysGravityModifier();
-		NiPSysGravityModifier(native::NiPSysGravityModifier* obj);
-		NiPSysGravityModifier(const NiPSysGravityModifier&) = delete;
+		Property<math::degf> speed;
+		Property<math::degf> speedVar;
+		Property<math::degf> angle;
+		Property<math::degf> angleVar;
+		Property<bool> randomSign;
 
-		virtual ~NiPSysGravityModifier() = default;
-
-		NiPSysGravityModifier& operator=(const NiPSysGravityModifier&) = delete;
-
-		native::NiPSysGravityModifier& getNative() const;
-
-		IAssignable<nif::NiNode>& gravityObject() { return m_gravityObj; }
-		IProperty<Floats<3>>& gravityAxis() { return m_gravityAxis; }
-		IProperty<float>& decay() { return m_decay; }
-		IProperty<float>& strength() { return m_strength; }
-		IProperty<ForceType>& forceType() { return m_forceType; }
-		IProperty<float>& turbulence() { return m_turbulence; }
-		IProperty<float>& turbulenceScale() { return m_turbulenceScale; }
-		IProperty<bool>& worldAligned() { return m_worldAligned; }
-
-	private:
-		Assignable<nif::NiNode> m_gravityObj;
-		Property<Floats<3>, native::float3_t> m_gravityAxis;
-		Property<float> m_decay;
-		Property<float> m_strength;
-		Property<ForceType, native::ForceType> m_forceType;
-		Property<float> m_turbulence;
-		Property<float> m_turbulenceScale; 
-		Property<bool> m_worldAligned;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-
-	class NiPSysPositionModifier : public NiPSysModifier
+	struct BSPSysScaleModifier : NiTraversable<BSPSysScaleModifier, NiPSysModifier>
 	{
-	public:
-		NiPSysPositionModifier();
-		NiPSysPositionModifier(native::NiPSysPositionModifier* obj);
-		NiPSysPositionModifier(const NiPSysPositionModifier&) = delete;
+		Property<std::vector<float>> scales;
 
-		virtual ~NiPSysPositionModifier() = default;
-
-		NiPSysPositionModifier& operator=(const NiPSysPositionModifier&) = delete;
-
-		native::NiPSysPositionModifier& getNative() const;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 
-	//Somewhat annoying to have to do this just because we cannot inject this conversion into our current Property template.
-	//We should be able to fix that, but it only comes into play in a few places right now.
-	//Edit: This fails the get/set tests in some release builds. Can't see an obvious reason. Ignore this design for now.
-	template<typename T, typename ObjType>
-	class DegRadConverter final : public PropertyBase<T>
+	struct BSPSysSimpleColorModifier : NiTraversable<BSPSysSimpleColorModifier, NiPSysModifier>
 	{
-	public:
-		template<typename ObjType, typename BaseType>
-		DegRadConverter(ObjType* obj, T(BaseType::* g)() const, void(BaseType::* s)(T)) :
-			m_get{ std::bind(g, obj) },
-			m_set{ std::bind(s, obj, std::placeholders::_1) }
+		struct
 		{
-			static_assert(std::is_base_of<BaseType, ObjType>::value);
-			assert(obj && g && s);
-		}
+			Property<ColRGBA> value;
 
-		virtual float get() const override
+			const Property<float> RGBbegin{ 0.0f };
+			Property<float> RGBend;
+
+			const Property<float> Abegin{ 0.0f };
+			const Property<float> Aend{ 0.0f };
+		} col1;
+		struct
 		{
-			assert(m_get);
-			return static_cast<math::degrees<T>>(math::radians<T>(m_get())).value;
-		}
-		virtual void set(const float& f) override
+			Property<ColRGBA> value;
+
+			Property<float> RGBbegin;
+			Property<float> RGBend;
+
+			Property<float> Abegin;
+			Property<float> Aend;
+		} col2;
+		struct
 		{
-			assert(m_set);
-			if (f != get()) {
-				m_set(static_cast<math::radians<T>>(math::degrees<T>(f)).value);
-				this->notify(f);
-			}
-		}
+			Property<ColRGBA> value;
 
-	private:
-		std::function<T()> m_get;
-		std::function<void(const T&)> m_set;
-	};
+			Property<float> RGBbegin;
+			const Property<float> RGBend{ 1.0f };
 
-	class NiPSysRotationModifier : public NiPSysModifier
-	{
-	public:
-		NiPSysRotationModifier();
-		NiPSysRotationModifier(native::NiPSysRotationModifier* obj);
-		NiPSysRotationModifier(const NiPSysRotationModifier&) = delete;
+			const Property<float> Abegin{ 1.0f };
+			const Property<float> Aend{ 1.0f };
+		} col3;
 
-		virtual ~NiPSysRotationModifier() = default;
-
-		NiPSysRotationModifier& operator=(const NiPSysRotationModifier&) = delete;
-
-		native::NiPSysRotationModifier& getNative() const;
-
-		IProperty<float>& speed() { return m_speed; }
-		IProperty<float>& speedVar() { return m_speedVar; }
-		IProperty<float>& angle() { return m_angle; }
-		IProperty<float>& angleVar() { return m_angleVar; }
-		IProperty<bool>& randomSign() { return m_randomSign; }
-
-	private:
-		struct Speed : PropertyBase<float>
-		{
-			Speed(NiPSysRotationModifier& super) : m_super{ super } {}
-
-			virtual float get() const override;
-			virtual void set(const float& f) override;
-
-			NiPSysRotationModifier& m_super;
-
-		};
-		struct SpeedVar : PropertyBase<float>
-		{
-			SpeedVar(NiPSysRotationModifier& super) : m_super{ super } {}
-
-			virtual float get() const override;
-			virtual void set(const float& f) override;
-
-			NiPSysRotationModifier& m_super;
-
-		};
-		struct Angle : PropertyBase<float>
-		{
-			Angle(NiPSysRotationModifier& super) : m_super{ super } {}
-
-			virtual float get() const override;
-			virtual void set(const float& f) override;
-
-			NiPSysRotationModifier& m_super;
-
-		};
-		struct AngleVar : PropertyBase<float>
-		{
-			AngleVar(NiPSysRotationModifier& super) : m_super{ super } {}
-
-			virtual float get() const override;
-			virtual void set(const float& f) override;
-
-			NiPSysRotationModifier& m_super;
-
-		};
-
-		Speed m_speed;
-		SpeedVar m_speedVar;
-		Angle m_angle;
-		AngleVar m_angleVar;
-
-		//DegRadConverter<float, native::NiPSysRotationModifier> m_speed;
-		//DegRadConverter<float, native::NiPSysRotationModifier> m_speedVar;
-		//DegRadConverter<float, native::NiPSysRotationModifier> m_angle;
-		//DegRadConverter<float, native::NiPSysRotationModifier> m_angleVar;
-		Property<bool> m_randomSign;
-	};
-
-	class BSPSysScaleModifier : public NiPSysModifier
-	{
-	public:
-		BSPSysScaleModifier();
-		BSPSysScaleModifier(native::BSPSysScaleModifier* obj);
-		BSPSysScaleModifier(const BSPSysScaleModifier&) = delete;
-
-		virtual ~BSPSysScaleModifier() = default;
-
-		BSPSysScaleModifier& operator=(const BSPSysScaleModifier&) = delete;
-
-		native::BSPSysScaleModifier& getNative() const;
-
-		IProperty<std::vector<float>>& scales() { return m_scales; }
-
-	private:
-		Property<std::vector<float>> m_scales;
-	};
-
-	class BSPSysSimpleColorModifier : public NiPSysModifier
-	{
-	public:
-		BSPSysSimpleColorModifier();
-		BSPSysSimpleColorModifier(native::BSPSysSimpleColorModifier* obj);
-		BSPSysSimpleColorModifier(const BSPSysSimpleColorModifier&) = delete;
-
-		virtual ~BSPSysSimpleColorModifier() = default;
-
-		BSPSysSimpleColorModifier& operator=(const BSPSysSimpleColorModifier&) = delete;
-
-		native::BSPSysSimpleColorModifier& getNative() const;
-
-		IProperty<float>& alpha2Begin() { return m_fadeInEnd; }
-		const IProperty<float>& alpha2Begin() const { return m_fadeInEnd; }
-		IProperty<float>& alpha2End() { return m_fadeOutBegin; }
-		const IProperty<float>& alpha2End() const { return m_fadeOutBegin; }
-		IProperty<float>& rgb1End() { return m_col1End; }
-		const IProperty<float>& rgb1End() const { return m_col1End; }
-		IProperty<float>& rgb2Begin() { return m_col2Begin; }
-		const IProperty<float>& rgb2Begin() const { return m_col2Begin; }
-		IProperty<float>& rgb2End() { return m_col2End; }
-		const IProperty<float>& rgb2End() const { return m_col2End; }
-		IProperty<float>& rgb3Begin() { return m_col3Begin; }
-		const IProperty<float>& rgb3Begin() const { return m_col3Begin; }
-		IProperty<nif::ColRGBA>& col1() { return m_col1; }
-		const IProperty<nif::ColRGBA>& col1() const { return m_col1; }
-		IProperty<nif::ColRGBA>& col2() { return m_col2; }
-		const IProperty<nif::ColRGBA>& col2() const { return m_col2; }
-		IProperty<nif::ColRGBA>& col3() { return m_col3; }
-		const IProperty<nif::ColRGBA>& col3() const { return m_col3; }
-
-	private:
-		Property<float> m_fadeInEnd;
-		Property<float> m_fadeOutBegin;
-		Property<float> m_col1End;
-		Property<float> m_col2Begin;
-		Property<float> m_col2End;
-		Property<float> m_col3Begin;
-		Property<nif::ColRGBA> m_col1;
-		Property<nif::ColRGBA> m_col2;
-		Property<nif::ColRGBA> m_col3;
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
 	};
 }

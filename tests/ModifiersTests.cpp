@@ -1,386 +1,285 @@
+//Copyright 2021 Jonas Gernandt
+//
+//This file is part of SVFX Editor, a program for creating visual effects
+//in the NetImmerse format.
+//
+//SVFX Editor is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+//SVFX Editor is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
+
 #include "pch.h"
 #include "CppUnitTest.h"
 #include "CommonTests.h"
-#include "nodes.h"
+#include "ModifiersTests.h"
 
-namespace nif
+namespace nodes
 {
-	TEST_CLASS(NiPSysModifierCtlrTests)
-	{
-		nif::NiPSysEmitterCtlr concrete_obj;
-		nif::NiPSysModifierCtlr& obj = concrete_obj;
+	using namespace nif;
 
+	TEST_CLASS(Modifier)
+	{
+	public:
+
+		//Test that modifiers change their name to match their order
 		TEST_METHOD(ModifierName)
 		{
-			StringPropertyTest(obj.modifierName());
-		}
-	};
+			File file{ File::Version::SKYRIM_SE };
 
-	TEST_CLASS(NiPSysModifierTests)
-	{
-		nif::NiPSysRotationModifier concrete_obj;
-		nif::NiPSysModifier& obj = concrete_obj;
-		std::mt19937 m_engine;
+			auto obj0 = file.create<NiPSysBoxEmitter>();
+			auto node = node::Default<node::BoxEmitter>{}.create(file, obj0);
 
-		TEST_METHOD(Name)
-		{
-			StringPropertyTest(obj.name());
+			obj0->order.set(3);
+			Assert::IsTrue(obj0->name.get() == "Modifier:3");
 		}
 
-		TEST_METHOD(Order)
+		//Test that modifier ctlrs receive name changes from their modifier
+		TEST_METHOD(ControllerName)
 		{
-			PropertyTest<unsigned int>(obj.order(), m_engine);
+			File file{ File::Version::SKYRIM_SE };
+
+			auto obj0 = file.create<NiPSysBoxEmitter>();
+			auto ctlr0 = file.create<NiPSysEmitterCtlr>();
+			auto node0 = node::Default<node::BoxEmitter>{}.create(file, obj0, ctlr0);
+
+			obj0->name.set("wabnoearnb");
+			Assert::IsTrue(ctlr0->modifierName.get() == obj0->name.get());
+
+			auto obj1 = file.create<NiPSysModifier>();
+			auto ctlr1 = file.create<NiPSysModifierCtlr>();
+			auto node1 = node::Default<node::DummyModifier>{}.create(file, obj1);
+			node1->addController(ctlr1);
+
+			obj1->name.set("awbvaierubn");
+			Assert::IsTrue(ctlr1->modifierName.get() == obj1->name.get());
 		}
 
-		TEST_METHOD(Target)
-		{
-			AssignableTest<nif::NiParticleSystem>(obj.target());
-		}
-
-		TEST_METHOD(Active)
-		{
-			PropertyTest<bool>(obj.active(), m_engine);
-		}
-	};
-
-	TEST_CLASS(NiPSysRotationModifierTests)
-	{
-		nif::NiPSysRotationModifier obj;
-		std::mt19937 m_engine;
-
-		TEST_METHOD(Speed)
-		{
-			PropertyTest<float>(obj.speed(), m_engine, 1.0e-4f);
-		}
-
-		TEST_METHOD(SpeedVar)
-		{
-			PropertyTest<float>(obj.speedVar(), m_engine, 1.0e-4f);
-		}
-
-		TEST_METHOD(Angle)
-		{
-			PropertyTest<float>(obj.angle(), m_engine, 1.0e-4f);
-		}
-
-		TEST_METHOD(AngleVar)
-		{
-			PropertyTest<float>(obj.angleVar(), m_engine, 1.0e-4f);
-		}
-
-		TEST_METHOD(RandomSign)
-		{
-			PropertyTest<bool>(obj.randomSign(), m_engine);
-		}
-	};
-
-	TEST_CLASS(BSPSysScaleModifierTests)
-	{
-		nif::BSPSysScaleModifier obj;
-		std::mt19937 m_engine;
-
-		TEST_METHOD(Scales)
-		{
-			std::uniform_int_distribution<int> L(1, 20);
-			std::uniform_real_distribution<float> D;
-			for (int N = 0; N < 3; N++) {//run 3 tests
-				//Populate a vector of random length with random values
-				std::vector<float> scales(L(m_engine));
-				for (size_t i = 0; i < scales.size(); i++)
-					scales[i] = D(m_engine);
-				//Set, get back and compare
-				obj.scales().set(scales);
-				std::vector<float> ret = obj.scales().get();
-				Assert::IsTrue(ret == scales);
-			}
-		}
-	};
-
-	TEST_CLASS(BSPSysSimpleColorModifierTests)
-	{
-		nif::BSPSysSimpleColorModifier obj;
-		std::mt19937 m_engine;
-
-		TEST_METHOD(FadeInEnd)
-		{
-			PropertyTest<float>(obj.alpha2Begin(), m_engine);
-		}
-		TEST_METHOD(FadeOutBegin)
-		{
-			PropertyTest<float>(obj.alpha2End(), m_engine);
-		}
-		TEST_METHOD(Col1End)
-		{
-			PropertyTest<float>(obj.rgb1End(), m_engine);
-		}
-		TEST_METHOD(Col2Begin)
-		{
-			PropertyTest<float>(obj.rgb2Begin(), m_engine);
-		}
-		TEST_METHOD(Col2End)
-		{
-			PropertyTest<float>(obj.rgb2End(), m_engine);
-		}
-		TEST_METHOD(Col3Begin)
-		{
-			PropertyTest<float>(obj.rgb3Begin(), m_engine);
-		}
-		TEST_METHOD(Col1)
-		{
-			PropertyTest<nif::ColRGBA>(obj.col1(), m_engine);
-		}
-		TEST_METHOD(Col2)
-		{
-			PropertyTest<nif::ColRGBA>(obj.col2(), m_engine);
-		}
-		TEST_METHOD(Col3)
-		{
-			PropertyTest<nif::ColRGBA>(obj.col3(), m_engine);
-		}
-	};
-}
-
-namespace node
-{
-	TEST_CLASS(ModifierTests)
-	{
-		TEST_METHOD(Target)
+		TEST_METHOD(Connector_Target)
 		{
 			//Test that
 			//*we can connect to a sender of IModifiable
 			//*we take the expected action on an IModifiable interface
 
+			File file{ File::Version::SKYRIM_SE };
+			auto obj = file.create<NiPSysModifier>();
+			auto ctlr = file.create<NiPSysModifierCtlr>();
+
 			MockModifiable target1;
 			MockModifiable target2;
-			ConnectorTester<Modifier> tester(std::make_unique<RotationModifier>());
+			ConnectorTester<node::Modifier> tester(node::Default<node::DummyModifier>{}.create(file, obj));
+			tester.getNode()->addController(ctlr);
 
-			tester.tryConnect<void, IModifiable>(Modifier::TARGET, false, &target1);
-			tester.tryConnect<void, IModifiable>(Modifier::TARGET, false, &target2);
+			tester.tryConnect<void, node::IModifiable>(node::Modifier::TARGET, false, &target1);
+			tester.tryConnect<void, node::IModifiable>(node::Modifier::TARGET, false, &target2);
 
-			//Regardless of the type of modifier, it should be inserted
-			Assert::IsTrue(target2.modifiers().size() == 1);
-			Assert::IsTrue(target2.modifiers().find(tester.getNode()->object()) != -1);
+			//Test mod addition
+			Assert::IsTrue(target1.modsAdded.size() == target1.modsRemoved.size());
+			Assert::IsTrue(target2.modsAdded.size() == 1);
+			Assert::IsTrue(target2.modsAdded.front() == obj.get());
+			target2.modsAdded.clear();
+			Assert::IsTrue(target2.modsRemoved.empty());
 
-			//If it has a controller, that should also be inserted (test separately)
-			/*if (tester.getNode()->controller()) {
-				Assert::IsTrue(target2.controllers().size() == 1);
-				Assert::IsTrue(target2.controllers().find(*tester.getNode()->controller()) != -1);
-			}*/
+			//Test ctlr addition
+			Assert::IsTrue(target1.ctlrsAdded.size() == target1.ctlrsRemoved.size());
+			Assert::IsTrue(target2.ctlrsAdded.size() == 1);
+			Assert::IsTrue(target2.ctlrsAdded.front() == ctlr.get());
+			target2.ctlrsAdded.clear();
+			Assert::IsTrue(target2.ctlrsRemoved.empty());
 
 			tester.disconnect(&target2);
 
-			Assert::IsTrue(target2.modifiers().size() == 0);
+			//Test mod removal
+			Assert::IsTrue(target2.modsAdded.empty());
+			Assert::IsTrue(target2.modsRemoved.size() == 1);
+			Assert::IsTrue(target2.modsRemoved.front() == obj.get());
+
+			//Test ctlr removal
+			Assert::IsTrue(target2.ctlrsAdded.empty());
+			Assert::IsTrue(target2.ctlrsRemoved.size() == 1);
+			Assert::IsTrue(target2.ctlrsRemoved.front() == ctlr.get());
 		}
 
-		TEST_METHOD(NextModifier)
+		TEST_METHOD(Connector_NextModifier)
 		{
 			//Test that
 			//*we can connect to a receiver of IModifiable
 			//*we expose no interface to them
-			ConnectorTester<Modifier> tester(std::make_unique<RotationModifier>());
 
-			tester.tryConnect<IModifiable, void>(Modifier::NEXT_MODIFIER, false, nullptr);
-			IModifiable* ifc = tester.tryConnect<IModifiable, void>(Modifier::NEXT_MODIFIER, false, nullptr);
+			File file{ File::Version::SKYRIM_SE };
+			ConnectorTester<node::Modifier> tester(node::Default<node::DummyModifier>{}.create(file));
+
+			tester.tryConnect<node::IModifiable, void>(node::Modifier::NEXT_MODIFIER, false, nullptr);
+			auto ifc = tester.tryConnect<node::IModifiable, void>(node::Modifier::NEXT_MODIFIER, false, nullptr);
 
 			Assert::IsNull(ifc);
 		}
 
 		TEST_METHOD(Sequence)
 		{
+			File file{ File::Version::SKYRIM_SE };
 			MockModifiable target;
 			TestRoot root;
 
 			//Make a sequence of modifiers and connect them to an interface
-			Modifier* mod1 = root.newChild<RotationModifier>();
-			Modifier* mod2 = root.newChild<RotationModifier>();
 
-			if (Field* f1 = mod1->getField(Modifier::NEXT_MODIFIER))
-				if (Field* f2 = mod2->getField(Modifier::TARGET))
+			auto obj0 = file.create<NiPSysModifier>();
+			auto ctlr0 = file.create<NiPSysModifierCtlr>();
+			node::Modifier* node0 = root.newChild<node::DummyModifier>(obj0);
+			node0->addController(ctlr0);
+
+			auto obj1 = file.create<NiPSysModifier>();
+			auto ctlr1 = file.create<NiPSysModifierCtlr>();
+			node::Modifier* node1 = root.newChild<node::DummyModifier>(obj1);
+			node1->addController(ctlr1);
+
+
+			if (node::Field* f0 = node0->getField(node::Modifier::NEXT_MODIFIER)) {
+				if (node::Field* f1 = node1->getField(node::Modifier::TARGET))
+					if (f0->connector && f1->connector) {
+						f0->connector->onClick();
+						f1->connector->onRelease();
+					}
+			}
+			if (node::Field* f0 = node0->getField(node::Modifier::TARGET)) {
+				if (f0->connector) {
+					auto c2 = root.newChild<TestConnector>(target);
+					f0->connector->onClick();
+					c2->onRelease();
+				}
+			}
+
+			//Assert mods and ctlrs were added in the correct order
+			Assert::IsTrue(target.modsAdded.size() == 2);
+			Assert::IsTrue(target.modsAdded[0] == obj0.get());
+			Assert::IsTrue(target.modsAdded[1] == obj1.get());
+			target.modsAdded.clear();
+			Assert::IsTrue(target.modsRemoved.empty());
+
+			Assert::IsTrue(target.ctlrsAdded.size() == 2);
+			Assert::IsTrue(target.ctlrsAdded[0] == ctlr0.get());
+			Assert::IsTrue(target.ctlrsAdded[1] == ctlr1.get());
+			target.ctlrsAdded.clear();
+			Assert::IsTrue(target.ctlrsRemoved.empty());
+
+
+			//Make another sequence
+
+			auto obj2 = file.create<NiPSysModifier>();
+			auto ctlr2 = file.create<NiPSysModifierCtlr>();
+			node::Modifier* node2 = root.newChild<node::DummyModifier>(obj2);
+			node2->addController(ctlr2);
+
+			auto obj3 = file.create<NiPSysModifier>();
+			auto ctlr3 = file.create<NiPSysModifierCtlr>();
+			node::Modifier* node3 = root.newChild<node::DummyModifier>(obj3);
+			node3->addController(ctlr3);
+
+			if (node::Field* f2 = node2->getField(node::Modifier::NEXT_MODIFIER))
+				if (node::Field* f3 = node3->getField(node::Modifier::TARGET))
+					if (f2->connector && f3->connector) {
+						f2->connector->onClick();
+						f3->connector->onRelease();
+					}
+
+			//Append it to the first
+			if (node::Field* f1 = node1->getField(node::Modifier::NEXT_MODIFIER))
+				if (node::Field* f2 = node2->getField(node::Modifier::TARGET))
 					if (f1->connector && f2->connector) {
 						f1->connector->onClick();
 						f2->connector->onRelease();
 					}
 
-			class TestConnector : public Receiver<void>, public Sender<IModifiable>, public gui::SingleConnector
-			{
-			public:
-				TestConnector(IModifiable& ifc) : Sender<IModifiable>(ifc), SingleConnector(*this, *this) {}
-			};
+			//Assert that only the new mods were added, in order
+			Assert::IsTrue(target.modsAdded.size() == 2);
+			Assert::IsTrue(target.modsAdded[0] == obj2.get());
+			Assert::IsTrue(target.modsAdded[1] == obj3.get());
+			target.modsAdded.clear();
+			Assert::IsTrue(target.modsRemoved.empty());
 
-			if (Field* f1 = mod1->getField(Modifier::TARGET))
-				if (f1->connector) {
-					auto c2 = root.newChild<TestConnector>(target);
-					f1->connector->onClick();
-					c2->onRelease();
-				}
+			Assert::IsTrue(target.ctlrsAdded.size() == 2);
+			Assert::IsTrue(target.ctlrsAdded[0] == ctlr2.get());
+			Assert::IsTrue(target.ctlrsAdded[1] == ctlr3.get());
+			target.ctlrsAdded.clear();
+			Assert::IsTrue(target.ctlrsRemoved.empty());
 
-			//Assert mods were added in the corret order
-			Assert::IsTrue(target.modifiers().size() == 2);
-			Assert::IsTrue(target.modifiers().find(mod1->object()) == 0);
-			Assert::IsTrue(target.modifiers().find(mod2->object()) == 1);
-			Assert::IsTrue(mod1->object().order().get() == 0);
-			Assert::IsTrue(mod2->object().order().get() == 1);
-			Assert::IsTrue(mod1->object().name().get() == "Modifier:0");
-			Assert::IsTrue(mod2->object().name().get() == "Modifier:1");
-
-			//Make another sequence
-			Modifier* mod3 = root.newChild<RotationModifier>();
-			Modifier* mod4 = root.newChild<RotationModifier>();
-			if (Field* f3 = mod3->getField(Modifier::NEXT_MODIFIER))
-				if (Field* f4 = mod4->getField(Modifier::TARGET))
-					if (f3->connector && f4->connector) {
-						f3->connector->onClick();
-						f4->connector->onRelease();
-					}
-			//Append it to the first
-			if (Field* f2 = mod2->getField(Modifier::NEXT_MODIFIER))
-				if (Field* f3 = mod3->getField(Modifier::TARGET))
-					if (f2->connector && f3->connector) {
-						f2->connector->onClick();
-						f3->connector->onRelease();
-					}
-			//Assert their mods were added and the existing sequence was unchanged (and not duplicated)
-			Assert::IsTrue(target.modifiers().size() == 4);
-			Assert::IsTrue(target.modifiers().find(mod1->object()) == 0);
-			Assert::IsTrue(target.modifiers().find(mod2->object()) == 1);
-			Assert::IsTrue(target.modifiers().find(mod3->object()) == 2);
-			Assert::IsTrue(target.modifiers().find(mod4->object()) == 3);
-			Assert::IsTrue(mod1->object().order().get() == 0);
-			Assert::IsTrue(mod2->object().order().get() == 1);
-			Assert::IsTrue(mod3->object().order().get() == 2);
-			Assert::IsTrue(mod4->object().order().get() == 3);
-			Assert::IsTrue(mod1->object().name().get() == "Modifier:0");
-			Assert::IsTrue(mod2->object().name().get() == "Modifier:1");
-			Assert::IsTrue(mod3->object().name().get() == "Modifier:2");
-			Assert::IsTrue(mod4->object().name().get() == "Modifier:3");
-
-			//If a mod is added to the beginning (for whatever reason), the others should update name and order
-			nif::NiPSysAgeDeathModifier adm;
-			target.modifiers().insert(0, adm);
-			Assert::IsTrue(target.modifiers().size() == 5);
-			Assert::IsTrue(target.modifiers().find(mod1->object()) == 1);
-			Assert::IsTrue(target.modifiers().find(mod2->object()) == 2);
-			Assert::IsTrue(target.modifiers().find(mod3->object()) == 3);
-			Assert::IsTrue(target.modifiers().find(mod4->object()) == 4);
-			Assert::IsTrue(mod1->object().order().get() == 1);
-			Assert::IsTrue(mod2->object().order().get() == 2);
-			Assert::IsTrue(mod3->object().order().get() == 3);
-			Assert::IsTrue(mod4->object().order().get() == 4);
-			Assert::IsTrue(mod1->object().name().get() == "Modifier:1");
-			Assert::IsTrue(mod2->object().name().get() == "Modifier:2");
-			Assert::IsTrue(mod3->object().name().get() == "Modifier:3");
-			Assert::IsTrue(mod4->object().name().get() == "Modifier:4");
-
-			//Now reverse everything
-			target.modifiers().erase(0);
-			Assert::IsTrue(target.modifiers().size() == 4);
-			Assert::IsTrue(target.modifiers().find(mod1->object()) == 0);
-			Assert::IsTrue(target.modifiers().find(mod2->object()) == 1);
-			Assert::IsTrue(target.modifiers().find(mod3->object()) == 2);
-			Assert::IsTrue(target.modifiers().find(mod4->object()) == 3);
-			Assert::IsTrue(mod1->object().order().get() == 0);
-			Assert::IsTrue(mod2->object().order().get() == 1);
-			Assert::IsTrue(mod3->object().order().get() == 2);
-			Assert::IsTrue(mod4->object().order().get() == 3);
-			Assert::IsTrue(mod1->object().name().get() == "Modifier:0");
-			Assert::IsTrue(mod2->object().name().get() == "Modifier:1");
-			Assert::IsTrue(mod3->object().name().get() == "Modifier:2");
-			Assert::IsTrue(mod4->object().name().get() == "Modifier:3");
-
-			//Now remove a part of the sequence
-			if (Field* f3 = mod3->getField(Modifier::TARGET))
-				if (f3->connector)
-					f3->connector->disconnect();
-			//And make sure they were removed (but the remaining sequence was not)
-			Assert::IsTrue(target.modifiers().size() == 2);
-			Assert::IsTrue(target.modifiers().find(mod1->object()) == 0);
-			Assert::IsTrue(target.modifiers().find(mod2->object()) == 1);
-			Assert::IsTrue(mod1->object().order().get() == 0);
-			Assert::IsTrue(mod2->object().order().get() == 1);
-			Assert::IsTrue(mod1->object().name().get() == "Modifier:0");
-			Assert::IsTrue(mod2->object().name().get() == "Modifier:1");
-
-			//Remove the last two, for good measure
-			if (Field* f2 = mod2->getField(Modifier::TARGET))
+			//Disconnect the last two 
+			if (node::Field* f2 = node2->getField(node::Modifier::TARGET))
 				if (f2->connector)
 					f2->connector->disconnect();
-			Assert::IsTrue(target.modifiers().size() == 1);
-			Assert::IsTrue(target.modifiers().find(mod1->object()) == 0);
-			Assert::IsTrue(mod1->object().order().get() == 0);
-			Assert::IsTrue(mod1->object().name().get() == "Modifier:0");
 
-			if (Field* f1 = mod1->getField(Modifier::TARGET))
-				if (f1->connector)
-					f1->connector->disconnect();
-			Assert::IsTrue(target.modifiers().size() == 0);
+			//They should have been removed, last to first
+			Assert::IsTrue(target.modsAdded.empty());
+			Assert::IsTrue(target.modsRemoved.size() == 2);
+			Assert::IsTrue(target.modsRemoved[0] == obj3.get());
+			Assert::IsTrue(target.modsRemoved[1] == obj2.get());
+			target.modsRemoved.clear();
+
+			Assert::IsTrue(target.ctlrsAdded.empty());
+			Assert::IsTrue(target.ctlrsRemoved.size() == 2);
+			Assert::IsTrue(target.ctlrsRemoved[0] == ctlr3.get());
+			Assert::IsTrue(target.ctlrsRemoved[1] == ctlr2.get());
+			target.ctlrsRemoved.clear();
+
+			//Remove the remaining two, for good measure
+			if (node::Field* f0 = node0->getField(node::Modifier::TARGET))
+				if (f0->connector)
+					f0->connector->disconnect();
+
+			Assert::IsTrue(target.modsAdded.empty());
+			Assert::IsTrue(target.modsRemoved.size() == 2);
+			Assert::IsTrue(target.modsRemoved[0] == obj1.get());
+			Assert::IsTrue(target.modsRemoved[1] == obj0.get());
+			target.modsRemoved.clear();
+
+			Assert::IsTrue(target.ctlrsAdded.empty());
+			Assert::IsTrue(target.ctlrsRemoved.size() == 2);
+			Assert::IsTrue(target.ctlrsRemoved[0] == ctlr1.get());
+			Assert::IsTrue(target.ctlrsRemoved[1] == ctlr0.get());
+			target.ctlrsRemoved.clear();
 		}
 	};
 
-	TEST_CLASS(RotationModifierTests)
+	TEST_CLASS(GravityModifierTests)
 	{
+	public:
+
+		//Gravity object should send Assignable<NiNode>, single
+		TEST_METHOD(GravityObject)
+		{
+			File file{ File::Version::SKYRIM_SE };
+			auto obj = file.create<NiPSysGravityModifier>();
+			AssignableSenderTest(node::Default<node::PlanarForceField>{}.create(file, obj), 
+				obj->gravityObject, node::GravityModifier::GRAVITY_OBJECT, false);
+		}
+	};
+
+	TEST_CLASS(RotationModifier)
+	{
+	public:
+
 		//We should send a constant rotations requirement
 		TEST_METHOD(RequirementTest)
 		{
-			class TestConnector : public Receiver<void>, public Sender<IModifiable>, public gui::SingleConnector
-			{
-			public:
-				TestConnector(IModifiable& ifc) : Sender<IModifiable>(ifc), SingleConnector(*this, *this) {}
-			};
-
-			MockModifiable target;
-			TestRoot root;
-			auto mod1 = root.newChild<RotationModifier>();
-
-			gui::Connector* c1 = nullptr;
-			gui::Connector* c2 = nullptr;
-			if (Field* f1 = mod1->getField(Modifier::TARGET))
-				if (f1->connector) {
-					c1 = f1->connector;
-					c2 = root.newChild<TestConnector>(target);
-					c1->onClick();
-					c2->onRelease();
-				}
-
-			Assert::IsTrue(target.requirements().count(Modifier::Requirement::ROTATION) == 1);
-
-			if (c1)
-				c1->disconnect();
-
-			Assert::IsTrue(target.requirements().count(Modifier::Requirement::ROTATION) == 0);
+			RequirementsTest<node::RotationModifier, node::ModRequirement::ROTATION>{}.run();
 		}
 	};
 
 	TEST_CLASS(SimpleColourModifierTests)
 	{
+	public:
+
 		//We should send a constant colour requirement
 		TEST_METHOD(RequirementTest)
 		{
-			class TestConnector : public Receiver<void>, public Sender<IModifiable>, public gui::SingleConnector
-			{
-			public:
-				TestConnector(IModifiable& ifc) : Sender<IModifiable>(ifc), SingleConnector(*this, *this) {}
-			};
-
-			MockModifiable target;
-			TestRoot root;
-			auto mod1 = root.newChild<SimpleColourModifier>();
-
-			gui::Connector* c1 = nullptr;
-			gui::Connector* c2 = nullptr;
-			if (Field* f1 = mod1->getField(Modifier::TARGET))
-				if (f1->connector) {
-					c1 = f1->connector;
-					c2 = root.newChild<TestConnector>(target);
-					c1->onClick();
-					c2->onRelease();
-				}
-
-			Assert::IsTrue(target.requirements().count(Modifier::Requirement::COLOUR) == 1);
-
-			if (c1)
-				c1->disconnect();
-
-			Assert::IsTrue(target.requirements().count(Modifier::Requirement::COLOUR) == 0);
+			RequirementsTest<node::SimpleColourModifier, node::ModRequirement::COLOUR>{}.run();
 		}
 	};
 }

@@ -21,111 +21,91 @@
 #include "style.h"
 #include "widget_types.h"
 
-node::ExtraData::TargetField::TargetField(const std::string& name, ExtraData& node) :
-	Field(name), m_rvr(node.object())
+node::ExtraData::TargetField::TargetField(const std::string& name, NodeBase& node, const ni_ptr<NiExtraData>& obj) :
+	Field(name), m_rvr(obj)
 {
 	connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::MultiConnector>(m_sdr, m_rvr));
 }
 
-node::ExtraData::NameField::NameField(const std::string& name, ExtraData& node) : Field(name)
-{
-	node.newChild<gui::Text>(name);
-	node.newChild<StringInput>(node.object().name());
-}
-
-node::ExtraData::ExtraData(std::unique_ptr<nif::NiExtraData>&& obj) : NodeBase(std::move(obj))
+node::ExtraData::ExtraData(const ni_ptr<NiExtraData>& obj)
 {
 	setClosable(true);
 	setColour(COL_TITLE, TitleCol_XData);
 	setColour(COL_TITLE_ACTIVE, TitleCol_XDataActive);
 
-	newField<TargetField>(TARGET, *this);
-}
-
-nif::NiExtraData& node::ExtraData::object()
-{
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiExtraData*>(getObjects()[0].get());
+	m_targetField = newField<TargetField>(TARGET, *this, obj);
 }
 
 
-node::StringDataShared::StringDataShared(std::unique_ptr<nif::NiStringExtraData>&& obj) :
-	ExtraData(std::move(obj))
-{
-}
-
-nif::NiStringExtraData& node::StringDataShared::object()
-{
-	assert(!getObjects().empty() && getObjects()[0]);
-	return *static_cast<nif::NiStringExtraData*>(getObjects()[0].get());
-}
+node::StringDataShared::StringDataShared(const ni_ptr<NiStringExtraData>& obj) :
+	ExtraData(obj)
+{}
 
 
-node::StringData::StringData() : StringData(std::make_unique<nif::NiStringExtraData>()) {}
-
-node::StringData::StringData(std::unique_ptr<nif::NiStringExtraData>&& obj) : 
-	StringDataShared(std::move(obj))
+node::StringData::StringData(const ni_ptr<nif::NiStringExtraData>& obj) :
+	StringDataShared(obj)
 {
 	setTitle("String data");
 	setSize({ WIDTH, HEIGHT });
 
-	newField<NameField>(NAME, *this);
+	newChild<gui::Text>(NAME);
+	newChild<StringInput>(make_ni_ptr(std::static_pointer_cast<NiExtraData>(obj), &NiExtraData::name));
 
-	struct ValueField : Field
-	{
-		ValueField(const std::string& name, StringData& node) : Field(name)
-		{
-			node.newChild<gui::Text>(name);
-			node.newChild<StringInput>(node.object().value());
-		}
-	};
-	newField<ValueField>(VALUE, *this);
+	newChild<gui::Text>(VALUE);
+	newChild<StringInput>(make_ni_ptr(obj, &NiStringExtraData::value));
 
 	//until we have some other way to determine connector position for loading placement
 	getField(TARGET)->connector->setTranslation({ 0.0f, 38.0f });
 }
 
-node::WeaponTypeData::WeaponTypeData() : WeaponTypeData(std::make_unique<nif::NiStringExtraData>()) {}
+node::StringData::~StringData()
+{
+	disconnect();
+}
 
-node::WeaponTypeData::WeaponTypeData(std::unique_ptr<nif::NiStringExtraData>&& obj) : 
-	StringDataShared(std::move(obj))
+node::WeaponTypeData::WeaponTypeData(const ni_ptr<nif::NiStringExtraData>& obj) :
+	StringDataShared(obj)
 {
 	setTitle("Weapon type data");
 	setSize({ WIDTH, HEIGHT });
 
-	object().name().set("Prn");
+	assert(obj);
+	obj->name.set("Prn");
 
-	struct TypeField : Field
-	{
-		TypeField(const std::string& name, WeaponTypeData& node) : Field(name)
-		{
-			using widget_type = gui::Selector<std::string, IProperty<std::string>>;
-			widget = node.newChild<widget_type>(node.object().value(), name,
-				widget_type::ItemList{
-					{ "WeaponAxe", "Axe" },
-					{ "WeaponDagger", "Dagger" },
-					{ "WeaponMace", "Mace" },
-					{ "WeaponSword", "Sword" },
-					{ "WeaponBack", "Two-hander" },
-					{ "WeaponBow", "Ranged" },
-					{ "SHIELD", "Shield" } });
-		}
-	};
-
-	newField<TypeField>(TYPE, *this);
+	using widget_type = gui::Selector<std::string, ni_ptr<Property<std::string>>>;
+	newChild<widget_type>(make_ni_ptr(obj, &NiStringExtraData::value), TYPE,
+		widget_type::ItemList{
+			{ "WeaponAxe", "Axe" },
+			{ "WeaponDagger", "Dagger" },
+			{ "WeaponMace", "Mace" },
+			{ "WeaponSword", "Sword" },
+			{ "WeaponBack", "Two-hander" },
+			{ "WeaponBow", "Ranged" },
+			{ "SHIELD", "Shield" } });
 
 	//until we have some other way to determine connector position for loading placement
 	getField(TARGET)->connector->setTranslation({ 0.0f, 38.0f });
 }
 
-node::DummyExtraData::DummyExtraData(std::unique_ptr<nif::NiExtraData>&& obj) :
-	ExtraData(std::move(obj))
+node::WeaponTypeData::~WeaponTypeData()
 {
+	disconnect();
+}
+
+node::DummyExtraData::DummyExtraData(const ni_ptr<nif::NiExtraData>& obj) :
+	ExtraData(obj)
+{
+	assert(obj);
 	setTitle("Extra data");
 	setSize({ WIDTH, HEIGHT });
 	newChild<gui::Separator>();
-	newChild<gui::FramePadded>(std::make_unique<gui::Text>(object().name().get()));
+	newChild<gui::Label>(obj->name.get());
 
 	//until we have some other way to determine connector position for loading placement
 	getField(TARGET)->connector->setTranslation({ 0.0f, 38.0f });
+}
+
+node::DummyExtraData::~DummyExtraData()
+{
+	disconnect();
 }

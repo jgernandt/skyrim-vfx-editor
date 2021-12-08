@@ -25,7 +25,8 @@
 
 gui::Window::Window(const std::string& title) :
 	m_title(title), 
-	m_style { ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar }
+	m_style { ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | 
+		ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse }
 {
 	if (ImGui::GetCurrentContext()) {
 		m_colours[COL_TITLE] = gui_type_conversion<gui::ColRGBA>::from(ImGui::GetStyle().Colors[ImGuiCol_TitleBg]);
@@ -92,8 +93,8 @@ void gui::Window::frame(FrameDrawer& fd)
 	bool keepOpen = true;
 	bool* p_open = m_closable ? &keepOpen : nullptr;
 
+	util::CallWrapper ender(&ImGui::End);
 	if (Begin(m_title[0].c_str(), p_open, m_style)) {
-		util::CallWrapper end(&End);
 
 		PushItemWidth(-std::numeric_limits<float>::min());
 		util::CallWrapper popItemWidth(&PopItemWidth);
@@ -120,4 +121,16 @@ void gui::Window::setTranslation(const Floats<2>& t)
 void gui::Window::onClose()
 {
 	asyncInvoke<RemoveChild>(this, getParent(), false);//default to irreversible deletion. Bad idea?
+}
+
+void gui::Window::setStyle(Style style, bool on)
+{
+	switch (style) {
+	case Style::SCROLLABLE:
+		if (on)
+			m_style &= ~(ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
+		else
+			m_style |= ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar;
+		break;
+	}
 }

@@ -17,35 +17,35 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-#include "NiExtraData.h"
+#include "nif_internal.h"
 
-nif::NiExtraData::NiExtraData(native::NiExtraData* obj) : 
-	NiObject(obj), 
-	m_name(&getNative(), &native::NiExtraData::GetName, &native::NiExtraData::SetName)
+const size_t nif::NiExtraData::TYPE = std::hash<std::string>{}("NiExtraData");
+const size_t nif::NiStringExtraData::TYPE = std::hash<std::string>{}("NiStringExtraData");
+
+bool nif::ReadSyncer<nif::NiExtraData>::operator()(NiExtraData& object, const Niflib::NiExtraData* native, File& file)
 {
+	assert(native);
+	object.name.set(native->GetName());
+	return true;
 }
 
-nif::native::NiExtraData& nif::NiExtraData::getNative() const
+bool nif::WriteSyncer<nif::NiExtraData>::operator()(const NiExtraData& object, Niflib::NiExtraData* native, const File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiExtraData::TYPE));
-	return static_cast<native::NiExtraData&>(*m_ptr);
+	assert(native);
+	native->SetName(object.name.get());
+	return true;
 }
 
-
-nif::NiStringExtraData::NiStringExtraData() : 
-	NiStringExtraData(new Niflib::NiStringExtraData)
+bool nif::ReadSyncer<nif::NiStringExtraData>::operator()(NiStringExtraData& object, const Niflib::NiStringExtraData* native, File& file)
 {
-	assert(m_ptr && m_ptr->GetType().IsSameType(Niflib::NiStringExtraData::TYPE));
+	assert(native);
+	object.value.set(native->GetData());
+	return true;
 }
 
-nif::NiStringExtraData::NiStringExtraData(native::NiStringExtraData* obj) :
-	NiExtraData(obj), 
-	m_value(&getNative(), &native::NiStringExtraData::GetData, &native::NiStringExtraData::SetData)
+bool nif::WriteSyncer<nif::NiStringExtraData>::operator()(const NiStringExtraData& object, Niflib::NiStringExtraData* native, const File& file)
 {
-}
-
-nif::native::NiStringExtraData& nif::NiStringExtraData::getNative() const
-{
-	assert(m_ptr && m_ptr->GetType().IsDerivedType(Niflib::NiStringExtraData::TYPE));
-	return static_cast<native::NiStringExtraData&>(*m_ptr);
+	assert(native);
+	native->SetData(object.value.get());
+	return true;
 }

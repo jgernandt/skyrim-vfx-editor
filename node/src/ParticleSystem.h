@@ -18,40 +18,32 @@
 
 #pragma once
 #include "AVObject.h"
-#include "NiParticleSystem.h"
-#include "NiPSysModifier.h"
 
 namespace node
 {
+	using namespace nif;
+
 	class ParticleSystem final : public AVObject
 	{
 	public:
-		ParticleSystem();
 		ParticleSystem(
-			std::unique_ptr<nif::NiParticleSystem>&& obj,
-			std::unique_ptr<nif::NiPSysData>&& data,
-			std::unique_ptr<nif::NiAlphaProperty>&& alpha,
-			std::unique_ptr<nif::NiPSysUpdateCtlr>&& ctlr,
-			std::unique_ptr<nif::NiPSysAgeDeathModifier>&& adm,
-			std::unique_ptr<nif::NiPSysPositionModifier>&& pm,
-			std::unique_ptr<nif::NiPSysBoundUpdateModifier>&& bum);
+			const ni_ptr<NiParticleSystem>& psys,
+			const ni_ptr<NiPSysData>& data,
+			const ni_ptr<NiAlphaProperty>& alpha,
+			const ni_ptr<NiPSysAgeDeathModifier>& adm,
+			const ni_ptr<NiPSysBoundUpdateModifier>& bum,
+			const ni_ptr<NiPSysPositionModifier>& pm,
+			const ni_ptr<NiPSysUpdateCtlr>& ctlr);
 
 		~ParticleSystem();
 
-		virtual nif::NiParticleSystem& object() override;
-		nif::NiPSysData& data();
-		nif::NiAlphaProperty& alphaProperty();
-		nif::NiPSysUpdateCtlr& updateCtlr();
-		nif::NiPSysAgeDeathModifier& ageDeathMod();
-		nif::NiPSysPositionModifier& positionMod();
-		nif::NiPSysBoundUpdateModifier& boundUpdateMod();
-
-		IProperty<nif::SubtextureCount>& subtexCount() { return m_subtexCount; }
+		Property<SubtextureCount>& subtexCount() { return *m_subtexCount; }
 
 	public:
 		constexpr static const char* WORLD_SPACE = "World space";
 		constexpr static const char* MAX_COUNT = "Particle limit";
 		constexpr static const char* SHADER = "Shader";
+		constexpr static const char* ALPHA = "Blending";
 		constexpr static const char* MODIFIERS = "Modifiers";
 
 		constexpr static float WIDTH = 160.0f;
@@ -59,12 +51,14 @@ namespace node
 
 	private:
 		class MaxCountField;
-		class WorldSpaceField;
 		class ShaderField;
 		class ModifiersField;
-		class ModifiersManager;
 
-		LocalProperty<nif::SubtextureCount> m_subtexCount;
-		std::unique_ptr<SetterListener<nif::SubtextureCount, std::vector<nif::SubtextureOffset>>> m_subtexLsnr;
+		PropertySyncer<SubtextureCount, std::vector<SubtextureOffset>> m_subtexLsnr;
+		ni_ptr<Property<SubtextureCount>> m_subtexCount;
+
+		std::unique_ptr<Field> m_shaderField;
+		std::unique_ptr<Field> m_maxCountField;
+		std::unique_ptr<Field> m_modifiersField;
 	};
 }
