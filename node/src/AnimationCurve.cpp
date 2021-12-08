@@ -368,8 +368,11 @@ public:
 node::AnimationCurve::AnimationCurve(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data) :
 	m_ctlr{ ctlr }, m_data{ data }
 {
-	assert(m_data);
+	assert(m_data && m_ctlr);
 	m_data->keys.addListener(*this);
+	m_ctlr->flags.addListener(*this);
+	m_ctlr->startTime.addListener(*this);
+	m_ctlr->stopTime.addListener(*this);
 
 	int i = 0;
 	for (auto&& key : m_data->keys)
@@ -379,6 +382,10 @@ node::AnimationCurve::AnimationCurve(const ni_ptr<NiTimeController>& ctlr, const
 node::AnimationCurve::~AnimationCurve()
 {
 	m_data->keys.removeListener(*this);
+	m_ctlr->flags.removeListener(*this);
+	m_ctlr->startTime.removeListener(*this);
+	m_ctlr->stopTime.removeListener(*this);
+
 	//we need the children destroyed while we still exist
 	clearChildren();
 }
@@ -394,92 +401,114 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 	//Should be recalculated on setting axis lims and transforms
 	gui::Floats<2> lims = { (m_axisLims[0] - m_translation[0]) / m_scale[0], (m_axisLims[1] - m_translation[0]) / m_scale[0] };
 
-	buildClip(lims, (fd.toGlobal(m_scale) - fd.toGlobal({ 0.0f, 0.0f })).abs());
+	if (lims[0] == lims[1])
+		return;
 
-	//Map out the clips to the time line
-	int offset;//number of clips to offset
-	int N;//repetitions
-
-	bool clamp = m_ctlr->flags.hasRaised(CTLR_LOOP_CLAMP);
-	float startTime = m_ctlr->startTime.get();
-	float stopTime = m_ctlr->stopTime.get();
-
-	if (clamp) {
-		offset = 0;
-		N = 1;
+	//Rebuild clip if
+	//*start/stop time or loop type has changed
+	//*our global scale has changed
+	//*any of our keys is dirty
+	bool rebuild = false;
+	gui::Floats<2> scale = fd.getCurrentScale() * m_scale;
+	if (m_clipDirty)
+		rebuild = true;
+	else if (scale.matrix() != m_calcScale.matrix()) {
+		rebuild = true;
 	}
+	else if (getChildren().empty())
+		rebuild = true;
 	else {
-		offset = static_cast<int>(std::floor((lims[0] - startTime) / m_clipLength));
-		N = static_cast<int>(std::ceil((lims[1] - startTime) / m_clipLength)) - offset;
+		for (auto&& child : getChildren()) {
+			if (static_cast<AnimationKey*>(child.get())->getDirty()) {
+				rebuild = true;
+				break;
+			}
+		}
 	}
 
-	if (m_clipLength > 0.0f && lims[0] != lims[1]) {
+	if (rebuild) {
+		m_clipDirty = false;
+		m_calcScale = scale;
+		buildClip(lims, (fd.toGlobal(m_scale) - fd.toGlobal({ 0.0f, 0.0f })).abs());
+	}
+
+	if (m_clipLength > 0.0f) {
+
+		//pixels per unit
+		gui::Floats<2> resolution = (fd.toGlobal(m_scale) - fd.toGlobal({ 0.0f, 0.0f })).abs();
+
 		auto popper = fd.pushTransform(m_translation, m_scale);
 
-		//To hold the final curve
-		std::vector<gui::Floats<2>> curve;
-		curve.reserve(N * m_clipPoints.size() + 2);
+		float startTime = m_ctlr->startTime.get();
+		float stopTime = m_ctlr->stopTime.get();
 
-		//Only valid/relevant on Clamp
-		if (clamp && lims[0] < startTime) {
-			curve.push_back(fd.toGlobal({ lims[0], m_clipPoints.front()[1] }).floor());
-			curve.push_back(fd.toGlobal(m_clipPoints.front()).floor());
-		}
+		//Rebuild curve if
+		//*clip was rebuilt
+		//*our global position has changed
+		gui::Floats<2> global_pos = fd.getCurrentTranslation();
+		if (rebuild || global_pos.matrix() != m_calcPos.matrix()) {
+			m_calcPos = global_pos;
+			m_curvePoints.clear();
 
-		for (int i = 0; i < N; i++) {
-			float t_offset = (i + offset) * m_clipLength;
+			//Map out the clips to the time line
+			int offset;//number of clips to offset
+			int N;//repetitions
 
-			//push t_offset as a transform and input points in global space directly?
+			bool clamp = m_ctlr->flags.hasRaised(CTLR_LOOP_CLAMP);
 
-			//transform limits to this clip space
-			float lim0 = lims[0] - t_offset;
-			float lim1 = lims[1] - t_offset;
-
-			if (lim0 < startTime && lim1 > stopTime) {
-				//Whole curve is visible (in x at least, let's worry about y later).
-				for (int i = 0; i < (int)m_clipPoints.size(); i++) {
-					gui::Floats<2> p = fd.toGlobal({ m_clipPoints[i][0] + t_offset, m_clipPoints[i][1] }).floor();
-					if (curve.empty() || curve.back().matrix() != p.matrix())
-						curve.push_back(p);
-				}
-			}
-			else if (lim0 >= startTime) {
-				//This is the start point of the curve (may also be the end!)
-				//Skip if next is less than lim0
-
-				int i = 0;
-				//skip clipped beginning
-				for (; i < (int)m_clipPoints.size() - 1 && m_clipPoints[i + 1][0] <= lim0; i++) {}
-
-				//May also be clipped in upper end; include only as long as previous is less than lim1
-				for (; i < (int)m_clipPoints.size(); i++) {
-					if (i != 0 && m_clipPoints[i - 1][0] >= lim1)
-						break;
-
-					gui::Floats<2> p = fd.toGlobal({ m_clipPoints[i][0] + t_offset, m_clipPoints[i][1] }).floor();
-					if (curve.empty() || curve.back().matrix() != p.matrix())
-						curve.push_back(p);
-				}
+			if (clamp) {
+				offset = 0;
+				N = 1;
 			}
 			else {
-				//This is the end of the curve (lim1 <= clip.length)
-				//Include as long as previous is less than lim1
-				//We skip the first point if it is a duplicate
-				for (int i = 0; i < (int)m_clipPoints.size(); i++) {
+				offset = static_cast<int>(std::floor((lims[0] - startTime) / m_clipLength));
+				N = static_cast<int>(std::ceil((lims[1] - startTime) / m_clipLength)) - offset;
+			}
 
-					if (i != 0 && m_clipPoints[i - 1][0] >= lim1)
-						break;
+			//Only valid/relevant on Clamp
+			if (clamp && lims[0] < startTime) {
+				float v = m_segments.front().key < 0 ? 0.0f : animationKey(m_segments.front().key).eval(m_segments.front().tauBegin);
+				m_curvePoints.push_back(fd.toGlobal({ lims[0], v }).floor());
+				m_curvePoints.push_back(fd.toGlobal({ m_segments.front().tBegin, v }).floor());
+			}
 
-					gui::Floats<2> p = fd.toGlobal({ m_clipPoints[i][0] + t_offset, m_clipPoints[i][1] }).floor();
-					if (curve.empty() || curve.back().matrix() != p.matrix())
-						curve.push_back(p);
+			for (int clip = 0; clip < N; clip++) {
+				float t_offset = (clip + offset) * m_clipLength;
+
+				//push t_offset as a transform and input points in global space directly?
+				auto popper2 = fd.pushTransform({ t_offset, 0.0f }, { 1.0f, 1.0f });
+
+				//transform limits to this clip space
+				float lim0 = lims[0] - t_offset;
+				float lim1 = lims[1] - t_offset;
+
+				if (lim0 < startTime && lim1 > startTime + m_clipLength) {
+					//Whole curve is visible (in x at least, let's worry about y later).
+					for (int i = 0; (size_t)i < m_segments.size(); i++) {
+						addCurvePoints(fd, i, { lim0, lim1 }, resolution);
+					}
+				}
+				else {
+					//some segments are clipped
+					for (int i = 0; (size_t)i < m_segments.size(); i++) {
+						if (m_segments[i].tBegin < lim1 && m_segments[i].tEnd > lim0)
+							addCurvePoints(fd, i, { lim0, lim1 }, resolution);
+					}
 				}
 			}
-		}
 
-		//Only valid/relevant on Clamp
-		if (clamp && lims[1] > stopTime) {
-			curve.push_back(fd.toGlobal({ lims[1], m_clipPoints.back()[1] }).floor());
+			//Only valid/relevant on Clamp
+			if (clamp && lims[1] > stopTime) {
+				float v = m_segments.back().key < 0 ? 0.0f : animationKey(m_segments.back().key).eval(m_segments.back().tauEnd);
+				if (m_curvePoints.empty())
+					m_curvePoints.push_back(fd.toGlobal({ lims[0], v }).floor());
+				m_curvePoints.push_back(fd.toGlobal({ lims[1], v }).floor());
+			}
+
+			//If the last key is exactly at the stop time (common), it will not get evaluated.
+			//We do this just to clean it (preventing it from triggering a recalulation).
+			if (keys().size() > 0 && keys().back().time.get() == stopTime)
+				animationKey(keys().size() - 1).eval(0.0f);
 		}
 
 		gui::Floats<2> tl1{ fd.toGlobal({ lims[0], 0.0f })[0], std::numeric_limits<float>::max() };
@@ -489,14 +518,15 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 
 		gui::ColRGBA lineCol = { 1.0f, 0.0f, 0.0f, 1.0f };
 		float lineWidth = 3.0f;
-		if (curve.size() >= 2)
-			fd.curve(curve, lineCol, lineWidth, true);
+		if (m_curvePoints.size() >= 2)
+			fd.curve(m_curvePoints, lineCol, lineWidth, true);
 
 		fd.rectangle(tl1.floor(), br1.floor(), { 0.0f, 0.0f, 0.0f, 0.075f }, true);
 		fd.rectangle(tl2.floor(), br2.floor(), { 0.0f, 0.0f, 0.0f, 0.075f }, true);
 
 #ifdef _DEBUG
-		gui::DebugWindow::print("Curve points: %d", curve.size());
+		gui::DebugWindow::print("Clip segments: %d", m_segments.size());
+		gui::DebugWindow::print("Curve points: %d", m_curvePoints.size());
 #endif
 	}
 	else {
@@ -568,6 +598,23 @@ void node::AnimationCurve::onMove(int from, int to)
 		static_cast<AnimationKey*>(getChildren()[low - 1].get())->setDirty();
 	//The handle at max(from, to) must refresh
 	static_cast<AnimationKey*>(getChildren()[high].get())->setDirty();
+}
+
+void node::AnimationCurve::onSet(const float&)
+{
+	m_clipDirty = true;
+}
+
+void node::AnimationCurve::onRaise(ControllerFlags flags)
+{
+	if (flags & CTLR_LOOP_MASK)
+		m_clipDirty = true;
+}
+
+void node::AnimationCurve::onClear(ControllerFlags flags)
+{
+	if (flags & CTLR_LOOP_MASK)
+		m_clipDirty = true;
 }
 
 node::AnimationKey* node::AnimationCurve::getActive() const
@@ -651,24 +698,18 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, const gui::Floa
 
 	m_clipLength = reverse ? 2.0f * (tStop - tStart) : tStop - tStart;
 
-	m_clipPoints.clear();
+	m_segments.clear();
 
 	if (m_clipLength <= 0.0f) {
 		m_clipLength = 0.0f;
 	}
 	else if (m_data->keys.size() == 0) {
-		m_clipPoints.push_back({ tStart, 0.0f });
-		m_clipPoints.push_back({ reverse ? tStart + m_clipLength : tStop, 0.0f });
+		m_segments.push_back({ -1, tStart, reverse ? tStart + m_clipLength : tStop, 0.0f, 0.0f });
 	}
 	else {
-		int stopReverse = -1;
-
 		//if the first key is greater than tStart, special treatment is required
-		if (float t = m_data->keys.front().time.get(); t > tStart) {
-			m_clipPoints.push_back({ tStart, 0.0f });
-			m_clipPoints.push_back({ std::min(t, tStop), 0.0f });
-			stopReverse = 1;
-		}
+		if (float t = m_data->keys.front().time.get(); t > tStart)
+			m_segments.push_back({ -1, tStart, std::min(t, tStop), 0.0f, 0.0f });
 
 		//if the first key is greater than tStop, we're done
 		int i = 0;
@@ -684,6 +725,7 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, const gui::Floa
 
 				float t = m_data->keys.at(i).time.get();
 
+				//Determine limits (might need interpolation)
 				float tBegin;
 				float tauBegin;
 				if (t < tStart) {
@@ -698,134 +740,128 @@ void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, const gui::Floa
 					tauBegin = 0.0f;
 				}
 
-				if (type == KEY_QUADRATIC) {
-					//push from tBegin up to (not including) tEnd
-					//if tEnd == tStop, push them too and break
-
-					float tEnd;
-					float tauEnd;
-
-					if (i == (int)m_data->keys.size() - 1) {
-						tEnd = tBegin;
-						tauEnd = tauBegin;
-					}
-					else if (m_data->keys.at(i + 1).time.get() > tStop) {
-						tEnd = tStop;
-						tauEnd = (tStop - t) / (m_data->keys.at(i + 1).time.get() - t);
-					}
-					else {
-						tEnd = m_data->keys.at(i + 1).time.get();
-						tauEnd = 1.0f;
-					}
-
-					auto key = static_cast<AnimationKey*>(getChildren()[i].get());
-
-					if (tEnd > tBegin) {
-
-						assert(i < (int)m_data->keys.size() - 1);//sanity check
-						float tNext = m_data->keys.at(i + 1).time.get();
-
-						gui::Floats<2> tauExtr = key->getExtrema();
-
-						//we may have 1, 2 or 3 intervals:
-						std::array<float, 3> tauHigh{ tauExtr[0], tauExtr[1], tauEnd };
-						float tauLow = tauBegin;
-						float tLow = tBegin;
-						for (int n = 0; n < 3; n++) {
-							if (n == 2 || (!std::isnan(tauHigh[n]) && tauHigh[n] > tauLow && tauHigh[n] < tauEnd)) {
-								float tHigh = t + tauHigh[n] * (tNext - t);
-
-								float resolution_factor = 0.5f;//roughly twice the number of segments per pixel, on average
-								float half_delta_t = 0.5f * (tHigh - tLow);
-								float half_interval_pixels = half_delta_t * resolution[0];
-								int segments = static_cast<int>(std::ceil(half_interval_pixels * resolution_factor));
-
-								float half_delta_tau = 0.5f * (tauHigh[n] - tauLow);
-								float disp_tau = 0.5f * (tauLow + tauHigh[n]);
-								float disp_t = 0.5f * (tLow + tHigh);
-
-								for (int j = 0; j < segments; j++) {
-									//jth Chebyshev point (distributes more points around the extrema, but might be overkill)
-									float t_j = std::cos(j * math::pi<float> / segments);
-
-									//linspaced
-									//float t_j = 1.0f - 2.0f * j / segments;
-
-									float v = key->eval(disp_tau - half_delta_tau * t_j);
-									m_clipPoints.push_back({ disp_t - half_delta_t * t_j, v });
-								}
-
-								tauLow = tauHigh[n];
-								tLow = tHigh;
-							}
-						}
-					}
-					else {
-						//we only need at tBegin
-						m_clipPoints.push_back({ tBegin, key->eval(tauBegin) });
-					}
-
-					if (tEnd == tStop) {
-						m_clipPoints.push_back({ tEnd, key->eval(tauEnd) });
-						break;
-					}
+				float tEnd;
+				float tauEnd;
+				if (i == (int)m_data->keys.size() - 1) {
+					tEnd = tStop;
+					tauEnd = 1.0f;
 				}
-				else if (type == KEY_LINEAR) {
-					//push at tBegin
-					//if t >= tStop, this is the last relevant key
-					float v;
-
-					if (tBegin >= tStop) {
-						assert(i > 0);//sanity check
-						tauBegin = (tStop - m_data->keys.at(i - 1).time.get()) / (tBegin - m_data->keys.at(i - 1).time.get());
-						tBegin = tStop;
-						v = static_cast<AnimationKey*>(getChildren()[i - 1].get())->eval(tauBegin);
-					}
-					else
-						v = static_cast<AnimationKey*>(getChildren()[i].get())->eval(tauBegin);
-
-					//we only need this check on the first push? No, the keys could be equal.
-					if (m_clipPoints.empty() || m_clipPoints.back()[0] != tBegin || m_clipPoints.back()[1] != v)
-						m_clipPoints.push_back({ tBegin, v });
-
-					if (tBegin == tStop)
-						break;
+				else if (m_data->keys.at(i + 1).time.get() > tStop) {
+					tEnd = tStop;
+					tauEnd = (tStop - t) / (m_data->keys.at(i + 1).time.get() - t);
 				}
 				else {
-					//Constant or unsupported
-					//push at tBegin and at tEnd (unless equal, or last key)
-					if (tBegin < tStop) {
+					tEnd = m_data->keys.at(i + 1).time.get();
+					tauEnd = 1.0f;
+				}
 
-						float v = m_data->keys.at(i).value.get();
-						if (m_clipPoints.empty() || m_clipPoints.back()[0] != tBegin || m_clipPoints.back()[1] != v)
-							m_clipPoints.push_back({ tBegin, v });
+				//If quadratic, split segments into subsegments at extrema
+				if (type == KEY_QUADRATIC && i < (int)m_data->keys.size() - 1 && tEnd > tBegin) {
 
-						if (i < (int)m_data->keys.size() - 1) {
-							float t_next = m_data->keys.at(i + 1).time.get();
-							if (t_next > tBegin && t_next < tStop) {
-								m_clipPoints.push_back({ t_next, v });
-							}
+					gui::Floats<2> tauExtr = static_cast<AnimationKey*>(getChildren()[i].get())->getExtrema();
+
+					//we may have 1, 2 or 3 intervals:
+					std::array<float, 3> tauHigh{ tauExtr[0], tauExtr[1], tauEnd };
+					float tauLow = tauBegin;
+					float tLow = tBegin;
+					for (int n = 0; n < 3; n++) {
+						if (n == 2 || (!std::isnan(tauHigh[n]) && tauHigh[n] > tauLow && tauHigh[n] < tauEnd)) {
+
+							float tHigh = t + tauHigh[n] * (m_data->keys.at(i + 1).time.get() - t);
+							m_segments.push_back({ i, tLow, tHigh, tauLow, tauHigh[n] });
+
+							tauLow = tauHigh[n];
+							tLow = tHigh;
 						}
 					}
-					else
-						break;
 				}
-			}
+				else
+					m_segments.push_back({ i, tBegin, tEnd, tauBegin, tauEnd });
 
-			//if the last point is less than tStop, clamp it to the end
-			if (m_clipPoints.back()[0] < tStop)
-				m_clipPoints.push_back({ tStop, m_clipPoints.back()[1] });
+				if (tEnd == tStop)
+					break;
+			}
 		}
 
-		if (reverse) {
-			for (i = m_clipPoints.size() - 2; i > stopReverse; i--)
-				m_clipPoints.push_back({ 2.0f * tStop - m_clipPoints[i][0], m_clipPoints[i][1] });
+		assert(!m_segments.empty());
 
-			if (i != -1)
-				m_clipPoints.push_back({ m_clipLength + tStart, m_clipPoints.back()[1] });
+		if (reverse) {
+			for (i = (int)m_segments.size() - 1; i >= 0; i--) {
+				m_segments.push_back({
+					m_segments[i].key,
+					2.0f * tStop - m_segments[i].tEnd,
+					2.0f * tStop - m_segments[i].tBegin,
+					m_segments[i].tauEnd,
+					m_segments[i].tauBegin });
+			}
+
+			//Deal with the special segment we added when the first key was greater than tStart
+			if (m_segments.back().key < 0 && m_segments.size() > 1) {
+				m_segments.back().key = m_segments[1].key;
+				m_segments.back().tauBegin = m_segments[1].tauBegin;
+				m_segments.back().tauEnd = m_segments[1].tauBegin;
+			}
 		}
 	}
 
+}
+
+void node::AnimationCurve::addCurvePoints(gui::FrameDrawer& fd, int i, const gui::Floats<2>& lims, const gui::Floats<2>& resolution)
+{
+	if (keyType().get() == KEY_QUADRATIC && 
+		m_segments[i].key >= 0 &&
+		m_segments[i].key < (int)keys().size() - 1)
+	{
+		assert(m_segments[i].tBegin < lims[1] && m_segments[i].tEnd > lims[0]);
+
+		float t0 = std::max(m_segments[i].tBegin, lims[0]);
+		float t1 = std::min(m_segments[i].tEnd, lims[1]);
+
+		float tau0;
+		float tau1;
+		if (t0 != m_segments[i].tBegin) {
+			float k = (lims[0] - m_segments[i].tBegin) / (m_segments[i].tEnd - m_segments[i].tBegin);
+			tau0 = m_segments[i].tauBegin + k * (m_segments[i].tauEnd - m_segments[i].tauBegin);
+		}
+		else
+			tau0 = m_segments[i].tauBegin;
+
+		if (t1 != m_segments[i].tEnd) {
+			float k = (lims[1] - m_segments[i].tBegin) / (m_segments[i].tEnd - m_segments[i].tBegin);
+			tau1 = m_segments[i].tauBegin + k * (m_segments[i].tauEnd - m_segments[i].tauBegin);
+		}
+		else
+			tau1 = m_segments[i].tauEnd;
+
+		float resolution_factor = 0.25f;//roughly the number of segments per pixel
+		float tInterval = (t1 - t0);
+		float interval_pixels = std::abs(tInterval * resolution[0]);
+		int segments = static_cast<int>(std::ceil(interval_pixels * resolution_factor));
+		float delta_t = tInterval / segments;
+		float delta_tau = (tau1 - tau0) / segments;
+
+		assert(segments > 0);
+		float v0 = animationKey(m_segments[i].key).eval(tau0);
+		gui::Floats<2> p = fd.toGlobal({ t0, v0 }).floor();
+		if (m_curvePoints.empty() || m_curvePoints.back().matrix() != p.matrix())
+			m_curvePoints.push_back(p);
+
+		for (int j = 1; j < segments + 1; j++) {
+			float v = animationKey(m_segments[i].key).eval(tau0 + j * delta_tau);
+			m_curvePoints.push_back(fd.toGlobal({ t0 + j * delta_t, v }).floor());
+		}
+	}
+	else {
+		float v0 = m_segments[i].key < 0 ? 0.0f : animationKey(m_segments[i].key).eval(m_segments[i].tauBegin);
+		gui::Floats<2> p = fd.toGlobal({ m_segments[i].tBegin, v0 }).floor();
+		if (m_curvePoints.empty() || m_curvePoints.back().matrix() != p.matrix())
+			m_curvePoints.push_back(p);
+
+		if (m_segments[i].tEnd != m_segments[i].tBegin) {
+			float v1 = m_segments[i].key < 0 ? 0.0f : animationKey(m_segments[i].key).eval(m_segments[i].tauEnd);
+			m_curvePoints.push_back(fd.toGlobal({ m_segments[i].tEnd, v1 }).floor());
+		}
+	}
 }
 
 
@@ -902,19 +938,8 @@ void node::AnimationKey::setIndex(int i)
 
 float node::AnimationKey::eval(float t)
 {
-	if (KeyType type = m_curve->keyType().get(); type == KEY_LINEAR) {
-		if (t <= 0.0f) {
-			return key().value.get();
-		}
-		else if (t >= 1.0f) {
-			return m_index < (int)m_curve->keys().size() - 1 ? m_curve->keys().at(m_index + 1).value.get() : key().value.get();
-		}
-		else {
-			float v0 = key().value.get();
-			return m_index < (int)m_curve->keys().size() - 1 ? v0 + t * (m_curve->keys().at(m_index + 1).value.get() - v0) : v0;
-		}
-	}
-	else if (type == KEY_QUADRATIC) {
+	KeyType type = m_curve->keyType().get();
+	if (type == KEY_QUADRATIC) {
 		if (m_dirty)
 			recalculate();
 
@@ -931,8 +956,23 @@ float node::AnimationKey::eval(float t)
 			return m_pHi[0] + m_pHi[1] + m_pHi[2];
 		}
 	}
-	else //Constant or unsupported
-		return key().value.get();
+	else {
+		m_dirty = false;
+		if (type == KEY_LINEAR) {
+			if (t <= 0.0f) {
+				return key().value.get();
+			}
+			else if (t >= 1.0f) {
+				return m_index < (int)m_curve->keys().size() - 1 ? m_curve->keys().at(m_index + 1).value.get() : key().value.get();
+			}
+			else {
+				float v0 = key().value.get();
+				return m_index < (int)m_curve->keys().size() - 1 ? v0 + t * (m_curve->keys().at(m_index + 1).value.get() - v0) : v0;
+			}
+		}
+		else
+			return key().value.get();
+	}
 }
 
 gui::Floats<2> node::AnimationKey::getExtrema()
@@ -972,6 +1012,13 @@ void node::AnimationKey::recalculate()
 		m_pHi[0] = y1 - m_pHi[1] - m_pHi[2];
 
 		m_pLo[2] = m_pHi[1] + m_pHi[2] - m_pLo[1];
+	}
+	else {
+		m_pLo[1] = 0.0f;
+		m_pLo[2] = 0.0f;
+		m_pHi[0] = m_pLo[0];
+		m_pHi[1] = 0.0f;
+		m_pHi[2] = 0.0f;
 	}
 
 	m_dirty = false;

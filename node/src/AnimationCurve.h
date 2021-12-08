@@ -32,7 +32,9 @@ namespace node
 
 	class AnimationCurve final :
 		public gui::Composite,
-		public nif::VectorListener<Key<float>>
+		public nif::VectorListener<Key<float>>,
+		public PropertyListener<float>,
+		public FlagSetListener<ControllerFlags>
 	{
 	public:
 		class MoveOperation : public gui::ICommand
@@ -51,6 +53,10 @@ namespace node
 		virtual void onInsert(int pos) override;
 		virtual void onErase(int pos) override;
 		virtual void onMove(int from, int to) override;
+
+		virtual void onSet(const float&) override;
+		virtual void onRaise(ControllerFlags flags) override;
+		virtual void onClear(ControllerFlags flags) override;
 
 		SelectionState getSelectionState() const { return m_selectionState; }
 		void setSelectionState(SelectionState state) { m_selectionState = state; }
@@ -74,6 +80,7 @@ namespace node
 
 	private:
 		void buildClip(const gui::Floats<2>& lims, const gui::Floats<2>& resolution);
+		void addCurvePoints(gui::FrameDrawer& fd, int i, const gui::Floats<2>& lims, const gui::Floats<2>& resolution);
 
 	private:
 		const ni_ptr<NiTimeController> m_ctlr;
@@ -81,8 +88,21 @@ namespace node
 		gui::Floats<2> m_axisLims;
 		SelectionState m_selectionState{ SelectionState::NOT_SELECTED };
 
-		std::vector<gui::Floats<2>> m_clipPoints;
+		std::vector<gui::Floats<2>> m_curvePoints;
+		gui::Floats<2> m_calcPos;//global position of the current curve data
+
+		struct Segment
+		{
+			int key;
+			float tBegin;
+			float tEnd;
+			float tauBegin;
+			float tauEnd;
+		};
+		std::vector<Segment> m_segments;
 		float m_clipLength{ 0.0f };
+		gui::Floats<2> m_calcScale;//global scale of the current clip data
+		bool m_clipDirty{ true };
 	};
 
 	//Root of the key handle. Responsible for positioning at the correct time/value,
