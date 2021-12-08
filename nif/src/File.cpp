@@ -167,6 +167,7 @@ namespace Niflib
 nif::File::File(Version version) : m_version{ version }
 {
 	m_rootNode = create<BSFadeNode>();
+	m_rootNode->flags.raise(14);
 }
 
 nif::File::File(const std::filesystem::path& path)
