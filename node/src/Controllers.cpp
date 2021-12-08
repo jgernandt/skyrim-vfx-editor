@@ -69,7 +69,7 @@ node::FloatController::FloatController(const ni_ptr<NiFloatInterpolator>& iplr, 
 	iplr->data.assign(data);
 
 	setClosable(true);
-	setTitle("Controller");
+	setTitle("Animation");
 	setSize({ WIDTH, HEIGHT });
 	setColour(COL_TITLE, TitleCol_Anim);
 	setColour(COL_TITLE_ACTIVE, TitleCol_AnimActive);

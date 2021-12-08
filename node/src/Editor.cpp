@@ -174,7 +174,7 @@ std::unique_ptr<gui::IComponent> node::Editor::NodeRoot::createAddMenu()
 	extra->newChild<gui::MenuItem>("Weapon type", std::bind(&NodeRoot::addNode<WeaponTypeData>, this));
 
 	auto anim = root->newChild<gui::Menu>("Animation");
-	anim->newChild<gui::MenuItem>("Controller (number)", std::bind(&NodeRoot::addNode<FloatController>, this));
+	anim->newChild<gui::MenuItem>("Float", std::bind(&NodeRoot::addNode<FloatController>, this));
 
 	return root;
 }
