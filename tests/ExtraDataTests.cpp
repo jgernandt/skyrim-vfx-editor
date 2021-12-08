@@ -37,4 +37,91 @@ namespace nodes
 			SetReceiverTest(std::make_unique<node::DummyExtraData>(obj), *obj, node::ExtraData::TARGET, true);
 		}
 	};
+
+	TEST_CLASS(AttachPointData)
+	{
+	public:
+
+		TEST_METHOD(PreWriteProcessor)
+		{
+			{
+				//If there is AttachPointData on any non-root node, 
+				//a "MultiTechnique" data should be attached to the root.
+				File file{ File::Version::SKYRIM_SE };
+				auto root = file.getRoot();
+				auto node1 = file.create<NiNode>();
+				auto node2 = file.create<NiNode>();
+				root->children.add(node1);
+				root->children.add(node2);
+
+				auto data1 = file.create<NiStringsExtraData>();
+				data1->name.set("AttachT");
+				data1->strings.resize(1);
+				data1->strings.at(0).set("NamedNode&Bone1");
+				node1->extraData.add(data1);
+
+				auto data2 = file.create<NiStringsExtraData>();
+				data2->name.set("AttachT");
+				data2->strings.resize(1);
+				data2->strings.at(0).set("NamedNode&Bone2");
+				node2->extraData.add(data2);
+
+				node::AttachPointData::PreWriteProcessor t(file);
+				root->receive(t);
+
+				Assert::IsTrue(root->extraData.size() == 1);
+				for (auto&& data : root->extraData) {
+					Assert::IsTrue(std::static_pointer_cast<NiStringsExtraData>(data)->strings.size() == 1);
+					Assert::IsTrue(std::static_pointer_cast<NiStringsExtraData>(data)->strings.at(0).get() == "MultiTechnique");
+				}
+			}
+			{
+				//If the root has AttachPointData, no additional data should be added
+				File file{ File::Version::SKYRIM_SE };
+				auto root = file.getRoot();
+
+				auto data = file.create<NiStringsExtraData>();
+				data->name.set("AttachT");
+				data->strings.resize(1);
+				data->strings.at(0).set("NamedNode&Bone1");
+				root->extraData.add(data);
+
+				node::AttachPointData::PreWriteProcessor t(file);
+				root->receive(t);
+
+				Assert::IsTrue(root->extraData.size() == 1);
+				for (auto&& data : root->extraData) {
+					Assert::IsTrue(std::static_pointer_cast<NiStringsExtraData>(data)->strings.size() == 1);
+					Assert::IsTrue(std::static_pointer_cast<NiStringsExtraData>(data)->strings.at(0).get() == "NamedNode&Bone1");
+				}
+			}
+			{
+				//If the root has a "MultiTechnique" data but no non-root attach points,
+				//this should be removed.
+				File file{ File::Version::SKYRIM_SE };
+				auto root = file.getRoot();
+
+				auto data1 = file.create<NiStringsExtraData>();
+				data1->name.set("AttachT");
+				data1->strings.resize(1);
+				data1->strings.at(0).set("MultiTechnique");
+				root->extraData.add(data1);
+
+				auto data2 = file.create<NiStringsExtraData>();
+				data2->name.set("AttachT");
+				data2->strings.resize(1);
+				data2->strings.at(0).set("NamedNode&Bone1");
+				root->extraData.add(data2);
+
+				node::AttachPointData::PreWriteProcessor t(file);
+				root->receive(t);
+
+				Assert::IsTrue(root->extraData.size() == 1);
+				for (auto&& data : root->extraData) {
+					Assert::IsTrue(std::static_pointer_cast<NiStringsExtraData>(data)->strings.size() == 1);
+					Assert::IsTrue(std::static_pointer_cast<NiStringsExtraData>(data)->strings.at(0).get() == "NamedNode&Bone1");
+				}
+			}
+		}
+	};
 }

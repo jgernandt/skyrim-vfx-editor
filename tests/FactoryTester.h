@@ -158,12 +158,6 @@ namespace objects
 	};
 
 	template<>
-	struct FactoryTest<NiStringExtraData>
-	{
-		void run();
-	};
-
-	template<>
 	struct FactoryTest<NiParticleSystem>
 	{
 		void run();
@@ -177,6 +171,18 @@ namespace objects
 
 	template<>
 	struct FactoryTest<NiPSysEmitterCtlr>
+	{
+		void run();
+	};
+
+	template<>
+	struct FactoryTest<NiStringExtraData>
+	{
+		void run();
+	};
+
+	template<>
+	struct FactoryTest<NiStringsExtraData>
 	{
 		void run();
 	};

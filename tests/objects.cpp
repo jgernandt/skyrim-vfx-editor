@@ -181,4 +181,12 @@ namespace objects
 		TEST_METHOD(Factory) { FactoryTest<nif::NiStringExtraData>{}.run(); }
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiStringExtraData>{}.run(); }
 	};
+
+	TEST_CLASS(NiStringsExtraData)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiStringsExtraData>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiStringsExtraData>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiStringsExtraData>{}.run(); }
+	};
 }

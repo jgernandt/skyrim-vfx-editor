@@ -140,6 +140,16 @@ void node::Editor::frame(gui::FrameDrawer& fd)
 	Composite::frame(fd);
 }
 
+void node::Editor::preWriteProc()
+{
+	if (m_file) {
+		if (auto&& root = m_file->getRoot()) {
+			AttachPointData::PreWriteProcessor attachT(*m_file);
+			root->receive(attachT);
+		}
+	}
+}
+
 void node::Editor::setProjectName(const std::string& name)
 {
 	if (m_rootName)
@@ -170,6 +180,7 @@ std::unique_ptr<gui::IComponent> node::Editor::NodeRoot::createAddMenu()
 	shad->newChild<gui::MenuItem>("Effect shader", std::bind(&NodeRoot::addNode<EffectShader>, this));
 
 	auto extra = root->newChild<gui::Menu>("Extra data");
+	extra->newChild<gui::MenuItem>("Attach point", std::bind(&NodeRoot::addNode<AttachPointData>, this));
 	extra->newChild<gui::MenuItem>("String data", std::bind(&NodeRoot::addNode<StringData>, this));
 	extra->newChild<gui::MenuItem>("Weapon type", std::bind(&NodeRoot::addNode<WeaponTypeData>, this));
 

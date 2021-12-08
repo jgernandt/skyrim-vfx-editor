@@ -71,4 +71,32 @@ namespace node
 	};
 
 	//No Forwarder specialisation
+
+
+	//StringsExtraData/////
+
+	//No Default specialisation
+	//No Connector specialisation
+
+	template<>
+	class Factory<NiStringsExtraData> : public VerticalTraverser<NiStringsExtraData, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiStringsExtraData& obj, C& ctor)
+		{
+			if (obj.name.get() == "AttachT") {
+				if (obj.strings.size() > 0 && obj.strings.at(0).get() != "MultiTechnique") {
+					if (ni_ptr<NiStringsExtraData> ptr = std::static_pointer_cast<NiStringsExtraData>(ctor.getObject()); ptr.get() == &obj)
+						ctor.addNode(&obj, Default<AttachPointData>{}.create(ctor.getFile(), ptr));
+				}
+				return false;
+			}
+			else
+				//fall through to default extra data
+				return true;
+		}
+	};
+
+	//No Forwarder specialisation
 }
