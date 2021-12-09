@@ -51,8 +51,16 @@ bool nif::WriteSyncer<nif::NiNode>::operator()(const NiNode& object, Niflib::NiN
 	assert(native);
 
 	native->ClearChildren();
-	for (auto&& child : object.children)
-		native->AddChild(file.getNative<NiAVObject>(child.get()));
+	for (auto&& child : object.children) {
+		Niflib::NiAVObjectRef nativeChild = file.getNative<NiAVObject>(child.get());
+		if (nativeChild) {
+			//If we have another parent, we need to clear it first.
+			//This happens whenever a parent changes between syncs.
+			if (Niflib::NiNodeRef parent = nativeChild->GetParent())
+				parent->RemoveChild(nativeChild);
+		}
+		native->AddChild(nativeChild);
+	}
 	return true;
 }
 
