@@ -172,6 +172,8 @@ void app::Document::setFilePath(const std::filesystem::path& path)
 void app::Document::write()
 {
 	try {
+		if (m_nodeEditor)
+			m_nodeEditor->preWriteProc();
 		if (m_file)
 			m_file->write(m_targetPath);
 	}

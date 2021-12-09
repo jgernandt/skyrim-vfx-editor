@@ -137,23 +137,27 @@ namespace nif
 		}
 	};
 	template<>
-	struct NifConverter<std::uint_fast32_t>
+	struct NifConverter<unsigned int>
 	{
-		constexpr static std::uint_fast32_t convert(Niflib::SkyrimShaderPropertyFlags1 val)
+		constexpr static unsigned int convert(Niflib::BillboardMode val)
 		{
-			return static_cast<std::uint_fast32_t>(val);
+			return static_cast<unsigned int>(val);
 		}
-		constexpr static std::uint_fast32_t convert(Niflib::SkyrimShaderPropertyFlags2 val)
+		constexpr static unsigned int convert(Niflib::SkyrimShaderPropertyFlags1 val)
 		{
-			return static_cast<std::uint_fast32_t>(val);
+			return static_cast<unsigned int>(val);
 		}
-		constexpr static std::uint_fast32_t convert(Niflib::KeyType val)
+		constexpr static unsigned int convert(Niflib::SkyrimShaderPropertyFlags2 val)
 		{
-			return static_cast<std::uint_fast32_t>(val);
+			return static_cast<unsigned int>(val);
 		}
-		constexpr static std::uint_fast32_t convert(Niflib::ForceType val)
+		constexpr static unsigned int convert(Niflib::KeyType val)
 		{
-			return static_cast<std::uint_fast32_t>(val);
+			return static_cast<unsigned int>(val);
+		}
+		constexpr static unsigned int convert(Niflib::ForceType val)
+		{
+			return static_cast<unsigned int>(val);
 		}
 	};
 }

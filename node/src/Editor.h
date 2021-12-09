@@ -36,6 +36,7 @@ namespace node
 
 		virtual void frame(gui::FrameDrawer& fd) override;
 
+		void preWriteProc();
 		void setProjectName(const std::string& name);
 
 	private:

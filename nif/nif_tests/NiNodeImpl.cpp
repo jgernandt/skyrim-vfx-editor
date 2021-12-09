@@ -57,3 +57,23 @@ bool common::Randomiser<NiNode>::operator()(const NiNode&, Niflib::NiNode* nativ
 
 	return true;
 }
+
+
+bool common::EquivalenceTester<NiBillboardNode>::operator()(const NiBillboardNode& object, const Niflib::NiBillboardNode* native, File& file)
+{
+	Assert::IsTrue(object.mode.get() == nif_type_conversion<BillboardMode>::from(native->GetBillboardMode()));
+
+	return true;
+}
+
+bool common::Randomiser<NiBillboardNode>::operator()(NiBillboardNode& object, File& file, std::mt19937& rng)
+{
+	randomiseProperty(object.mode, rng);
+	return true;
+}
+
+bool common::Randomiser<NiBillboardNode>::operator()(const NiBillboardNode&, Niflib::NiBillboardNode* native, File& file, std::mt19937& rng)
+{
+	native->SetBillboardMode(static_cast<Niflib::BillboardMode>(randi<std::underlying_type<Niflib::BillboardMode>::type>(rng)));
+	return true;
+}

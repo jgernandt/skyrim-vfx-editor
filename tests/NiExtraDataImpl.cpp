@@ -63,3 +63,46 @@ void objects::FactoryTest<NiStringExtraData>::run()
 		Assert::IsNotNull(dynamic_cast<node::StringData*>(ctor.node.second.get()));
 	}
 }
+
+
+void objects::FactoryTest<NiStringsExtraData>::run()
+{
+	File file(File::Version::SKYRIM_SE);
+
+	{//AttachT (bone)
+		TestConstructor ctor(file);
+		auto obj = file.create<NiStringsExtraData>();
+		obj->name.set("AttachT");
+		obj->strings.push_back();
+		obj->strings.back().set("Bone");
+
+		ctor.pushObject(obj);
+		node::Factory<NiStringsExtraData>{}.up(*obj, ctor);
+		ctor.popObject();
+
+		nodeTest<node::AttachPointData>(*obj, ctor);
+	}
+	{//AttachT (MultiTechnique)
+		TestConstructor ctor(file);
+		auto obj = file.create<NiStringsExtraData>();
+		obj->name.set("AttachT");
+		obj->strings.push_back();
+		obj->strings.back().set("MultiTechnique");
+
+		ctor.pushObject(obj);
+		node::Factory<NiStringsExtraData>{}.up(*obj, ctor);
+		ctor.popObject();
+
+		Assert::IsTrue(!ctor.node.second);
+	}
+	{//Other
+		TestConstructor ctor(file);
+		auto obj = file.create<NiStringsExtraData>();
+
+		ctor.pushObject(obj);
+		node::Factory<NiStringsExtraData>{}.up(*obj, ctor);
+		ctor.popObject();
+
+		nodeTest<node::DummyExtraData>(*obj, ctor);
+	}
+}

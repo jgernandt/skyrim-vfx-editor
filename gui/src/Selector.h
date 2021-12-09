@@ -25,7 +25,6 @@
 #include "Widget.h"
 #include "UniqueLabel.h"
 
-
 namespace gui
 {
 	namespace backend
@@ -40,7 +39,10 @@ namespace gui
 		public Component
 	{
 	public:
-		typedef std::map<T, std::string> ItemList;
+		//Use a vector instead, will make arranging much nicer.
+		// Might be slow to find the preview string if we have many items, but that seems unlikely.
+		//typedef std::map<T, std::string> ItemList;
+		typedef std::vector<std::pair<T, std::string>> ItemList;
 
 	public:
 		Selector(const PropertyType& prop, const std::string& label, ItemList&& items) :
@@ -53,7 +55,8 @@ namespace gui
 		{
 			T data = util::type_conversion<T, ConverterType<T>>::from(util::property_traits<PropertyType>::get(m_property));
 
-			auto it = m_items.find(data);//Get preview string
+			//auto it = m_items.find(data);//Get preview string
+			auto it = std::find_if(m_items.begin(), m_items.end(), [data](const std::pair<T, std::string>& p) { return p.first == data; });
 
 			if (auto&& result = backend::Selector(m_label[0], it != m_items.end() ? it->second : std::string())) {
 				for (auto&& item : m_items) {

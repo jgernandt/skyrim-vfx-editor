@@ -31,8 +31,7 @@ namespace node
 	public:
 		virtual ~ExtraData() = default;
 
-		constexpr static const char* TARGET = "Targets";
-		constexpr static const char* NAME = "Name";
+		constexpr static const char* TARGET = "Target";
 
 	protected:
 		class TargetField final : public Field
@@ -55,8 +54,6 @@ namespace node
 
 	public:
 		virtual ~StringDataShared() = default;
-
-		constexpr static const char* VALUE = "Value";
 	};
 
 	class StringData final : public StringDataShared
@@ -68,7 +65,7 @@ namespace node
 		~StringData();
 
 		constexpr static float WIDTH = 150.0f;
-		constexpr static float HEIGHT = 140.0f;
+		constexpr static float HEIGHT = 150.0f;
 	};
 
 	class WeaponTypeData final : public StringDataShared
@@ -79,9 +76,38 @@ namespace node
 		WeaponTypeData(const ni_ptr<NiStringExtraData>& obj);
 		~WeaponTypeData();
 
-		constexpr static const char* TYPE = "Type";
 		constexpr static float WIDTH = 150.0f;
-		constexpr static float HEIGHT = 90.0f;
+		constexpr static float HEIGHT = 115.0f;
+	};
+
+	class AttachPointData final : public ExtraData
+	{
+	public:
+		class PreWriteProcessor final : public NiTraverser
+		{
+		public:
+			PreWriteProcessor(File& file);
+
+			virtual void traverse(NiNode& obj) override;
+			virtual void traverse(BSFadeNode& obj) override;
+			//virtual void traverse(NiBillboardNode& obj) override;
+
+			virtual void traverse(NiStringsExtraData& obj) override;
+
+		private:
+			File& m_file;
+			NiNode* m_current{ nullptr };
+			NiStringsExtraData* m_multiTech{ nullptr };
+			bool m_needMulti{ false };
+		};
+	public:
+		using default_object = NiStringsExtraData;
+
+		AttachPointData(const ni_ptr<NiStringsExtraData>& obj);
+		~AttachPointData();
+
+		constexpr static float WIDTH = 150.0f;
+		constexpr static float HEIGHT = 115.0f;
 	};
 
 	class DummyExtraData final : public ExtraData

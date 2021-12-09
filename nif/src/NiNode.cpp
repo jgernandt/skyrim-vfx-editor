@@ -20,6 +20,7 @@
 #include "nif_internal.h"
 
 const size_t nif::NiNode::TYPE = std::hash<std::string>{}("NiNode");
+const size_t nif::NiBillboardNode::TYPE = std::hash<std::string>{}("NiBillboardNode");
 const size_t nif::BSFadeNode::TYPE = std::hash<std::string>{}("BSFadeNode");
 
 
@@ -50,7 +51,32 @@ bool nif::WriteSyncer<nif::NiNode>::operator()(const NiNode& object, Niflib::NiN
 	assert(native);
 
 	native->ClearChildren();
-	for (auto&& child : object.children)
-		native->AddChild(file.getNative<NiAVObject>(child.get()));
+	for (auto&& child : object.children) {
+		Niflib::NiAVObjectRef nativeChild = file.getNative<NiAVObject>(child.get());
+		if (nativeChild) {
+			//If we have another parent, we need to clear it first.
+			//This happens whenever a parent changes between syncs.
+			if (Niflib::NiNodeRef parent = nativeChild->GetParent())
+				parent->RemoveChild(nativeChild);
+		}
+		native->AddChild(nativeChild);
+	}
+	return true;
+}
+
+
+bool nif::ReadSyncer<nif::NiBillboardNode>::operator()(
+	NiBillboardNode& object, const Niflib::NiBillboardNode* native, File& file)
+{
+	assert(native);
+	object.mode.set(nif_type_conversion<BillboardMode>::from(native->GetBillboardMode()));
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiBillboardNode>::operator()(
+	const NiBillboardNode& object, Niflib::NiBillboardNode* native, const File& file)
+{
+	assert(native);
+	native->SetBillboardMode(nif_type_conversion<Niflib::BillboardMode>::from(object.mode.get()));
 	return true;
 }
