@@ -54,6 +54,14 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiNode>{}.run(); }
 	};
 
+	TEST_CLASS(NiBillboardNode)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiBillboardNode>{}.run(); }
+	};
+
 	TEST_CLASS(BSEffectShaderProperty)
 	{
 	public:
@@ -180,5 +188,13 @@ namespace objects
 		TEST_METHOD(Connector) { ConnectorTest<nif::NiStringExtraData>{}.run(); }
 		TEST_METHOD(Factory) { FactoryTest<nif::NiStringExtraData>{}.run(); }
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiStringExtraData>{}.run(); }
+	};
+
+	TEST_CLASS(NiStringsExtraData)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiStringsExtraData>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiStringsExtraData>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiStringsExtraData>{}.run(); }
 	};
 }

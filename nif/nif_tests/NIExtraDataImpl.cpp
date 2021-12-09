@@ -65,3 +65,33 @@ bool common::Randomiser<NiStringExtraData>::operator()(const NiStringExtraData&,
 
 	return true;
 }
+
+
+bool common::EquivalenceTester<NiStringsExtraData>::operator()(const NiStringsExtraData& object, const Niflib::NiStringsExtraData* native, File& file)
+{
+	auto&& nativeStrings = native->GetData();
+	Assert::IsTrue(nativeStrings.size() == object.strings.size());
+	for (size_t i = 0; i < object.strings.size(); i++)
+		Assert::IsTrue(nativeStrings[i] == object.strings.at(i).get());
+	return true;
+}
+
+bool common::Randomiser<NiStringsExtraData>::operator()(NiStringsExtraData& object, File& file, std::mt19937& rng)
+{
+	std::uniform_int_distribution<int> I{ 3, 6 };
+	object.strings.resize(I(rng));
+	for (auto&& s : object.strings)
+		s.set(rands(rng));
+	return true;
+}
+
+bool common::Randomiser<NiStringsExtraData>::operator()(const NiStringsExtraData&, Niflib::NiStringsExtraData* native, File& file, std::mt19937& rng)
+{
+	std::uniform_int_distribution<int> I{ 3, 6 };
+	std::vector<std::string> strings(I(rng));
+	for (auto&& s : strings)
+		s = rands(rng);
+	native->SetData(std::move(strings));
+
+	return true;
+}

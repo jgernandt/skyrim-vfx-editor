@@ -65,8 +65,16 @@ bool nif::WriteSyncer<nif::NiParticleSystem>::operator()(const NiParticleSystem&
 	native->SetData(file.getNative<NiPSysData>(object.data.assigned().get()));
 
 	native->ClearModifiers();
-	for (auto&& mod : object.modifiers)
-		native->AddModifier(file.getNative<NiPSysModifier>(mod.get()));
+	for (auto&& mod : object.modifiers) {
+		Niflib::NiPSysModifierRef nativeMod = file.getNative<NiPSysModifier>(mod.get());
+		if (nativeMod) {
+			//If we have another target, we need to clear it first.
+			//This happens whenever a target changes between syncs.
+			if (Niflib::NiParticleSystemRef target = nativeMod->GetTarget())
+				target->RemoveModifier(nativeMod);
+		}
+		native->AddModifier(nativeMod);
+	}
 
 	native->SetShaderProperty(file.getNative<BSShaderProperty>(object.shaderProperty.assigned().get()));
 	native->SetAlphaProperty(file.getNative<NiAlphaProperty>(object.alphaProperty.assigned().get()));

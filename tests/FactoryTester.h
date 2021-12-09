@@ -58,6 +58,12 @@ namespace objects
 	};
 
 	template<>
+	struct FactoryTester<NiBillboardNode> : VerticalTraverser<NiBillboardNode, FactoryTester>
+	{
+		bool operator() (const NiBillboardNode& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct FactoryTester<BSEffectShaderProperty> : VerticalTraverser<BSEffectShaderProperty, FactoryTester>
 	{
 		bool operator() (const BSEffectShaderProperty& obj, const TestConstructor& ctor);
@@ -158,12 +164,6 @@ namespace objects
 	};
 
 	template<>
-	struct FactoryTest<NiStringExtraData>
-	{
-		void run();
-	};
-
-	template<>
 	struct FactoryTest<NiParticleSystem>
 	{
 		void run();
@@ -177,6 +177,18 @@ namespace objects
 
 	template<>
 	struct FactoryTest<NiPSysEmitterCtlr>
+	{
+		void run();
+	};
+
+	template<>
+	struct FactoryTest<NiStringExtraData>
+	{
+		void run();
+	};
+
+	template<>
+	struct FactoryTest<NiStringsExtraData>
 	{
 		void run();
 	};

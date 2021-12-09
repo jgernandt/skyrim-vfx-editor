@@ -111,6 +111,7 @@ namespace nif
 	template<> [[nodiscard]] std::shared_ptr<NiObjectNET> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiAVObject> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiNode> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiBillboardNode> File::create();
 	template<> [[nodiscard]] std::shared_ptr<BSFadeNode> File::create();
 
 	template<> [[nodiscard]] std::shared_ptr<NiProperty> File::create();
@@ -155,4 +156,5 @@ namespace nif
 
 	template<> [[nodiscard]] std::shared_ptr<NiExtraData> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiStringExtraData> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiStringsExtraData> File::create();
 }

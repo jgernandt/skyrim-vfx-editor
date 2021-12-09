@@ -205,6 +205,13 @@ namespace common
 	};
 
 	template<>
+	struct Randomiser<NiBillboardNode> : VerticalTraverser<NiBillboardNode, Randomiser>
+	{
+		bool operator() (NiBillboardNode& object, File& file, std::mt19937& rng);
+		bool operator() (const NiBillboardNode&, Niflib::NiBillboardNode* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
 	struct Randomiser<NiAlphaProperty> : VerticalTraverser<NiAlphaProperty, Randomiser>
 	{
 		bool operator() (NiAlphaProperty& object, File& file, std::mt19937& rng);
@@ -370,5 +377,12 @@ namespace common
 	{
 		bool operator() (NiStringExtraData& object, File& file, std::mt19937& rng);
 		bool operator() (const NiStringExtraData&, Niflib::NiStringExtraData* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiStringsExtraData> : VerticalTraverser<NiStringsExtraData, Randomiser>
+	{
+		bool operator() (NiStringsExtraData& object, File& file, std::mt19937& rng);
+		bool operator() (const NiStringsExtraData&, Niflib::NiStringsExtraData* native, File& file, std::mt19937& rng);
 	};
 }

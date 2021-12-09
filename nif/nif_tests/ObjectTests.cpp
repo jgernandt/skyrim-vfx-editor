@@ -235,6 +235,17 @@ namespace objects
 		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiNode>{}.run(); }
 	};
 
+	TEST_CLASS(NiBillboardNode)
+	{
+	public:
+		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(Syncer) { SyncerTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiBillboardNode>{}.run(); }
+	};
+
 	TEST_CLASS(BSFadeNode)
 	{
 	public:
@@ -618,5 +629,16 @@ namespace objects
 		TEST_METHOD(Syncer) { SyncerTest<nif::NiStringExtraData>{}.run(); }
 		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiStringExtraData>{}.run(); }
 		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiStringExtraData>{}.run(); }
+	};
+
+	TEST_CLASS(NiStringsExtraData)
+	{
+	public:
+		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiStringsExtraData>{}.run(); }
+		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiStringsExtraData>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiStringsExtraData>{}.run(); }
+		TEST_METHOD(Syncer) { SyncerTest<nif::NiStringsExtraData>{}.run(); }
+		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiStringsExtraData>{}.run(); }
+		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiStringsExtraData>{}.run(); }
 	};
 }

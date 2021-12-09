@@ -36,4 +36,12 @@ namespace nif
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
 	};
+
+	struct NiStringsExtraData : NiTraversable<NiStringsExtraData, NiExtraData>
+	{
+		Vector<Property<std::string>> strings;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
 }

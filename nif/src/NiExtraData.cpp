@@ -21,6 +21,7 @@
 
 const size_t nif::NiExtraData::TYPE = std::hash<std::string>{}("NiExtraData");
 const size_t nif::NiStringExtraData::TYPE = std::hash<std::string>{}("NiStringExtraData");
+const size_t nif::NiStringsExtraData::TYPE = std::hash<std::string>{}("NiStringsExtraData");
 
 bool nif::ReadSyncer<nif::NiExtraData>::operator()(NiExtraData& object, const Niflib::NiExtraData* native, File& file)
 {
@@ -36,6 +37,7 @@ bool nif::WriteSyncer<nif::NiExtraData>::operator()(const NiExtraData& object, N
 	return true;
 }
 
+
 bool nif::ReadSyncer<nif::NiStringExtraData>::operator()(NiStringExtraData& object, const Niflib::NiStringExtraData* native, File& file)
 {
 	assert(native);
@@ -47,5 +49,27 @@ bool nif::WriteSyncer<nif::NiStringExtraData>::operator()(const NiStringExtraDat
 {
 	assert(native);
 	native->SetData(object.value.get());
+	return true;
+}
+
+
+bool nif::ReadSyncer<nif::NiStringsExtraData>::operator()(NiStringsExtraData& object, const Niflib::NiStringsExtraData* native, File& file)
+{
+	assert(native);
+	object.strings.clear();
+	for (auto&& s : native->GetData()) {
+		object.strings.push_back();
+		object.strings.back().set(s);
+	}
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiStringsExtraData>::operator()(const NiStringsExtraData& object, Niflib::NiStringsExtraData* native, const File& file)
+{
+	assert(native);
+	std::vector<std::string> strings(object.strings.size());
+	for (size_t i = 0; i < strings.size(); i++)
+		strings[i] = object.strings.at(i).get();
+	native->SetData(std::move(strings));
 	return true;
 }
