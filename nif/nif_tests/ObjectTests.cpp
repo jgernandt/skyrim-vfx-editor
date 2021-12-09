@@ -235,6 +235,17 @@ namespace objects
 		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiNode>{}.run(); }
 	};
 
+	TEST_CLASS(NiBillboardNode)
+	{
+	public:
+		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(Syncer) { SyncerTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiBillboardNode>{}.run(); }
+	};
+
 	TEST_CLASS(BSFadeNode)
 	{
 	public:

@@ -57,6 +57,7 @@ template<> [[nodiscard]] std::shared_ptr<NiObject> File::create() { return make_
 template<> [[nodiscard]] std::shared_ptr<NiObjectNET> File::create() { return make_ni<NiObjectNET>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<NiAVObject> File::create() { return make_ni<NiAVObject>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<NiNode> File::create() { return make_ni<NiNode>(nullptr); }
+template<> [[nodiscard]] std::shared_ptr<NiBillboardNode> File::create() { return make_ni<NiBillboardNode>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<BSFadeNode> File::create() { return make_ni<BSFadeNode>(nullptr); }
 
 template<> [[nodiscard]] std::shared_ptr<NiProperty> File::create() { return make_ni<NiProperty>(nullptr); }
@@ -111,6 +112,7 @@ void nif::File::registerTypes()
 
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiAVObject::TYPE)] = &make_NiObject<nif::NiAVObject>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiNode::TYPE)] = &make_NiObject<nif::NiNode>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiBillboardNode::TYPE)] = &make_NiObject<nif::NiBillboardNode>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::BSFadeNode::TYPE)] = &make_NiObject<nif::BSFadeNode>;
 
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiProperty::TYPE)] = &make_NiObject<nif::NiProperty>;

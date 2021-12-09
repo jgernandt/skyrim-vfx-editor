@@ -51,6 +51,12 @@ namespace common
 	};
 
 	template<>
+	struct EquivalenceTester<NiBillboardNode> : VerticalTraverser<NiBillboardNode, EquivalenceTester>
+	{
+		bool operator() (const NiBillboardNode& object, const Niflib::NiBillboardNode* native, File& file);
+	};
+
+	template<>
 	struct EquivalenceTester<NiAlphaProperty> : VerticalTraverser<NiAlphaProperty, EquivalenceTester>
 	{
 		bool operator() (const NiAlphaProperty& object, const Niflib::NiAlphaProperty* native, File& file);

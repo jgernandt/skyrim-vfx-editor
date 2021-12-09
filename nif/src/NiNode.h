@@ -33,6 +33,14 @@ namespace nif
 		bool operator() (NiNode& object, NiTraverser& traverser);
 	};
 
+	struct NiBillboardNode : NiTraversable<NiBillboardNode, NiNode>
+	{
+		Property<BillboardMode> mode;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const { return TYPE; }
+	};
+
 	struct BSFadeNode : NiTraversable<BSFadeNode, NiNode> 
 	{
 		static const ni_type TYPE;

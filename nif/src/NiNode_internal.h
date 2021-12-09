@@ -35,6 +35,21 @@ namespace nif
 		bool operator() (const NiNode& object, Niflib::NiNode* native, const File& file);
 	};
 
+
+	//NiBillboardNode
+	template<> struct type_map<Niflib::NiBillboardNode> { using type = NiBillboardNode; };
+	template<> struct type_map<NiBillboardNode> { using type = Niflib::NiBillboardNode; };
+
+	template<> struct ReadSyncer<NiBillboardNode> : VerticalTraverser<NiBillboardNode, ReadSyncer>
+	{
+		bool operator() (NiBillboardNode& object, const Niflib::NiBillboardNode* native, File& file);
+	};
+	template<> struct WriteSyncer<NiBillboardNode> : VerticalTraverser<NiBillboardNode, WriteSyncer>
+	{
+		bool operator() (const NiBillboardNode& object, Niflib::NiBillboardNode* native, const File& file);
+	};
+
+
 	//BSFadeNode
 	template<> struct type_map<Niflib::BSFadeNode> { using type = BSFadeNode; };
 	template<> struct type_map<BSFadeNode> { using type = Niflib::BSFadeNode; };

@@ -29,6 +29,7 @@ namespace nif
 		virtual void traverse(NiObjectNET& obj) {}
 		virtual void traverse(NiAVObject& obj) {}
 		virtual void traverse(NiNode& obj) {}
+		virtual void traverse(NiBillboardNode& obj) {}
 		virtual void traverse(BSFadeNode& obj) {}
 
 		virtual void traverse(NiProperty& obj) {}
@@ -163,6 +164,7 @@ namespace nif
 		virtual void traverse(NiObjectNET& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiAVObject& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiNode& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiBillboardNode& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(BSFadeNode& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
 		virtual void traverse(NiProperty& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }

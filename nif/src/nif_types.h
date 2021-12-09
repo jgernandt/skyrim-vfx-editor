@@ -89,6 +89,7 @@ namespace nif
 	struct NiObjectNET;
 	struct NiAVObject;
 	struct NiNode;
+	struct NiBillboardNode;
 	struct BSFadeNode;
 
 	struct NiProperty;
@@ -144,6 +145,7 @@ namespace Niflib
 	class NiObjectNET;
 	class NiAVObject;
 	class NiNode;
+	class NiBillboardNode;
 	class BSFadeNode;
 
 	class NiProperty;
