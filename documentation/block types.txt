@@ -24,6 +24,21 @@ Root
 A unique Node that is created automatically when a file is loaded or created. Only blocks that are 
 somehow attached to the root will be exported when the file is saved.
 
+--------------
+Billboard node
+--------------
+A Node that rotates with the position or direction of the camera.
+
+Modes:
+Direction - align billboard Z axis with the camera view direction (shortest path)
+Direction (rigid) - align billboard Z axis with the camera view direction, X with camera right and Y with camera up
+Position - point billboard Z axis at the position of the camera (shortest path)
+Position (rigid) - point billboard Z axis at the position of the camera, with X pointing right and Y up
+Position (Y only) - point billboard Z axis as closely as possible to the position of the camera, 
+	while only allowing rotation around billboard Y
+Global Z - point billboard Y axis as closely as possible to the position of the camera, 
+	while locking billboard Z to global Z
+
 ----------------
 Particle system
 ----------------
@@ -195,5 +210,8 @@ x = (texture alpha x vertex colour alpha), y = emissive colour alpha.
 ----------
 Extra data
 ----------
-Attached to the root to set various additional properties.
-Weapon type data: required for sheathing of weapons to work.
+Sets various additional properties.
+
+Attach point: Name a bone to attach the effect to. Different Nodes may be attached to different bones.
+
+Weapon type: Required for sheathing of weapons to work. Add this to the Root only.
