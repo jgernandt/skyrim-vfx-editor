@@ -107,4 +107,39 @@ namespace node
 			return true; 
 		}
 	};
+
+
+	template<>
+	class Default<BillboardNode> : public Default<Node>
+	{
+	public:
+		std::unique_ptr<Node> create(File& file, const ni_ptr<NiBillboardNode>& obj = ni_ptr<NiBillboardNode>())
+		{
+			if (obj)
+				return std::make_unique<BillboardNode>(obj);
+			else {
+				auto new_obj = file.create<NiBillboardNode>();
+				if (!new_obj)
+					throw std::runtime_error("Failed to create NiBillboardNode");
+
+				setDefaults(*new_obj);
+				return std::make_unique<BillboardNode>(new_obj);
+			}
+		}
+	};
+
+	template<>
+	class Factory<NiBillboardNode> : public VerticalTraverser<NiBillboardNode, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiBillboardNode& obj, C& ctor)
+		{
+			if (auto&& ptr = std::static_pointer_cast<NiBillboardNode>(ctor.getObject()); ptr.get() == &obj) {
+				auto node = Default<BillboardNode>{}.create(ctor.getFile(), ptr);
+				ctor.addNode(&obj, std::move(node));
+			}
+			return false;
+		}
+	};
 }

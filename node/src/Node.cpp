@@ -90,3 +90,30 @@ node::Root::~Root()
 {
 	disconnect();
 }
+
+node::BillboardNode::BillboardNode(const ni_ptr<NiBillboardNode>& obj) :
+	Node(obj)
+{
+	setTitle("Billboard node");
+	setSize({ WIDTH, HEIGHT });
+
+	newChild<gui::Separator>();
+
+	newChild<gui::Text>("Billboard mode");
+
+	//Better names?
+	using selector_type = gui::Selector<BillboardMode, ni_ptr<Property<BillboardMode>>>;
+	auto selector = newChild<selector_type>(make_ni_ptr(obj, &NiBillboardNode::mode), std::string(),
+		selector_type::ItemList{
+			{ ALWAYS_FACE_CAMERA, "Always face camera" },
+			{ RIGID_FACE_CAMERA, "Rigid face camera" },
+			{ ALWAYS_FACE_CENTER, "Always face centre" },
+			{ RIGID_FACE_CENTER, "Rigid face centre" },
+			{ ROTATE_ABOUT_UP, "Rotate about up" },
+			{ BS_ROTATE_ABOUT_UP, "BS rotate about up" } });
+}
+
+node::BillboardNode::~BillboardNode()
+{
+	disconnect();
+}

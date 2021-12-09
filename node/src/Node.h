@@ -40,11 +40,11 @@ namespace node
 		std::unique_ptr<Field> m_children;
 	};
 
-	class Node final : public NodeShared
+	class Node : public NodeShared
 	{
 	public:
 		Node(const ni_ptr<NiNode>& obj);
-		~Node();
+		virtual ~Node();
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 180.0f;
@@ -58,5 +58,15 @@ namespace node
 
 		constexpr static float WIDTH = 150.0f;
 		constexpr static float HEIGHT = 116.0f;
+	};
+
+	class BillboardNode final : public Node
+	{
+	public:
+		BillboardNode(const ni_ptr<NiBillboardNode>& obj);
+		~BillboardNode();
+
+		constexpr static float WIDTH = 150.0f;
+		constexpr static float HEIGHT = 225.0f;
 	};
 }

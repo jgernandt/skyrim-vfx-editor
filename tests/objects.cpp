@@ -54,6 +54,14 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiNode>{}.run(); }
 	};
 
+	TEST_CLASS(NiBillboardNode)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiBillboardNode>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiBillboardNode>{}.run(); }
+	};
+
 	TEST_CLASS(BSEffectShaderProperty)
 	{
 	public:

@@ -161,6 +161,7 @@ std::unique_ptr<gui::IComponent> node::Editor::NodeRoot::createAddMenu()
 	auto root = std::make_unique<gui::Composite>();
 	auto group = root->newChild<gui::Menu>("Grouping");
 	group->newChild<gui::MenuItem>("Node", std::bind(&NodeRoot::addNode<Node>, this));
+	group->newChild<gui::MenuItem>("Billboard node", std::bind(&NodeRoot::addNode<BillboardNode>, this));
 
 	auto part = root->newChild<gui::Menu>("Particles");
 	part->newChild<gui::MenuItem>("Particle system", std::bind(&NodeRoot::addNode<ParticleSystem>, this));

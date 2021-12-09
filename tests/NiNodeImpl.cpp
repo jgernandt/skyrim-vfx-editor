@@ -60,3 +60,10 @@ bool objects::ForwardTester<NiNode>::operator()(const NiNode& obj, const TestCon
 
 	return false;
 }
+
+
+bool objects::FactoryTester<NiBillboardNode>::operator()(const NiBillboardNode& obj, const TestConstructor& ctor)
+{
+	nodeTest<node::BillboardNode>(obj, ctor);
+	return false;
+}
