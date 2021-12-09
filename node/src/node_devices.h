@@ -21,6 +21,7 @@
 #include <vector>
 #include "Devices.h"
 #include "nif_types.h"
+#include "node_concepts.h"
 
 namespace node
 {
@@ -244,6 +245,23 @@ namespace node
 
 	private:
 		nif::ni_ptr<T> m_obj;
+	};
+
+
+	class FloatCtlrReceiver final : public Receiver<IController<float>>
+	{
+	public:
+		FloatCtlrReceiver(const ni_ptr<NiTimeController>& ctlr);
+
+		virtual void onConnect(IController<float>& ifc) override;
+		virtual void onDisconnect(IController<float>& ifc) override;
+
+	private:
+		FlagSetSyncer<ControllerFlags> m_lFlags;
+		PropertySyncer<float> m_lFrequency;
+		PropertySyncer<float> m_lPhase;
+		PropertySyncer<float> m_lStartTime;
+		PropertySyncer<float> m_lStopTime;
 	};
 }
 

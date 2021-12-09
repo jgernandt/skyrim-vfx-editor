@@ -123,7 +123,7 @@ namespace nodes
 			Assert::IsTrue(target.reqsRemoved.empty());
 		}
 
-		//Birth rate should send Assignable<NiInterpolator> and receive IController<float> (single)
+		//Birth rate should send IControllable and receive IController<float> (single)
 		TEST_METHOD(Connector_BirthRate)
 		{
 			class MockController : public node::IController<float>
@@ -151,8 +151,8 @@ namespace nodes
 			MockController target;
 			ConnectorTester<node::Emitter> tester(node::Default<node::BoxEmitter>{}.create(file, nullptr, ctlr));
 
-			tester.tryConnect<Ref<NiInterpolator>, node::IController<float>>(node::Emitter::BIRTH_RATE, false, &target0);
-			auto ifc = tester.tryConnect<Ref<NiInterpolator>, node::IController<float>>(node::Emitter::BIRTH_RATE, false, &target);
+			tester.tryConnect<node::IControllable, node::IController<float>>(node::Emitter::BIRTH_RATE, false, &target0);
+			auto ifc = tester.tryConnect<node::IControllable, node::IController<float>>(node::Emitter::BIRTH_RATE, false, &target);
 			Assert::IsNotNull(ifc);
 
 			//Setting the properties on target (but not target0) should set the corresponding on ctlr
@@ -186,10 +186,12 @@ namespace nodes
 			//Assigning to the interface should assign to ctlr->interpolator
 			auto iplr = file.create<NiFloatInterpolator>();
 			Assert::IsNotNull(iplr.get());
-			ifc->assign(iplr);
+			ifc->iplr().assign(iplr);
 			Assert::IsTrue(ctlr->interpolator.assigned() == iplr);
-			ifc->assign(nullptr);
+			ifc->iplr().assign(nullptr);
 			Assert::IsTrue(ctlr->interpolator.assigned() == nullptr);
+
+			//TODO: Test the other fields of the interface (no point until we start on nonlinear animations)
 
 			//Make sure listeners are removed
 			tester.disconnect<node::IController<float>>(&target);

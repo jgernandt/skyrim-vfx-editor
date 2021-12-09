@@ -32,13 +32,24 @@ class node::FloatController::TargetField : public node::Field
 {
 public:
 	TargetField(const std::string& name, FloatController& node) :
-		Field(name), m_ifc(node), m_rcvr(node.m_iplr), m_sndr(m_ifc)
+		Field(name), m_rcvr(node.m_iplr), m_ifc(node), m_sndr(m_ifc)
 	{
 		//This is technically an upwards connector, but feels somehow better to have it downwards.
 		//Go for consistency or intuitivity?
 		connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
 	}
 private:
+	class ControllableReceiver : public Receiver<IControllable>
+	{
+	public:
+		ControllableReceiver(const ni_ptr<NiInterpolator>& obj) : m_obj{ obj } {}
+
+		virtual void onConnect(IControllable& ifc) override { ifc.iplr().assign(m_obj); }
+		virtual void onDisconnect(IControllable& ifc) override { ifc.iplr().assign(nullptr); }
+
+	private:
+		ni_ptr<NiInterpolator> m_obj;
+	};
 	class Controller final : public IController<float>
 	{
 	public:
@@ -53,8 +64,9 @@ private:
 	private:
 		FloatController& m_node;
 	};
+
+	ControllableReceiver m_rcvr;
 	Controller m_ifc;
-	RefReceiver<NiInterpolator> m_rcvr;
 	Sender<IController<float>> m_sndr;
 };
 
