@@ -191,6 +191,9 @@ nif::File::File(const std::filesystem::path& path)
 
 		if (auto node = Niflib::DynamicCast<Niflib::NiNode>(Niflib::FindRoot(objects)))
 			m_rootNode = make_ni<NiNode>(node);
+
+		//All objects should have strong refs by now; empty the temp storage
+		m_tmpStorage.clear();
 	}
 }
 
@@ -228,4 +231,9 @@ void nif::File::write(const std::filesystem::path& path)
 			}
 		}
 	}
+}
+
+void nif::File::keepAlive(const std::shared_ptr<NiObject>& obj)
+{
+	m_tmpStorage.push_back(obj);
 }

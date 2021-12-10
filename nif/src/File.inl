@@ -93,7 +93,10 @@ namespace nif
 					//The object is indexed, but it has expired.
 					//We'll get here if we load a file that has a downward Ptr.
 					//However, it could also be a bug, so we should keep an eye on this.
-					result = make_ni<T>(nativeRef);
+					//result = make_ni<T>(nativeRef);
+
+					//Go back to treating this as a bug
+					assert(false);
 #ifdef _DEBUG
 					g_downwardsPtrs++;
 #endif

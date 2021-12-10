@@ -164,7 +164,9 @@ bool nif::ReadSyncer<nif::NiTimeController>::operator()(NiTimeController& object
 	object.phase.set(native->GetPhase());
 	object.startTime.set(native->GetStartTime());
 	object.stopTime.set(native->GetStopTime());
-	object.target.assign(file.get<NiObjectNET>(native->GetTarget()));
+	auto target = file.get<NiObjectNET>(native->GetTarget());
+	file.keepAlive(target);
+	object.target.assign(target);
 	return true;
 }
 

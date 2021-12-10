@@ -67,7 +67,9 @@ bool nif::WriteSyncer<nif::NiPSysEmitter>::operator()(const NiPSysEmitter& objec
 bool nif::ReadSyncer<nif::NiPSysVolumeEmitter>::operator()(NiPSysVolumeEmitter& object, const Niflib::NiPSysVolumeEmitter* native, File& file)
 {
 	assert(native);
-	object.emitterObject.assign(file.get<NiNode>(native->GetEmitterObject()));
+	auto emitterObject = file.get<NiNode>(native->GetEmitterObject());
+	file.keepAlive(emitterObject);
+	object.emitterObject.assign(emitterObject);
 	return true;
 }
 

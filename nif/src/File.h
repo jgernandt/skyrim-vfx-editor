@@ -80,6 +80,10 @@ namespace nif
 		template<typename T>
 		[[nodiscard]] Niflib::Ref<typename type_map<T>::type> getNative(T* object) const;
 
+		//If a file contains downwards Ptrs, they must be kept alive until the whole graph has been synced.
+		//Pass any weak reference to this function during read sync.
+		void keepAlive(const std::shared_ptr<NiObject>& obj);
+
 	private:
 		//Create a new object and add to our index
 		template<typename T>
@@ -101,6 +105,8 @@ namespace nif
 
 		std::map<Niflib::NiObject*, std::weak_ptr<NiObject>> m_nativeIndex;
 		std::map<NiObject*, std::weak_ptr<Niflib::NiObject>> m_objectIndex;
+
+		std::vector<std::shared_ptr<NiObject>> m_tmpStorage;
 	};
 
 	//Use explicit specialisation here to avoid the public having to know anything about the native type.
