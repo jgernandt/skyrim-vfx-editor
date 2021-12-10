@@ -126,7 +126,17 @@ namespace nodes
 			File file{ File::Version::SKYRIM_SE };
 			auto ctlr = file.create<NiPSysEmitterCtlr>();
 			std::unique_ptr<node::NodeBase> node = node::Default<node::BoxEmitter>{}.create(file, nullptr, ctlr);
+			Assert::IsNotNull(ctlr->interpolator.assigned().get());
+
 			ControllableTest<float>(std::move(node), ctlr.get(), node::Emitter::BIRTH_RATE, file);
+
+			//Defaults should be restored when the controller node is disconnected
+			Assert::IsNotNull(ctlr->interpolator.assigned().get());
+			Assert::IsTrue(ctlr->flags.raised() == node::DEFAULT_CTLR_FLAGS);
+			Assert::IsTrue(ctlr->frequency.get() == node::DEFAULT_FREQUENCY);
+			Assert::IsTrue(ctlr->phase.get() == node::DEFAULT_PHASE);
+			Assert::IsTrue(ctlr->startTime.get() == node::DEFAULT_STARTTIME);
+			Assert::IsTrue(ctlr->stopTime.get() == node::DEFAULT_STOPTIME);
 		}
 	};
 	

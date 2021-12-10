@@ -55,41 +55,36 @@ Ref<NiInterpolator>& node::GravityModifier::StrengthField::iplr()
 	//Add it to the device.
 	//Means we need access to a nif::File and to the Modifier. No way around that.
 	//I do like that we (the StrngthField) manage the controller, though.
-	if (!m_ctlr) {
-		m_ctlr = m_node.m_file.create<NiPSysGravityStrengthCtlr>();
-		m_node.addController(m_ctlr);
-		m_rcvr.setController(m_ctlr);
-	}
+	if (!m_ctlr)
+		setController(m_node.m_file.create<NiPSysGravityStrengthCtlr>());
 	return m_ctlr->interpolator;
 }
 
 ni_ptr<NiTimeController> node::GravityModifier::StrengthField::ctlr()
 {
-	if (!m_ctlr) {
-		m_ctlr = m_node.m_file.create<NiPSysGravityStrengthCtlr>();
-		m_node.addController(m_ctlr);
-		m_rcvr.setController(m_ctlr);
-	}
+	if (!m_ctlr)
+		setController(m_node.m_file.create<NiPSysGravityStrengthCtlr>());
 	return m_ctlr;
 }
 
 void node::GravityModifier::StrengthField::onAssign(NiInterpolator* obj)
 {
-	//when null is assigned, release the controller (not critical, we could keep it)
+	//when null is assigned, release the controller
 	if (!obj) {
-		m_rcvr.setController(nullptr);
+		m_ctlr->interpolator.removeListener(*this);
 		m_node.removeController(m_ctlr.get());
+		m_rcvr.setController(nullptr);
 		m_ctlr.reset();
 	}
 }
 
 void node::GravityModifier::StrengthField::setController(const ni_ptr<NiPSysGravityStrengthCtlr>& ctlr)
 {
-	//Should only be called during loading
 	assert(!m_ctlr);
 	m_ctlr = ctlr;
-	m_node.addController(m_ctlr);
 	m_rcvr.setController(m_ctlr);
+	m_node.addController(m_ctlr);
+	m_ctlr->interpolator.addListener(*this);
 }
 
 class DecayField final : public Field

@@ -50,6 +50,8 @@ public:
 		if (!m_ctlr->interpolator.assigned())
 			m_ctlr->interpolator.assign(m_iplr);
 
+		m_ctlr->interpolator.addListener(*this);
+
 		connector = node.addConnector(std::string(), ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
 
 		//Switch widget off when connected
@@ -64,6 +66,11 @@ public:
 		sw->newChild<gui::Label>(name);
 
 		widget = sw;
+	}
+
+	~BirthRateField()
+	{
+		m_ctlr->interpolator.removeListener(*this);
 	}
 
 	virtual void onAssign(NiInterpolator* obj) override

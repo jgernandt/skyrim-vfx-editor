@@ -333,25 +333,25 @@ namespace nodes
 		ifc->iplr().assign(iplr);
 		Assert::IsTrue(ctlr->interpolator.assigned() == iplr);
 		ifc->iplr().assign(nullptr);
-		Assert::IsTrue(ctlr->interpolator.assigned() == nullptr);
+		Assert::IsTrue(ctlr->interpolator.assigned() != iplr);
 
 		//TODO: Test the other fields of the interface (no point until we start on nonlinear animations)
 
 		//Make sure listeners are removed
 		tester.disconnect<node::IController<float>>(&target);
 
-		//these calls should not reach the node (defaults should have been restored)
+		//these calls should not reach the controller
 		target.flags().clear(-1);
 		target.flags().raise(I(rng));
 		target.frequency().set(F(rng));
 		target.phase().set(F(rng));
 		target.startTime().set(F(rng));
 		target.stopTime().set(F(rng));
-		Assert::IsTrue(ctlr->flags.raised() == node::DEFAULT_CTLR_FLAGS);
-		Assert::IsTrue(ctlr->frequency.get() == node::DEFAULT_FREQUENCY);
-		Assert::IsTrue(ctlr->phase.get() == node::DEFAULT_PHASE);
-		Assert::IsTrue(ctlr->startTime.get() == node::DEFAULT_STARTTIME);
-		Assert::IsTrue(ctlr->stopTime.get() == node::DEFAULT_STOPTIME);
+		Assert::IsTrue(ctlr->flags.raised() != target.flags().raised());
+		Assert::IsTrue(ctlr->frequency.get() != target.frequency().get());
+		Assert::IsTrue(ctlr->phase.get() != target.phase().get());
+		Assert::IsTrue(ctlr->startTime.get() != target.startTime().get());
+		Assert::IsTrue(ctlr->stopTime.get() != target.stopTime().get());
 	}
 }
 
