@@ -34,11 +34,18 @@ constexpr float SCALE_BASE = 1.1f;
 constexpr float SCALE_MIN = 0.23939f;
 constexpr float SCALE_MAX = 4.17725f;
 
-class HelpWindow final : public gui::Window
+class BlockInfoWindow final : public gui::Window
 {
 public:
-	HelpWindow();
-	~HelpWindow();
+	BlockInfoWindow();
+	~BlockInfoWindow();
+	virtual void frame(gui::FrameDrawer& fd) override;
+};
+
+class ControlsInfoWindow final : public gui::Window
+{
+public:
+	ControlsInfoWindow();
 	virtual void frame(gui::FrameDrawer& fd) override;
 };
 
@@ -130,8 +137,13 @@ node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &fil
 
 	//Main menu additions
 	auto help = std::make_unique<gui::MainMenu>("Help");
+
 	help->newChild<gui::MenuItem>("Block info",
-		[this]() { asyncInvoke<gui::InsertChild>(std::make_unique<HelpWindow>(), this, 0); });
+		[this]() { asyncInvoke<gui::InsertChild>(std::make_unique<BlockInfoWindow>(), this, 0); });
+
+	help->newChild<gui::MenuItem>("Controls",
+		[this]() { asyncInvoke<gui::InsertChild>(std::make_unique<ControlsInfoWindow>(), this, 0); });
+
 	addChild(std::move(help));
 }
 
@@ -195,7 +207,7 @@ std::unique_ptr<gui::IComponent> node::Editor::NodeRoot::createAddMenu()
 	return root;
 }
 
-HelpWindow::HelpWindow()
+BlockInfoWindow::BlockInfoWindow()
 {
 	setClosable();
 	setTitle("Block types");
@@ -214,11 +226,43 @@ HelpWindow::HelpWindow()
 		newChild<gui::Text>(std::string("Failed to load ") + DOC_FILE_NAME);
 }
 
-HelpWindow::~HelpWindow()
+BlockInfoWindow::~BlockInfoWindow()
 {
 }
 
-void HelpWindow::frame(gui::FrameDrawer& fd)
+void BlockInfoWindow::frame(gui::FrameDrawer& fd)
+{
+	Window::frame(fd);
+
+	gui::Floats<2> pos = gui::Mouse::getPosition();
+	gui::Floats<2> TL = fd.toGlobal(m_translation).floor();
+	gui::Floats<2> BR = fd.toGlobal(m_translation + m_size * m_scale).floor();
+	if (pos[0] >= TL[0] && pos[0] <= BR[0] && pos[1] >= TL[1] && pos[1] <= BR[1])
+		fd.setWheelHandled();
+}
+
+ControlsInfoWindow::ControlsInfoWindow()
+{
+	setClosable();
+	setTitle("Controls");
+	setSize({ 400.0f, 300.0f });
+
+	std::string info{"Node editor:\n\
+*Right click to open Add menu\n\
+*Pan with middle mouse button\n\
+*Zoom with mouse wheel\n\
+\n\
+Key editor:\n\
+*Insert a key with CTRL + left click\n\
+*Erase selected keys with X or DEL\n\
+*Pan with middle mouse button\n\
+*Zoom with mouse wheel or CTRL + middle mouse button" };
+
+	auto text = newChild<gui::Text>(info);
+	text->setWrap();
+}
+
+void ControlsInfoWindow::frame(gui::FrameDrawer& fd)
 {
 	Window::frame(fd);
 
