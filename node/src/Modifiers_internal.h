@@ -48,6 +48,10 @@ namespace node
 		{
 			ModifierCtlrTraverser::traverse(static_cast<NiPSysModifierCtlr&>(obj));
 		}
+		virtual void traverse(NiPSysGravityStrengthCtlr& obj) override
+		{
+			ModifierCtlrTraverser::traverse(static_cast<NiPSysModifierCtlr&>(obj));
+		}
 	};
 
 	//NiPSysModifier/////
@@ -181,7 +185,7 @@ namespace node
 		std::unique_ptr<PlanarForceField> create(File& file, const ni_ptr<NiPSysGravityModifier>& obj = ni_ptr<NiPSysGravityModifier>())
 		{
 			if (obj)
-				return std::make_unique<PlanarForceField>(obj);
+				return std::make_unique<PlanarForceField>(file, obj);
 			else {
 				auto new_obj = file.create<NiPSysGravityModifier>();
 				if (!new_obj)
@@ -191,7 +195,7 @@ namespace node
 				new_obj->forceType.set(FORCE_PLANAR);
 				new_obj->gravityAxis.set({ 0.0f, 0.0f, 1.0f });
 
-				return std::make_unique<PlanarForceField>(new_obj);
+				return std::make_unique<PlanarForceField>(file, new_obj);
 			}
 		}
 	};
@@ -203,7 +207,7 @@ namespace node
 		std::unique_ptr<SphericalForceField> create(File& file, const ni_ptr<NiPSysGravityModifier>& obj = ni_ptr<NiPSysGravityModifier>())
 		{
 			if (obj)
-				return std::make_unique<SphericalForceField>(obj);
+				return std::make_unique<SphericalForceField>(file, obj);
 			else {
 				auto new_obj = file.create<NiPSysGravityModifier>();
 				if (!new_obj)
@@ -212,7 +216,7 @@ namespace node
 				this->setDefaults(*new_obj);
 				new_obj->forceType.set(FORCE_SPHERICAL);
 
-				return std::make_unique<SphericalForceField>(new_obj);
+				return std::make_unique<SphericalForceField>(file, new_obj);
 			}
 		}
 	};
@@ -239,7 +243,14 @@ namespace node
 	{
 	public:
 		GravityCtlrTraverser(std::string&& name) : ModifierCtlrTraverser{ std::move(name) } {}
-		//virtual void traverse(NiPSysGravityStrengthCtlr& obj) final override {}
+		virtual void traverse(NiPSysGravityStrengthCtlr& obj) final override 
+		{
+			assert(current.get() == &obj);
+			if (obj.modifierName.get() == m_name)
+				strengthCtlr = std::static_pointer_cast<NiPSysGravityStrengthCtlr>(current);
+		}
+
+		ni_ptr<NiPSysGravityStrengthCtlr> strengthCtlr;
 	};
 
 	template<>
@@ -261,6 +272,9 @@ namespace node
 					node = Default<SphericalForceField>{}.create(ctor.getFile(), ptr);
 
 				if (node) {
+					if (t.strengthCtlr)
+						node->strength().setController(t.strengthCtlr);
+
 					for (auto&& ctlr : t.controllers)
 						node->addController(ctlr);
 

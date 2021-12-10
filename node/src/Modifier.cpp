@@ -46,8 +46,12 @@ node::Modifier::~Modifier()
 
 void node::Modifier::addController(const ni_ptr<nif::NiPSysModifierCtlr>& ctlr)
 {
-	if (ctlr)
-		m_device.addController(ctlr);
+	m_device.addController(ctlr);
+}
+
+void node::Modifier::removeController(NiPSysModifierCtlr* ctlr)
+{
+	m_device.removeController(ctlr);
 }
 
 std::vector<NiPSysModifierCtlr*> node::Modifier::getControllers() const

@@ -131,6 +131,7 @@ namespace nif
 	struct NiPSysModifierCtlr;
 	struct NiPSysUpdateCtlr;
 	struct NiPSysEmitterCtlr;
+	struct NiPSysGravityStrengthCtlr;
 
 	struct NiExtraData;
 	struct NiStringExtraData;
@@ -187,6 +188,7 @@ namespace Niflib
 	class NiPSysModifierCtlr;
 	class NiPSysUpdateCtlr;
 	class NiPSysEmitterCtlr;
+	class NiPSysGravityStrengthCtlr;
 
 	class NiExtraData;
 	class NiStringExtraData;

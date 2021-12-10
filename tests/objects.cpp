@@ -174,6 +174,14 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysEmitterCtlr>{}.run(); }
 	};
 
+	TEST_CLASS(NiPSysGravityStrengthCtlr)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysGravityStrengthCtlr>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysGravityStrengthCtlr>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysGravityStrengthCtlr>{}.run(); }
+	};
+
 	TEST_CLASS(NiExtraData)
 	{
 	public:

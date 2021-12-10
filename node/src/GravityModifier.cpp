@@ -36,17 +36,61 @@ public:
 	}
 };
 
-class StrengthField final : public Field
+node::GravityModifier::StrengthField::StrengthField(const std::string& name, GravityModifier& node, ni_ptr<Property<float>>&& obj) :
+	Field{ name }, m_node{ node }, m_sndr{ *this }
 {
-public:
-	StrengthField(const std::string& name, NodeBase& node, ni_ptr<Property<float>>&& obj) :
-		Field(name)
-	{
-		widget = node.newChild<DragFloat>(obj, name);
-		static_cast<DragFloat*>(widget)->setSensitivity(0.1f);
-		static_cast<DragFloat*>(widget)->setNumberFormat("%.2f");
+	connector = node.addConnector(std::string(), ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
+
+	auto sw = node.newChild<gui::Switch>(std::bind(&gui::Connector::isConnected, connector));
+	auto input = sw->newChild<DragFloat>(obj, name);
+	input->setSensitivity(0.1f);
+	input->setNumberFormat("%.2f");
+
+	sw->newChild<gui::Label>(name);
+}
+
+Ref<NiInterpolator>& node::GravityModifier::StrengthField::iplr()
+{
+	//If there is no controller, create one.
+	//Add it to the device.
+	//Means we need access to a nif::File and to the Modifier. No way around that.
+	//I do like that we (the StrngthField) manage the controller, though.
+	if (!m_ctlr) {
+		m_ctlr = m_node.m_file.create<NiPSysGravityStrengthCtlr>();
+		m_node.addController(m_ctlr);
+		m_rcvr.setController(m_ctlr);
 	}
-};
+	return m_ctlr->interpolator;
+}
+
+ni_ptr<NiTimeController> node::GravityModifier::StrengthField::ctlr()
+{
+	if (!m_ctlr) {
+		m_ctlr = m_node.m_file.create<NiPSysGravityStrengthCtlr>();
+		m_node.addController(m_ctlr);
+		m_rcvr.setController(m_ctlr);
+	}
+	return m_ctlr;
+}
+
+void node::GravityModifier::StrengthField::onAssign(NiInterpolator* obj)
+{
+	//when null is assigned, release the controller (not critical, we could keep it)
+	if (!obj) {
+		m_rcvr.setController(nullptr);
+		m_node.removeController(m_ctlr.get());
+		m_ctlr.reset();
+	}
+}
+
+void node::GravityModifier::StrengthField::setController(const ni_ptr<NiPSysGravityStrengthCtlr>& ctlr)
+{
+	//Should only be called during loading
+	assert(!m_ctlr);
+	m_ctlr = ctlr;
+	m_node.addController(m_ctlr);
+	m_rcvr.setController(m_ctlr);
+}
 
 class DecayField final : public Field
 {
@@ -89,8 +133,8 @@ public:
 	}
 };
 
-node::GravityModifier::GravityModifier(const ni_ptr<NiPSysGravityModifier>& obj) :
-	Modifier(obj)
+node::GravityModifier::GravityModifier(File& file, const ni_ptr<NiPSysGravityModifier>& obj) :
+	Modifier(obj), m_file{ file }
 {
 	newChild<gui::Separator>();
 
@@ -110,6 +154,7 @@ node::GravityModifier::GravityModifier(const ni_ptr<NiPSysGravityModifier>& obj)
 		make_ni_ptr(obj, &NiPSysGravityModifier::turbulenceScale));
 }
 
+
 class GravityAxisField final : public Field
 {
 public:
@@ -126,8 +171,8 @@ public:
 };
 
 
-node::PlanarForceField::PlanarForceField(const ni_ptr<NiPSysGravityModifier>& obj) :
-	GravityModifier(obj)
+node::PlanarForceField::PlanarForceField(File& file, const ni_ptr<NiPSysGravityModifier>& obj) :
+	GravityModifier(file, obj)
 {
 	setTitle("Planar force field");
 	setSize({ WIDTH, HEIGHT });
@@ -150,8 +195,8 @@ node::PlanarForceField::~PlanarForceField()
 
 
 
-node::SphericalForceField::SphericalForceField(const ni_ptr<NiPSysGravityModifier>& obj) :
-	GravityModifier(obj)
+node::SphericalForceField::SphericalForceField(File& file, const ni_ptr<NiPSysGravityModifier>& obj) :
+	GravityModifier(file, obj)
 {
 	setTitle("Spherical force field");
 	setSize({ WIDTH, HEIGHT });

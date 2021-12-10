@@ -27,8 +27,6 @@ const size_t nif::NiPSysPositionModifier::TYPE = std::hash<std::string>{}("NiPSy
 const size_t nif::NiPSysRotationModifier::TYPE = std::hash<std::string>{}("NiPSysRotationModifier");
 const size_t nif::BSPSysScaleModifier::TYPE = std::hash<std::string>{}("BSPSysScaleModifier");
 const size_t nif::BSPSysSimpleColorModifier::TYPE = std::hash<std::string>{}("BSPSysSimpleColorModifier");
-const size_t nif::NiPSysModifierCtlr::TYPE = std::hash<std::string>{}("NiPSysModifierCtlr");
-const size_t nif::NiPSysUpdateCtlr::TYPE = std::hash<std::string>{}("NiPSysUpdateCtlr");
 
 using namespace math;
 

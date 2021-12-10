@@ -251,10 +251,13 @@ namespace node
 	class FloatCtlrReceiver final : public Receiver<IController<float>>
 	{
 	public:
+		FloatCtlrReceiver();
 		FloatCtlrReceiver(const ni_ptr<NiTimeController>& ctlr);
 
 		virtual void onConnect(IController<float>& ifc) override;
 		virtual void onDisconnect(IController<float>& ifc) override;
+
+		void setController(const ni_ptr<NiTimeController>& ctlr);
 
 	private:
 		FlagSetSyncer<ControllerFlags> m_lFlags;
@@ -262,6 +265,8 @@ namespace node
 		PropertySyncer<float> m_lPhase;
 		PropertySyncer<float> m_lStartTime;
 		PropertySyncer<float> m_lStopTime;
+
+		IController<float>* m_ifc{ nullptr };
 	};
 }
 

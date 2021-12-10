@@ -27,6 +27,11 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
 
+//Modifier controller tests should all be similar:
+//*setup a target and target modifier
+//*check that we requested a connection from our iplr to the target field on the target modifier
+//*check that a controller node was created (possibly conditional)
+
 bool objects::TestSetup<NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& obj, File& file)
 {
 	auto target = file.create<NiParticleSystem>();
@@ -54,7 +59,7 @@ bool objects::TestSetup<NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& obj, F
 bool objects::ConnectorTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& obj, const TestConstructor& ctor)
 {
 	//Should always request a connection between its interpolator (if any) and the target mod (mod1)
-	auto target = static_cast<NiParticleSystem*>(obj.target.assigned().get());
+	auto target = std::static_pointer_cast<NiParticleSystem>(obj.target.assigned());
 	Assert::IsTrue(ctor.connections.size() == 1);
 	Assert::IsTrue(ctor.connections[0].object1 == obj.interpolator.assigned().get());
 	Assert::IsTrue(ctor.connections[0].field1 == node::FloatController::TARGET);
@@ -125,4 +130,49 @@ void objects::FactoryTest<NiPSysEmitterCtlr>::run()
 		node::Factory<NiPSysEmitterCtlr>{}.up(*obj, ctor);
 		FactoryTester<NiPSysEmitterCtlr>{}.up(*obj, ctor);
 	}
+}
+
+
+bool objects::TestSetup<NiPSysGravityStrengthCtlr>::operator()(NiPSysGravityStrengthCtlr& obj, File& file)
+{
+	//Add a target psys and a target modifier
+	auto target = file.create<NiParticleSystem>();
+	file.getRoot()->children.add(target);
+	obj.target.assign(target);
+
+	auto mod0 = file.create<NiPSysModifier>();
+	target->modifiers.insert(0, mod0);
+	auto mod1 = file.create<NiPSysGravityModifier>();
+	target->modifiers.insert(1, mod1);
+	auto mod2 = file.create<NiPSysModifier>();
+	target->modifiers.insert(2, mod2);
+
+	obj.modifierName.set("bvvarnlier");
+	mod1->name.set(obj.modifierName.get());
+
+	auto iplr = file.create<NiFloatInterpolator>();
+	obj.interpolator.assign(iplr);
+
+	return false;
+}
+
+bool objects::ConnectorTester<NiPSysGravityStrengthCtlr>::operator()(const NiPSysGravityStrengthCtlr& obj, const TestConstructor& ctor)
+{
+	auto target = std::static_pointer_cast<NiParticleSystem>(obj.target.assigned());
+	Assert::IsTrue(ctor.connections.size() == 1);
+	Assert::IsTrue(ctor.connections[0].object1 == obj.interpolator.assigned().get());
+	Assert::IsTrue(ctor.connections[0].field1 == node::FloatController::TARGET);
+	Assert::IsTrue(ctor.connections[0].object2 == target->modifiers.at(1).get());
+	Assert::IsTrue(ctor.connections[0].field2 == node::GravityModifier::STRENGTH);
+	return false;
+}
+
+bool objects::FactoryTester<NiPSysGravityStrengthCtlr>::operator()(const NiPSysGravityStrengthCtlr& obj, const TestConstructor& ctor)
+{
+	auto&& iplr = obj.interpolator.assigned(); 
+	if (ni_type type = iplr->type(); type == NiBlendFloatInterpolator::TYPE)
+		Assert::IsTrue(!ctor.node.second);
+	else
+		nodeTest<node::FloatController>(*obj.interpolator.assigned(), ctor);
+	return false;
 }

@@ -23,8 +23,8 @@
 
 #include "CompositionActions.h"
 
-constexpr gui::ColRGBA TitleCol_Anim = { 0.8f, 0.8f, 0.8f, 1.0f };
-constexpr gui::ColRGBA TitleCol_AnimActive = { 0.8f, 0.8f, 0.8f, 1.0f };
+constexpr gui::ColRGBA TitleCol_Anim = { 1.0f, 1.0f, 0.7f, 1.0f };
+constexpr gui::ColRGBA TitleCol_AnimActive = { 1.0f, 1.0f, 0.7f, 1.0f };
 
 using namespace nif;
 
@@ -70,15 +70,13 @@ private:
 	Sender<IController<float>> m_sndr;
 };
 
-node::FloatController::FloatController(const ni_ptr<NiFloatInterpolator>& iplr, const ni_ptr<NiFloatData>& data) :
+node::FloatController::FloatController(const ni_ptr<NiFloatInterpolator>& iplr) :
 	m_iplr{ iplr },
-	m_data{ data },
 	//Our controller is a dummy object that will never be exported or assigned to another field,
 	//hence we can bypass file. Still, this is a little fishy.
 	m_ctlr{ std::make_shared<NiTimeController>() }
 {
-	assert(iplr && data);
-	iplr->data.assign(data);
+	assert(iplr->data.assigned());
 
 	setClosable(true);
 	setTitle("Animation");
@@ -104,7 +102,7 @@ node::FloatController::~FloatController()
 
 void node::FloatController::openKeyEditor()
 {
-	auto c = std::make_unique<FloatKeyEditor>(m_ctlr, m_data);
+	auto c = std::make_unique<FloatKeyEditor>(m_ctlr, m_iplr->data.assigned());
 	c->open();
 	asyncInvoke<gui::AddChild>(std::move(c), this, false);
 }

@@ -23,6 +23,12 @@
 using namespace nif;
 using namespace node;
 
+node::FloatCtlrReceiver::FloatCtlrReceiver() :
+	m_lFlags(nullptr), m_lFrequency(nullptr), m_lPhase(nullptr),
+	m_lStartTime(nullptr), m_lStopTime(nullptr)
+{
+}
+
 node::FloatCtlrReceiver::FloatCtlrReceiver(const ni_ptr<NiTimeController>& ctlr) :
 	m_lFlags(make_ni_ptr(ctlr, &NiTimeController::flags)),
 	m_lFrequency(make_ni_ptr(ctlr, &NiTimeController::frequency)),
@@ -34,6 +40,8 @@ node::FloatCtlrReceiver::FloatCtlrReceiver(const ni_ptr<NiTimeController>& ctlr)
 
 void node::FloatCtlrReceiver::onConnect(IController<float>& ifc)
 {
+	m_ifc = &ifc;
+
 	ifc.flags().addListener(m_lFlags);
 	ifc.frequency().addListener(m_lFrequency);
 	ifc.phase().addListener(m_lPhase);
@@ -63,4 +71,23 @@ void node::FloatCtlrReceiver::onDisconnect(IController<float>& ifc)
 	m_lPhase.onSet(DEFAULT_PHASE);
 	m_lStartTime.onSet(DEFAULT_STARTTIME);
 	m_lStopTime.onSet(DEFAULT_STOPTIME);
+
+	m_ifc = nullptr;
+}
+
+void node::FloatCtlrReceiver::setController(const ni_ptr<NiTimeController>& ctlr)
+{
+	m_lFlags.setTarget(make_ni_ptr(ctlr, &NiTimeController::flags));
+	m_lFrequency.setTarget(make_ni_ptr(ctlr, &NiTimeController::frequency));
+	m_lPhase.setTarget(make_ni_ptr(ctlr, &NiTimeController::phase));
+	m_lStartTime.setTarget(make_ni_ptr(ctlr, &NiTimeController::startTime));
+	m_lStopTime.setTarget(make_ni_ptr(ctlr, &NiTimeController::stopTime));
+
+	if (m_ifc) {
+		m_lFlags.onRaise(m_ifc->flags().raised());
+		m_lFrequency.onSet(m_ifc->frequency().get());
+		m_lPhase.onSet(m_ifc->phase().get());
+		m_lStartTime.onSet(m_ifc->startTime().get());
+		m_lStopTime.onSet(m_ifc->stopTime().get());
+	}
 }

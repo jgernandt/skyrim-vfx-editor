@@ -35,20 +35,21 @@
 #include "obj/NiParticleSystem.h"
 #include "obj/NiPSysData.h"
 
+#include "obj/NiPSysAgeDeathModifier.h"
+#include "obj/NiPSysBoundUpdateModifier.h"
+#include "obj/NiPSysGravityModifier.h"
+#include "obj/NiPSysPositionModifier.h"
+#include "obj/NiPSysRotationModifier.h"
 #include "obj/BSPSysScaleModifier.h"
 #include "obj/BSPSysSimpleColorModifier.h"
-#include "obj/NiPSysGravityModifier.h"
-#include "obj/NiPSysRotationModifier.h"
 
 #include "obj/NiPSysBoxEmitter.h"
 #include "obj/NiPSysCylinderEmitter.h"
 #include "obj/NiPSysSphereEmitter.h"
-#include "obj/NiPSysEmitterCtlr.h"
 
-#include "obj/NiPSysAgeDeathModifier.h"
-#include "obj/NiPSysPositionModifier.h"
-#include "obj/NiPSysBoundUpdateModifier.h"
 #include "obj/NiPSysUpdateCtlr.h"
+#include "obj/NiPSysEmitterCtlr.h"
+#include "obj/NiPSysGravityStrengthCtlr.h"
 
 #include "obj/NiStringExtraData.h"
 #include "obj/NiStringsExtraData.h"

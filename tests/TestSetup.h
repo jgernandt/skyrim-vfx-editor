@@ -111,4 +111,10 @@ namespace objects
 	{
 		bool operator() (NiPSysEmitterCtlr& obj, File& file);
 	};
+
+	template<>
+	struct TestSetup<NiPSysGravityStrengthCtlr> : VerticalTraverser<NiPSysGravityStrengthCtlr, TestSetup>
+	{
+		bool operator() (NiPSysGravityStrengthCtlr& obj, File& file);
+	};
 }

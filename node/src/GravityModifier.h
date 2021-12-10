@@ -25,11 +25,42 @@ namespace node
 
 	class GravityModifier : public Modifier
 	{
+	public:
+		class StrengthField final :
+			public Field,
+			public IControllable,
+			public AssignableListener<NiInterpolator>
+		{
+		public:
+			StrengthField(const std::string& name, GravityModifier& node, ni_ptr<Property<float>>&& obj);
+
+			virtual Ref<NiInterpolator>& iplr() override;
+			virtual ni_ptr<NiTimeController> ctlr() override;
+			virtual ni_ptr<NiAVObject> object() override { return ni_ptr<NiAVObject>(); }
+			virtual std::string propertyType() override { return std::string(); }
+			virtual std::string ctlrType() override { return std::string(); }
+			virtual Property<std::string>* ctlrID() override { return nullptr; }
+			virtual std::string iplrID() override { return std::string(); }
+
+			virtual void onAssign(NiInterpolator* obj) override;
+
+			void setController(const ni_ptr<NiPSysGravityStrengthCtlr>& ctlr);
+
+		private:
+			GravityModifier& m_node;
+			ni_ptr<NiPSysGravityStrengthCtlr> m_ctlr;
+			FloatCtlrReceiver m_rcvr;
+			Sender<IControllable> m_sndr;
+		};
+
 	protected:
-		GravityModifier(const ni_ptr<NiPSysGravityModifier>& obj);
+		GravityModifier(File& file, const ni_ptr<NiPSysGravityModifier>& obj);
 
 	public:
 		virtual ~GravityModifier() = default;
+
+		//I think this is how we want this to work, very approximately
+		StrengthField& strength() { return *m_strengthField; }
 
 		constexpr static const char* GRAVITY_OBJECT = "Field object";
 		constexpr static const char* STRENGTH = "Strength";
@@ -38,8 +69,12 @@ namespace node
 		constexpr static const char* TURBULENCE_SCALE = "Turbulence scale";
 
 	private:
+		//I'm not sure how we want to store this, just put it here for now
+		File& m_file;
+
+		//should not be pointers, but a composition?
 		std::unique_ptr<Field> m_objectField;
-		std::unique_ptr<Field> m_strengthField;
+		std::unique_ptr<StrengthField> m_strengthField;
 		std::unique_ptr<Field> m_decayField;
 		std::unique_ptr<Field> m_turbField;
 		std::unique_ptr<Field> m_turbScaleField;
@@ -48,7 +83,7 @@ namespace node
 	class PlanarForceField final : public GravityModifier
 	{
 	public:
-		PlanarForceField(const ni_ptr<NiPSysGravityModifier>& obj);
+		PlanarForceField(File& file, const ni_ptr<NiPSysGravityModifier>& obj);
 		~PlanarForceField();
 
 		constexpr static const char* GRAVITY_AXIS = "Direction";
@@ -64,7 +99,7 @@ namespace node
 	class SphericalForceField final : public GravityModifier
 	{
 	public:
-		SphericalForceField(const ni_ptr<NiPSysGravityModifier>& obj);
+		SphericalForceField(File& file, const ni_ptr<NiPSysGravityModifier>& obj);
 		~SphericalForceField();
 
 		constexpr static float WIDTH = 150.0f;

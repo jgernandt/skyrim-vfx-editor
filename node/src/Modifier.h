@@ -37,6 +37,7 @@ namespace node
 		virtual ~Modifier();
 
 		void addController(const ni_ptr<NiPSysModifierCtlr>& ctlr);
+		void removeController(NiPSysModifierCtlr* ctlr);
 		std::vector<NiPSysModifierCtlr*> getControllers() const;
 
 	public:

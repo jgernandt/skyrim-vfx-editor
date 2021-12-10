@@ -27,8 +27,6 @@ namespace nodes
 
 	TEST_CLASS(Emitter)
 	{
-		std::mt19937 m_engine;
-
 	public:
 
 		//Emitters should send a colour requirement if their colour is non-white
@@ -123,91 +121,12 @@ namespace nodes
 			Assert::IsTrue(target.reqsRemoved.empty());
 		}
 
-		//Birth rate should send IControllable and receive IController<float> (single)
 		TEST_METHOD(Connector_BirthRate)
 		{
-			class MockController : public node::IController<float>
-			{
-			public:
-				virtual FlagSet<ControllerFlags>& flags() override { return m_flags; }
-				virtual Property<float>& frequency() override { return m_frequency; }
-				virtual Property<float>& phase() override { return m_phase; }
-				virtual Property<float>& startTime() override { return m_startTime; }
-				virtual Property<float>& stopTime() override { return m_stopTime; }
-
-			private:
-				FlagSet<ControllerFlags> m_flags;
-				Property<float> m_frequency;
-				Property<float> m_phase;
-				Property<float> m_startTime;
-				Property<float> m_stopTime;
-			};
-
 			File file{ File::Version::SKYRIM_SE };
 			auto ctlr = file.create<NiPSysEmitterCtlr>();
-
-
-			MockController target0;
-			MockController target;
-			ConnectorTester<node::Emitter> tester(node::Default<node::BoxEmitter>{}.create(file, nullptr, ctlr));
-
-			tester.tryConnect<node::IControllable, node::IController<float>>(node::Emitter::BIRTH_RATE, false, &target0);
-			auto ifc = tester.tryConnect<node::IControllable, node::IController<float>>(node::Emitter::BIRTH_RATE, false, &target);
-			Assert::IsNotNull(ifc);
-
-			//Setting the properties on target (but not target0) should set the corresponding on ctlr
-			std::uniform_int_distribution<unsigned short> I;
-			std::uniform_real_distribution<float> F;
-
-			target0.flags().clear(-1);//better clear any defaults
-			target0.flags().raise(I(m_engine));
-			target0.frequency().set(F(m_engine));
-			target0.phase().set(F(m_engine));
-			target0.startTime().set(F(m_engine));
-			target0.stopTime().set(F(m_engine));
-			Assert::IsFalse(ctlr->flags.raised() == target0.flags().raised());
-			Assert::IsFalse(ctlr->frequency.get() == target0.frequency().get());
-			Assert::IsFalse(ctlr->phase.get() == target0.phase().get());
-			Assert::IsFalse(ctlr->startTime.get() == target0.startTime().get());
-			Assert::IsFalse(ctlr->stopTime.get() == target0.stopTime().get());
-
-			target.flags().clear(-1);//better clear any defaults
-			target.flags().raise(I(m_engine));
-			target.frequency().set(F(m_engine));
-			target.phase().set(F(m_engine));
-			target.startTime().set(F(m_engine));
-			target.stopTime().set(F(m_engine));
-			Assert::IsTrue(ctlr->flags.raised() == target.flags().raised());
-			Assert::IsTrue(ctlr->frequency.get() == target.frequency().get());
-			Assert::IsTrue(ctlr->phase.get() == target.phase().get());
-			Assert::IsTrue(ctlr->startTime.get() == target.startTime().get());
-			Assert::IsTrue(ctlr->stopTime.get() == target.stopTime().get());
-
-			//Assigning to the interface should assign to ctlr->interpolator
-			auto iplr = file.create<NiFloatInterpolator>();
-			Assert::IsNotNull(iplr.get());
-			ifc->iplr().assign(iplr);
-			Assert::IsTrue(ctlr->interpolator.assigned() == iplr);
-			ifc->iplr().assign(nullptr);
-			Assert::IsTrue(ctlr->interpolator.assigned() == nullptr);
-
-			//TODO: Test the other fields of the interface (no point until we start on nonlinear animations)
-
-			//Make sure listeners are removed
-			tester.disconnect<node::IController<float>>(&target);
-
-			//these calls should not reach the node (defaults should have been restored)
-			target.flags().clear(-1);
-			target.flags().raise(I(m_engine));
-			target.frequency().set(F(m_engine));
-			target.phase().set(F(m_engine));
-			target.startTime().set(F(m_engine));
-			target.stopTime().set(F(m_engine));
-			Assert::IsTrue(ctlr->flags.raised() == node::DEFAULT_CTLR_FLAGS);
-			Assert::IsTrue(ctlr->frequency.get() == node::DEFAULT_FREQUENCY);
-			Assert::IsTrue(ctlr->phase.get() == node::DEFAULT_PHASE);
-			Assert::IsTrue(ctlr->startTime.get() == node::DEFAULT_STARTTIME);
-			Assert::IsTrue(ctlr->stopTime.get() == node::DEFAULT_STOPTIME);
+			std::unique_ptr<node::NodeBase> node = node::Default<node::BoxEmitter>{}.create(file, nullptr, ctlr);
+			ControllableTest<float>(std::move(node), ctlr.get(), node::Emitter::BIRTH_RATE, file);
 		}
 	};
 	
