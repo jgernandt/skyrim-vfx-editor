@@ -116,6 +116,9 @@ node::NLFloatController::NLFloatController(const ni_ptr<NiBlendFloatInterpolator
 {
 	setTitle("Nonlinear anim.");
 	setSize({ WIDTH, HEIGHT });
+
+	//until we have some other way to determine connector position for loading placement
+	getField(TARGET)->connector->setTranslation({ WIDTH, 38.0f });
 }
 
 node::NLFloatController::~NLFloatController()
