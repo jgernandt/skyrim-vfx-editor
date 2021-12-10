@@ -68,9 +68,10 @@ namespace nif
 		virtual void traverse(NiPSysCylinderEmitter& obj) {}
 		virtual void traverse(NiPSysSphereEmitter& obj) {}
 
-		virtual void traverse(NiPSysModifierCtlr& obj) {}
 		virtual void traverse(NiPSysUpdateCtlr& obj) {}
+		virtual void traverse(NiPSysModifierCtlr& obj) {}
 		virtual void traverse(NiPSysEmitterCtlr& obj) {}
+		virtual void traverse(NiPSysGravityStrengthCtlr& obj) {}
 
 		virtual void traverse(NiExtraData& obj) {}
 		virtual void traverse(NiStringExtraData& obj) {}
@@ -203,9 +204,10 @@ namespace nif
 		virtual void traverse(NiPSysCylinderEmitter& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiPSysSphereEmitter& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
-		virtual void traverse(NiPSysModifierCtlr& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiPSysUpdateCtlr& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysModifierCtlr& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiPSysEmitterCtlr& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiPSysGravityStrengthCtlr& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
 		virtual void traverse(NiExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiStringExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }

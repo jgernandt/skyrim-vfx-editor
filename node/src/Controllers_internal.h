@@ -37,7 +37,6 @@ namespace node
 		std::unique_ptr<FloatController> create(
 			File& file, 
 			ni_ptr<NiFloatInterpolator> iplr = ni_ptr<NiFloatInterpolator>(),
-			ni_ptr<NiFloatData> data = ni_ptr<NiFloatData>(),
 			const NiTimeController* ctlr = nullptr)
 		{
 			if (!iplr) {
@@ -45,9 +44,10 @@ namespace node
 				if (!iplr)
 					throw std::runtime_error("Failed to create NiFloatInterpolator");
 			}
-			if (!data) {
+
+			if (!iplr->data.assigned()) {
 				//We don't necessarily need a data block. Should we always have one regardless?
-				data = file.create<NiFloatData>();
+				auto data = file.create<NiFloatData>();
 				if (!data)
 					throw std::runtime_error("Failed to create NiFloatData");
 
@@ -55,15 +55,16 @@ namespace node
 
 				data->keys.push_back();
 				data->keys.back().time.set(ctlr ? ctlr->startTime.get() : 0.0f);
-				data->keys.back().value.set(0.0f);
+				data->keys.back().value.set(iplr->value.get());
 
 				data->keys.push_back();
 				data->keys.back().time.set(ctlr ? ctlr->stopTime.get() : 1.0f);
-				data->keys.back().value.set(0.0f);
+				data->keys.back().value.set(iplr->value.get());
+
+				iplr->data.assign(data);
 			}
 
-			//Let the node decide if it wants the data assigned or not
-			auto node = std::make_unique<FloatController>(iplr, data);
+			auto node = std::make_unique<FloatController>(iplr);
 
 			if (ctlr) {
 				node->flags().raise(ctlr->flags.raised());
@@ -83,6 +84,9 @@ namespace node
 			return node;
 		}
 	};
+
+
+	//NiPSysEmitterCtlr////////////
 
 	template<>
 	class Connector<NiPSysEmitterCtlr> : public VerticalTraverser<NiPSysEmitterCtlr, Connector>
@@ -125,17 +129,76 @@ namespace node
 			//one that knows what type of node (if any) to create. 
 			//Not the interpolator, not the modifier, not the particle system.
 			if (auto&& iplr = obj.interpolator.assigned()) {
-				ni_type type = iplr->type();
-				if (type == NiFloatInterpolator::TYPE) {
-					if (auto&& data = static_cast<NiFloatInterpolator*>(iplr.get())->data.assigned()) {
+				if (ni_type type = iplr->type(); type == NiFloatInterpolator::TYPE) {
+					if (static_cast<NiFloatInterpolator*>(iplr.get())->data.assigned()) {
 						auto node = Default<FloatController>{}.create(
-							ctor.getFile(), std::static_pointer_cast<NiFloatInterpolator>(iplr), data, &obj);
+							ctor.getFile(), std::static_pointer_cast<NiFloatInterpolator>(iplr), &obj);
 						ctor.addNode(iplr.get(), std::move(node));
 					}
 				}
 				else if (type == NiBlendFloatInterpolator::TYPE) {
-					//maybe another type of node
+					ctor.addNode(iplr.get(), Default<NLFloatController>{}.create(
+						ctor.getFile(), std::static_pointer_cast<NiBlendFloatInterpolator>(iplr)));
 				}
+			}
+
+			return false;
+		}
+	};
+
+
+	//NiPSysGravityStrengthCtlr////////////
+
+	template<>
+	class Connector<NiPSysGravityStrengthCtlr> : public VerticalTraverser<NiPSysGravityStrengthCtlr, Connector>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiPSysGravityStrengthCtlr& obj, C& ctor)
+		{
+			//Locate our target modifier
+			if (auto target = obj.target.assigned()) {
+				for (auto&& mod : static_cast<NiParticleSystem*>(target.get())->modifiers) {
+					assert(mod);
+					if (mod->name.get() == obj.modifierName.get()) {
+						ConnectionInfo info;
+						//There should always be an interpolator at this point. Even if the file
+						//was missing one (which is an error), our Factory should have added it.
+						info.object1 = obj.interpolator.assigned().get();
+						info.field1 = FloatController::TARGET;
+						info.object2 = mod.get();
+						info.field2 = GravityModifier::STRENGTH;
+						ctor.addConnection(info);
+
+						break;
+					}
+				}
+			}
+
+			return true;
+		}
+	};
+
+	template<>
+	class Factory<NiPSysGravityStrengthCtlr> : public VerticalTraverser<NiPSysGravityStrengthCtlr, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiPSysGravityStrengthCtlr& obj, C& ctor)
+		{
+			if (auto&& iplr = obj.interpolator.assigned()) {
+				if (ni_type type = iplr->type(); type == NiFloatInterpolator::TYPE) {
+					ctor.addNode(iplr.get(), Default<FloatController>{}.create(
+						ctor.getFile(), std::static_pointer_cast<NiFloatInterpolator>(iplr), &obj));
+				}
+				else if (type == NiBlendFloatInterpolator::TYPE) {
+					ctor.addNode(iplr.get(), Default<NLFloatController>{}.create(
+						ctor.getFile(), std::static_pointer_cast<NiBlendFloatInterpolator>(iplr)));
+				}
+			}
+			else {
+				auto new_iplr = ctor.getFile().create<NiFloatInterpolator>();
+				ctor.addNode(new_iplr.get(), Default<FloatController>{}.create(ctor.getFile(), new_iplr, &obj));
 			}
 
 			return false;

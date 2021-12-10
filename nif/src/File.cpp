@@ -96,9 +96,10 @@ template<> [[nodiscard]] std::shared_ptr<NiPSysBoxEmitter> File::create() { retu
 template<> [[nodiscard]] std::shared_ptr<NiPSysCylinderEmitter> File::create() { return make_ni<NiPSysCylinderEmitter>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<NiPSysSphereEmitter> File::create() { return make_ni<NiPSysSphereEmitter>(nullptr); }
 
-template<> [[nodiscard]] std::shared_ptr<NiPSysModifierCtlr> File::create() { return make_ni<NiPSysModifierCtlr>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<NiPSysUpdateCtlr> File::create() { return make_ni<NiPSysUpdateCtlr>(nullptr); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysModifierCtlr> File::create() { return make_ni<NiPSysModifierCtlr>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<NiPSysEmitterCtlr> File::create() { return make_ni<NiPSysEmitterCtlr>(nullptr); }
+template<> [[nodiscard]] std::shared_ptr<NiPSysGravityStrengthCtlr> File::create() { return make_ni<NiPSysGravityStrengthCtlr>(nullptr); }
 
 template<> [[nodiscard]] std::shared_ptr<NiExtraData> File::create() { return make_ni<NiExtraData>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<NiStringExtraData> File::create() { return make_ni<NiStringExtraData>(nullptr); }
@@ -137,9 +138,6 @@ void nif::File::registerTypes()
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiParticleSystem::TYPE)] = &make_NiObject<nif::NiParticleSystem>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysData::TYPE)] = &make_NiObject<nif::NiPSysData>;
 
-	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysModifierCtlr::TYPE)] = &make_NiObject<nif::NiPSysModifierCtlr>;
-	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysUpdateCtlr::TYPE)] = &make_NiObject<nif::NiPSysUpdateCtlr>;
-
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysModifier::TYPE)] = &make_NiObject<nif::NiPSysModifier>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysBoundUpdateModifier::TYPE)] = &make_NiObject<nif::NiPSysBoundUpdateModifier>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysAgeDeathModifier::TYPE)] = &make_NiObject<nif::NiPSysAgeDeathModifier>;
@@ -149,12 +147,16 @@ void nif::File::registerTypes()
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::BSPSysScaleModifier::TYPE)] = &make_NiObject<nif::BSPSysScaleModifier>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::BSPSysSimpleColorModifier::TYPE)] = &make_NiObject<nif::BSPSysSimpleColorModifier>;
 
-	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysEmitterCtlr::TYPE)] = &make_NiObject<nif::NiPSysEmitterCtlr>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysEmitter::TYPE)] = &make_NiObject<nif::NiPSysEmitter>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysVolumeEmitter::TYPE)] = &make_NiObject<nif::NiPSysVolumeEmitter>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysBoxEmitter::TYPE)] = &make_NiObject<nif::NiPSysBoxEmitter>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysCylinderEmitter::TYPE)] = &make_NiObject<nif::NiPSysCylinderEmitter>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysSphereEmitter::TYPE)] = &make_NiObject<nif::NiPSysSphereEmitter>;
+
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysUpdateCtlr::TYPE)] = &make_NiObject<nif::NiPSysUpdateCtlr>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysModifierCtlr::TYPE)] = &make_NiObject<nif::NiPSysModifierCtlr>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysEmitterCtlr::TYPE)] = &make_NiObject<nif::NiPSysEmitterCtlr>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysGravityStrengthCtlr::TYPE)] = &make_NiObject<nif::NiPSysGravityStrengthCtlr>;
 
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiExtraData::TYPE)] = &make_NiObject<nif::NiExtraData>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiStringExtraData::TYPE)] = &make_NiObject<nif::NiStringExtraData>;

@@ -103,24 +103,39 @@ namespace nodes
 			ControllerFlags m_cleared{ 0 };
 		};
 
-		//Target connector should receive IAssignable<NiInterpolator> (single)
-		//and send IController<float>, or something like that.
+		//Target connector should receive IControllable (single) and send IController<float>.
 		//Multiconnector would probably work here, but doesn't seem very useful. Let's wait with that.
 		TEST_METHOD(Connector_Target)
 		{
+			class MockControllable final : public node::IControllable
+			{
+			public:
+				virtual Ref<NiInterpolator>& iplr() override { return m_iplr; }
+
+				virtual ni_ptr<NiTimeController> ctlr() override { return ni_ptr<NiTimeController>(); }
+				virtual ni_ptr<NiAVObject> object() override { return ni_ptr<NiAVObject>(); }
+				virtual std::string propertyType() override { return std::string(); }
+				virtual std::string ctlrType() override { return std::string(); }
+				virtual Property<std::string>* ctlrID() override { return nullptr; }
+				virtual std::string iplrID() override { return std::string(); }
+
+			private:
+				Ref<NiInterpolator> m_iplr;
+			};
+
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiFloatInterpolator>();
 
-			Ref<NiInterpolator> target0;
-			Ref<NiInterpolator> target;
+			MockControllable target0;
+			MockControllable target;
 			ConnectorTester<node::FloatController> tester(node::Default<node::FloatController>{}.create(file, obj));
 
-			tester.tryConnect<node::IController<float>, Ref<NiInterpolator>>(node::FloatController::TARGET, false, &target0);
-			auto ifc = tester.tryConnect<node::IController<float>, Ref<NiInterpolator>>(node::FloatController::TARGET, false, &target);
+			tester.tryConnect<node::IController<float>, node::IControllable>(node::FloatController::TARGET, false, &target0);
+			auto ifc = tester.tryConnect<node::IController<float>, node::IControllable>(node::FloatController::TARGET, false, &target);
 			Assert::IsNotNull(ifc);
 
-			Assert::IsTrue(target0.assigned() == nullptr);
-			Assert::IsTrue(target.assigned() == obj);
+			Assert::IsTrue(target0.iplr().assigned() == nullptr);
+			Assert::IsTrue(target.iplr().assigned() == obj);
 
 			//Test the interface
 			//Add listeners to the properties and make sure they get called
@@ -200,8 +215,8 @@ namespace nodes
 			Assert::IsFalse(l5.wasSet());
 
 			//disconnecting should unassign the interpolator
-			tester.disconnect<Assignable<NiInterpolator>>(&target);
-			Assert::IsTrue(target.assigned() == nullptr);
+			tester.disconnect<node::IControllable>(&target);
+			Assert::IsTrue(target.iplr().assigned() == nullptr);
 		}
 
 	};

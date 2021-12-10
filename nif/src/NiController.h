@@ -171,4 +171,10 @@ namespace nif
 	{
 		bool operator() (NiPSysEmitterCtlr& object, NiTraverser& traverser);
 	};
+
+	struct NiPSysGravityStrengthCtlr : NiTraversable<NiPSysGravityStrengthCtlr, NiPSysModifierCtlr>
+	{
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
 }

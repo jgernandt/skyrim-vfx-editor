@@ -259,6 +259,27 @@ namespace nodes
 			AssignableSenderTest(node::Default<node::PlanarForceField>{}.create(file, obj), 
 				obj->gravityObject, node::GravityModifier::GRAVITY_OBJECT, false);
 		}
+
+		TEST_METHOD(Strength)
+		{
+			File file{ File::Version::SKYRIM_SE };
+			auto obj = file.create<NiPSysGravityModifier>();
+			std::unique_ptr<node::PlanarForceField> node = node::Default<node::PlanarForceField>{}.create(file, obj);
+
+			//this should trigger creation of the controller
+			auto ctlr = node->strength().ctlr();
+			Assert::IsNotNull(ctlr.get());
+			Assert::IsTrue(ctlr->type() == NiPSysGravityStrengthCtlr::TYPE);
+
+			//This should remove the controller from the modifier
+			node->strength().iplr().assign(file.create<NiInterpolator>());
+			node->strength().iplr().assign(nullptr);
+			Assert::IsTrue(node->getControllers().empty());
+
+			ctlr = node->strength().ctlr();
+
+			ControllableTest<float>(std::move(node), static_cast<NiSingleInterpController*>(ctlr.get()), node::GravityModifier::STRENGTH, file);
+		}
 	};
 
 	TEST_CLASS(RotationModifier)

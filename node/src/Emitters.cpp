@@ -38,16 +38,19 @@ public:
 		const ni_ptr<NiPSysEmitterCtlr>& ctlr,
 		const ni_ptr<NiFloatInterpolator>& iplr)
 		:
-		Field(name), 
+		Field{ name },
 		m_ctlr{ ctlr },
 		m_iplr{ iplr }, 
-		m_rcvr(m_ctlr),
-		m_sndr(m_ctlr->interpolator)//old structure, should use shared_ptr
+		m_rcvr{ m_ctlr },
+		m_ifc{ *this },
+		m_sndr{ m_ifc }
 	{
-		assert(m_ctlr);//too late!
+		assert(m_ctlr);
 
 		if (!m_ctlr->interpolator.assigned())
 			m_ctlr->interpolator.assign(m_iplr);
+
+		m_ctlr->interpolator.addListener(*this);
 
 		connector = node.addConnector(std::string(), ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
 
@@ -65,6 +68,11 @@ public:
 		widget = sw;
 	}
 
+	~BirthRateField()
+	{
+		m_ctlr->interpolator.removeListener(*this);
+	}
+
 	virtual void onAssign(NiInterpolator* obj) override
 	{
 		//Assign our default iplr when null is assigned
@@ -73,63 +81,29 @@ public:
 	}
 
 private:
-	//This will be universally useful, so we'll move this definition later
-	class ControllerReceiver final : public Receiver<IController<float>>
+	class Controllable final : public IControllable
 	{
+		BirthRateField& m_parent;
+
 	public:
-		ControllerReceiver(const ni_ptr<NiTimeController>& ctlr) :
-			m_lFlags(make_ni_ptr(ctlr, &NiTimeController::flags)),
-			m_lFrequency( make_ni_ptr(ctlr, &NiTimeController::frequency) ),
-			m_lPhase(make_ni_ptr(ctlr, &NiTimeController::phase)),
-			m_lStartTime(make_ni_ptr(ctlr, &NiTimeController::startTime)),
-			m_lStopTime(make_ni_ptr(ctlr, &NiTimeController::stopTime))
-		{}
+		Controllable(BirthRateField& parent) : m_parent{ parent } {}
 
-		virtual void onConnect(IController<float>& ifc) override
-		{
-			ifc.flags().addListener(m_lFlags);
-			ifc.frequency().addListener(m_lFrequency);
-			ifc.phase().addListener(m_lPhase);
-			ifc.startTime().addListener(m_lStartTime);
-			ifc.stopTime().addListener(m_lStopTime);
+		virtual Ref<NiInterpolator>& iplr() override { return m_parent.m_ctlr->interpolator; }
 
-			//we need to set the current values
-			m_lFlags.onRaise(ifc.flags().raised());
-			m_lFrequency.onSet(ifc.frequency().get());
-			m_lPhase.onSet(ifc.phase().get());
-			m_lStartTime.onSet(ifc.startTime().get());
-			m_lStopTime.onSet(ifc.stopTime().get());
-		}
-		virtual void onDisconnect(IController<float>& ifc) override
-		{
-			ifc.flags().removeListener(m_lFlags);
-			ifc.frequency().removeListener(m_lFrequency);
-			ifc.phase().removeListener(m_lPhase);
-			ifc.startTime().removeListener(m_lStartTime);
-			ifc.stopTime().removeListener(m_lStopTime);
-
-			//we need to restore defaults
-			m_lFlags.onClear(~DEFAULT_CTLR_FLAGS);
-			m_lFlags.onRaise(DEFAULT_CTLR_FLAGS);
-			m_lFrequency.onSet(DEFAULT_FREQUENCY);
-			m_lPhase.onSet(DEFAULT_PHASE);
-			m_lStartTime.onSet(DEFAULT_STARTTIME);
-			m_lStopTime.onSet(DEFAULT_STOPTIME);
-		}
-
-	private:
-		FlagSetSyncer<ControllerFlags> m_lFlags;
-		PropertySyncer<float> m_lFrequency;
-		PropertySyncer<float> m_lPhase;
-		PropertySyncer<float> m_lStartTime;
-		PropertySyncer<float> m_lStopTime;
+		virtual ni_ptr<NiTimeController> ctlr() override { return ni_ptr<NiTimeController>(); }
+		virtual ni_ptr<NiAVObject> object() override { return ni_ptr<NiAVObject>(); }
+		virtual std::string propertyType() override { return std::string(); }
+		virtual std::string ctlrType() override { return std::string(); }
+		virtual Property<std::string>* ctlrID() override { return nullptr; }
+		virtual std::string iplrID() override { return std::string(); }
 	};
 	
 	ni_ptr<NiPSysEmitterCtlr> m_ctlr;
 	ni_ptr<NiFloatInterpolator> m_iplr;
 
-	ControllerReceiver m_rcvr;
-	Sender<Ref<NiInterpolator>> m_sndr;
+	FloatCtlrReceiver m_rcvr;
+	Controllable m_ifc;
+	Sender<IControllable> m_sndr;
 };
 
 class node::Emitter::LifeSpanField final : public Field

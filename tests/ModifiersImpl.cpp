@@ -89,7 +89,11 @@ bool objects::TestSetup<NiPSysGravityModifier>::operator()(NiPSysGravityModifier
 	TestSetup<NiPSysModifier>::operator()(obj, file);
 	obj.gravityObject.assign(file.getRoot());
 
-	//TODO: Set up our specific ctlrs
+	//Set up our specific ctlrs
+	auto strengthCtlr = file.create<NiPSysGravityStrengthCtlr>();
+	strengthCtlr->modifierName.set(obj.name.get());
+	auto target = obj.target.assigned();
+	target->controllers.insert(target->controllers.size(), strengthCtlr);
 
 	return false;
 }
@@ -113,10 +117,11 @@ bool objects::FactoryTester<NiPSysGravityModifier>::operator()(const NiPSysGravi
 	else
 		nodeTest<node::Modifier>(obj, ctor);//unspecified type
 
-	//TODO: Complete with our specific controllers
 	auto ctlrs = static_cast<node::Modifier*>(ctor.node.second.get())->getControllers();
-	Assert::IsTrue(ctlrs.size() == 2);
+	Assert::IsTrue(ctlrs.size() == 3);
 	controllerTest(ctlrs, obj.target.assigned());
+	//Complete with our specific controllers
+	Assert::IsTrue(std::find(ctlrs.begin(), ctlrs.end(), obj.target.assigned()->controllers.at(3).get()) != ctlrs.end());
 
 	return false;
 }

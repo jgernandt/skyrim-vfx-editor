@@ -521,28 +521,6 @@ namespace objects
 		TEST_METHOD(TraverseV) { TraverseVTest<nif::BSPSysSimpleColorModifier>{}.run(); }
 	};
 
-	TEST_CLASS(NiPSysModifierCtlr)
-	{
-	public:
-		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiPSysModifierCtlr>{}.run(); }
-		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiPSysModifierCtlr>{}.run(); }
-		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiPSysModifierCtlr>{}.run(); }
-		TEST_METHOD(Syncer) { SyncerTest<nif::NiPSysModifierCtlr>{}.run(); }
-		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiPSysModifierCtlr>{}.run(); }
-		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiPSysModifierCtlr>{}.run(); }
-	};
-
-	TEST_CLASS(NiPSysUpdateCtlr)
-	{
-	public:
-		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiPSysUpdateCtlr>{}.run(); }
-		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiPSysUpdateCtlr>{}.run(); }
-		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiPSysUpdateCtlr>{}.run(); }
-		TEST_METHOD(Syncer) { SyncerTest<nif::NiPSysUpdateCtlr>{}.run(); }
-		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiPSysUpdateCtlr>{}.run(); }
-		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiPSysUpdateCtlr>{}.run(); }
-	};
-
 	TEST_CLASS(NiPSysEmitter)
 	{
 	public:
@@ -598,6 +576,28 @@ namespace objects
 		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiPSysSphereEmitter>{}.run(); }
 	};
 
+	TEST_CLASS(NiPSysUpdateCtlr)
+	{
+	public:
+		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiPSysUpdateCtlr>{}.run(); }
+		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiPSysUpdateCtlr>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiPSysUpdateCtlr>{}.run(); }
+		TEST_METHOD(Syncer) { SyncerTest<nif::NiPSysUpdateCtlr>{}.run(); }
+		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiPSysUpdateCtlr>{}.run(); }
+		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiPSysUpdateCtlr>{}.run(); }
+	};
+
+	TEST_CLASS(NiPSysModifierCtlr)
+	{
+	public:
+		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiPSysModifierCtlr>{}.run(); }
+		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiPSysModifierCtlr>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiPSysModifierCtlr>{}.run(); }
+		TEST_METHOD(Syncer) { SyncerTest<nif::NiPSysModifierCtlr>{}.run(); }
+		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiPSysModifierCtlr>{}.run(); }
+		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiPSysModifierCtlr>{}.run(); }
+	};
+
 	TEST_CLASS(NiPSysEmitterCtlr)
 	{
 	public:
@@ -607,6 +607,17 @@ namespace objects
 		TEST_METHOD(Syncer) { SyncerTest<nif::NiPSysEmitterCtlr>{}.run(); }
 		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiPSysEmitterCtlr>{}.run(); }
 		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiPSysEmitterCtlr>{}.run(); }
+	};
+
+	TEST_CLASS(NiPSysGravityStrengthCtlr)
+	{
+	public:
+		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiPSysGravityStrengthCtlr>{}.run(); }
+		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiPSysGravityStrengthCtlr>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiPSysGravityStrengthCtlr>{}.run(); }
+		TEST_METHOD(Syncer) { SyncerTest<nif::NiPSysGravityStrengthCtlr>{}.run(); }
+		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiPSysGravityStrengthCtlr>{}.run(); }
+		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiPSysGravityStrengthCtlr>{}.run(); }
 	};
 
 	TEST_CLASS(NiExtraData)

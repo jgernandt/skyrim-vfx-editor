@@ -50,7 +50,9 @@ namespace node
 {
 	using namespace nif;
 
-	//A wrapper that allows reserving positions at the beginning and end of a sequence
+	/*A wrapper that allows reserving positions at the beginning and end of a sequence
+	 (no longer used)
+	
 	template<typename T>
 	class ReservableSequence final : public nif::Sequence<T>
 	{
@@ -117,6 +119,7 @@ namespace node
 		const std::shared_ptr<nif::Sequence<T>> m_seq;
 		size_t m_lim[2]{ 0, 0 };//the min and max pos allowed for inserts
 	};
+	*/
 
 	//Should this still be abstract?
 	template<typename T>//template only to distinguish types
@@ -130,6 +133,30 @@ namespace node
 		virtual nif::Property<float>& phase() = 0;
 		virtual nif::Property<float>& startTime() = 0;
 		virtual nif::Property<float>& stopTime() = 0;
+	};
+
+	class IControllable
+	{
+	public:
+		virtual Ref<NiInterpolator>& iplr() = 0;
+
+		//Needed by a ControllerSequence.
+		//Node name and ctlrID (modifier name) may change, so they need to be observable.
+		//Property type, controller type and interpolator id are always constants, as far as I know.
+		virtual ni_ptr<NiTimeController> ctlr() = 0;
+		//virtual Property<std::string>& nodeName() = 0;
+		//I think we need the AVObject (not just its name), since it also goes into the object palette.
+		virtual ni_ptr<NiAVObject> object() = 0;
+		//These have to return the respective type name. Should we return a type object instead?
+		virtual std::string propertyType() = 0;
+		virtual std::string ctlrType() = 0;
+		//Return by pointer here. Inconsistent, but many controllers will not have this property.
+		virtual Property<std::string>* ctlrID() = 0;
+		virtual std::string iplrID() = 0;
+
+		//For the gui we might want:
+		//virtual std::string propertyName() = 0;
+		//virtual std::array<float, 2> numericLimits() = 0;//needs template?
 	};
 
 	enum class ModRequirement

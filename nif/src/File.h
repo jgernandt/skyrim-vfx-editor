@@ -150,9 +150,10 @@ namespace nif
 	template<> [[nodiscard]] std::shared_ptr<NiPSysCylinderEmitter> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiPSysSphereEmitter> File::create();
 
-	template<> [[nodiscard]] std::shared_ptr<NiPSysModifierCtlr> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiPSysUpdateCtlr> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysModifierCtlr> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiPSysEmitterCtlr> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiPSysGravityStrengthCtlr> File::create();
 
 	template<> [[nodiscard]] std::shared_ptr<NiExtraData> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiStringExtraData> File::create();

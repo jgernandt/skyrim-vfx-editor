@@ -114,6 +114,10 @@ namespace nif
 		bool operator() (const NiSingleInterpController& object, Niflib::NiSingleInterpController* native, const File& file);
 	};
 
+	//NiPSysUpdateCtlr
+	template<> struct type_map<Niflib::NiPSysUpdateCtlr> { using type = NiPSysUpdateCtlr; };
+	template<> struct type_map<NiPSysUpdateCtlr> { using type = Niflib::NiPSysUpdateCtlr; };
+
 	//NiPSysModifierCtlr
 	template<> struct type_map<Niflib::NiPSysModifierCtlr> { using type = NiPSysModifierCtlr; };
 	template<> struct type_map<NiPSysModifierCtlr> { using type = Niflib::NiPSysModifierCtlr; };
@@ -127,10 +131,6 @@ namespace nif
 		bool operator() (const NiPSysModifierCtlr& object, Niflib::NiPSysModifierCtlr* native, const File& file);
 	};
 
-	//NiPSysUpdateCtlr
-	template<> struct type_map<Niflib::NiPSysUpdateCtlr> { using type = NiPSysUpdateCtlr; };
-	template<> struct type_map<NiPSysUpdateCtlr> { using type = Niflib::NiPSysUpdateCtlr; };
-
 	//NiPSysEmitterCtlr
 	template<> struct type_map<Niflib::NiPSysEmitterCtlr> { using type = NiPSysEmitterCtlr; };
 	template<> struct type_map<NiPSysEmitterCtlr> { using type = Niflib::NiPSysEmitterCtlr; };
@@ -143,4 +143,8 @@ namespace nif
 	{
 		bool operator() (const NiPSysEmitterCtlr& object, Niflib::NiPSysEmitterCtlr* native, const File& file);
 	};
+
+	//NiPSysGravityStrengthCtlr
+	template<> struct type_map<Niflib::NiPSysGravityStrengthCtlr> { using type = NiPSysGravityStrengthCtlr; };
+	template<> struct type_map<NiPSysGravityStrengthCtlr> { using type = Niflib::NiPSysGravityStrengthCtlr; };
 }

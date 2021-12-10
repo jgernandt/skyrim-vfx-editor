@@ -69,6 +69,7 @@
     <ClCompile Include="src\NodeBase.cpp" />
     <ClCompile Include="src\Editor.cpp" />
     <ClCompile Include="src\node_conversions.cpp" />
+    <ClCompile Include="src\node_devices.cpp" />
     <ClCompile Include="src\ParticleSystem.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

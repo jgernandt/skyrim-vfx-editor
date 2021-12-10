@@ -268,5 +268,90 @@ namespace nodes
 		auto ifc = tester.tryConnect<Set<ElementType>, void>(connector, multi, nullptr);
 		Assert::IsTrue(ifc == &expected);
 	}
+
+	template<typename T>
+	void ControllableTest(std::unique_ptr<node::NodeBase>&& node, NiSingleInterpController* ctlr, const char* connector, nif::File& file)
+	{
+		class MockController : public node::IController<float>
+		{
+		public:
+			virtual FlagSet<ControllerFlags>& flags() override { return m_flags; }
+			virtual Property<float>& frequency() override { return m_frequency; }
+			virtual Property<float>& phase() override { return m_phase; }
+			virtual Property<float>& startTime() override { return m_startTime; }
+			virtual Property<float>& stopTime() override { return m_stopTime; }
+
+		private:
+			FlagSet<ControllerFlags> m_flags;
+			Property<float> m_frequency;
+			Property<float> m_phase;
+			Property<float> m_startTime;
+			Property<float> m_stopTime;
+		};
+
+		std::mt19937 rng;
+
+		MockController target0;
+		MockController target;
+		ConnectorTester<node::NodeBase> tester(std::move(node));
+
+		tester.tryConnect<node::IControllable, node::IController<T>>(connector, false, &target0);
+		auto ifc = tester.tryConnect<node::IControllable, node::IController<T>>(connector, false, &target);
+		Assert::IsNotNull(ifc);
+
+		//Setting the properties on target (but not target0) should set the corresponding on ctlr
+		std::uniform_int_distribution<unsigned short> I;
+		std::uniform_real_distribution<float> F;
+
+		target0.flags().clear(-1);//better clear any defaults
+		target0.flags().raise(I(rng));
+		target0.frequency().set(F(rng));
+		target0.phase().set(F(rng));
+		target0.startTime().set(F(rng));
+		target0.stopTime().set(F(rng));
+		Assert::IsFalse(ctlr->flags.raised() == target0.flags().raised());
+		Assert::IsFalse(ctlr->frequency.get() == target0.frequency().get());
+		Assert::IsFalse(ctlr->phase.get() == target0.phase().get());
+		Assert::IsFalse(ctlr->startTime.get() == target0.startTime().get());
+		Assert::IsFalse(ctlr->stopTime.get() == target0.stopTime().get());
+
+		target.flags().clear(-1);//better clear any defaults
+		target.flags().raise(I(rng));
+		target.frequency().set(F(rng));
+		target.phase().set(F(rng));
+		target.startTime().set(F(rng));
+		target.stopTime().set(F(rng));
+		Assert::IsTrue(ctlr->flags.raised() == target.flags().raised());
+		Assert::IsTrue(ctlr->frequency.get() == target.frequency().get());
+		Assert::IsTrue(ctlr->phase.get() == target.phase().get());
+		Assert::IsTrue(ctlr->startTime.get() == target.startTime().get());
+		Assert::IsTrue(ctlr->stopTime.get() == target.stopTime().get());
+
+		//Assigning to the interface should assign to ctlr->interpolator
+		auto iplr = file.create<NiInterpolator>();
+		Assert::IsNotNull(iplr.get());
+		ifc->iplr().assign(iplr);
+		Assert::IsTrue(ctlr->interpolator.assigned() == iplr);
+		ifc->iplr().assign(nullptr);
+		Assert::IsTrue(ctlr->interpolator.assigned() != iplr);
+
+		//TODO: Test the other fields of the interface (no point until we start on nonlinear animations)
+
+		//Make sure listeners are removed
+		tester.disconnect<node::IController<float>>(&target);
+
+		//these calls should not reach the controller
+		target.flags().clear(-1);
+		target.flags().raise(I(rng));
+		target.frequency().set(F(rng));
+		target.phase().set(F(rng));
+		target.startTime().set(F(rng));
+		target.stopTime().set(F(rng));
+		Assert::IsTrue(ctlr->flags.raised() != target.flags().raised());
+		Assert::IsTrue(ctlr->frequency.get() != target.frequency().get());
+		Assert::IsTrue(ctlr->phase.get() != target.phase().get());
+		Assert::IsTrue(ctlr->startTime.get() != target.startTime().get());
+		Assert::IsTrue(ctlr->stopTime.get() != target.stopTime().get());
+	}
 }
 

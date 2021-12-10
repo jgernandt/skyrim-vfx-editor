@@ -27,9 +27,13 @@ const size_t nif::NiFloatInterpolator::TYPE = std::hash<std::string>{}("NiFloatI
 const size_t nif::NiBlendInterpolator::TYPE = std::hash<std::string>{}("NiBlendInterpolator");
 const size_t nif::NiBlendBoolInterpolator::TYPE = std::hash<std::string>{}("NiBlendBoolInterpolator");
 const size_t nif::NiBlendFloatInterpolator::TYPE = std::hash<std::string>{}("NiBlendFloatInterpolator");
+
 const size_t nif::NiTimeController::TYPE = std::hash<std::string>{}("NiTimeController");
 const size_t nif::NiSingleInterpController::TYPE = std::hash<std::string>{}("NiSingleInterpController");
-
+const size_t nif::NiPSysUpdateCtlr::TYPE = std::hash<std::string>{}("NiPSysUpdateCtlr");
+const size_t nif::NiPSysModifierCtlr::TYPE = std::hash<std::string>{}("NiPSysModifierCtlr");
+const size_t nif::NiPSysEmitterCtlr::TYPE = std::hash<std::string>{}("NiPSysEmitterCtlr");
+const size_t nif::NiPSysGravityStrengthCtlr::TYPE = std::hash<std::string>{}("NiPSysGravityStrengthCtlr");
 
 bool nif::ReadSyncer<nif::NiBoolData>::operator()(NiBoolData& object, const Niflib::NiBoolData* native, File& file)
 {
