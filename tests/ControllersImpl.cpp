@@ -78,7 +78,7 @@ bool objects::FactoryTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCt
 				Assert::IsTrue(!ctor.node.second);
 		}
 		else if (iplr->type() == NiBlendFloatInterpolator::TYPE)
-			Assert::IsTrue(!ctor.node.second);//might be something else later
+			nodeTest<node::NLFloatController>(*iplr, ctor);
 		else
 			Assert::IsTrue(!ctor.node.second);
 	}
@@ -171,8 +171,39 @@ bool objects::FactoryTester<NiPSysGravityStrengthCtlr>::operator()(const NiPSysG
 {
 	auto&& iplr = obj.interpolator.assigned(); 
 	if (ni_type type = iplr->type(); type == NiBlendFloatInterpolator::TYPE)
-		Assert::IsTrue(!ctor.node.second);
+		nodeTest<node::NLFloatController>(*obj.interpolator.assigned(), ctor);
 	else
 		nodeTest<node::FloatController>(*obj.interpolator.assigned(), ctor);
 	return false;
+}
+
+//This should be reusable for any controllable property?
+void objects::FactoryTest<NiPSysGravityStrengthCtlr>::run()
+{
+	File file(File::Version::SKYRIM_SE);
+	auto obj = file.create<NiPSysGravityStrengthCtlr>();
+	TestSetup<NiPSysGravityStrengthCtlr>{}.up(*obj, file);
+
+	{//normal
+		auto iplr = file.create<NiFloatInterpolator>();
+		obj->interpolator.assign(iplr);
+		auto data = file.create<NiFloatData>();
+		iplr->data.assign(data);
+
+		TestConstructor ctor(file);
+		ctor.pushObject(obj);
+		node::Factory<NiPSysGravityStrengthCtlr>{}.up(*obj, ctor);
+		FactoryTester<NiPSysGravityStrengthCtlr>{}.up(*obj, ctor);
+
+		Assert::IsTrue(iplr->data.assigned() == data);
+	}
+	{//blend
+		auto iplr = file.create<NiBlendFloatInterpolator>();
+		obj->interpolator.assign(iplr);
+
+		TestConstructor ctor(file);
+		ctor.pushObject(obj);
+		node::Factory<NiPSysGravityStrengthCtlr>{}.up(*obj, ctor);
+		FactoryTester<NiPSysGravityStrengthCtlr>{}.up(*obj, ctor);
+	}
 }

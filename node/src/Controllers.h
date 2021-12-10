@@ -52,11 +52,11 @@ namespace node
 {
 	using namespace nif;
 
-	class FloatController final : public NodeBase
+	class ControllerBase : public NodeBase
 	{
 	public:
-		FloatController(const ni_ptr<NiFloatInterpolator>& iplr);
-		~FloatController();
+		ControllerBase(const ni_ptr<NiInterpolator>& iplr);
+		virtual ~ControllerBase() = default;
 
 		FlagSet<ControllerFlags>& flags() { return m_ctlr->flags; }
 		const FlagSet<ControllerFlags>& flags() const { return m_ctlr->flags; }
@@ -65,22 +65,45 @@ namespace node
 		Property<float>& startTime() { return m_ctlr->startTime; }
 		Property<float>& stopTime() { return m_ctlr->stopTime; }
 
+		constexpr static const char* TARGET = "Target";
+
+	protected:
+		const ni_ptr<NiTimeController> m_ctlr;//dummy controller
+
+		//bleh
+		class TargetField;
+		std::unique_ptr<TargetField> m_target;
+	};
+
+	class FloatController final : public ControllerBase
+	{
+	public:
+		FloatController(const ni_ptr<NiFloatInterpolator>& iplr);
+		~FloatController();
+
 	private:
 		void openKeyEditor();
 
 	public:
-		constexpr static const char* TARGET = "Target";
+		constexpr static float WIDTH = 120.0f;
+		constexpr static float HEIGHT = 96.0f;
+
+	private:
+		const ni_ptr<NiFloatInterpolator> m_iplr;
+	};
+
+	class NLFloatController final : public ControllerBase
+	{
+	public:
+		using default_object = NiBlendFloatInterpolator;
+
+		NLFloatController(const ni_ptr<NiBlendFloatInterpolator>& obj);
+		~NLFloatController();
 
 		constexpr static float WIDTH = 120.0f;
 		constexpr static float HEIGHT = 96.0f;
 
 	private:
-		//Managed objects
-		const ni_ptr<NiFloatInterpolator> m_iplr;
-		const ni_ptr<NiTimeController> m_ctlr;//dummy controller
-
-		//bleh
-		class TargetField;
-		std::unique_ptr<Field> m_target;
+		const ni_ptr<NiBlendFloatInterpolator> m_iplr;
 	};
 }

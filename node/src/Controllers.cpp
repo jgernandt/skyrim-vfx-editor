@@ -28,11 +28,23 @@ constexpr gui::ColRGBA TitleCol_AnimActive = { 1.0f, 1.0f, 0.7f, 1.0f };
 
 using namespace nif;
 
-class node::FloatController::TargetField : public node::Field
+node::ControllerBase::ControllerBase(const ni_ptr<NiInterpolator>& iplr) :
+	//Our controller is a dummy object that will never be exported or assigned to another field,
+	//hence we can bypass file. Still, this is a little fishy.
+	m_ctlr{ std::make_shared<NiTimeController>() }
+{
+	setClosable(true);
+	setColour(COL_TITLE, TitleCol_Anim);
+	setColour(COL_TITLE_ACTIVE, TitleCol_AnimActive);
+
+	m_target = newField<TargetField>(TARGET, *this, iplr);
+}
+
+class node::ControllerBase::TargetField : public node::Field
 {
 public:
-	TargetField(const std::string& name, FloatController& node) :
-		Field(name), m_rcvr(node.m_iplr), m_ifc(node), m_sndr(m_ifc)
+	TargetField(const std::string& name, ControllerBase& node, const ni_ptr<NiInterpolator>& iplr) :
+		Field(name), m_rcvr(iplr), m_ifc(node), m_sndr(m_ifc)
 	{
 		//This is technically an upwards connector, but feels somehow better to have it downwards.
 		//Go for consistency or intuitivity?
@@ -53,7 +65,7 @@ private:
 	class Controller final : public IController<float>
 	{
 	public:
-		Controller(FloatController& node) : m_node{ node } {}
+		Controller(ControllerBase& node) : m_node{ node } {}
 
 		virtual FlagSet<ControllerFlags>& flags() override { return m_node.flags(); }
 		virtual Property<float>& frequency() override { return m_node.frequency(); }
@@ -62,7 +74,7 @@ private:
 		virtual Property<float>& stopTime() override { return m_node.stopTime(); }
 
 	private:
-		FloatController& m_node;
+		ControllerBase& m_node;
 	};
 
 	ControllableReceiver m_rcvr;
@@ -71,20 +83,12 @@ private:
 };
 
 node::FloatController::FloatController(const ni_ptr<NiFloatInterpolator>& iplr) :
-	m_iplr{ iplr },
-	//Our controller is a dummy object that will never be exported or assigned to another field,
-	//hence we can bypass file. Still, this is a little fishy.
-	m_ctlr{ std::make_shared<NiTimeController>() }
+	ControllerBase{ iplr }, m_iplr { iplr }
 {
-	assert(iplr->data.assigned());
+	assert(iplr && iplr->data.assigned());
 
-	setClosable(true);
 	setTitle("Animation");
 	setSize({ WIDTH, HEIGHT });
-	setColour(COL_TITLE, TitleCol_Anim);
-	setColour(COL_TITLE_ACTIVE, TitleCol_AnimActive);
-
-	m_target = newField<TargetField>(TARGET, *this);
 
 	newChild<gui::VerticalSpacing>();
 
@@ -105,4 +109,16 @@ void node::FloatController::openKeyEditor()
 	auto c = std::make_unique<FloatKeyEditor>(m_ctlr, m_iplr->data.assigned());
 	c->open();
 	asyncInvoke<gui::AddChild>(std::move(c), this, false);
+}
+
+node::NLFloatController::NLFloatController(const ni_ptr<NiBlendFloatInterpolator>& obj) :
+	ControllerBase{ obj }
+{
+	setTitle("Nonlinear anim.");
+	setSize({ WIDTH, HEIGHT });
+}
+
+node::NLFloatController::~NLFloatController()
+{
+	disconnect();
 }

@@ -188,6 +188,12 @@ namespace objects
 	};
 
 	template<>
+	struct FactoryTest<NiPSysGravityStrengthCtlr>
+	{
+		void run();
+	};
+
+	template<>
 	struct FactoryTest<NiStringExtraData>
 	{
 		void run();

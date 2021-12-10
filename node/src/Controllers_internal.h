@@ -129,8 +129,7 @@ namespace node
 			//one that knows what type of node (if any) to create. 
 			//Not the interpolator, not the modifier, not the particle system.
 			if (auto&& iplr = obj.interpolator.assigned()) {
-				ni_type type = iplr->type();
-				if (type == NiFloatInterpolator::TYPE) {
+				if (ni_type type = iplr->type(); type == NiFloatInterpolator::TYPE) {
 					if (static_cast<NiFloatInterpolator*>(iplr.get())->data.assigned()) {
 						auto node = Default<FloatController>{}.create(
 							ctor.getFile(), std::static_pointer_cast<NiFloatInterpolator>(iplr), &obj);
@@ -138,7 +137,8 @@ namespace node
 					}
 				}
 				else if (type == NiBlendFloatInterpolator::TYPE) {
-					//maybe another type of node
+					ctor.addNode(iplr.get(), Default<NLFloatController>{}.create(
+						ctor.getFile(), std::static_pointer_cast<NiBlendFloatInterpolator>(iplr)));
 				}
 			}
 
@@ -192,7 +192,8 @@ namespace node
 						ctor.getFile(), std::static_pointer_cast<NiFloatInterpolator>(iplr), &obj));
 				}
 				else if (type == NiBlendFloatInterpolator::TYPE) {
-
+					ctor.addNode(iplr.get(), Default<NLFloatController>{}.create(
+						ctor.getFile(), std::static_pointer_cast<NiBlendFloatInterpolator>(iplr)));
 				}
 			}
 			else {
