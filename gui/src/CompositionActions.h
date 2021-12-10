@@ -95,4 +95,24 @@ namespace gui
 		IComponent* m_to;
 		bool m_reversible;
 	};
+
+	class InsertChild final : public ICommand
+	{
+	public:
+		InsertChild(ComponentPtr&& child, IComponent* parent, int pos) :
+			m_parent{ parent }, m_child{ std::move(child) }, m_pos{ pos }
+		{}
+
+		virtual void execute() override
+		{
+			if (m_parent)
+				m_parent->insertChild(m_pos, std::move(m_child));
+		}
+		virtual void reverse() override {}
+		virtual bool reversible() const override { return false; }
+	private:
+		IComponent* m_parent;
+		ComponentPtr m_child;
+		int m_pos;
+	};
 }

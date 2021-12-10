@@ -38,6 +38,8 @@ class HelpWindow final : public gui::Window
 {
 public:
 	HelpWindow();
+	~HelpWindow();
+	virtual void frame(gui::FrameDrawer& fd) override;
 };
 
 //Should this be baseline Component functionality?
@@ -80,6 +82,8 @@ node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &fil
 {
 	m_size = size;
 
+	NodeRoot* workArea{ nullptr };
+
 	try {
 		auto root = file.getRoot();
 		if (!root)
@@ -87,7 +91,7 @@ node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &fil
 
 		m_rootName = make_ni_ptr(std::static_pointer_cast<NiObjectNET>(root), &NiObjectNET::name);
 
-		auto workArea = newChild<NodeRoot>(file);
+		workArea = newChild<NodeRoot>(file);
 
 		//Nodes
 		Constructor c(file);
@@ -116,7 +120,7 @@ node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &fil
 	catch (const std::exception& e) {
 		clearChildren();
 		m_rootName.reset();
-		auto workArea = newChild<NodeRoot>(file);
+		workArea = newChild<NodeRoot>(file);
 		newChild<gui::MessageBox>("Error", e.what());
 
 		//Now we have the appearance we should have, but no way to add nodes. It wouldn't make sense to. 
@@ -127,7 +131,7 @@ node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &fil
 	//Main menu additions
 	auto help = std::make_unique<gui::MainMenu>("Help");
 	help->newChild<gui::MenuItem>("Block info",
-		[this]() { asyncInvoke<gui::AddChild>(std::make_unique<HelpWindow>(), this, false); });
+		[this]() { asyncInvoke<gui::InsertChild>(std::make_unique<HelpWindow>(), this, 0); });
 	addChild(std::move(help));
 }
 
@@ -196,6 +200,7 @@ HelpWindow::HelpWindow()
 	setClosable();
 	setTitle("Block types");
 	setSize({ 640.0f, 400.0f });
+	setStyle(gui::Window::Style::SCROLLABLE, true);
 
 	std::ifstream file(DOC_FILE_NAME);
 	if (file.is_open()) {
@@ -207,6 +212,21 @@ HelpWindow::HelpWindow()
 	}
 	else
 		newChild<gui::Text>(std::string("Failed to load ") + DOC_FILE_NAME);
+}
+
+HelpWindow::~HelpWindow()
+{
+}
+
+void HelpWindow::frame(gui::FrameDrawer& fd)
+{
+	Window::frame(fd);
+
+	gui::Floats<2> pos = gui::Mouse::getPosition();
+	gui::Floats<2> TL = fd.toGlobal(m_translation).floor();
+	gui::Floats<2> BR = fd.toGlobal(m_translation + m_size * m_scale).floor();
+	if (pos[0] >= TL[0] && pos[0] <= BR[0] && pos[1] >= TL[1] && pos[1] <= BR[1])
+		fd.setWheelHandled();
 }
 
 void node::Editor::NodeRoot::frame(gui::FrameDrawer& fd)
