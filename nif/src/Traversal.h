@@ -50,6 +50,10 @@ namespace nif
 		virtual void traverse(NiTimeController& obj) {}
 		virtual void traverse(NiSingleInterpController& obj) {}
 
+		virtual void traverse(NiControllerManager& obj) {}
+		virtual void traverse(NiControllerSequence& obj) {}
+		virtual void traverse(NiDefaultAVObjectPalette& obj) {}
+
 		virtual void traverse(NiParticleSystem& obj) {}
 		virtual void traverse(NiPSysData& obj) {}
 
@@ -76,6 +80,8 @@ namespace nif
 		virtual void traverse(NiExtraData& obj) {}
 		virtual void traverse(NiStringExtraData& obj) {}
 		virtual void traverse(NiStringsExtraData& obj) {}
+		virtual void traverse(NiTextKeyExtraData& obj) {}
+		virtual void traverse(BSBehaviorGraphExtraData& obj) {}
 		//etc.
 	};
 
@@ -186,6 +192,10 @@ namespace nif
 		virtual void traverse(NiTimeController& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiSingleInterpController& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
+		virtual void traverse(NiControllerManager& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiControllerSequence& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiDefaultAVObjectPalette& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+
 		virtual void traverse(NiParticleSystem& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiPSysData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 
@@ -212,6 +222,8 @@ namespace nif
 		virtual void traverse(NiExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiStringExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 		virtual void traverse(NiStringsExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(NiTextKeyExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
+		virtual void traverse(BSBehaviorGraphExtraData& obj) override { static_cast<TraverserType&>(*this).invoke(obj); }
 	};
 	
 	//A variant that calls a separate function object instead of a member function.

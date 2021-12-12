@@ -138,6 +138,10 @@ namespace nif
 	template<> [[nodiscard]] std::shared_ptr<NiTimeController> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiSingleInterpController> File::create();
 
+	template<> [[nodiscard]] std::shared_ptr<NiControllerManager> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiControllerSequence> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiDefaultAVObjectPalette> File::create();
+
 	template<> [[nodiscard]] std::shared_ptr<NiParticleSystem> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiPSysData> File::create();
 
@@ -164,4 +168,6 @@ namespace nif
 	template<> [[nodiscard]] std::shared_ptr<NiExtraData> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiStringExtraData> File::create();
 	template<> [[nodiscard]] std::shared_ptr<NiStringsExtraData> File::create();
+	template<> [[nodiscard]] std::shared_ptr<NiTextKeyExtraData> File::create();
+	template<> [[nodiscard]] std::shared_ptr<BSBehaviorGraphExtraData> File::create();
 }

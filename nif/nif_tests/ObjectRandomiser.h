@@ -268,6 +268,27 @@ namespace common
 	};
 
 	template<>
+	struct Randomiser<NiControllerManager> : VerticalTraverser<NiControllerManager, Randomiser>
+	{
+		bool operator() (NiControllerManager& object, File& file, std::mt19937& rng);
+		bool operator() (const NiControllerManager&, Niflib::NiControllerManager* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiControllerSequence> : VerticalTraverser<NiControllerSequence, Randomiser>
+	{
+		bool operator() (NiControllerSequence& object, File& file, std::mt19937& rng);
+		bool operator() (const NiControllerSequence&, Niflib::NiControllerSequence* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiDefaultAVObjectPalette> : VerticalTraverser<NiDefaultAVObjectPalette, Randomiser>
+	{
+		bool operator() (NiDefaultAVObjectPalette& object, File& file, std::mt19937& rng);
+		bool operator() (const NiDefaultAVObjectPalette&, Niflib::NiDefaultAVObjectPalette* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
 	struct Randomiser<NiParticleSystem> : VerticalTraverser<NiParticleSystem, Randomiser>
 	{
 		bool operator() (NiParticleSystem& object, File& file, std::mt19937& rng);
@@ -384,5 +405,19 @@ namespace common
 	{
 		bool operator() (NiStringsExtraData& object, File& file, std::mt19937& rng);
 		bool operator() (const NiStringsExtraData&, Niflib::NiStringsExtraData* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiTextKeyExtraData> : VerticalTraverser<NiTextKeyExtraData, Randomiser>
+	{
+		bool operator() (NiTextKeyExtraData& object, File& file, std::mt19937& rng);
+		bool operator() (const NiTextKeyExtraData&, Niflib::NiTextKeyExtraData* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<BSBehaviorGraphExtraData> : VerticalTraverser<BSBehaviorGraphExtraData, Randomiser>
+	{
+		bool operator() (BSBehaviorGraphExtraData& object, File& file, std::mt19937& rng);
+		bool operator() (const BSBehaviorGraphExtraData&, Niflib::BSBehaviorGraphExtraData* native, File& file, std::mt19937& rng);
 	};
 }

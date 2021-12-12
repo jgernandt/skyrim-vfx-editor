@@ -22,3 +22,4 @@
 #include "NiParticleSystem.h"
 #include "NiProperties.h"
 #include "NiPSysEmitter.h"
+#include "NiControllerManager.h"

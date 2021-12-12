@@ -58,6 +58,15 @@ namespace nif
 	};
 
 	template<>
+	struct NifConverter<CycleType>
+	{
+		constexpr static CycleType convert(Niflib::CycleType val)
+		{
+			return static_cast<CycleType>(val);
+		}
+	};
+
+	template<>
 	struct NifConverter<Niflib::Color3>
 	{
 		static Niflib::Color3 convert(const std::array<float, 3>& f);
@@ -103,6 +112,15 @@ namespace nif
 	};
 
 	template<>
+	struct NifConverter<Niflib::CycleType>
+	{
+		constexpr static Niflib::CycleType convert(CycleType val)
+		{
+			return static_cast<Niflib::CycleType>(val);
+		}
+	};
+
+	template<>
 	struct NifConverter<Niflib::ForceType>
 	{
 		constexpr static Niflib::ForceType convert(ForceType val)
@@ -128,6 +146,7 @@ namespace nif
 			return static_cast<Niflib::SkyrimShaderPropertyFlags1>(flags);
 		}
 	};
+
 	template<>
 	struct NifConverter<Niflib::SkyrimShaderPropertyFlags2>
 	{
@@ -136,6 +155,7 @@ namespace nif
 			return static_cast<Niflib::SkyrimShaderPropertyFlags2>(flags);
 		}
 	};
+
 	template<>
 	struct NifConverter<unsigned int>
 	{

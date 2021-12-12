@@ -44,4 +44,21 @@ namespace nif
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
 	};
+
+	struct NiTextKeyExtraData : NiTraversable<NiTextKeyExtraData, NiExtraData>
+	{
+		Vector<Key<std::string>> keys;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
+
+	struct BSBehaviorGraphExtraData : NiTraversable<BSBehaviorGraphExtraData, NiExtraData>
+	{
+		Property<std::string> fileName;
+		Property<bool> controlsBaseSkeleton;
+
+		static const ni_type TYPE;
+		virtual ni_type type() const override { return TYPE; }
+	};
 }

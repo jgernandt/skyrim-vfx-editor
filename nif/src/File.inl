@@ -21,6 +21,7 @@
 
 #include "NiObject_internal.h"
 #include "NiController_internal.h"
+#include "NiControllerManager_internal.h"
 #include "NiExtraData_internal.h"
 #include "NiNode_internal.h"
 #include "NiParticleSystem_internal.h"

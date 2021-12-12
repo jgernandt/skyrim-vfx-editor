@@ -78,6 +78,10 @@ template<> [[nodiscard]] std::shared_ptr<NiBlendFloatInterpolator> File::create(
 template<> [[nodiscard]] std::shared_ptr<NiTimeController> File::create() { return make_ni<NiTimeController>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<NiSingleInterpController> File::create() { return make_ni<NiSingleInterpController>(nullptr); }
 
+template<> [[nodiscard]] std::shared_ptr<NiControllerManager> File::create() { return make_ni<NiControllerManager>(nullptr); }
+template<> [[nodiscard]] std::shared_ptr<NiControllerSequence> File::create() { return make_ni<NiControllerSequence>(nullptr); }
+template<> [[nodiscard]] std::shared_ptr<NiDefaultAVObjectPalette> File::create() { return make_ni<NiDefaultAVObjectPalette>(nullptr); }
+
 template<> [[nodiscard]] std::shared_ptr<NiParticleSystem> File::create() { return make_ni<NiParticleSystem>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<NiPSysData> File::create() { return make_ni<NiPSysData>(nullptr); }
 
@@ -104,6 +108,8 @@ template<> [[nodiscard]] std::shared_ptr<NiPSysGravityStrengthCtlr> File::create
 template<> [[nodiscard]] std::shared_ptr<NiExtraData> File::create() { return make_ni<NiExtraData>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<NiStringExtraData> File::create() { return make_ni<NiStringExtraData>(nullptr); }
 template<> [[nodiscard]] std::shared_ptr<NiStringsExtraData> File::create() { return make_ni<NiStringsExtraData>(nullptr); }
+template<> [[nodiscard]] std::shared_ptr<NiTextKeyExtraData> File::create() { return make_ni<NiTextKeyExtraData>(nullptr); }
+template<> [[nodiscard]] std::shared_ptr<BSBehaviorGraphExtraData> File::create() { return make_ni<BSBehaviorGraphExtraData>(nullptr); }
 
 std::map<size_t, nif::File::CreateFcn> nif::File::s_typeRegistry;
 void nif::File::registerTypes()
@@ -135,6 +141,10 @@ void nif::File::registerTypes()
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiTimeController::TYPE)] = &make_NiObject<nif::NiTimeController>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiSingleInterpController::TYPE)] = &make_NiObject<nif::NiSingleInterpController>;
 
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiControllerManager::TYPE)] = &make_NiObject<nif::NiControllerManager>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiControllerSequence::TYPE)] = &make_NiObject<nif::NiControllerSequence>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiDefaultAVObjectPalette::TYPE)] = &make_NiObject<nif::NiDefaultAVObjectPalette>;
+
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiParticleSystem::TYPE)] = &make_NiObject<nif::NiParticleSystem>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiPSysData::TYPE)] = &make_NiObject<nif::NiPSysData>;
 
@@ -161,6 +171,8 @@ void nif::File::registerTypes()
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiExtraData::TYPE)] = &make_NiObject<nif::NiExtraData>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiStringExtraData::TYPE)] = &make_NiObject<nif::NiStringExtraData>;
 	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiStringsExtraData::TYPE)] = &make_NiObject<nif::NiStringsExtraData>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::NiTextKeyExtraData::TYPE)] = &make_NiObject<nif::NiTextKeyExtraData>;
+	s_typeRegistry[std::hash<const Niflib::Type*>{}(&Niflib::BSBehaviorGraphExtraData::TYPE)] = &make_NiObject<nif::BSBehaviorGraphExtraData>;
 }
 
 namespace Niflib

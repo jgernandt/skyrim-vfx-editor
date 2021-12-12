@@ -95,3 +95,71 @@ bool common::Randomiser<NiStringsExtraData>::operator()(const NiStringsExtraData
 
 	return true;
 }
+
+
+bool common::EquivalenceTester<NiTextKeyExtraData>::operator()(const NiTextKeyExtraData& object, const Niflib::NiTextKeyExtraData* native, File& file)
+{
+	auto&& keys = native->GetKeys();
+	Assert::IsTrue(keys.size() == object.keys.size());
+	for (size_t i = 0; i < keys.size(); i++) {
+		Assert::IsTrue(object.keys.at(i).time.get() == keys[i].time);
+		Assert::IsTrue(object.keys.at(i).value.get() == keys[i].data);
+		Assert::IsTrue(keys[i].forward_tangent == std::string());
+		Assert::IsTrue(keys[i].backward_tangent == std::string());
+		Assert::IsTrue(keys[i].tension == 0.0f);
+		Assert::IsTrue(keys[i].bias == 0.0f);
+		Assert::IsTrue(keys[i].continuity == 0.0f);
+	}
+
+	return true;
+}
+
+bool common::Randomiser<NiTextKeyExtraData>::operator()(NiTextKeyExtraData& object, File& file, std::mt19937& rng)
+{
+	std::uniform_int_distribution I(3, 6);
+	object.keys.resize(I(rng));
+	for (auto&& key : object.keys) {
+		key.time.set(randf<float>(rng));
+		key.value.set(rands(rng));
+	}
+
+	return true;
+}
+
+bool common::Randomiser<NiTextKeyExtraData>::operator()(
+	const NiTextKeyExtraData&, Niflib::NiTextKeyExtraData* native, File& file, std::mt19937& rng)
+{
+	std::uniform_int_distribution I(3, 6);
+	std::vector<Niflib::Key<std::string>> keys(I(rng));
+	for (auto&& key : keys) {
+		key.time = randf<float>(rng);
+		key.data = rands(rng);
+	}
+	native->SetKeys(keys);
+
+	return true;
+}
+
+
+bool common::EquivalenceTester<BSBehaviorGraphExtraData>::operator()(
+	const BSBehaviorGraphExtraData& object, const Niflib::BSBehaviorGraphExtraData* native, File& file)
+{
+	Assert::IsTrue(object.fileName.get() == native->GetBehaviourGraphFile());
+	Assert::IsTrue(object.controlsBaseSkeleton.get() == native->GetControlsBaseSkeleton());
+	return true;
+}
+
+bool common::Randomiser<BSBehaviorGraphExtraData>::operator()(BSBehaviorGraphExtraData& object, File& file, std::mt19937& rng)
+{
+	object.fileName.set(rands(rng));
+	object.controlsBaseSkeleton.set(!object.controlsBaseSkeleton.get());
+	return true;
+}
+
+bool common::Randomiser<BSBehaviorGraphExtraData>::operator()(
+	const BSBehaviorGraphExtraData&, Niflib::BSBehaviorGraphExtraData* native, File& file, std::mt19937& rng)
+{
+	native->SetBehaviourGraphFile(rands(rng));
+	native->SetControlsBaseSkeleton(!native->GetControlsBaseSkeleton());
+	return true;
+}

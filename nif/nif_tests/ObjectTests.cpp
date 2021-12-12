@@ -411,6 +411,39 @@ namespace objects
 		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiSingleInterpController>{}.run(); }
 	};
 
+	TEST_CLASS(NiControllerManager)
+	{
+	public:
+		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiControllerManager>{}.run(); }
+		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiControllerManager>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiControllerManager>{}.run(); }
+		TEST_METHOD(Syncer) { SyncerTest<nif::NiControllerManager>{}.run(); }
+		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiControllerManager>{}.run(); }
+		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiControllerManager>{}.run(); }
+	};
+
+	TEST_CLASS(NiControllerSequence)
+	{
+	public:
+		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiControllerSequence>{}.run(); }
+		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiControllerSequence>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiControllerSequence>{}.run(); }
+		TEST_METHOD(Syncer) { SyncerTest<nif::NiControllerSequence>{}.run(); }
+		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiControllerSequence>{}.run(); }
+		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiControllerSequence>{}.run(); }
+	};
+
+	TEST_CLASS(NiDefaultAVObjectPalette)
+	{
+	public:
+		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiDefaultAVObjectPalette>{}.run(); }
+		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiDefaultAVObjectPalette>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiDefaultAVObjectPalette>{}.run(); }
+		TEST_METHOD(Syncer) { SyncerTest<nif::NiDefaultAVObjectPalette>{}.run(); }
+		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiDefaultAVObjectPalette>{}.run(); }
+		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiDefaultAVObjectPalette>{}.run(); }
+	};
+
 	TEST_CLASS(NiParticleSystem)
 	{
 	public:
@@ -651,5 +684,27 @@ namespace objects
 		TEST_METHOD(Syncer) { SyncerTest<nif::NiStringsExtraData>{}.run(); }
 		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiStringsExtraData>{}.run(); }
 		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiStringsExtraData>{}.run(); }
+	};
+
+	TEST_CLASS(NiTextKeyExtraData)
+	{
+	public:
+		TEST_METHOD(CreateSync) { CreateSyncTest<nif::NiTextKeyExtraData>{}.run(); }
+		TEST_METHOD(CreateType) { CreateTypeTest<nif::NiTextKeyExtraData>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwarderTest<nif::NiTextKeyExtraData>{}.run(); }
+		TEST_METHOD(Syncer) { SyncerTest<nif::NiTextKeyExtraData>{}.run(); }
+		TEST_METHOD(TraverseH) { TraverseHTest<nif::NiTextKeyExtraData>{}.run(); }
+		TEST_METHOD(TraverseV) { TraverseVTest<nif::NiTextKeyExtraData>{}.run(); }
+	};
+
+	TEST_CLASS(BSBehaviorGraphExtraData)
+	{
+	public:
+		TEST_METHOD(CreateSync) { CreateSyncTest<nif::BSBehaviorGraphExtraData>{}.run(); }
+		TEST_METHOD(CreateType) { CreateTypeTest<nif::BSBehaviorGraphExtraData>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwarderTest<nif::BSBehaviorGraphExtraData>{}.run(); }
+		TEST_METHOD(Syncer) { SyncerTest<nif::BSBehaviorGraphExtraData>{}.run(); }
+		TEST_METHOD(TraverseH) { TraverseHTest<nif::BSBehaviorGraphExtraData>{}.run(); }
+		TEST_METHOD(TraverseV) { TraverseVTest<nif::BSBehaviorGraphExtraData>{}.run(); }
 	};
 }

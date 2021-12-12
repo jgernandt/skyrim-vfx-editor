@@ -278,3 +278,222 @@ bool common::Randomiser<NiSingleInterpController>::operator()(const NiSingleInte
 
 	return true;
 }
+
+
+bool common::EquivalenceTester<NiControllerManager>::operator()(const NiControllerManager& object, const Niflib::NiControllerManager* native, File& file)
+{
+	Assert::IsTrue(object.cumulative.get() == native->GetCumulative());
+
+	auto&& seqs = native->GetControllerSequences();
+	Assert::IsTrue(seqs.size() == object.ctlrSequences.size());
+	for (auto&& seq : seqs)
+		Assert::IsTrue(object.ctlrSequences.has(file.get<NiControllerSequence>(seq).get()));
+
+	Assert::IsTrue(object.objectPalette.assigned() == file.get<NiDefaultAVObjectPalette>(native->GetObjectPalette()));
+
+	return true;
+}
+
+bool common::ForwardOrderTester<NiControllerManager>::operator()(
+	const NiControllerManager& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
+{
+	fwdSet(object.ctlrSequences, it, end);
+	fwdRef(object.objectPalette, it, end);
+	return true;
+}
+
+bool common::Randomiser<NiControllerManager>::operator()(NiControllerManager& object, File& file, std::mt19937& rng)
+{
+	object.cumulative.set(!object.cumulative.get());
+	randomiseSet(object.ctlrSequences, file, rng);
+	object.objectPalette.assign(file.create<NiDefaultAVObjectPalette>());
+	return true;
+}
+
+bool common::Randomiser<NiControllerManager>::operator()(
+	const NiControllerManager&, Niflib::NiControllerManager* native, File& file, std::mt19937& rng)
+{
+	native->SetCumulative(!native->GetCumulative());
+	native->SetControllerSequences(randomObjVector<NiControllerSequence>(rng));
+	native->SetObjectPalette(new Niflib::NiDefaultAVObjectPalette);
+	return true;
+}
+
+
+bool common::EquivalenceTester<NiControllerSequence>::operator()(
+	const NiControllerSequence& object, const Niflib::NiControllerSequence* native, File& file)
+{
+	Assert::IsTrue(object.name.get() == native->GetName());
+	Assert::IsTrue(object.arrayGrowBy.get() == native->GetArrayGrowBy());
+
+	auto&& blocks = native->GetControlledBlocks();
+	Assert::IsTrue(object.blocks.size() == blocks.size());
+	for (size_t i = 0; i < blocks.size(); i++) {
+		Assert::IsTrue(object.blocks.at(i).interpolator.assigned() == file.get<NiInterpolator>(blocks[i].interpolator));
+		Assert::IsTrue(object.blocks.at(i).controller.assigned() == file.get<NiTimeController>(blocks[i].controller));
+		Assert::IsTrue(object.blocks.at(i).priority.get() == blocks[i].priority);
+		Assert::IsTrue(object.blocks.at(i).nodeName.get() == blocks[i].nodeName);
+		Assert::IsTrue(object.blocks.at(i).propertyType.get() == blocks[i].propertyType);
+		Assert::IsTrue(object.blocks.at(i).ctlrType.get() == blocks[i].controllerType);
+		Assert::IsTrue(object.blocks.at(i).ctlrID.get() == blocks[i].variable1);
+		Assert::IsTrue(object.blocks.at(i).iplrID.get() == blocks[i].variable2);
+	}
+
+	Assert::IsTrue(object.weight.get() == native->GetWeight());
+	Assert::IsTrue(object.textKeys.assigned() == file.get<NiTextKeyExtraData>(native->GetTextKeyExtraData()));
+	Assert::IsTrue(object.cycleType.get() == static_cast<CycleType>(native->GetCycleType()));
+	Assert::IsTrue(object.frequency.get() == native->GetFrequency());
+	Assert::IsTrue(object.startTime.get() == native->GetStartTime());
+	Assert::IsTrue(object.stopTime.get() == native->GetStopTime());
+	Assert::IsTrue(object.manager.assigned() == file.get<NiControllerManager>(native->GetParent()));
+	Assert::IsTrue(object.accumRootName.get() == native->GetTargetName());
+
+	return true;
+}
+
+bool common::ForwardOrderTester<NiControllerSequence>::operator()(
+	const NiControllerSequence& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end)
+{
+	for (auto&& block : object.blocks) {
+		fwdRef(block.interpolator, it, end);
+		//I don't think we want to forward to the controller, do we?
+	}
+	fwdRef(object.textKeys, it, end);
+	return true;
+}
+
+bool common::Randomiser<NiControllerSequence>::operator()(NiControllerSequence& object, File& file, std::mt19937& rng)
+{
+	object.name.set(rands(rng));
+	randomiseProperty(object.arrayGrowBy, rng);
+
+	std::uniform_int_distribution<int> size(1, 5);
+	object.blocks.resize(size(rng));
+	for (auto&& block : object.blocks) {
+		block.interpolator.assign(file.create<NiInterpolator>());
+		block.controller.assign(file.create<NiTimeController>());
+		block.priority.set(randi<int>(rng, { 0, 255 }));
+		block.nodeName.set(rands(rng));
+		block.propertyType.set(rands(rng));
+		block.ctlrType.set(rands(rng));
+		block.ctlrID.set(rands(rng));
+		block.iplrID.set(rands(rng));
+	}
+
+	randomiseProperty(object.weight, rng);
+	object.textKeys.assign(file.create<NiTextKeyExtraData>());
+	object.cycleType.set(static_cast<CycleType>(randi<unsigned int>(rng)));
+	randomiseProperty(object.frequency, rng);
+	randomiseProperty(object.startTime, rng);
+	randomiseProperty(object.stopTime, rng);
+
+	auto manager = file.create<NiControllerManager>();
+	file.keepAlive(manager);
+	object.manager.assign(manager);
+
+	object.accumRootName.set(rands(rng));
+
+	return true;
+}
+
+bool common::Randomiser<NiControllerSequence>::operator()(const NiControllerSequence&, Niflib::NiControllerSequence* native, File& file, std::mt19937& rng)
+{
+	native->SetName(rands(rng));
+	native->SetArrayGrowBy(randi<unsigned int>(rng));
+
+	std::uniform_int_distribution<int> size(1, 5);
+	std::vector<Niflib::ControllerLink> blocks(size(rng));
+	for (auto&& block : blocks) {
+		block.interpolator = new Niflib::NiInterpolator;
+		block.controller = new Niflib::NiTimeController;
+		block.priority = randi<int>(rng, { 0, 255 });
+		block.nodeName = rands(rng);
+		block.propertyType = rands(rng);
+		block.controllerType = rands(rng);
+		block.variable1 = rands(rng);
+		block.variable2 = rands(rng);
+	}
+	native->SetControlledBlocks(std::move(blocks));
+
+	native->SetWeight(randf<float>(rng));
+	native->SetTextKey(new Niflib::NiTextKeyExtraData);
+	native->SetCycleType(static_cast<Niflib::CycleType>(randi<unsigned int>(rng)));
+	native->SetFrequency(randf<float>(rng));
+	native->SetStartTime(randf<float>(rng));
+	native->SetStopTime(randf<float>(rng));
+
+	Niflib::NiControllerManagerRef native_manager = new Niflib::NiControllerManager;
+	auto manager = file.get<NiControllerManager>(native_manager);
+	file.keepAlive(manager);
+	native_manager->AddSequence(native);//also sets target on us
+
+	native->SetTargetName(rands(rng));
+
+	return true;
+}
+
+bool common::EquivalenceTester<NiDefaultAVObjectPalette>::operator()(
+	const NiDefaultAVObjectPalette& object, const Niflib::NiDefaultAVObjectPalette* native, File& file)
+{
+	Assert::IsTrue(object.scene.assigned() == file.get<NiAVObject>(native->GetScene()));
+	auto&& objects = native->GetObjects();
+	Assert::IsTrue(objects.size() == object.objects.size());
+	for (size_t i = 0; i < objects.size(); i++) {
+		Assert::IsTrue(object.objects.at(i).name.get() == objects[i].name);
+		Assert::IsTrue(object.objects.at(i).object.assigned() == file.get<NiAVObject>(objects[i].avObject));
+
+		//If we store Set<NiAVObject> instead
+		//auto obj = file.get<NiAVObject>(objects[i].avObject);
+		//Assert::IsTrue(object.objects.has(obj.get()));
+		//Assert::IsTrue(obj->name.get() == objects[i].name);
+	}
+
+	return true;
+}
+
+bool common::Randomiser<NiDefaultAVObjectPalette>::operator()(NiDefaultAVObjectPalette& object, File& file, std::mt19937& rng)
+{
+	auto scene = file.create<NiAVObject>();
+	file.keepAlive(scene);
+	object.scene.assign(scene);
+
+	std::uniform_int_distribution<int> I(3, 6);
+	object.objects.resize(I(rng));
+	for (auto&& obj : object.objects) {
+		obj.name.set(rands(rng));
+
+		auto o = file.create<NiAVObject>();
+		file.keepAlive(o);
+		obj.object.assign(o);
+	}
+
+	//If we store Set<NiAVObject> instead
+	//randomiseSet(object.objects, file, rng);
+	//for (auto&& obj : object.objects)
+	//	obj->name.set(rands(rng));
+
+	return true;
+}
+
+bool common::Randomiser<NiDefaultAVObjectPalette>::operator()(const NiDefaultAVObjectPalette&, Niflib::NiDefaultAVObjectPalette* native, File& file, std::mt19937& rng)
+{
+	Niflib::NiAVObjectRef native_scene = new Niflib::NiAVObject;
+	auto scene = file.get<NiAVObject>(native_scene);
+	file.keepAlive(scene);
+	native->SetScene(native_scene);
+
+	std::uniform_int_distribution<int> I(3, 6);
+	std::vector<Niflib::AVObject> vec(I(rng));
+	for (auto&& obj : vec) {
+		Niflib::NiAVObjectRef native_obj = new Niflib::NiAVObject;
+		native_obj->SetName(rands(rng));
+		auto o = file.get<NiAVObject>(native_obj);
+		file.keepAlive(o);
+
+		obj.name = native_obj->GetName();
+		obj.avObject = native_obj;
+	}
+	native->SetObjects(std::move(vec));
+
+	return true;
+}

@@ -53,8 +53,13 @@
 
 #include "obj/NiStringExtraData.h"
 #include "obj/NiStringsExtraData.h"
+#include "obj/NiTextKeyExtraData.h"
+#include "obj/BSBehaviorGraphExtraData.h"
 
 #include "obj/BSEffectShaderProperty.h"
 #include "obj/NiAlphaProperty.h"
 
 #include "obj/NiControllerManager.h"
+#include "obj/NiControllerSequence.h"
+#include "obj/NiDefaultAVObjectPalette.h"
+#include "obj/BSAnimNotes.h"

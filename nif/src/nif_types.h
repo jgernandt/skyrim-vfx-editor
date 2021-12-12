@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include "Rotation.h"
+#include "nif_data.h"
 
 namespace nif
 {
@@ -57,6 +58,14 @@ namespace nif
 	constexpr ControllerFlags CTLR_LOOP_REVERSE = 0x02;
 	constexpr ControllerFlags CTLR_LOOP_CLAMP = 0x04;
 	constexpr ControllerFlags CTLR_LOOP_MASK = 0x06;
+	//Actually, NiControllerSequence treats it as an enum, so we might want to switch to that
+	enum class CycleType : std::uint_fast32_t
+	{
+		REPEAT = 0,
+		REVERSE = 1,
+		CLAMP = 2,
+	};
+
 	constexpr ControllerFlags CTLR_ACTIVE = 0x08;
 	constexpr ControllerFlags CTLR_PLAY_BWD = 0x10;
 	constexpr ControllerFlags CTLR_MNGR_CTRLD = 0x20;
@@ -81,6 +90,54 @@ namespace nif
 
 	constexpr ShaderFlags SF2_DOUBLE_SIDED = 0x00000010;
 	constexpr ShaderFlags SF2_VERTEX_COLOUR = 0x00000020;
+
+	template<typename T>
+	struct Key
+	{
+		Key() = default;
+		Key(const Key<T>&) = delete;
+		Key(Key<T>&& other) noexcept { *this = std::move(other); }
+
+		Key<T>& operator=(const Key<T>&) = delete;
+		Key<T>& operator=(Key<T>&& other) noexcept
+		{
+			time = std::move(other.time);
+			value = std::move(other.value);
+			fwdTan = std::move(other.fwdTan);
+			bwdTan = std::move(other.bwdTan);
+			tension = std::move(other.tension);
+			bias = std::move(other.bias);
+			continuity = std::move(other.continuity);
+			return *this;
+		}
+
+		Property<float> time;
+		Property<T> value;
+		Property<T> fwdTan;
+		Property<T> bwdTan;
+		Property<float> tension;
+		Property<float> bias;
+		Property<float> continuity;
+	};
+
+	template<>
+	struct Key<std::string>
+	{
+		Key() = default;
+		Key(const Key<std::string>&) = delete;
+		Key(Key<std::string>&& other) noexcept { *this = std::move(other); }
+
+		Key<std::string>& operator=(const Key<std::string>&) = delete;
+		Key<std::string>& operator=(Key<std::string>&& other) noexcept
+		{
+			time = std::move(other.time);
+			value = std::move(other.value);
+			return *this;
+		}
+
+		Property<float> time;
+		Property<std::string> value;
+	};
 
 	template<typename T>
 	using ni_ptr = std::shared_ptr<T>;
@@ -110,6 +167,11 @@ namespace nif
 	struct NiTimeController;
 	struct NiSingleInterpController;
 
+	struct NiControllerManager;
+	struct NiControllerSequence;
+	struct NiDefaultAVObjectPalette;
+	struct BSAnimNotes;
+
 	struct NiParticleSystem;
 	struct NiPSysData;
 
@@ -136,6 +198,8 @@ namespace nif
 	struct NiExtraData;
 	struct NiStringExtraData;
 	struct NiStringsExtraData;
+	struct NiTextKeyExtraData;
+	struct BSBehaviorGraphExtraData;
 }
 
 namespace Niflib
@@ -167,6 +231,11 @@ namespace Niflib
 	class NiTimeController;
 	class NiSingleInterpController;
 
+	class NiControllerManager;
+	class NiControllerSequence;
+	class NiDefaultAVObjectPalette;
+	class BSAnimNotes;
+
 	class NiParticleSystem;
 	class NiPSysData;
 
@@ -193,4 +262,6 @@ namespace Niflib
 	class NiExtraData;
 	class NiStringExtraData;
 	class NiStringsExtraData;
+	class NiTextKeyExtraData;
+	class BSBehaviorGraphExtraData;
 }

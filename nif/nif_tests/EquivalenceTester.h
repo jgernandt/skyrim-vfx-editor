@@ -105,6 +105,24 @@ namespace common
 	};
 
 	template<>
+	struct EquivalenceTester<NiControllerManager> : VerticalTraverser<NiControllerManager, EquivalenceTester>
+	{
+		bool operator() (const NiControllerManager& object, const Niflib::NiControllerManager* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiControllerSequence> : VerticalTraverser<NiControllerSequence, EquivalenceTester>
+	{
+		bool operator() (const NiControllerSequence& object, const Niflib::NiControllerSequence* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiDefaultAVObjectPalette> : VerticalTraverser<NiDefaultAVObjectPalette, EquivalenceTester>
+	{
+		bool operator() (const NiDefaultAVObjectPalette& object, const Niflib::NiDefaultAVObjectPalette* native, File& file);
+	};
+
+	template<>
 	struct EquivalenceTester<NiParticleSystem> : VerticalTraverser<NiParticleSystem, EquivalenceTester>
 	{
 		bool operator() (const NiParticleSystem& object, const Niflib::NiParticleSystem* native, File& file);
@@ -204,5 +222,17 @@ namespace common
 	struct EquivalenceTester<NiStringsExtraData> : VerticalTraverser<NiStringsExtraData, EquivalenceTester>
 	{
 		bool operator() (const NiStringsExtraData& object, const Niflib::NiStringsExtraData* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiTextKeyExtraData> : VerticalTraverser<NiTextKeyExtraData, EquivalenceTester>
+	{
+		bool operator() (const NiTextKeyExtraData& object, const Niflib::NiTextKeyExtraData* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<BSBehaviorGraphExtraData> : VerticalTraverser<BSBehaviorGraphExtraData, EquivalenceTester>
+	{
+		bool operator() (const BSBehaviorGraphExtraData& object, const Niflib::BSBehaviorGraphExtraData* native, File& file);
 	};
 }

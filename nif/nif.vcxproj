@@ -22,6 +22,8 @@
     <ClInclude Include="src\Assignable.h" />
     <ClInclude Include="src\FlagSet.h" />
     <ClInclude Include="src\List.h" />
+    <ClInclude Include="src\NiControllerManager.h" />
+    <ClInclude Include="src\NiControllerManager_internal.h" />
     <ClInclude Include="src\nif.h" />
     <ClInclude Include="src\nif_conversions.h" />
     <ClInclude Include="src\nif_internal.h" />
@@ -47,6 +49,7 @@
     <ClInclude Include="src\Set.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\NiControllerManager.cpp" />
     <ClCompile Include="src\NiProperties.cpp" />
     <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\NiController.cpp" />

@@ -180,7 +180,7 @@
     <ClCompile Include="NiObjectNETImpl.cpp" />
     <ClCompile Include="NiAVObjectImpl.cpp" />
     <ClCompile Include="NIExtraDataImpl.cpp" />
-    <ClCompile Include="NiInterpolatorsImpl.cpp" />
+    <ClCompile Include="NiControllersImpl.cpp" />
     <ClCompile Include="NiNodeImpl.cpp" />
     <ClCompile Include="NiPropertiesImpl.cpp" />
   </ItemGroup>

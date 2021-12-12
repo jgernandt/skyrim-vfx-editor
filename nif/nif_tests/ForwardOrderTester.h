@@ -102,6 +102,18 @@ namespace common
 	};
 
 	template<>
+	struct ForwardOrderTester<NiControllerManager> : nif::VerticalTraverser<NiControllerManager, ForwardOrderTester>
+	{
+		bool operator() (const NiControllerManager& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
+	};
+
+	template<>
+	struct ForwardOrderTester<NiControllerSequence> : nif::VerticalTraverser<NiControllerSequence, ForwardOrderTester>
+	{
+		bool operator() (const NiControllerSequence& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);
+	};
+
+	template<>
 	struct ForwardOrderTester<NiParticleSystem> : nif::VerticalTraverser<NiParticleSystem, ForwardOrderTester>
 	{
 		bool operator() (const NiParticleSystem& object, std::vector<nif::NiObject*>::iterator& it, std::vector<nif::NiObject*>::iterator end);

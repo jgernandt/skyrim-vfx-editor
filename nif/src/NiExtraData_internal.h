@@ -57,4 +57,28 @@ namespace nif
 	{
 		bool operator() (const NiStringsExtraData& object, Niflib::NiStringsExtraData* native, const File& file);
 	};
+
+	//NiTextKeyExtraData
+	template<> struct type_map<Niflib::NiTextKeyExtraData> { using type = NiTextKeyExtraData; };
+	template<> struct type_map<NiTextKeyExtraData> { using type = Niflib::NiTextKeyExtraData; };
+	template<> struct ReadSyncer<NiTextKeyExtraData> : VerticalTraverser<NiTextKeyExtraData, ReadSyncer>
+	{
+		bool operator() (NiTextKeyExtraData& object, const Niflib::NiTextKeyExtraData* native, File& file);
+	};
+	template<> struct WriteSyncer<NiTextKeyExtraData> : VerticalTraverser<NiTextKeyExtraData, WriteSyncer>
+	{
+		bool operator() (const NiTextKeyExtraData& object, Niflib::NiTextKeyExtraData* native, const File& file);
+	};
+
+	//BSBehaviorGraphExtraData
+	template<> struct type_map<Niflib::BSBehaviorGraphExtraData> { using type = BSBehaviorGraphExtraData; };
+	template<> struct type_map<BSBehaviorGraphExtraData> { using type = Niflib::BSBehaviorGraphExtraData; };
+	template<> struct ReadSyncer<BSBehaviorGraphExtraData> : VerticalTraverser<BSBehaviorGraphExtraData, ReadSyncer>
+	{
+		bool operator() (BSBehaviorGraphExtraData& object, const Niflib::BSBehaviorGraphExtraData* native, File& file);
+	};
+	template<> struct WriteSyncer<BSBehaviorGraphExtraData> : VerticalTraverser<BSBehaviorGraphExtraData, WriteSyncer>
+	{
+		bool operator() (const BSBehaviorGraphExtraData& object, Niflib::BSBehaviorGraphExtraData* native, const File& file);
+	};
 }

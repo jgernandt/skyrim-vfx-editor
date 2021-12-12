@@ -22,6 +22,8 @@
 const size_t nif::NiExtraData::TYPE = std::hash<std::string>{}("NiExtraData");
 const size_t nif::NiStringExtraData::TYPE = std::hash<std::string>{}("NiStringExtraData");
 const size_t nif::NiStringsExtraData::TYPE = std::hash<std::string>{}("NiStringsExtraData");
+const size_t nif::NiTextKeyExtraData::TYPE = std::hash<std::string>{}("NiTextKeyExtraData");
+const size_t nif::BSBehaviorGraphExtraData::TYPE = std::hash<std::string>{}("BSBehaviorGraphExtraData");
 
 bool nif::ReadSyncer<nif::NiExtraData>::operator()(NiExtraData& object, const Niflib::NiExtraData* native, File& file)
 {
@@ -71,5 +73,59 @@ bool nif::WriteSyncer<nif::NiStringsExtraData>::operator()(const NiStringsExtraD
 	for (size_t i = 0; i < strings.size(); i++)
 		strings[i] = object.strings.at(i).get();
 	native->SetData(std::move(strings));
+	return true;
+}
+
+
+bool nif::ReadSyncer<nif::NiTextKeyExtraData>::operator()(
+	NiTextKeyExtraData& object, const Niflib::NiTextKeyExtraData* native, File& file)
+{
+	assert(native);
+
+	object.keys.clear();
+	for (auto&& key : native->GetKeys()) {
+		object.keys.push_back();
+		object.keys.back().time.set(key.time);
+		object.keys.back().value.set(key.data);
+	}
+
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiTextKeyExtraData>::operator()(
+	const NiTextKeyExtraData& object, Niflib::NiTextKeyExtraData* native, const File& file)
+{
+	assert(native);
+
+	std::vector<Niflib::Key<std::string>> keys;
+	keys.reserve(object.keys.size());
+	for (auto&& key : object.keys) {
+		keys.push_back({ key.time.get(), key.value.get() });
+	}
+	native->SetKeys(std::move(keys));
+
+	return true;
+}
+
+
+bool nif::ReadSyncer<nif::BSBehaviorGraphExtraData>::operator()(
+	BSBehaviorGraphExtraData& object, const Niflib::BSBehaviorGraphExtraData* native, File& file)
+{
+	assert(native);
+
+	object.fileName.set(native->GetBehaviourGraphFile());
+	object.controlsBaseSkeleton.set(native->GetControlsBaseSkeleton());
+
+	return true;
+}
+
+bool nif::WriteSyncer<nif::BSBehaviorGraphExtraData>::operator()(
+	const BSBehaviorGraphExtraData& object, Niflib::BSBehaviorGraphExtraData* native, const File& file)
+{
+	assert(native);
+
+	native->SetBehaviourGraphFile(object.fileName.get());
+	native->SetControlsBaseSkeleton(object.controlsBaseSkeleton.get());
+
 	return true;
 }
