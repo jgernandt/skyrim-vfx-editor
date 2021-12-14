@@ -24,6 +24,11 @@ using namespace nif;
 
 void node::Constructor::extractNodes(gui::ConnectionHandler& target, bool arrange)
 {
+	//Execute post-process functions
+	for (auto&& fcn : m_postProcess)
+		if (fcn)
+			fcn();
+
 	//Translate modifier connection requests into actual ConnectionInfo
 	struct Compare
 	{

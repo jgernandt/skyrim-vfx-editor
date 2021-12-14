@@ -70,6 +70,12 @@ namespace objects
 	};
 
 	template<>
+	struct FactoryTester<NiControllerManager> : VerticalTraverser<NiControllerManager, FactoryTester>
+	{
+		bool operator() (const NiControllerManager& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct FactoryTester<NiPSysModifier> : VerticalTraverser<NiPSysModifier, FactoryTester>
 	{
 		bool operator() (const NiPSysModifier& obj, const TestConstructor& ctor);
@@ -201,6 +207,12 @@ namespace objects
 
 	template<>
 	struct FactoryTest<NiStringsExtraData>
+	{
+		void run();
+	};
+
+	template<>
+	struct FactoryTest<BSBehaviorGraphExtraData>
 	{
 		void run();
 	};

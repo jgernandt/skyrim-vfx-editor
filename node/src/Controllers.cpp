@@ -23,8 +23,7 @@
 
 #include "CompositionActions.h"
 
-constexpr gui::ColRGBA TitleCol_Anim = { 1.0f, 1.0f, 0.7f, 1.0f };
-constexpr gui::ColRGBA TitleCol_AnimActive = { 1.0f, 1.0f, 0.7f, 1.0f };
+#include "style.h"
 
 using namespace nif;
 

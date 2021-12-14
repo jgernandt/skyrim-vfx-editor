@@ -18,6 +18,7 @@
 
 #pragma once
 #include "Controllers.h"
+#include "ControllerManager.h"
 #include "Emitters.h"
 #include "ExtraData.h"
 #include "GravityModifier.h"

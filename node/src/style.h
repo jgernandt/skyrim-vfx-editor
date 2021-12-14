@@ -23,6 +23,9 @@
 //possibly read from an external resource.
 namespace node
 {
+	constexpr gui::ColRGBA TitleCol_Anim = { 1.0f, 1.0f, 0.7f, 1.0f };
+	constexpr gui::ColRGBA TitleCol_AnimActive = { 1.0f, 1.0f, 0.7f, 1.0f };
+
 	constexpr gui::ColRGBA TitleCol_Geom = { 0.9f, 0.7f, 0.5f, 1.0f };
 	constexpr gui::ColRGBA TitleCol_GeomActive = { 0.9f, 0.7f, 0.5f, 1.0f };
 

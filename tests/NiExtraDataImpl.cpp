@@ -106,3 +106,45 @@ void objects::FactoryTest<NiStringsExtraData>::run()
 		nodeTest<node::DummyExtraData>(*obj, ctor);
 	}
 }
+
+
+void objects::FactoryTest<BSBehaviorGraphExtraData>::run()
+{
+	{//has manager (don't add node)
+		File file(File::Version::SKYRIM_SE);
+		TestConstructor ctor(file);
+		auto obj = file.create<BSBehaviorGraphExtraData>();
+		obj->name.set(node::BGED_NAME);
+		auto root = file.getRoot();
+		auto mngr = file.create<NiControllerManager>();
+		root->extraData.add(obj);
+		root->controllers.insert(0, mngr);
+
+		ctor.pushObject(obj);
+		node::Factory<BSBehaviorGraphExtraData>{}.up(*obj, ctor);
+		ctor.popObject();
+
+		Assert::IsNull(ctor.node.second.get());
+		Assert::IsTrue(root->extraData.has(obj.get()));
+	}
+	{//no manager (remove and warn)
+		File file(File::Version::SKYRIM_SE);
+		TestConstructor ctor(file);
+		auto obj = file.create<BSBehaviorGraphExtraData>();
+		obj->name.set(node::BGED_NAME);
+		auto root = file.getRoot();
+		root->extraData.add(obj);
+
+		ctor.pushObject(obj);
+		node::Factory<BSBehaviorGraphExtraData>{}.up(*obj, ctor);
+		ctor.popObject();
+
+		Assert::IsNull(ctor.node.second.get());
+		Assert::IsTrue(ctor.warnings().size() == 1);
+
+		for (auto&& fcn : ctor.m_postProcess)
+			if (fcn)
+				fcn();
+		Assert::IsFalse(root->extraData.has(obj.get()));
+	}
+}

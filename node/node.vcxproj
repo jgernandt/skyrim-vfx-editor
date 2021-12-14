@@ -23,6 +23,8 @@
     <ClInclude Include="src\AVObject.h" />
     <ClInclude Include="src\AVObject_internal.h" />
     <ClInclude Include="src\Constructor.h" />
+    <ClInclude Include="src\ControllerManager.h" />
+    <ClInclude Include="src\ControllerManager_internal.h" />
     <ClInclude Include="src\Controllers.h" />
     <ClInclude Include="src\Controllers_internal.h" />
     <ClInclude Include="src\Emitters_internal.h" />
@@ -59,6 +61,7 @@
     <ClCompile Include="src\AnimationCurve.cpp" />
     <ClCompile Include="src\AVObject.cpp" />
     <ClCompile Include="src\Constructor.cpp" />
+    <ClCompile Include="src\ControllerManager.cpp" />
     <ClCompile Include="src\Controllers.cpp" />
     <ClCompile Include="src\Emitters.cpp" />
     <ClCompile Include="src\ExtraData.cpp" />

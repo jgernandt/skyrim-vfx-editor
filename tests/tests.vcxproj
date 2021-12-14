@@ -181,6 +181,8 @@
       </ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="ConstructorTests.cpp" />
+    <ClCompile Include="ControllerManagerImpl.cpp" />
+    <ClCompile Include="ControllerManagerTests.cpp" />
     <ClCompile Include="ControllersImpl.cpp" />
     <ClCompile Include="ControllerTests.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

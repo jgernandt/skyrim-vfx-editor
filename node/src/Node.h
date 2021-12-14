@@ -43,6 +43,8 @@ namespace node
 	class Node : public NodeShared
 	{
 	public:
+		using default_object = NiNode;
+
 		Node(const ni_ptr<NiNode>& obj);
 		virtual ~Node();
 
@@ -53,11 +55,44 @@ namespace node
 	class Root final : public NodeShared
 	{
 	public:
+		class Behaviour final : public Field
+		{
+			class ControllableRoot final : public IControllableRoot
+			{
+			public:
+				ControllableRoot(const ni_ptr<NiAVObject>& obj);
+
+				virtual void addController(const ni_ptr<NiTimeController>& ctlr) override;
+				virtual void removeController(NiTimeController* ctlr) override;
+
+				virtual Set<NiExtraData>& extraData() override;
+
+			private:
+				const ni_ptr<NiAVObject> m_obj;
+			};
+
+		public:
+			Behaviour(const std::string& name, NodeBase& node, const ni_ptr<NiAVObject>& obj);
+			constexpr static const char* ID = "Behaviour";
+
+		private:
+			ControllableRoot m_ifc;
+			PtrReceiver<NiAVObject> m_rcvr;
+			Sender<IControllableRoot> m_sndr;
+		};
+
+		using default_object = BSFadeNode;
+
+	public:
 		Root(const ni_ptr<NiNode>& obj);
 		~Root();
 
+	public:
 		constexpr static float WIDTH = 150.0f;
-		constexpr static float HEIGHT = 116.0f;
+		constexpr static float HEIGHT = 140.0f;
+
+	private:
+		std::unique_ptr<Behaviour> m_behaviour;
 	};
 
 	class BillboardNode final : public Node

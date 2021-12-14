@@ -43,6 +43,9 @@ namespace objects
 		//For ForwardTester
 		std::vector<NiObject*> forwards;
 
+		std::vector<std::string> m_warnings;
+		std::vector<std::function<void()>> m_postProcess;
+
 	public:
 		TestConstructor(File& file) : m_file{ file } {}
 
@@ -53,6 +56,8 @@ namespace objects
 				forwards.push_back(&obj);
 		}
 
+		std::vector<std::string>& warnings() { return m_warnings; }
+
 		void addConnection(const node::ConnectionInfo& info) { connections.push_back(info); }
 		void addModConnections(NiParticleSystem* target, std::vector<NiPSysModifier*>&& mods) { modConnections = { target, std::move(mods) }; }
 
@@ -62,6 +67,8 @@ namespace objects
 			Assert::IsTrue(!node.first && !node.second);
 			node = { obj, std::move(n) };
 		}
+
+		void addPostProcess(const std::function<void()>& fcn) { m_postProcess.push_back(fcn); }
 
 		void pushObject(const ni_ptr<NiObject>& obj) { objects.push_back(obj); }
 		void popObject() { objects.pop_back(); }

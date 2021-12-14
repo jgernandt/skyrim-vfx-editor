@@ -62,6 +62,8 @@ namespace node
 
 		void addNode(NiObject* obj, std::unique_ptr<NodeBase>&& node);
 
+		void addPostProcess(const std::function<void()>& fcn) { m_postProcess.push_back(fcn); }
+
 		void pushObject(const ni_ptr<NiObject>& obj) { m_objectStack.push_back(obj); }
 		void popObject() { m_objectStack.pop_back(); }
 		ni_ptr<NiObject> getObject() const;
@@ -84,6 +86,8 @@ namespace node
 		std::set<NiObject*> m_traversed;
 
 		std::vector<std::string> m_warnings;
+
+		std::vector<std::function<void()>> m_postProcess;
 	};
 
 	/*class Constructor

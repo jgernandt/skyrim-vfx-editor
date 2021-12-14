@@ -99,4 +99,44 @@ namespace node
 	};
 
 	//No Forwarder specialisation
+
+
+	//BSBehaviorGraphExtraData/////
+
+	//No Default specialisation
+	//No Connector specialisation
+
+	template<>
+	class Factory<BSBehaviorGraphExtraData> : public VerticalTraverser<BSBehaviorGraphExtraData, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (BSBehaviorGraphExtraData& obj, C& ctor)
+		{
+			auto&& root = ctor.getFile().getRoot();
+			assert(root);//or we would not get here
+			if (obj.name.get() == BGED_NAME && root->extraData.has(&obj)) {
+				//if the file root has a controller manager, leave this object as it is.
+				//else remove it (as a post process, not while traversing)
+				bool hasMngr = false;
+				for (auto&& ctlr : root->controllers) {
+					assert(ctlr);
+					if (ctlr->type() == NiControllerManager::TYPE) {
+						hasMngr = true;
+						break;
+					}
+				}
+				if (!hasMngr) {
+					ctor.addPostProcess([root, &obj]() { root->extraData.remove(&obj); });
+					ctor.warnings().push_back("Removed an unused behaviour graph");
+				}
+				return false;
+			}
+			else
+				//This might be used for some unknown purpose, let it be
+				return true;
+		}
+	};
+
+	//No Forwarder specialisation
 }

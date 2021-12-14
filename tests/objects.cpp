@@ -70,6 +70,14 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::BSEffectShaderProperty>{}.run(); }
 	};
 
+	TEST_CLASS(NiControllerManager)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiControllerManager>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiControllerManager>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiControllerManager>{}.run(); }
+	};
+
 	TEST_CLASS(NiParticleSystem)
 	{
 	public:
@@ -204,5 +212,13 @@ namespace objects
 		TEST_METHOD(Connector) { ConnectorTest<nif::NiStringsExtraData>{}.run(); }
 		TEST_METHOD(Factory) { FactoryTest<nif::NiStringsExtraData>{}.run(); }
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiStringsExtraData>{}.run(); }
+	};
+
+	TEST_CLASS(BSBehaviorGraphExtraData)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::BSBehaviorGraphExtraData>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::BSBehaviorGraphExtraData>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::BSBehaviorGraphExtraData>{}.run(); }
 	};
 }

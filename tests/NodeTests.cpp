@@ -67,4 +67,42 @@ namespace nodes
 			SetSenderTest(std::make_unique<node::Node>(obj), obj->children, node::Node::CHILDREN, true);
 		}
 	};
+
+	TEST_CLASS(Root)
+	{
+	public:
+		TEST_METHOD(Behaviour)
+		{
+			File file{ File::Version::SKYRIM_SE };
+			auto obj = file.create<BSFadeNode>();
+			obj->controllers.insert(0, file.create<NiTimeController>());//to test insert order
+
+			Ptr<NiAVObject> target0;
+			Ptr<NiAVObject> target;
+
+			ConnectorTester<node::Root> tester(node::Default<node::Root>{}.create(file, obj));
+			tester.tryConnect<node::IControllableRoot, Ptr<NiAVObject>>(node::Root::Behaviour::ID, false, &target0);
+			auto ifc = tester.tryConnect<node::IControllableRoot, Ptr<NiAVObject>>(node::Root::Behaviour::ID, false, &target);
+			Assert::IsNotNull(ifc);
+
+			//obj should be assigned to target (not target0)
+			Assert::IsTrue(!target0.assigned());
+			Assert::IsTrue(target.assigned() == obj);
+
+			//add/remove controllers on the interface should send to object and set target
+			auto ctlr = file.create<NiTimeController>();
+			ifc->addController(ctlr);
+			Assert::IsTrue(obj->controllers.size() == 2);
+			Assert::IsTrue(obj->controllers.find(ctlr.get()) == 0);
+			Assert::IsTrue(ctlr->target.assigned() == obj);
+
+			ifc->removeController(ctlr.get());
+			Assert::IsTrue(obj->controllers.size() == 1);
+			Assert::IsTrue(obj->controllers.find(ctlr.get()) == -1);
+			Assert::IsTrue(!ctlr->target.assigned());
+
+			//interface should expose extraData of obj
+			Assert::IsTrue(&ifc->extraData() == &obj->extraData);
+		}
+	};
 }

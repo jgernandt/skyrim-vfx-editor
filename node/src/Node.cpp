@@ -79,17 +79,56 @@ node::Root::Root(const ni_ptr<nif::NiNode>& obj) : NodeShared(obj)
 	m_extraData = newField<ExtraDataField>(EXTRA_DATA, *this, make_ni_ptr(std::static_pointer_cast<NiObjectNET>(obj), &NiObjectNET::extraData));
 	m_children = newField<ChildField>(CHILDREN, *this, make_ni_ptr(obj, &NiNode::children));
 	m_references = newField<ObjectField<NiNode>>(OBJECT, *this, obj);
+	m_behaviour = newField<Behaviour>(Behaviour::ID, *this, obj);
 
 	//until we have some other way to determine connector position for loading placement
-	getField(EXTRA_DATA)->connector->setTranslation({ WIDTH, 38.0f });
-	getField(CHILDREN)->connector->setTranslation({ WIDTH, 62.0f });
-	getField(OBJECT)->connector->setTranslation({ WIDTH, 86.0f });
+	m_extraData->connector->setTranslation({ WIDTH, 38.0f });
+	m_children->connector->setTranslation({ WIDTH, 62.0f });
+	m_references->connector->setTranslation({ WIDTH, 86.0f });
+	m_behaviour->connector->setTranslation({ WIDTH, 110.0f });
 }
 
 node::Root::~Root()
 {
 	disconnect();
 }
+
+node::Root::Behaviour::Behaviour(const std::string& name, NodeBase& node, const ni_ptr<NiAVObject>& obj) :
+	Field{ name }, m_ifc{ obj }, m_rcvr{ obj }, m_sndr{ m_ifc }
+{
+	connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
+}
+
+node::Root::Behaviour::ControllableRoot::ControllableRoot(const ni_ptr<NiAVObject>& obj) :
+	m_obj{ obj }
+{
+	assert(obj);
+}
+
+void node::Root::Behaviour::ControllableRoot::addController(const ni_ptr<NiTimeController>& ctlr)
+{
+	if (ctlr && ctlr->target.assigned() != m_obj) {
+		assert(!ctlr->target.assigned());//or it could end up with double owners
+		m_obj->controllers.insert(0, ctlr);
+		ctlr->target.assign(m_obj);
+	}
+}
+
+void node::Root::Behaviour::ControllableRoot::removeController(NiTimeController* ctlr)
+{
+	if (ctlr) {
+		if (int pos = m_obj->controllers.find(ctlr); pos != -1) {
+			m_obj->controllers.erase(pos);
+			ctlr->target.assign(nullptr);
+		}
+	}
+}
+
+Set<NiExtraData>& node::Root::Behaviour::ControllableRoot::extraData()
+{
+	return m_obj->extraData;
+}
+
 
 node::BillboardNode::BillboardNode(const ni_ptr<NiBillboardNode>& obj) :
 	Node(obj)

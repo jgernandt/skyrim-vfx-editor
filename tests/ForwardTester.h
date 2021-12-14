@@ -52,6 +52,12 @@ namespace objects
 	};
 
 	template<>
+	struct ForwardTester<NiControllerManager> : VerticalTraverser<NiControllerManager, ForwardTester>
+	{
+		bool operator() (const NiControllerManager& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct ForwardTester<NiParticleSystem> : VerticalTraverser<NiParticleSystem, ForwardTester>
 	{
 		bool operator() (const NiParticleSystem& obj, const TestConstructor& ctor);

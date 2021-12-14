@@ -45,9 +45,6 @@
     <ClInclude Include="src\Constructor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\NodeBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Node.h">
       <Filter>Header Files\Nodes</Filter>
     </ClInclude>
@@ -129,15 +126,21 @@
     <ClInclude Include="src\AnimationCurve.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\NodeBase.h">
+      <Filter>Header Files\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ControllerManager.h">
+      <Filter>Header Files\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ControllerManager_internal.h">
+      <Filter>Header Files\Nodes\internal</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Editor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\NodeBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Constructor.cpp">
@@ -193,6 +196,12 @@
     </ClCompile>
     <ClCompile Include="src\node_devices.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NodeBase.cpp">
+      <Filter>Source Files\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ControllerManager.cpp">
+      <Filter>Source Files\Nodes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

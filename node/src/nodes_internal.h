@@ -20,6 +20,7 @@
 #include "nodes.h"
 
 #include "Controllers_internal.h"
+#include "ControllerManager_internal.h"
 
 #include "PSys_internal.h"
 #include "Modifiers_internal.h"

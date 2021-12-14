@@ -82,5 +82,22 @@ namespace creation
 			Assert::IsTrue(areConnected(c1_next, c3_target));
 			Assert::IsTrue(c3_next->getConnected().empty());
 		}
+
+		TEST_METHOD(PostProcessing)
+		{
+			File file(File::Version::SKYRIM_SE);
+			node::Constructor ctor(file);
+
+			bool test1 = false;
+			bool test2 = false;
+
+			ctor.addPostProcess([&test1]() { test1 = true; });
+			ctor.addPostProcess([&test2]() { test2 = true; });
+
+			TestRoot root;
+			ctor.extractNodes(root);
+
+			Assert::IsTrue(test1 && test2);
+		}
 	};
 }

@@ -159,6 +159,17 @@ namespace node
 		//virtual std::array<float, 2> numericLimits() = 0;//needs template?
 	};
 
+	class IControllableRoot
+	{
+	public:
+		virtual ~IControllableRoot() = default;
+
+		virtual void addController(const ni_ptr<NiTimeController>&) = 0;
+		virtual void removeController(NiTimeController*) = 0;
+
+		virtual Set<NiExtraData>& extraData() = 0;
+	};
+
 	enum class ModRequirement
 	{
 		NONE,
