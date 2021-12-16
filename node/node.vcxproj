@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AnimationCurve.h" />
+    <ClInclude Include="src\AnimationManager.h" />
     <ClInclude Include="src\AVObject.h" />
     <ClInclude Include="src\AVObject_internal.h" />
     <ClInclude Include="src\Constructor.h" />
@@ -59,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AnimationCurve.cpp" />
+    <ClCompile Include="src\AnimationManager.cpp" />
     <ClCompile Include="src\AVObject.cpp" />
     <ClCompile Include="src\Constructor.cpp" />
     <ClCompile Include="src\ControllerManager.cpp" />
@@ -88,6 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+    <None Include="src\AnimationManager.inl" />
     <None Include="src\Constructor.inl" />
   </ItemGroup>
   <ItemGroup>

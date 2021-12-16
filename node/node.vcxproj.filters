@@ -135,6 +135,9 @@
     <ClInclude Include="src\ControllerManager_internal.h">
       <Filter>Header Files\Nodes\internal</Filter>
     </ClInclude>
+    <ClInclude Include="src\AnimationManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">
@@ -203,10 +206,16 @@
     <ClCompile Include="src\ControllerManager.cpp">
       <Filter>Source Files\Nodes</Filter>
     </ClCompile>
+    <ClCompile Include="src\AnimationManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
     <None Include="src\Constructor.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="src\AnimationManager.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

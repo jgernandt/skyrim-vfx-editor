@@ -18,10 +18,11 @@
 
 #include "pch.h"
 #include "CppUnitTest.h"
+#include "AnimationTester.h"
 #include "ConnectorTester.h"
 #include "FactoryTester.h"
 #include "ForwardTester.h"
-#include "Constructor.inl"
+#include "nodes_internal.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
@@ -35,20 +36,35 @@ bool objects::TestSetup<NiControllerManager>::operator()(NiControllerManager& ob
 	bged->name.set(node::BGED_NAME);
 	root->extraData.add(bged);
 
+	//Two controller sequences with a total of 3 unique controllers
 	obj.ctlrSequences.clear();
-	obj.ctlrSequences.add(file.create<NiControllerSequence>());
-	obj.ctlrSequences.add(file.create<NiControllerSequence>());
+	auto seq0 = file.create<NiControllerSequence>();
+	seq0->blocks.resize(2);
+	auto ctlr0 = file.create<NiTimeController>();
+	auto ctlr1 = file.create<NiTimeController>();
+	seq0->blocks.front().controller.assign(ctlr0);
+	seq0->blocks.back().controller.assign(ctlr1);
+	obj.ctlrSequences.add(seq0);
 
-	auto pal = file.create<NiDefaultAVObjectPalette>();
-	pal->objects.resize(2);
-	pal->scene.assign(root);
-	pal->objects.front().object.assign(root);
-	auto av2 = file.create<NiAVObject>();
-	pal->objects.back().object.assign(av2);
-	file.keepAlive(av2);
-	obj.objectPalette.assign(pal);
+	auto seq1 = file.create<NiControllerSequence>();
+	seq1->blocks.resize(2);
+	auto ctlr2 = file.create<NiTimeController>();
+	seq1->blocks.front().controller.assign(ctlr0);
+	seq1->blocks.back().controller.assign(ctlr2);
+	obj.ctlrSequences.add(seq1);
 
 	return false;
+}
+
+void objects::AnimationTester<NiControllerManager>::operator()(const NiControllerManager& obj, MockAnimationManager& visitor)
+{
+	//Should have forwarded to each unique controller
+	Assert::IsTrue(visitor.visited.size() == 3);
+	for (auto&& seq : obj.ctlrSequences) {
+		Assert::IsTrue(std::find(visitor.visited.begin(), visitor.visited.end(), seq->blocks.front().controller.assigned().get()) != visitor.visited.end());
+		Assert::IsTrue(std::find(visitor.visited.begin(), visitor.visited.end(), seq->blocks.back().controller.assigned().get()) != visitor.visited.end());
+	}
+	Assert::IsTrue(visitor.blocks.empty());
 }
 
 bool objects::FactoryTester<NiControllerManager>::operator()(const NiControllerManager& obj, const TestConstructor& ctor)
@@ -59,15 +75,15 @@ bool objects::FactoryTester<NiControllerManager>::operator()(const NiControllerM
 	Assert::IsTrue(obj.target.assigned() && obj.target.assigned()->extraData.has(node->getBGED().get()));
 
 	//we should have picked up the objects in the palette
-	Assert::IsTrue(obj.objectPalette.assigned()->objects.size() == 2);
-	auto av0 = obj.objectPalette.assigned()->objects.front().object.assigned();
-	auto av1 = obj.objectPalette.assigned()->objects.back().object.assigned();
-	Assert::IsNotNull(av0.get());
-	Assert::IsNotNull(av1.get());
-	av0->name.set("agorihaoeri");
-	av1->name.set("sbrieugb");
-	Assert::IsTrue(av0->name.get() == obj.objectPalette.assigned()->objects.front().name.get());
-	Assert::IsTrue(av1->name.get() == obj.objectPalette.assigned()->objects.back().name.get());
+	//Assert::IsTrue(obj.objectPalette.assigned()->objects.size() == 2);
+	//auto av0 = obj.objectPalette.assigned()->objects.front().object.assigned();
+	//auto av1 = obj.objectPalette.assigned()->objects.back().object.assigned();
+	//Assert::IsNotNull(av0.get());
+	//Assert::IsNotNull(av1.get());
+	//av0->name.set("agorihaoeri");
+	//av1->name.set("sbrieugb");
+	//Assert::IsTrue(av0->name.get() == obj.objectPalette.assigned()->objects.front().name.get());
+	//Assert::IsTrue(av1->name.get() == obj.objectPalette.assigned()->objects.back().name.get());
 
 	//Do we care to guard against a ControllerManager not attached to the root?
 	//I don't think that would interfere with us, so just ignore it.

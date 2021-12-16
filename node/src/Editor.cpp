@@ -17,13 +17,11 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
-
 #include "CallWrapper.h"
-
 #include "CompositionActions.h"
 
-#include "nodes_internal.h"
 #include "Editor.h"
+#include "AnimationManager.inl"
 #include "Constructor.h"
 #include "Constructor.inl"
 #include "widget_types.h"
@@ -62,16 +60,21 @@ template<typename T>
 void node::Editor::NodeRoot::addNode()
 {
 	try {
-		auto node = Default<T>{}.create(m_file);
-		//Position node at the cursor (constrained to our work area)
-		gui::Floats<2> pos = transformToLocal(*this, gui::Mouse::getPosition());
-		assert(getParent());
-		gui::Floats<2> tl = -m_translation / m_scale;
-		gui::Floats<2> br = tl + getParent()->getSize() / m_scale;
-		pos[0] = std::max(std::min(pos[0], br[0]), tl[0]);
-		pos[1] = std::max(std::min(pos[1], br[1]), tl[1]);
-		node->setTranslation(pos);
-		asyncInvoke<gui::AddChild>(std::move(node), this, true);
+		if (m_editor.m_file) {
+			auto node = Default<T>{}.create(*m_editor.m_file);
+			node->setAnimationManager(m_editor.m_animationMngr);
+
+			//Position node at the cursor (constrained to our work area)
+			gui::Floats<2> pos = transformToLocal(*this, gui::Mouse::getPosition());
+			assert(getParent());
+			gui::Floats<2> tl = -m_translation / m_scale;
+			gui::Floats<2> br = tl + getParent()->getSize() / m_scale;
+			pos[0] = std::max(std::min(pos[0], br[0]), tl[0]);
+			pos[1] = std::max(std::min(pos[1], br[1]), tl[1]);
+			node->setTranslation(pos);
+
+			asyncInvoke<gui::AddChild>(std::move(node), this, true);
+		}
 	}
 	catch (const std::exception&) {
 		//Could be bad_alloc or anything thrown by the constructor.
@@ -98,10 +101,11 @@ node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &fil
 
 		m_rootName = make_ni_ptr(std::static_pointer_cast<NiObjectNET>(root), &NiObjectNET::name);
 
-		workArea = newChild<NodeRoot>(file);
+		workArea = newChild<NodeRoot>(*this);
 
 		//Nodes
-		Constructor c(file);
+		preReadProc();
+		Constructor c(file, m_animationMngr);
 		root->receive(c);
 
 		c.extractNodes(*workArea);
@@ -127,7 +131,7 @@ node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &fil
 	catch (const std::exception& e) {
 		clearChildren();
 		m_rootName.reset();
-		workArea = newChild<NodeRoot>(file);
+		workArea = newChild<NodeRoot>(*this);
 		newChild<gui::MessageBox>("Error", e.what());
 
 		//Now we have the appearance we should have, but no way to add nodes. It wouldn't make sense to. 
@@ -154,6 +158,15 @@ node::Editor::~Editor()
 void node::Editor::frame(gui::FrameDrawer& fd)
 {
 	Composite::frame(fd);
+}
+
+void node::Editor::preReadProc()
+{
+	if (m_file) {
+		if (auto&& root = m_file->getRoot()) {
+			root->receive(m_animationMngr);
+		}
+	}
 }
 
 void node::Editor::preWriteProc()

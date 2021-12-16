@@ -18,6 +18,7 @@
 
 #include "pch.h"
 #include "CppUnitTest.h"
+#include "AnimationTester.h"
 #include "ConnectorTester.h"
 #include "FactoryTester.h"
 #include "ForwardTester.h"
@@ -26,11 +27,64 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
+bool objects::TestSetup<NiTimeController>::operator()(NiTimeController& obj, File& file)
+{
+	auto target = file.create<NiAVObject>();
+	file.keepAlive(target);
+	obj.target.assign(target);
+
+	return false;
+}
+
+void objects::AnimationTester<NiTimeController>::operator()(const NiTimeController& obj, MockAnimationManager& visitor)
+{
+	//Should leave everything unchanged
+	Assert::IsTrue(visitor.visited.empty());
+	Assert::IsTrue(visitor.blocks.size() == 1);
+	Assert::IsTrue(visitor.blocks.front().ctlr.get() == &obj);
+	Assert::IsTrue(visitor.blocks.front().ctlrIDProperty == nullptr);
+	Assert::IsTrue(visitor.blocks.front().target == nullptr);
+	Assert::IsTrue(visitor.blocks.front().nodeName == "TestNodeName");
+	Assert::IsTrue(visitor.blocks.front().propertyType == "TestPropertyType");
+	Assert::IsTrue(visitor.blocks.front().ctlrType == "TestControllerType");
+	Assert::IsTrue(visitor.blocks.front().ctlrID == "TestControllerID");
+	Assert::IsTrue(visitor.blocks.front().iplrID == "TestInterpolatorID");
+}
+
 
 //Modifier controller tests should all be similar:
 //*setup a target and target modifier
 //*check that we requested a connection from our iplr to the target field on the target modifier
 //*check that a controller node was created (possibly conditional)
+
+bool objects::TestSetup<NiPSysModifierCtlr>::operator()(NiPSysModifierCtlr& obj, File& file)
+{
+	auto target = file.create<NiParticleSystem>();
+	file.getRoot()->children.add(target);
+	obj.target.assign(target);
+
+	obj.modifierName.set("abieui");
+
+	return false;
+}
+
+void objects::AnimationTester<NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr& obj, MockAnimationManager& visitor)
+{
+	ni_ptr<NiParticleSystem> psys = std::static_pointer_cast<NiParticleSystem>(obj.target.assigned());
+
+	//Should pass the modifierName as controller id
+	Assert::IsTrue(visitor.visited.empty());
+	Assert::IsTrue(visitor.blocks.size() == 1);
+	Assert::IsTrue(visitor.blocks.front().ctlr.get() == &obj);
+	Assert::IsTrue(visitor.blocks.front().target == psys);
+	Assert::IsTrue(visitor.blocks.front().ctlrIDProperty.get() == &obj.modifierName);
+	Assert::IsTrue(visitor.blocks.front().nodeName == psys->name.get());
+	Assert::IsTrue(visitor.blocks.front().propertyType == "TestPropertyType");
+	Assert::IsTrue(visitor.blocks.front().ctlrType == "TestControllerType");
+	Assert::IsTrue(visitor.blocks.front().ctlrID == obj.modifierName.get());
+	Assert::IsTrue(visitor.blocks.front().iplrID == "TestInterpolatorID");
+}
+
 
 bool objects::TestSetup<NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& obj, File& file)
 {
@@ -62,7 +116,7 @@ bool objects::ConnectorTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitter
 	auto target = std::static_pointer_cast<NiParticleSystem>(obj.target.assigned());
 	Assert::IsTrue(ctor.connections.size() == 1);
 	Assert::IsTrue(ctor.connections[0].object1 == obj.interpolator.assigned().get());
-	Assert::IsTrue(ctor.connections[0].field1 == node::FloatController::TARGET);
+	Assert::IsTrue(ctor.connections[0].field1 == node::ControllerBase::TARGET);
 	Assert::IsTrue(ctor.connections[0].object2 == target->modifiers.at(1).get());
 	Assert::IsTrue(ctor.connections[0].field2 == node::Emitter::BIRTH_RATE);
 	return false;
@@ -89,6 +143,57 @@ bool objects::FactoryTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCt
 
 	return false;
 }
+
+/*Pointless test?
+
+void objects::AnimationTest<NiPSysEmitterCtlr>::run()
+{
+	nif::File file(nif::File::Version::SKYRIM_SE);
+	auto obj = file.create<NiPSysEmitterCtlr>();
+
+	TestSetup<NiPSysEmitterCtlr>{}.up(*obj, file);
+
+	ni_ptr<NiParticleSystem> psys = std::static_pointer_cast<NiParticleSystem>(obj->target.assigned());
+	auto&& mod = psys->modifiers.at(1);
+
+	//Test birth rate interpolator
+	ControlledBlock block;
+	block.controller.assign(obj);
+	block.ctlrType.set("NiPSysEmitterCtlr");
+	block.ctlrID.set("ModifierName");
+	block.iplrID.set("BirthRate");
+
+	MockAnimationManager v;
+	v.setCurrentBlock(&block);
+
+	node::AnimationInit<NiPSysEmitterCtlr>{}.up(*obj, v);
+
+	Assert::IsTrue(v.visited.empty());
+	Assert::IsTrue(v.blocks.size() == 1);
+	Assert::IsTrue(v.blocks.front().ctlr == obj);
+	Assert::IsTrue(v.blocks.front().target == obj->target.assigned());
+	Assert::IsTrue(v.blocks.front().ctlrIDProperty.get() == &obj->modifierName);
+	Assert::IsTrue(v.blocks.front().nodeName == psys->name.get());
+	Assert::IsTrue(v.blocks.front().propertyType == "");
+	Assert::IsTrue(v.blocks.front().ctlrType == "NiPSysEmitterCtlr");
+	Assert::IsTrue(v.blocks.front().ctlrID == obj->modifierName.get());
+	Assert::IsTrue(v.blocks.front().iplrID == "BirthRate");
+
+	//Test visibility iplr
+	block.iplrID.set("EmitterActive");
+	node::AnimationInit<NiPSysEmitterCtlr>{}.up(*obj, v);
+
+	Assert::IsTrue(v.visited.empty());
+	Assert::IsTrue(v.blocks.size() == 2);
+	Assert::IsTrue(v.blocks.back().ctlr == obj);
+	Assert::IsTrue(v.blocks.back().target == obj->target.assigned());
+	Assert::IsTrue(v.blocks.back().ctlrIDProperty.get() == &obj->modifierName);
+	Assert::IsTrue(v.blocks.back().nodeName == psys->name.get());
+	Assert::IsTrue(v.blocks.back().propertyType == "");
+	Assert::IsTrue(v.blocks.back().ctlrType == "NiPSysEmitterCtlr");
+	Assert::IsTrue(v.blocks.back().ctlrID == obj->modifierName.get());
+	Assert::IsTrue(v.blocks.back().iplrID == "EmitterActive");
+}*/
 
 void objects::FactoryTest<NiPSysEmitterCtlr>::run()
 {
@@ -155,6 +260,25 @@ bool objects::TestSetup<NiPSysGravityStrengthCtlr>::operator()(NiPSysGravityStre
 
 	return false;
 }
+
+/*We don't really need a specialised procedure here, leaving it to ModifierCtlr will work fine.
+* Only advantage would be that we can repair a broken nif, but we might just as well end up breaking a nif 
+* that does something we didn't expect.
+void objects::AnimationTester<NiPSysGravityStrengthCtlr>::operator()(const NiPSysGravityStrengthCtlr& obj, MockAnimationManager& visitor)
+{
+	ni_ptr<NiParticleSystem> psys = std::static_pointer_cast<NiParticleSystem>(obj.target.assigned());
+
+	Assert::IsTrue(visitor.visited.empty());
+	Assert::IsTrue(visitor.blocks.size() == 1);
+	Assert::IsTrue(visitor.blocks.front().ctlr.get() == &obj);
+	Assert::IsTrue(visitor.blocks.front().target == psys);
+	Assert::IsTrue(visitor.blocks.front().ctlrIDProperty.get() == &obj.modifierName);
+	Assert::IsTrue(visitor.blocks.front().nodeName == psys->name.get());
+	Assert::IsTrue(visitor.blocks.front().propertyType == "");
+	Assert::IsTrue(visitor.blocks.front().ctlrType == "NiPSysGravityStrengthCtlr");
+	Assert::IsTrue(visitor.blocks.front().ctlrID == obj.modifierName.get());
+	Assert::IsTrue(visitor.blocks.front().iplrID == "");
+}*/
 
 bool objects::ConnectorTester<NiPSysGravityStrengthCtlr>::operator()(const NiPSysGravityStrengthCtlr& obj, const TestConstructor& ctor)
 {

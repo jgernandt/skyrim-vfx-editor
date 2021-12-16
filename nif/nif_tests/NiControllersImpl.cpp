@@ -439,13 +439,9 @@ bool common::EquivalenceTester<NiDefaultAVObjectPalette>::operator()(
 	auto&& objects = native->GetObjects();
 	Assert::IsTrue(objects.size() == object.objects.size());
 	for (size_t i = 0; i < objects.size(); i++) {
-		Assert::IsTrue(object.objects.at(i).name.get() == objects[i].name);
-		Assert::IsTrue(object.objects.at(i).object.assigned() == file.get<NiAVObject>(objects[i].avObject));
-
-		//If we store Set<NiAVObject> instead
-		//auto obj = file.get<NiAVObject>(objects[i].avObject);
-		//Assert::IsTrue(object.objects.has(obj.get()));
-		//Assert::IsTrue(obj->name.get() == objects[i].name);
+		Assert::IsNotNull(objects[i].avObject);
+		Assert::IsTrue(object.objects.at(i).assigned() == file.get<NiAVObject>(objects[i].avObject));
+		Assert::IsTrue(objects[i].name == object.objects.at(i).assigned()->name.get());
 	}
 
 	return true;
@@ -460,17 +456,11 @@ bool common::Randomiser<NiDefaultAVObjectPalette>::operator()(NiDefaultAVObjectP
 	std::uniform_int_distribution<int> I(3, 6);
 	object.objects.resize(I(rng));
 	for (auto&& obj : object.objects) {
-		obj.name.set(rands(rng));
-
 		auto o = file.create<NiAVObject>();
 		file.keepAlive(o);
-		obj.object.assign(o);
+		obj.assign(o);
+		o->name.set(rands(rng));
 	}
-
-	//If we store Set<NiAVObject> instead
-	//randomiseSet(object.objects, file, rng);
-	//for (auto&& obj : object.objects)
-	//	obj->name.set(rands(rng));
 
 	return true;
 }

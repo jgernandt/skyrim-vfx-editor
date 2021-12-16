@@ -72,6 +72,34 @@ namespace node
 	};
 
 	template<>
+	class AnimationInit<NiControllerManager> : public VerticalTraverser<NiControllerManager, AnimationInit>
+	{
+	public:
+		template<typename VisitorType>
+		bool operator() (NiControllerManager& obj, VisitorType& v) 
+		{ 
+			//go through all blocks in all sequences
+			//forward to each controller, but only once per block
+			std::vector<std::pair<NiTimeController*, std::string>> visited;
+			for (auto&& seq : obj.ctlrSequences) {
+				assert(seq);
+				for (auto&& block : seq->blocks) {
+					//skip duplicate blocks
+					std::pair<NiTimeController*, std::string> id = 
+						{ block.controller.assigned().get(), block.iplrID.get() };
+					if (id.first && std::find(visited.begin(), visited.end(), id) == visited.end()) {
+						visited.push_back(id);
+						v.setCurrentBlock(&block);
+						id.first->receive(v);
+						v.setCurrentBlock(nullptr);
+					}
+				}
+			}
+			return false; 
+		}
+	};
+
+	template<>
 	class Connector<NiControllerManager> : public VerticalTraverser<NiControllerManager, Connector>
 	{
 	public:

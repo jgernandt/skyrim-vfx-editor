@@ -40,8 +40,8 @@ namespace node
 		gui::Connector* connector{ nullptr };
 	};
 
-	//We should think of connectors as leading UP or DOWN the ni hierarchy, rather than being input or output.
-	//The latter may not always make sense.
+	class AnimationManager;
+
 	enum class ConnectorType
 	{
 		UP,
@@ -78,6 +78,8 @@ namespace node
 			assert(result.second);
 			return obj;
 		}
+
+		virtual void setAnimationManager(AnimationManager&) {}
 
 	protected:
 		//quick workaround to avoid relying on our destructor for safe disconnection
@@ -126,6 +128,15 @@ namespace node
 			else
 				return std::make_unique<T>(file.create<typename T::default_object>());
 		}
+	};
+
+	//Used to set up the controlled blocks when loading a file with a controller manager
+	template<typename T>
+	class AnimationInit : public VerticalTraverser<T, AnimationInit>
+	{
+	public:
+		template<typename VisitorType>
+		bool operator() (T&, VisitorType&) { return true; }
 	};
 
 	//Called when loading a file to identify connections between nodes

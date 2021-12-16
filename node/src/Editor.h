@@ -17,8 +17,8 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
+#include "AnimationManager.h"
 #include "ConnectionHandler.h"
-#include "NiNode.h"
 #include "File.h"
 #include "widgets.h"
 
@@ -36,6 +36,7 @@ namespace node
 
 		virtual void frame(gui::FrameDrawer& fd) override;
 
+		void preReadProc();
 		void preWriteProc();
 		void setProjectName(const std::string& name);
 
@@ -43,16 +44,17 @@ namespace node
 		class NodeRoot final : public gui::ConnectionHandler
 		{
 		public:
-			NodeRoot(nif::File& file) : m_file{ file } {}
+			NodeRoot(Editor& editor) : m_editor{ editor } {}
 			virtual void frame(gui::FrameDrawer& fd) override;
 
 			std::unique_ptr<IComponent> createAddMenu();
 			template<typename T> void addNode();
 
 		private:
-			nif::File& m_file;
+			Editor& m_editor;
 		};
 
+		AnimationManager m_animationMngr;
 		nif::File* m_file{ nullptr };
 		ni_ptr<Property<std::string>> m_rootName;
 	};

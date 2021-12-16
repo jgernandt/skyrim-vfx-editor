@@ -261,6 +261,7 @@
     <ClCompile Include="PropertiesImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnimationTester.h" />
     <ClInclude Include="CommonTests.h" />
     <ClInclude Include="ConnectorTester.h" />
     <ClInclude Include="FactoryTester.h" />

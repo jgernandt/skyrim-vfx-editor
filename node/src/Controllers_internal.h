@@ -19,6 +19,7 @@
 #pragma once
 #include "Controllers.h"
 #include "Constructor.h"
+#include "AnimationManager.h"
 
 namespace node
 {
@@ -82,6 +83,60 @@ namespace node
 			}
 
 			return node;
+		}
+	};
+
+
+	template<>
+	class AnimationInit<NiTimeController> : public VerticalTraverser<NiTimeController, AnimationInit>
+	{
+	public:
+		template<typename VisitorType>
+		bool operator() (NiTimeController& obj, VisitorType& v) 
+		{ 
+			ControlledBlock* block = v.getCurrentBlock();
+			assert(block && block->controller.assigned().get() == &obj);
+
+			AnimationManager::BlockInfo b;
+			b.ctlr = block->controller.assigned();
+			b.nodeName = block->nodeName.get();
+			b.propertyType = block->propertyType.get();
+			b.ctlrType = block->ctlrType.get();
+			b.ctlrID = block->ctlrID.get();
+			b.iplrID = block->iplrID.get();
+
+			v.registerBlock(b);
+
+			return false; 
+		}
+	};
+
+	template<>
+	class AnimationInit<NiPSysModifierCtlr> : public VerticalTraverser<NiPSysModifierCtlr, AnimationInit>
+	{
+	public:
+		template<typename VisitorType>
+		bool operator() (NiPSysModifierCtlr& obj, VisitorType& v)
+		{
+			ControlledBlock* block = v.getCurrentBlock();
+			assert(block && block->controller.assigned().get() == &obj);
+
+			//target *should* be a particle system, but a faulty nif would crash us if we static cast here. Not worth it?
+			if (auto target = std::dynamic_pointer_cast<NiParticleSystem>(obj.target.assigned())) {
+				AnimationManager::BlockInfo b;
+				b.ctlr = block->controller.assigned();
+				b.ctlrIDProperty = make_ni_ptr(std::static_pointer_cast<NiPSysModifierCtlr>(b.ctlr), &NiPSysModifierCtlr::modifierName);
+				b.target = target;
+				b.nodeName = target->name.get();
+				b.propertyType = block->propertyType.get();
+				b.ctlrType = block->ctlrType.get();
+				b.ctlrID = obj.modifierName.get();
+				b.iplrID = block->iplrID.get();
+
+				v.registerBlock(b);
+			}
+
+			return false;
 		}
 	};
 

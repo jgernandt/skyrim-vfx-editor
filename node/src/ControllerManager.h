@@ -21,10 +21,20 @@
 
 namespace node
 {
-	class ControllerManager final : public NodeBase, public ListListener<AVObject>
+	class ControllerManager final : public NodeBase, public SequenceListener<NiAVObject>
 	{
+		class ObjectListener final : public AssignableListener<NiAVObject>
+		{
+		public:
+			ObjectListener(Ptr<NiAVObject>& target) : m_target{ target } {}
+			virtual void onAssign(NiAVObject* obj) override;
+
+		private:
+			Ptr<NiAVObject>& m_target;
+		};
+
 	public:
-		class Root final : public Field, public AssignableListener<NiAVObject>
+		class Root final : public Field
 		{
 			class Rcvr final : public Receiver<IControllableRoot>, public PropertyListener<std::string>
 			{
@@ -46,8 +56,6 @@ namespace node
 			Root(const std::string& name, ControllerManager& node);
 			~Root();
 
-			virtual void onAssign(NiAVObject* obj) override;
-
 		public:
 			constexpr static const char* ID = "Root";
 
@@ -57,27 +65,13 @@ namespace node
 			Sender<Ptr<NiAVObject>> m_sndr;
 		};
 
-		class NameSyncer final : public AssignableListener<NiAVObject>, public PropertyListener<std::string>
-		{
-		public:
-			NameSyncer(AVObject& av);
-			~NameSyncer();
-			//Start listening to the name of obj
-			virtual void onAssign(NiAVObject* obj) override;
-			//set the name of target
-			virtual void onSet(const std::string& name) override;
-
-		private:
-			AVObject& m_av;
-			std::weak_ptr<Property<std::string>> m_source;
-		};
-
 	public:
 		ControllerManager(const ni_ptr<NiControllerManager>& manager, 
 			const ni_ptr<BSBehaviorGraphExtraData>& bged);
 		~ControllerManager();
 
-		//We are responsible for syncing the name of every AVObject added to the palette
+		virtual void setAnimationManager(AnimationManager& am) override;
+
 		virtual void onInsert(int pos) override;
 		virtual void onErase(int pos) override;
 
@@ -91,9 +85,9 @@ namespace node
 		const ni_ptr<NiControllerManager> m_manager;
 		const ni_ptr<BSBehaviorGraphExtraData> m_bged;
 
-		std::vector<std::unique_ptr<NameSyncer>> m_lsnrs;
-
 		std::unique_ptr<Root> m_root;
+
+		AnimationManager* m_animationManager{ nullptr };
 	};
 
 	class ControllerSequence final : public NodeBase

@@ -19,6 +19,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 
+#include "AnimationTester.h"
 #include "ConnectorTester.h"
 #include "FactoryTester.h"
 #include "ForwardTester.h"
@@ -49,6 +50,7 @@ namespace objects
 	TEST_CLASS(NiNode)
 	{
 	public:
+		TEST_METHOD(Animation) { AnimationTest<nif::NiNode>{}.run(); }
 		TEST_METHOD(Connector) { ConnectorTest<nif::NiNode>{}.run(); }
 		TEST_METHOD(Factory) { FactoryTest<nif::NiNode>{}.run(); }
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiNode>{}.run(); }
@@ -70,9 +72,16 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::BSEffectShaderProperty>{}.run(); }
 	};
 
+	TEST_CLASS(NiTimeController)
+	{
+	public:
+		TEST_METHOD(Animation) { AnimationTest<nif::NiTimeController>{}.run(); }
+	};
+
 	TEST_CLASS(NiControllerManager)
 	{
 	public:
+		TEST_METHOD(Animation) { AnimationTest<nif::NiControllerManager>{}.run(); }
 		TEST_METHOD(Connector) { ConnectorTest<nif::NiControllerManager>{}.run(); }
 		TEST_METHOD(Factory) { FactoryTest<nif::NiControllerManager>{}.run(); }
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiControllerManager>{}.run(); }
@@ -172,6 +181,12 @@ namespace objects
 		TEST_METHOD(Connector) { ConnectorTest<nif::NiPSysSphereEmitter>{}.run(); }
 		TEST_METHOD(Factory) { FactoryTest<nif::NiPSysSphereEmitter>{}.run(); }
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiPSysSphereEmitter>{}.run(); }
+	};
+
+	TEST_CLASS(NiPSysModifierCtlr)
+	{
+	public:
+		TEST_METHOD(Animation) { AnimationTest<nif::NiPSysModifierCtlr>{}.run(); }
 	};
 
 	TEST_CLASS(NiPSysEmitterCtlr)

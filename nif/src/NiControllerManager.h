@@ -71,22 +71,18 @@ namespace nif
 		bool operator() (NiControllerSequence& object, NiTraverser& traverser);
 	};
 
-	struct AVObject
-	{
-		Property<std::string> name;
-		Ptr<NiAVObject> object;
-	};
+	//struct AVObject
+	//{
+	//	Property<std::string> name;
+	//	Ptr<NiAVObject> object;
+	//};
 
 	struct NiDefaultAVObjectPalette : NiTraversable<NiDefaultAVObjectPalette, NiObject>
 	{
 		Ptr<NiAVObject> scene;
-		List<AVObject> objects;
-
-		//We could just store a Set<NiAVObject>. There's really no point in storing the name
-		//separately, when it is hard required to be the same as the name of the object.
-		//Set<NiAVObject> objects;
-		//(this means we keep strong refs, but that shouldn't be a problem)
-		//I think I prefer this to be close to the nif format, though. Even if that's more work.
+		//List<AVObject> objects;
+		//Don't store a separate name, that only makes sense in the file
+		List<Ptr<NiAVObject>> objects;
 
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }

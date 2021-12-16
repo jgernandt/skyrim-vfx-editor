@@ -48,6 +48,24 @@ namespace node
 	};
 
 	template<>
+	class AnimationInit<NiNode> : public VerticalTraverser<NiNode, AnimationInit>
+	{
+	public:
+		template<typename VisitorType>
+		bool operator() (NiNode& obj, VisitorType& v) 
+		{
+			for (auto&& ctlr : obj.controllers) {
+				assert(ctlr);
+				if (ctlr->type() == NiControllerManager::TYPE) {
+					ctlr->receive(v);
+					break;
+				}
+			}
+			return false; 
+		}
+	};
+
+	template<>
 	class Connector<NiNode> : public VerticalTraverser<NiNode, Connector>
 	{
 	public:

@@ -107,5 +107,8 @@
     <ClInclude Include="TestSetup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AnimationTester.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

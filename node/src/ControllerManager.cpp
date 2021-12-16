@@ -17,6 +17,7 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
+#include "AnimationManager.h"
 #include "ControllerManager.h"
 #include "widget_types.h"
 #include "style.h"
@@ -33,14 +34,6 @@ node::ControllerManager::ControllerManager(
 
 	auto&& pal = m_manager->objectPalette.assigned();
 	assert(m_manager && m_bged && pal != nullptr);//note: this is assumed throughout this file
-	pal->objects.addListener(*this);
-	//need to initialise listeners for any preexisting objects in the palette
-	int i = 0;
-	for (auto&& av : pal->objects) {
-		onInsert(i);
-		assert(m_lsnrs.size() == i + 1);
-		m_lsnrs[i++]->onAssign(av.object.assigned().get());
-	}
 
 	m_root = newField<Root>(Root::ID, *this);
 
@@ -54,64 +47,33 @@ node::ControllerManager::ControllerManager(
 node::ControllerManager::~ControllerManager()
 {
 	disconnect();
-	//unregister any remaining listeners
-	auto&& obj_list = m_manager->objectPalette.assigned()->objects;
-	assert(obj_list.size() == m_lsnrs.size());
-	int i = 0;
-	for (auto&& av : obj_list) {
-		av.object.removeListener(*m_lsnrs[i++]);
-	}
-	//and ourselves
-	obj_list.removeListener(*this);
+}
+
+void node::ControllerManager::setAnimationManager(AnimationManager& am)
+{
+	assert(!m_animationManager);
+
+	m_animationManager = &am;
+	m_manager->objectPalette.assigned()->objects.clear();
+
+	am.objects().addListener(*this);
+	for (int i = 0; i < am.objects().size(); i++)
+		onInsert(i);
 }
 
 void node::ControllerManager::onInsert(int pos)
 {
-	assert((size_t)pos <= m_lsnrs.size());
-	auto&& av = m_manager->objectPalette.assigned()->objects.at(pos);
-	auto it = m_lsnrs.insert(m_lsnrs.begin() + pos, std::make_unique<NameSyncer>(av));
-	//register listener
-	av.object.addListener(**it);
+	auto&& pal = m_manager->objectPalette.assigned();
+	assert(pal->objects.size() >= (size_t)pos);
+	pal->objects.insert(pos);
+	pal->objects.at(pos).assign(m_animationManager->objects().at(pos));
 }
 
 void node::ControllerManager::onErase(int pos)
 {
-	assert((size_t)pos < m_lsnrs.size());
-	//don't unregister; target has been destroyed
-	m_lsnrs.erase(m_lsnrs.begin() + pos);
-}
-
-node::ControllerManager::NameSyncer::NameSyncer(AVObject& av) : m_av{ av }
-{
-}
-
-node::ControllerManager::NameSyncer::~NameSyncer()
-{
-	if (auto prev = m_source.lock())
-		prev->removeListener(*this);
-}
-
-void node::ControllerManager::NameSyncer::onAssign(NiAVObject* obj)
-{
-	//unregister from previous
-	if (auto prev = m_source.lock()) {
-		prev->removeListener(*this);
-		prev.reset();
-	}
-
-	if (obj) {
-		//register to new
-		if (auto current = m_av.object.assigned(); obj == current.get()) {//should be certain
-			m_source = make_ni_ptr(std::static_pointer_cast<NiObjectNET>(current), &NiObjectNET::name);
-			current->name.addListener(*this);
-			onSet(current->name.get());
-		}
-	}
-}
-
-void node::ControllerManager::NameSyncer::onSet(const std::string& name)
-{
-	m_av.name.set(name);
+	auto&& pal = m_manager->objectPalette.assigned();
+	assert(pal->objects.size() > (size_t)pos);
+	pal->objects.erase(pos);
 }
 
 node::ControllerManager::Root::Root(const std::string& name, ControllerManager& node) :
@@ -125,32 +87,6 @@ node::ControllerManager::Root::Root(const std::string& name, ControllerManager& 
 node::ControllerManager::Root::~Root()
 {
 	//m_node.m_manager->objectPalette.assigned()->scene.removeListener(*this);
-}
-
-void node::ControllerManager::Root::onAssign(NiAVObject* obj)
-{
-	auto&& objPalette = m_node.m_manager->objectPalette.assigned();
-	assert(obj == objPalette->scene.assigned().get());
-	if (obj) {
-		//Add an entry for obj, if it is not in the list already
-		bool found = false;
-		for (auto&& item : objPalette->objects) {
-			if (item.object.assigned().get() == obj) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			objPalette->objects.push_front();
-			objPalette->objects.front().object.assign(objPalette->scene.assigned());
-		}
-	}
-	else {
-		//Are we sure the scene root will always be in the front?
-		//No. We need to search for m_node.m_manager->target.assigned(). Which may have been unassigned already...
-		//We could just leave it. It won't do anything now that we have been disconnected.
-		//objPalette->objects.pop_front();
-	}
 }
 
 node::ControllerManager::Root::Rcvr::Rcvr(Root& root) : m_root{ root }

@@ -156,6 +156,7 @@ void node::Constructor::addModConnections(NiParticleSystem* target, std::vector<
 void node::Constructor::addNode(NiObject* obj, std::unique_ptr<NodeBase>&& node)
 {
 	assert(obj && node);
+	node->setAnimationManager(m_animationManager);
 	m_objectMap.insert({ obj, m_nodes.size() });
 	m_nodes.push_back(std::move(node));
 }

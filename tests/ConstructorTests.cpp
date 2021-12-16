@@ -36,7 +36,8 @@ namespace creation
 			//Feed a Constructor some Modifier nodes and the ConnectionInfo we expect them to produce.
 			//Test that the correct nodes are connected.
 			File file(File::Version::SKYRIM_SE);
-			node::Constructor ctor(file);
+			node::AnimationManager am;
+			node::Constructor ctor(file, am);
 
 			auto psys = file.create<NiParticleSystem>();
 			auto psys_node = node::Default<node::ParticleSystem>{}.create(file, psys);
@@ -86,7 +87,8 @@ namespace creation
 		TEST_METHOD(PostProcessing)
 		{
 			File file(File::Version::SKYRIM_SE);
-			node::Constructor ctor(file);
+			node::AnimationManager am;
+			node::Constructor ctor(file, am);
 
 			bool test1 = false;
 			bool test2 = false;
@@ -98,6 +100,30 @@ namespace creation
 			ctor.extractNodes(root);
 
 			Assert::IsTrue(test1 && test2);
+		}
+
+		TEST_METHOD(SetAnimationManager)
+		{
+			//Make sure we call setAnimationManager on any added node
+			struct MockNode : node::NodeBase 
+			{
+				node::AnimationManager* m_set{ nullptr };
+				virtual void setAnimationManager(node::AnimationManager& am) override
+				{
+					m_set = &am;
+				}
+			};
+
+			File file(File::Version::SKYRIM_SE);
+			node::AnimationManager am;
+			node::Constructor ctor(file, am);
+
+			auto obj = file.create<NiObject>();
+			auto unode = std::make_unique<MockNode>();
+			MockNode* node = unode.get();
+			ctor.addNode(obj.get(), std::move(unode));
+
+			Assert::IsTrue(node->m_set == &am);
 		}
 	};
 }

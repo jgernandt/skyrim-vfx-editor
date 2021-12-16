@@ -182,16 +182,14 @@ bool nif::ReadSyncer<nif::NiDefaultAVObjectPalette>::operator()(
 
 	object.objects.clear();
 	for (auto&& obj : native->GetObjects()) {
+		if (obj.avObject) {
+			object.objects.push_back();
 
-		object.objects.push_back();
+			auto o = file.get<NiAVObject>(obj.avObject);
+			file.keepAlive(o);
 
-		auto o = file.get<NiAVObject>(obj.avObject);
-		file.keepAlive(o);
-		object.objects.back().name.set(obj.name);
-		object.objects.back().object.assign(o);
-
-		//If we store Set<NiAVObject> instead
-		//object.objects.add(file.get<NiAVObject>(obj.avObject));
+			object.objects.back().assign(o);
+		}
 	}
 
 	return true;
@@ -206,10 +204,12 @@ bool nif::WriteSyncer<nif::NiDefaultAVObjectPalette>::operator()(
 
 	std::vector<Niflib::AVObject> vec;
 	vec.reserve(object.objects.size());
-	for (auto&& obj : object.objects) {
-		vec.push_back({});
-		vec.back().name = obj.name.get();
-		vec.back().avObject = file.getNative<NiAVObject>(obj.object.assigned().get());
+	for (auto&& ptr : object.objects) {
+		if (auto assigned = ptr.assigned()) {
+			vec.push_back({});
+			vec.back().name = assigned->name.get();
+			vec.back().avObject = file.getNative<NiAVObject>(assigned.get());
+		}
 	}
 	native->SetObjects(std::move(vec));
 

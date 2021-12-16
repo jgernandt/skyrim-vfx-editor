@@ -21,6 +21,8 @@
 
 namespace objects
 {
+	using namespace nif;
+
 	template<typename T>
 	struct TestSetup : VerticalTraverser<T, TestSetup>
 	{
@@ -38,6 +40,12 @@ namespace objects
 	struct TestSetup<NiNode> : VerticalTraverser<NiNode, TestSetup>
 	{
 		bool operator() (NiNode& obj, File& file);
+	};
+
+	template<>
+	struct TestSetup<NiTimeController> : VerticalTraverser<NiTimeController, TestSetup>
+	{
+		bool operator() (NiTimeController& obj, File& file);
 	};
 
 	template<>
@@ -110,6 +118,12 @@ namespace objects
 	struct TestSetup<NiPSysSphereEmitter> : VerticalTraverser<NiPSysSphereEmitter, TestSetup>
 	{
 		bool operator() (NiPSysSphereEmitter& obj, File& file) { return TestSetup<NiPSysVolumeEmitter>::operator() (obj, file); }
+	};
+
+	template<>
+	struct TestSetup<NiPSysModifierCtlr> : VerticalTraverser<NiPSysModifierCtlr, TestSetup>
+	{
+		bool operator() (NiPSysModifierCtlr& obj, File& file);
 	};
 
 	template<>
