@@ -43,12 +43,6 @@ namespace objects
 	};
 
 	template<>
-	struct TestSetup<NiTimeController> : VerticalTraverser<NiTimeController, TestSetup>
-	{
-		bool operator() (NiTimeController& obj, File& file);
-	};
-
-	template<>
 	struct TestSetup<NiControllerManager> : VerticalTraverser<NiControllerManager, TestSetup>
 	{
 		bool operator() (NiControllerManager& obj, File& file);
@@ -118,12 +112,6 @@ namespace objects
 	struct TestSetup<NiPSysSphereEmitter> : VerticalTraverser<NiPSysSphereEmitter, TestSetup>
 	{
 		bool operator() (NiPSysSphereEmitter& obj, File& file) { return TestSetup<NiPSysVolumeEmitter>::operator() (obj, file); }
-	};
-
-	template<>
-	struct TestSetup<NiPSysModifierCtlr> : VerticalTraverser<NiPSysModifierCtlr, TestSetup>
-	{
-		bool operator() (NiPSysModifierCtlr& obj, File& file);
 	};
 
 	template<>

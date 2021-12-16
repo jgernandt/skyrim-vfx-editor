@@ -87,18 +87,11 @@ namespace node
 			ni_ptr<NiTimeController> ctlr;
 			ni_ptr<Property<std::string>> ctlrIDProperty;
 			ni_ptr<NiAVObject> target;
-			std::string nodeName;
 			std::string propertyType;
 			std::string ctlrType;
 			std::string ctlrID;
 			std::string iplrID;
 		};
-
-	private:
-		/*class ObjectCounter final : public AssignableListener<NiAVObject>
-		{
-		public:
-		};*/
 
 	public:
 		~AnimationManager();
@@ -121,6 +114,10 @@ namespace node
 		ControlledBlock* getCurrentBlock() const { return m_currentBlock; }
 		void setCurrentBlock(ControlledBlock* block) { m_currentBlock = block; }
 
+		//For setting up existing animations when loading a file
+		void addObject(const ni_ptr<NiAVObject>& obj);
+		ni_ptr<NiAVObject> findObject(const std::string& name) const;
+
 	private:
 		void incrCount(const ni_ptr<NiAVObject>& obj);
 		void decrCount(NiAVObject* obj);
@@ -131,6 +128,9 @@ namespace node
 		ControlledBlock* m_currentBlock{ nullptr };
 
 		std::map<NiAVObject*, int> m_objCount;
-		//std::vector<std::unique_ptr<ObjectCounter>> m_objCounters;
+
+		//This is used for the initial traversal only. Separate the traverser into its own class?
+		//Makes no sense to keep this around.
+		std::map<std::string, ni_ptr<NiAVObject>> m_objMap;
 	};
 }

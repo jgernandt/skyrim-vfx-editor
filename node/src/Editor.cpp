@@ -164,6 +164,7 @@ void node::Editor::preReadProc()
 {
 	if (m_file) {
 		if (auto&& root = m_file->getRoot()) {
+			m_animationMngr.addObject(root);
 			root->receive(m_animationMngr);
 		}
 	}

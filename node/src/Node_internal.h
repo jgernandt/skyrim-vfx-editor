@@ -54,6 +54,12 @@ namespace node
 		template<typename VisitorType>
 		bool operator() (NiNode& obj, VisitorType& v) 
 		{
+			for (auto&& child : obj.children) {
+				assert(child);
+				v.addObject(child);
+				child->receive(v);
+			}
+
 			for (auto&& ctlr : obj.controllers) {
 				assert(ctlr);
 				if (ctlr->type() == NiControllerManager::TYPE) {

@@ -31,11 +31,14 @@ node::AnimationManager::Block* node::AnimationManager::registerBlock(const Block
 {
 	Block* result = nullptr;
 
-	if (info.ctlr) {
-		//first check for duplicates (same ctlr, same iplrID)
+	if (info.ctlr && info.target) {
+		//first check for duplicates (same ctlr, same nodeName, ctlrId and iplrID)
 		//when a BlendIplr node is first connected after loading a file, its block will already exist
 		for (auto&& block : m_blocks) {
-			if (info.ctlr == block.controller && info.iplrID == block.iplrID.get())
+			if (info.ctlr == block.controller && 
+				info.target->name.get() == block.nodeName.get() &&
+				info.ctlrID == block.ctlrID.get() &&
+				info.iplrID == block.iplrID.get())
 				return &block;
 		}
 		//this block is new
@@ -49,9 +52,6 @@ node::AnimationManager::Block* node::AnimationManager::registerBlock(const Block
 		result->propertyType.set(info.propertyType);
 		result->ctlrType.set(info.ctlrType);
 		result->iplrID.set(info.iplrID);
-
-		if (!info.target)
-			result->nodeName.set(info.nodeName);
 
 		if (info.ctlrIDProperty) {
 			result->ctlrIDProperty = info.ctlrIDProperty;
@@ -76,6 +76,22 @@ void node::AnimationManager::unregisterBlock(Block* block)
 	}
 	if ((size_t)i < m_blocks.size())
 		m_blocks.erase(i);
+}
+
+void node::AnimationManager::addObject(const ni_ptr<NiAVObject>& obj)
+{
+	if (obj)
+		//Doesn't matter if this succeeds or not. If it doesn't, the file is broken.
+		//Worst case scenario is that we lose some animations that were broken anyway.
+		m_objMap.insert({ obj->name.get(), obj });
+}
+
+ni_ptr<NiAVObject> node::AnimationManager::findObject(const std::string& name) const
+{
+	if (auto it = m_objMap.find(name); it != m_objMap.end())
+		return it->second;
+	else
+		return ni_ptr<NiAVObject>();
 }
 
 void node::AnimationManager::incrCount(const ni_ptr<NiAVObject>& obj)

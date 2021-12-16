@@ -80,17 +80,22 @@ namespace node
 		{ 
 			//go through all blocks in all sequences
 			//forward to each controller, but only once per block
-			std::vector<std::pair<NiTimeController*, std::string>> visited;
+			std::vector<ControlledBlock*> visited;
 			for (auto&& seq : obj.ctlrSequences) {
 				assert(seq);
 				for (auto&& block : seq->blocks) {
-					//skip duplicate blocks
-					std::pair<NiTimeController*, std::string> id = 
-						{ block.controller.assigned().get(), block.iplrID.get() };
-					if (id.first && std::find(visited.begin(), visited.end(), id) == visited.end()) {
-						visited.push_back(id);
+					//skip indentical blocks
+					auto up = [&block](ControlledBlock* b)
+					{
+						return block.controller.assigned().get() == b->controller.assigned().get() &&
+							block.nodeName.get() == b->nodeName.get() &&
+							block.ctlrID.get() == b->ctlrID.get() &&
+							block.iplrID.get() == b->iplrID.get();
+					};
+					if (block.controller.assigned() && std::find_if(visited.begin(), visited.end(), up) == visited.end()) {
+						visited.push_back(&block);
 						v.setCurrentBlock(&block);
-						id.first->receive(v);
+						block.controller.assigned()->receive(v);
 						v.setCurrentBlock(nullptr);
 					}
 				}

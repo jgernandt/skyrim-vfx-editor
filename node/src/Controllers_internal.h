@@ -99,7 +99,7 @@ namespace node
 
 			AnimationManager::BlockInfo b;
 			b.ctlr = block->controller.assigned();
-			b.nodeName = block->nodeName.get();
+			b.target = v.findObject(block->nodeName.get());
 			b.propertyType = block->propertyType.get();
 			b.ctlrType = block->ctlrType.get();
 			b.ctlrID = block->ctlrID.get();
@@ -121,20 +121,16 @@ namespace node
 			ControlledBlock* block = v.getCurrentBlock();
 			assert(block && block->controller.assigned().get() == &obj);
 
-			//target *should* be a particle system, but a faulty nif would crash us if we static cast here. Not worth it?
-			if (auto target = std::dynamic_pointer_cast<NiParticleSystem>(obj.target.assigned())) {
-				AnimationManager::BlockInfo b;
-				b.ctlr = block->controller.assigned();
-				b.ctlrIDProperty = make_ni_ptr(std::static_pointer_cast<NiPSysModifierCtlr>(b.ctlr), &NiPSysModifierCtlr::modifierName);
-				b.target = target;
-				b.nodeName = target->name.get();
-				b.propertyType = block->propertyType.get();
-				b.ctlrType = block->ctlrType.get();
-				b.ctlrID = obj.modifierName.get();
-				b.iplrID = block->iplrID.get();
+			AnimationManager::BlockInfo b;
+			b.ctlr = block->controller.assigned();
+			b.ctlrIDProperty = make_ni_ptr(std::static_pointer_cast<NiPSysModifierCtlr>(b.ctlr), &NiPSysModifierCtlr::modifierName);
+			b.target = v.findObject(block->nodeName.get());
+			b.propertyType = block->propertyType.get();
+			b.ctlrType = block->ctlrType.get();
+			b.ctlrID = obj.modifierName.get();
+			b.iplrID = block->iplrID.get();
 
-				v.registerBlock(b);
-			}
+			v.registerBlock(b);
 
 			return false;
 		}

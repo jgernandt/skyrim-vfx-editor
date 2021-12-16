@@ -18,7 +18,6 @@
 
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "AnimationTester.h"
 #include "ConnectorTester.h"
 #include "FactoryTester.h"
 #include "ForwardTester.h"
@@ -36,35 +35,10 @@ bool objects::TestSetup<NiControllerManager>::operator()(NiControllerManager& ob
 	bged->name.set(node::BGED_NAME);
 	root->extraData.add(bged);
 
-	//Two controller sequences with a total of 3 unique controllers
-	obj.ctlrSequences.clear();
-	auto seq0 = file.create<NiControllerSequence>();
-	seq0->blocks.resize(2);
-	auto ctlr0 = file.create<NiTimeController>();
-	auto ctlr1 = file.create<NiTimeController>();
-	seq0->blocks.front().controller.assign(ctlr0);
-	seq0->blocks.back().controller.assign(ctlr1);
-	obj.ctlrSequences.add(seq0);
-
-	auto seq1 = file.create<NiControllerSequence>();
-	seq1->blocks.resize(2);
-	auto ctlr2 = file.create<NiTimeController>();
-	seq1->blocks.front().controller.assign(ctlr0);
-	seq1->blocks.back().controller.assign(ctlr2);
-	obj.ctlrSequences.add(seq1);
+	obj.ctlrSequences.add(file.create<NiControllerSequence>());
+	obj.ctlrSequences.add(file.create<NiControllerSequence>());
 
 	return false;
-}
-
-void objects::AnimationTester<NiControllerManager>::operator()(const NiControllerManager& obj, MockAnimationManager& visitor)
-{
-	//Should have forwarded to each unique controller
-	Assert::IsTrue(visitor.visited.size() == 3);
-	for (auto&& seq : obj.ctlrSequences) {
-		Assert::IsTrue(std::find(visitor.visited.begin(), visitor.visited.end(), seq->blocks.front().controller.assigned().get()) != visitor.visited.end());
-		Assert::IsTrue(std::find(visitor.visited.begin(), visitor.visited.end(), seq->blocks.back().controller.assigned().get()) != visitor.visited.end());
-	}
-	Assert::IsTrue(visitor.blocks.empty());
 }
 
 bool objects::FactoryTester<NiControllerManager>::operator()(const NiControllerManager& obj, const TestConstructor& ctor)

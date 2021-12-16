@@ -18,7 +18,6 @@
 
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "AnimationTester.h"
 #include "ConnectorTester.h"
 #include "FactoryTester.h"
 #include "ForwardTester.h"
@@ -34,30 +33,6 @@ bool objects::TestSetup<NiNode>::operator()(NiNode& obj, nif::File& file)
 	obj.children.add(file.create<NiAVObject>());
 
 	return false;
-}
-
-void objects::AnimationTester<NiNode>::operator()(const NiNode& obj, MockAnimationManager& visitor)
-{
-	//Should have forwarded to manager only.
-	Assert::IsTrue(visitor.visited.size() == 1);
-	Assert::IsTrue(visitor.visited.front() == obj.controllers.at(1).get());
-	Assert::IsTrue(visitor.blocks.empty());
-}
-
-void objects::AnimationTest<NiNode>::run()
-{
-	nif::File file(nif::File::Version::SKYRIM_SE);
-	auto obj = file.create<NiNode>();
-
-	//Including this in TestSetup would mess up the other tests
-	obj->controllers.insert(0, file.create<NiTimeController>());
-	obj->controllers.insert(1, file.create<NiControllerManager>());
-	obj->controllers.insert(2, file.create<NiTimeController>());
-
-	MockAnimationManager v;
-
-	node::AnimationInit<NiNode>{}.up(*obj, v);
-	AnimationTester<NiNode>{}(*obj, v);
 }
 
 bool objects::ConnectorTester<NiNode>::operator()(const NiNode& obj, const TestConstructor& ctor)

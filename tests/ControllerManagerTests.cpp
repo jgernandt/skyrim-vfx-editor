@@ -25,9 +25,193 @@
 
 namespace nodes
 {
+	using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+	using namespace nif;
+
 	TEST_CLASS(AnimationManager)
 	{
 	public:
+
+		class MockAnimationManager : public HorizontalTraverser<MockAnimationManager>
+		{
+		public:
+			std::vector<NiObject*> visited;
+			std::vector<node::AnimationManager::BlockInfo> blocks;
+			std::vector<ni_ptr<NiAVObject>> objectMap;
+			ControlledBlock* current{ nullptr };
+
+			template<typename T>
+			void invoke(T& obj)
+			{
+				//log obj so we can track who was visited
+				visited.push_back(&obj);
+			}
+
+			void registerBlock(const node::AnimationManager::BlockInfo& b)
+			{
+				blocks.push_back(b);
+			}
+			void unregisterBlock(const node::AnimationManager::BlockInfo&)
+			{
+				Assert::Fail();
+			}
+
+			ControlledBlock* getCurrentBlock() const { return current; }
+			void setCurrentBlock(ControlledBlock* block) { current = block; }
+
+			void addObject(const ni_ptr<NiAVObject>& obj) 
+			{
+				if (auto it = std::find(objectMap.begin(), objectMap.end(), obj); it == objectMap.end())
+					objectMap.push_back(obj);
+			}
+			ni_ptr<NiAVObject> findObject(const std::string& name) const 
+			{
+				auto up = [&name](const ni_ptr<NiAVObject>& obj) { return obj->name.get() == name; };
+				if (auto it = std::find_if(objectMap.begin(), objectMap.end(), up); it != objectMap.end())
+					return *it;
+				else
+					return ni_ptr<NiAVObject>(); 
+			}
+		};
+
+		TEST_METHOD(TraverseNiNode)
+		{
+			//add children to object map, forward to children and to ctlr manager (last)
+			//(the node itself (scene root) will not be added to then map, is that a problem?)
+
+			nif::File file(nif::File::Version::SKYRIM_SE);
+			auto obj = file.create<NiNode>();
+
+			auto ch0 = file.create<NiAVObject>();
+			ch0->name.set("child0");
+			obj->children.add(ch0);
+			auto ch1 = file.create<NiAVObject>();
+			ch1->name.set("child1");
+			obj->children.add(ch1);
+
+			obj->controllers.insert(0, file.create<NiTimeController>());
+			obj->controllers.insert(1, file.create<NiControllerManager>());
+			obj->controllers.insert(2, file.create<NiTimeController>());
+
+			MockAnimationManager v;
+			node::AnimationInit<NiNode>{}.up(*obj, v);
+
+			Assert::IsTrue(v.objectMap.size() == 2);
+			Assert::IsTrue(ch0 == v.objectMap[0] || ch0 == v.objectMap[1]);
+			Assert::IsTrue(ch1 == v.objectMap[0] || ch1 == v.objectMap[1]);
+
+			Assert::IsTrue(v.visited.size() == 3);
+			for (auto&& child : obj->children)
+				Assert::IsTrue(child.get() == v.visited[0] || child.get() == v.visited[1]);
+			Assert::IsTrue(v.visited.back() == obj->controllers.at(1).get());
+			Assert::IsTrue(v.blocks.empty());
+		}
+
+		TEST_METHOD(TraverseNiControllerManager)
+		{
+			nif::File file(nif::File::Version::SKYRIM_SE);
+			auto obj = file.create<NiControllerManager>();
+
+			//Add two controller sequences with a total of 3 unique controllers
+			obj->ctlrSequences.clear();
+			auto seq0 = file.create<NiControllerSequence>();
+			seq0->blocks.resize(2);
+			auto ctlr0 = file.create<NiTimeController>();
+			auto ctlr1 = file.create<NiTimeController>();
+			seq0->blocks.front().controller.assign(ctlr0);
+			seq0->blocks.back().controller.assign(ctlr1);
+			obj->ctlrSequences.add(seq0);
+
+			auto seq1 = file.create<NiControllerSequence>();
+			seq1->blocks.resize(2);
+			auto ctlr2 = file.create<NiTimeController>();
+			seq1->blocks.front().controller.assign(ctlr0);
+			seq1->blocks.back().controller.assign(ctlr2);
+			obj->ctlrSequences.add(seq1);
+
+			MockAnimationManager v;
+			node::AnimationInit<NiControllerManager>{}.up(*obj, v);
+
+			Assert::IsTrue(v.objectMap.empty());
+
+			//Should have forwarded to each unique controller
+			Assert::IsTrue(v.visited.size() == 3);
+			for (auto&& seq : obj->ctlrSequences) {
+				Assert::IsTrue(std::find(v.visited.begin(), v.visited.end(), seq->blocks.front().controller.assigned().get()) != v.visited.end());
+				Assert::IsTrue(std::find(v.visited.begin(), v.visited.end(), seq->blocks.back().controller.assigned().get()) != v.visited.end());
+			}
+			Assert::IsTrue(v.blocks.empty());
+		}
+
+		TEST_METHOD(TraverseNiTimeController)
+		{
+			//should register a block with the target located and all strings forwarded
+			nif::File file(nif::File::Version::SKYRIM_SE);
+			auto obj = file.create<NiTimeController>();
+			auto av = file.create<NiAVObject>();
+			av->name.set("TestNodeName");
+
+			MockAnimationManager v;
+			v.objectMap.push_back(av);
+
+			ControlledBlock block;
+			block.controller.assign(obj);
+			block.nodeName.set("TestNodeName");
+			block.propertyType.set("TestPropertyType");
+			block.ctlrType.set("TestControllerType");
+			block.ctlrID.set("TestControllerID");
+			block.iplrID.set("TestInterpolatorID");
+			v.setCurrentBlock(&block);
+
+			node::AnimationInit<NiTimeController>{}.up(*obj, v);
+
+			Assert::IsTrue(v.objectMap.size() == 1);
+			Assert::IsTrue(v.visited.empty());
+			Assert::IsTrue(v.blocks.size() == 1);
+			Assert::IsTrue(v.blocks.front().ctlr == obj);
+			Assert::IsTrue(v.blocks.front().ctlrIDProperty == nullptr);
+			Assert::IsTrue(v.blocks.front().target == av);
+			Assert::IsTrue(v.blocks.front().propertyType == "TestPropertyType");
+			Assert::IsTrue(v.blocks.front().ctlrType == "TestControllerType");
+			Assert::IsTrue(v.blocks.front().ctlrID == "TestControllerID");
+			Assert::IsTrue(v.blocks.front().iplrID == "TestInterpolatorID");
+		}
+
+		TEST_METHOD(TraverseNiPSysModifierCtlr)
+		{
+			//should register a block with the target located and modifierName as controller id
+			nif::File file(nif::File::Version::SKYRIM_SE);
+			auto obj = file.create<NiPSysModifierCtlr>();
+			obj->modifierName.set("TargetModifier");
+			auto av = file.create<NiAVObject>();
+			av->name.set("TestNodeName");
+
+			MockAnimationManager v;
+			v.objectMap.push_back(av);
+
+			ControlledBlock block;
+			block.controller.assign(obj);
+			block.nodeName.set("TestNodeName");
+			block.propertyType.set("TestPropertyType");
+			block.ctlrType.set("TestControllerType");
+			block.iplrID.set("TestInterpolatorID");
+			v.setCurrentBlock(&block);
+
+			node::AnimationInit<NiPSysModifierCtlr>{}.up(*obj, v);
+
+			Assert::IsTrue(v.objectMap.size() == 1);
+			Assert::IsTrue(v.visited.empty());
+			Assert::IsTrue(v.blocks.size() == 1);
+			Assert::IsTrue(v.blocks.front().ctlr == obj);
+			Assert::IsTrue(v.blocks.front().ctlrIDProperty.get() == &obj->modifierName);
+			Assert::IsTrue(v.blocks.front().target == av);
+			//propertyType should typically be empty, but if it's not we'll just assume that
+			//whoever made this file knew what they were doing
+			Assert::IsTrue(v.blocks.front().propertyType == "TestPropertyType");
+			Assert::IsTrue(v.blocks.front().ctlrType == "TestControllerType");
+			Assert::IsTrue(v.blocks.front().ctlrID == "TargetModifier");
+			Assert::IsTrue(v.blocks.front().iplrID == "TestInterpolatorID");
+		}
 
 		TEST_METHOD(RegisterBlock)
 		{
@@ -65,6 +249,7 @@ namespace nodes
 			Assert::IsTrue(it0->nodeName.get() == av0->name.get());
 
 			//no duplicates
+			b0.target = it0->target.assigned();
 			auto it0_2 = am.registerBlock(b0);
 			Assert::IsTrue(am.blocks().size() == 1);
 			Assert::IsTrue(it0_2 == it0);
@@ -74,9 +259,10 @@ namespace nodes
 			auto ctlr1 = file.create<NiPSysModifierCtlr>();
 			
 			b1.ctlr = ctlr1;
+			b1.target = file.create<NiAVObject>();
+			b1.target->name.set("nvbaosbnr");
 			b1.ctlrIDProperty = make_ni_ptr(ctlr1, &NiPSysModifierCtlr::modifierName);
 			b1.ctlrIDProperty->set("vnoabvnois");
-			b1.nodeName = "aboaen";
 			b1.propertyType = "nbutrnhu";
 			b1.ctlrType = "eshbntu";
 			b1.iplrID = "nbridunti";
@@ -86,16 +272,17 @@ namespace nodes
 			Assert::IsTrue(am.blocks().size() == 2);
 			Assert::IsTrue(it1 == &am.blocks().at(1));
 			Assert::IsTrue(it1->controller == ctlr1);
-			Assert::IsTrue(it1->nodeName.get() == b1.nodeName);
+			Assert::IsTrue(it1->nodeName.get() == b1.target->name.get());
 			Assert::IsTrue(it1->propertyType.get() == b1.propertyType);
 			Assert::IsTrue(it1->ctlrType.get() == b1.ctlrType);
 			Assert::IsTrue(it1->ctlrID.get() == ctlr1->modifierName.get());
 			Assert::IsTrue(it1->iplrID.get() == b1.iplrID);
 			//should hear ctlrID change
 			ctlr1->modifierName.set("avnleib");
-			Assert::IsTrue(am.blocks().back().ctlrID.get() == ctlr1->modifierName.get());
+			Assert::IsTrue(it1->ctlrID.get() == ctlr1->modifierName.get());
 
 			//no duplicates
+			b1.ctlrID = it1->ctlrID.get();
 			auto it1_2 = am.registerBlock(b1);
 			Assert::IsTrue(am.blocks().size() == 2);
 			Assert::IsTrue(it1_2 == it1);
@@ -109,6 +296,13 @@ namespace nodes
 
 			//Controller required
 			b0.ctlr.reset();
+			it0 = am.registerBlock(b0);
+			Assert::IsTrue(am.blocks().size() == 0);
+			Assert::IsTrue(it0 == nullptr);
+
+			//Target required
+			b0.ctlr = file.create<NiTimeController>();
+			b0.target.reset();
 			it0 = am.registerBlock(b0);
 			Assert::IsTrue(am.blocks().size() == 0);
 			Assert::IsTrue(it0 == nullptr);

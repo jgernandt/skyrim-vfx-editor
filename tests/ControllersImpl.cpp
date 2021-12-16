@@ -18,7 +18,6 @@
 
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "AnimationTester.h"
 #include "ConnectorTester.h"
 #include "FactoryTester.h"
 #include "ForwardTester.h"
@@ -27,64 +26,10 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
-bool objects::TestSetup<NiTimeController>::operator()(NiTimeController& obj, File& file)
-{
-	auto target = file.create<NiAVObject>();
-	file.keepAlive(target);
-	obj.target.assign(target);
-
-	return false;
-}
-
-void objects::AnimationTester<NiTimeController>::operator()(const NiTimeController& obj, MockAnimationManager& visitor)
-{
-	//Should leave everything unchanged
-	Assert::IsTrue(visitor.visited.empty());
-	Assert::IsTrue(visitor.blocks.size() == 1);
-	Assert::IsTrue(visitor.blocks.front().ctlr.get() == &obj);
-	Assert::IsTrue(visitor.blocks.front().ctlrIDProperty == nullptr);
-	Assert::IsTrue(visitor.blocks.front().target == nullptr);
-	Assert::IsTrue(visitor.blocks.front().nodeName == "TestNodeName");
-	Assert::IsTrue(visitor.blocks.front().propertyType == "TestPropertyType");
-	Assert::IsTrue(visitor.blocks.front().ctlrType == "TestControllerType");
-	Assert::IsTrue(visitor.blocks.front().ctlrID == "TestControllerID");
-	Assert::IsTrue(visitor.blocks.front().iplrID == "TestInterpolatorID");
-}
-
-
 //Modifier controller tests should all be similar:
 //*setup a target and target modifier
 //*check that we requested a connection from our iplr to the target field on the target modifier
 //*check that a controller node was created (possibly conditional)
-
-bool objects::TestSetup<NiPSysModifierCtlr>::operator()(NiPSysModifierCtlr& obj, File& file)
-{
-	auto target = file.create<NiParticleSystem>();
-	file.getRoot()->children.add(target);
-	obj.target.assign(target);
-
-	obj.modifierName.set("abieui");
-
-	return false;
-}
-
-void objects::AnimationTester<NiPSysModifierCtlr>::operator()(const NiPSysModifierCtlr& obj, MockAnimationManager& visitor)
-{
-	ni_ptr<NiParticleSystem> psys = std::static_pointer_cast<NiParticleSystem>(obj.target.assigned());
-
-	//Should pass the modifierName as controller id
-	Assert::IsTrue(visitor.visited.empty());
-	Assert::IsTrue(visitor.blocks.size() == 1);
-	Assert::IsTrue(visitor.blocks.front().ctlr.get() == &obj);
-	Assert::IsTrue(visitor.blocks.front().target == psys);
-	Assert::IsTrue(visitor.blocks.front().ctlrIDProperty.get() == &obj.modifierName);
-	Assert::IsTrue(visitor.blocks.front().nodeName == psys->name.get());
-	Assert::IsTrue(visitor.blocks.front().propertyType == "TestPropertyType");
-	Assert::IsTrue(visitor.blocks.front().ctlrType == "TestControllerType");
-	Assert::IsTrue(visitor.blocks.front().ctlrID == obj.modifierName.get());
-	Assert::IsTrue(visitor.blocks.front().iplrID == "TestInterpolatorID");
-}
-
 
 bool objects::TestSetup<NiPSysEmitterCtlr>::operator()(NiPSysEmitterCtlr& obj, File& file)
 {
