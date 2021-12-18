@@ -36,8 +36,7 @@ namespace creation
 			//Feed a Constructor some Modifier nodes and the ConnectionInfo we expect them to produce.
 			//Test that the correct nodes are connected.
 			File file(File::Version::SKYRIM_SE);
-			node::AnimationManager am;
-			node::Constructor ctor(file, am);
+			node::Constructor ctor(file, nullptr);
 
 			auto psys = file.create<NiParticleSystem>();
 			auto psys_node = node::Default<node::ParticleSystem>{}.create(file, psys);
@@ -87,8 +86,7 @@ namespace creation
 		TEST_METHOD(PostProcessing)
 		{
 			File file(File::Version::SKYRIM_SE);
-			node::AnimationManager am;
-			node::Constructor ctor(file, am);
+			node::Constructor ctor(file, nullptr);
 
 			bool test1 = false;
 			bool test2 = false;
@@ -108,14 +106,14 @@ namespace creation
 			struct MockNode : node::NodeBase 
 			{
 				node::AnimationManager* m_set{ nullptr };
-				virtual void setAnimationManager(node::AnimationManager& am) override
+				virtual void setAnimationManager(const std::shared_ptr<node::AnimationManager>& am) override
 				{
-					m_set = &am;
+					m_set = am.get();
 				}
 			};
 
 			File file(File::Version::SKYRIM_SE);
-			node::AnimationManager am;
+			auto am = std::make_shared<node::AnimationManager>();
 			node::Constructor ctor(file, am);
 
 			auto obj = file.create<NiObject>();
@@ -123,7 +121,7 @@ namespace creation
 			MockNode* node = unode.get();
 			ctor.addNode(obj.get(), std::move(unode));
 
-			Assert::IsTrue(node->m_set == &am);
+			Assert::IsTrue(node->m_set == am.get());
 		}
 	};
 }

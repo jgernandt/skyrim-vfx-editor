@@ -99,6 +99,7 @@ node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &fil
 		if (!root)
 			throw std::runtime_error("File has no valid root");
 
+		m_animationMngr = std::make_shared<AnimationManager>();
 		m_rootName = make_ni_ptr(std::static_pointer_cast<NiObjectNET>(root), &NiObjectNET::name);
 
 		workArea = newChild<NodeRoot>(*this);
@@ -162,10 +163,10 @@ void node::Editor::frame(gui::FrameDrawer& fd)
 
 void node::Editor::preReadProc()
 {
-	if (m_file) {
+	if (m_file && m_animationMngr) {
 		if (auto&& root = m_file->getRoot()) {
-			m_animationMngr.addObject(root);
-			root->receive(m_animationMngr);
+			m_animationMngr->addObject(root);
+			root->receive(*m_animationMngr);
 		}
 	}
 }
@@ -217,6 +218,7 @@ std::unique_ptr<gui::IComponent> node::Editor::NodeRoot::createAddMenu()
 
 	auto anim = root->newChild<gui::Menu>("Animation");
 	anim->newChild<gui::MenuItem>("Behaviour", std::bind(&NodeRoot::addNode<ControllerManager>, this));
+	anim->newChild<gui::MenuItem>("Action", std::bind(&NodeRoot::addNode<ControllerSequence>, this));
 	anim->newChild<gui::MenuItem>("Float keys", std::bind(&NodeRoot::addNode<FloatController>, this));
 
 	return root;

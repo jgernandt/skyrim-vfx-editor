@@ -30,7 +30,13 @@ namespace node
 	public:
 		struct Block
 		{
-			Block();
+			Block(
+				const ni_ptr<NiTimeController>& ctlr, 
+				const std::string& nodeName, 
+				const std::string& propertyType,
+				const std::string& ctlrType,
+				const std::string& ctlrID,
+				const std::string& iplrID);
 			~Block();
 
 			Ref<NiAVObject> target;

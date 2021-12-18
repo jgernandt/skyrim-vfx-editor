@@ -42,24 +42,25 @@ node::AnimationManager::Block* node::AnimationManager::registerBlock(const Block
 				return &block;
 		}
 		//this block is new
-		m_blocks.push_back();
+		m_blocks.push_back(info.ctlr, info.target->name.get(), info.propertyType, 
+			info.ctlrType, info.ctlrIDProperty ? info.ctlrIDProperty->get() : info.ctlrID, info.iplrID);
 		result = &m_blocks.back();
 
 		result->targetLsnr.setAnimationManager(*this);
 
 		result->target.assign(info.target);
-		result->controller = info.ctlr;
-		result->propertyType.set(info.propertyType);
-		result->ctlrType.set(info.ctlrType);
-		result->iplrID.set(info.iplrID);
+		//result->controller = info.ctlr;
+		//result->propertyType.set(info.propertyType);
+		//result->ctlrType.set(info.ctlrType);
+		//result->iplrID.set(info.iplrID);
 
 		if (info.ctlrIDProperty) {
 			result->ctlrIDProperty = info.ctlrIDProperty;
 			info.ctlrIDProperty->addListener(result->ctlrIDSyncer);
-			result->ctlrIDSyncer.onSet(info.ctlrIDProperty->get());
+			//result->ctlrIDSyncer.onSet(info.ctlrIDProperty->get());
 		}
-		else
-			result->ctlrID.set(info.ctlrID);
+		//else
+		//	result->ctlrID.set(info.ctlrID);
 	}
 
 	return result;
@@ -117,7 +118,15 @@ void node::AnimationManager::decrCount(NiAVObject* obj)
 }
 
 
-node::AnimationManager::Block::Block() :
+node::AnimationManager::Block::Block(
+	const ni_ptr<NiTimeController>& ctlr,
+	const std::string& nodeName,
+	const std::string& propertyType,
+	const std::string& ctlrType,
+	const std::string& ctlrID,
+	const std::string& iplrID) :
+	controller{ ctlr }, nodeName{ nodeName }, propertyType{ propertyType }, 
+	ctlrType{ ctlrType }, ctlrID{ ctlrID }, iplrID{ iplrID },
 	targetLsnr{ *this }, ctlrIDSyncer{ *this }
 {
 	target.addListener(targetLsnr);

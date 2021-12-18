@@ -78,6 +78,14 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::NiControllerManager>{}.run(); }
 	};
 
+	TEST_CLASS(NiControllerSequence)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiControllerSequence>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiControllerSequence>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiControllerSequence>{}.run(); }
+	};
+
 	TEST_CLASS(NiParticleSystem)
 	{
 	public:

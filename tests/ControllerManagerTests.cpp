@@ -533,10 +533,10 @@ namespace nodes
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiControllerManager>();
 			auto node = node::Default<node::ControllerManager>{}.create(file, obj);
-			node::AnimationManager am;
+			auto am = std::make_shared<node::AnimationManager>();
 
-			am.objects().insert(0, file.create<NiAVObject>());
-			am.objects().insert(1, file.create<NiAVObject>());
+			am->objects().insert(0, file.create<NiAVObject>());
+			am->objects().insert(1, file.create<NiAVObject>());
 
 			node->setAnimationManager(am);
 			auto&& pal = obj->objectPalette.assigned();
@@ -544,24 +544,48 @@ namespace nodes
 			Assert::IsNotNull(pal.get());
 			Assert::IsTrue(pal->objects.size() == 2);
 			for (size_t i = 0; i < pal->objects.size(); i++)
-				Assert::IsTrue(pal->objects.at(i).assigned() == am.objects().at(i));
+				Assert::IsTrue(pal->objects.at(i).assigned() == am->objects().at(i));
 
 			//should hear insertion
-			am.objects().insert(0, file.create<NiAVObject>());
+			am->objects().insert(0, file.create<NiAVObject>());
 			Assert::IsTrue(pal->objects.size() == 3);
 			for (size_t i = 0; i < pal->objects.size(); i++)
-				Assert::IsTrue(pal->objects.at(i).assigned() == am.objects().at(i));
+				Assert::IsTrue(pal->objects.at(i).assigned() == am->objects().at(i));
 
 			//should hear erase
-			am.objects().erase(0);
+			am->objects().erase(0);
 			Assert::IsTrue(pal->objects.size() == 2);
 			for (size_t i = 0; i < pal->objects.size(); i++)
-				Assert::IsTrue(pal->objects.at(i).assigned() == am.objects().at(i));
+				Assert::IsTrue(pal->objects.at(i).assigned() == am->objects().at(i));
 		}
 
 		TEST_METHOD(Actions)
 		{
+			//send Set<NiControllerSequence>, receive Ptr<NiControllerManager>
 
+			File file{ File::Version::SKYRIM_SE };
+			auto obj = file.create<NiControllerManager>();
+			ConnectorTester<node::ControllerManager> tester(
+				node::Default<node::ControllerManager>{}.create(file, obj));
+
+			Ptr<NiControllerManager> target0;
+			Ptr<NiControllerManager> target1;
+
+			tester.tryConnect<Set<NiControllerSequence>, Ptr<NiControllerManager>>(
+				node::ControllerManager::Actions::ID, true, &target0);
+			auto ifc = tester.tryConnect<Set<NiControllerSequence>, Ptr<NiControllerManager>>(
+				node::ControllerManager::Actions::ID, true, &target1);
+
+			Assert::IsTrue(ifc == &obj->ctlrSequences);
+
+			Assert::IsTrue(target0.assigned() == obj);
+			Assert::IsTrue(target1.assigned() == obj);
+
+			tester.disconnect<Ptr<NiControllerManager>>(&target0);
+			Assert::IsFalse(target0.assigned() == obj);
+
+			tester.disconnect<Ptr<NiControllerManager>>(&target1);
+			Assert::IsFalse(target1.assigned() == obj);
 		}
 	};
 
@@ -569,9 +593,227 @@ namespace nodes
 	{
 	public:
 
+		TEST_METHOD(Default)
+		{
+			{//complete
+				File file{ File::Version::SKYRIM_SE };
+				auto obj = file.create<NiControllerSequence>();
+				obj->startTime.set(0.1f);
+				obj->stopTime.set(1.5f);
+				auto keys = file.create<NiTextKeyExtraData>();
+				obj->textKeys.assign(keys);
+				keys->keys.resize(2);
+				keys->keys.front().time.set(0.1f);
+				keys->keys.front().value.set("start");
+				keys->keys.back().time.set(1.5f);
+				keys->keys.back().value.set("end");
+
+				auto node = node::Default<node::ControllerSequence>{}.create(file, obj);
+
+				//keys should be unchanged
+				Assert::IsTrue(obj->textKeys.assigned() == keys);
+				Assert::IsTrue(keys->keys.size() == 2);
+
+				//start/end keys should match start/stop time
+				obj->startTime.set(0.0f);
+				obj->stopTime.set(1.6f);
+				Assert::IsTrue(keys->keys.front().time.get() == 0.0f);
+				Assert::IsTrue(keys->keys.back().time.get() == 1.6f);
+			}
+			{//missing TextKeysData
+				File file{ File::Version::SKYRIM_SE };
+				auto obj = file.create<NiControllerSequence>();
+				obj->startTime.set(0.1f);
+				obj->stopTime.set(1.5f);
+
+				auto node = node::Default<node::ControllerSequence>{}.create(file, obj);
+
+				//keys should be added
+				Assert::IsNotNull(obj->textKeys.assigned().get());
+				Assert::IsTrue(obj->textKeys.assigned()->keys.size() == 2);
+				Assert::IsTrue(obj->textKeys.assigned()->keys.front().time.get() == 0.1f);
+				Assert::IsTrue(obj->textKeys.assigned()->keys.front().value.get() == "start");
+				Assert::IsTrue(obj->textKeys.assigned()->keys.back().time.get() == 1.5f);
+				Assert::IsTrue(obj->textKeys.assigned()->keys.back().value.get() == "end");
+
+				//start/end keys should match start/stop time
+				obj->startTime.set(0.0f);
+				obj->stopTime.set(1.6f);
+				Assert::IsTrue(obj->textKeys.assigned()->keys.front().time.get() == 0.0f);
+				Assert::IsTrue(obj->textKeys.assigned()->keys.back().time.get() == 1.6f);
+			}
+			{//unexpected keys
+				File file{ File::Version::SKYRIM_SE };
+				auto obj = file.create<NiControllerSequence>();
+				obj->startTime.set(0.1f);
+				obj->stopTime.set(1.5f);
+				auto keys = file.create<NiTextKeyExtraData>();
+				obj->textKeys.assign(keys);
+				keys->keys.resize(3);
+				keys->keys.front().time.set(0.2f);
+				keys->keys.front().value.set("Event0");
+				keys->keys.at(1).time.set(0.2f);//"start" not matching start time, not first
+				keys->keys.at(1).value.set("start");
+				keys->keys.back().time.set(1.5f);
+				keys->keys.back().value.set("Event1");
+				//"end" missing
+
+				auto node = node::Default<node::ControllerSequence>{}.create(file, obj);
+
+				//Complete with end, move start to front
+				Assert::IsTrue(obj->textKeys.assigned() == keys);
+				Assert::IsTrue(keys->keys.size() == 4);
+				Assert::IsTrue(keys->keys.at(0).time.get() == 0.1f);
+				Assert::IsTrue(keys->keys.at(0).value.get() == "start");
+				Assert::IsTrue(keys->keys.at(1).time.get() == 0.2f);
+				Assert::IsTrue(keys->keys.at(1).value.get() == "Event0");
+				Assert::IsTrue(keys->keys.at(2).time.get() == 1.5f);
+				Assert::IsTrue(keys->keys.at(2).value.get() == "Event1");
+				Assert::IsTrue(keys->keys.at(3).time.get() == 1.5f);
+				Assert::IsTrue(keys->keys.at(3).value.get() == "end");
+
+				//start/end keys should match start/stop time
+				obj->startTime.set(0.0f);
+				obj->stopTime.set(1.6f);
+				Assert::IsTrue(keys->keys.front().time.get() == 0.0f);
+				Assert::IsTrue(keys->keys.back().time.get() == 1.6f);
+			}
+		}
+
 		TEST_METHOD(Behaviour)
 		{
+			//send Ptr<NiControllerManager>, receive Set<NiControllerSequence>
 
+			File file{ File::Version::SKYRIM_SE };
+			auto obj = file.create<NiControllerSequence>();
+			ConnectorTester<node::ControllerSequence> tester(
+				node::Default<node::ControllerSequence>{}.create(file, obj));
+
+			Set<NiControllerSequence> target0;
+			Set<NiControllerSequence> target;
+
+			tester.tryConnect<Ptr<NiControllerManager>, Set<NiControllerSequence>>(
+				node::ControllerSequence::Behaviour::ID, false, &target0);
+			auto ifc = tester.tryConnect<Ptr<NiControllerManager>, Set<NiControllerSequence>>(
+				node::ControllerSequence::Behaviour::ID, false, &target);
+
+			Assert::IsNotNull(ifc);
+			//interface should assign to obj->manager
+			auto mngr = file.create<NiControllerManager>();
+			mngr->target.assign(file.getRoot());
+			file.getRoot()->controllers.insert(0, mngr);
+			file.getRoot()->name.set("nvaeorbnv");
+			ifc->assign(mngr);
+			Assert::IsTrue(obj->manager.assigned() == mngr);
+			//and sync the name of the root to obj->accumRootName (unsure how important this is)
+			Assert::IsTrue(obj->accumRootName.get() == file.getRoot()->name.get());
+			//should hear the root name
+			file.getRoot()->name.set("vnabnab");
+			Assert::IsTrue(obj->accumRootName.get() == file.getRoot()->name.get());
+			//should hear manager target switching
+			mngr->target.assign(nullptr);
+			Assert::IsTrue(obj->accumRootName.get() == "");
+			mngr->target.assign(file.getRoot());
+			Assert::IsTrue(obj->accumRootName.get() == file.getRoot()->name.get());
+
+			ifc->assign(nullptr);
+			Assert::IsFalse(obj->manager.assigned() == mngr);
+			Assert::IsFalse(obj->accumRootName.get() == file.getRoot()->name.get());
+
+			Assert::IsFalse(target0.has(obj.get()));
+			Assert::IsTrue(target.has(obj.get()));
+
+			tester.disconnect<Set<NiControllerSequence>>(&target);
+			Assert::IsFalse(target.has(obj.get()));
+		}
+
+		TEST_METHOD(SetAnimationManager)
+		{
+			//should populate/sync our block list
+
+			File file{ File::Version::SKYRIM_SE };
+			auto obj = file.create<NiControllerSequence>();
+			auto node = node::Default<node::ControllerSequence>{}.create(file, obj);
+
+			//manager has 3 blocks (would be cleaner to insert these manually)
+			auto am = std::make_shared<node::AnimationManager>();
+			auto av0 = file.create<NiAVObject>();
+			av0->name.set("AV0");
+			auto b0 = am->registerBlock(
+				{ file.create<NiTimeController>(), nullptr, av0, "PType0", "CType0", "CID0", "IID0" });
+			auto av1 = file.create<NiAVObject>();
+			av1->name.set("AV1");
+			auto b1 = am->registerBlock(
+				//a controller that should create an interpolator for us (not sure we should be testing this here)
+				{ file.create<NiPSysGravityStrengthCtlr>(), nullptr, av1, "PType1", "CType1", "CID1", "IID1" });
+			auto av2 = file.create<NiAVObject>();
+			av2->name.set("AV2");
+			auto b2 = am->registerBlock(
+				{ file.create<NiTimeController>(), nullptr, av2, "PType2", "CType2", "CID2", "IID2" });
+
+			//Sequence has 2 of those 3, but in different order
+			obj->blocks.resize(2);
+
+			auto iplr2 = file.create<NiInterpolator>();
+			obj->blocks.front().interpolator.assign(iplr2);
+			obj->blocks.front().controller.assign(b2->controller);
+			obj->blocks.front().nodeName.set(b2->nodeName.get());
+			obj->blocks.front().propertyType.set(b2->propertyType.get());
+			obj->blocks.front().ctlrType.set(b2->ctlrType.get());
+			obj->blocks.front().ctlrID.set(b2->ctlrID.get());
+			obj->blocks.front().iplrID.set(b2->iplrID.get());
+
+			auto iplr0 = file.create<NiInterpolator>();
+			obj->blocks.back().interpolator.assign(iplr0);
+			obj->blocks.back().controller.assign(b0->controller);
+			obj->blocks.back().nodeName.set(b0->nodeName.get());
+			obj->blocks.back().propertyType.set(b0->propertyType.get());
+			obj->blocks.back().ctlrType.set(b0->ctlrType.get());
+			obj->blocks.back().ctlrID.set(b0->ctlrID.get());
+			obj->blocks.back().iplrID.set(b0->iplrID.get());
+			
+			//should add the third and rearrange to same order
+			node->setAnimationManager(am);
+			Assert::IsTrue(obj->blocks.size() == 3);
+			node::AnimationManager::Block* blocks[3]{ b0, b1, b2 };
+			for (int i = 0; i < 3; i++) {
+				Assert::IsTrue(obj->blocks.at(i).controller.assigned() == blocks[i]->controller);
+				Assert::IsTrue(obj->blocks.at(i).nodeName.get() == blocks[i]->nodeName.get());
+				Assert::IsTrue(obj->blocks.at(i).propertyType.get() == blocks[i]->propertyType.get());
+				Assert::IsTrue(obj->blocks.at(i).ctlrType.get() == blocks[i]->ctlrType.get());
+				Assert::IsTrue(obj->blocks.at(i).ctlrID.get() == blocks[i]->ctlrID.get());
+				Assert::IsTrue(obj->blocks.at(i).iplrID.get() == blocks[i]->iplrID.get());
+			}
+			Assert::IsTrue(obj->blocks.at(0).interpolator.assigned() == iplr0);
+			Assert::IsTrue(obj->blocks.at(1).interpolator.assigned() != nullptr);
+			Assert::IsTrue(obj->blocks.at(2).interpolator.assigned() == iplr2);
+
+			//should hear insertions
+			auto b3 = am->registerBlock(
+				{ file.create<NiTimeController>(), nullptr, file.create<NiAVObject>(), "PType3", "CType3", "CID3", "IID3" });
+			Assert::IsTrue(obj->blocks.size() == 4);
+
+			//should hear erases
+			am->unregisterBlock(b1);
+			Assert::IsTrue(obj->blocks.size() == 3);
+
+			//should hear changes
+			b3->nodeName.set("nvabnsmb");
+			b3->propertyType.set("nbaoerbe");
+			b3->ctlrType.set("aohbre");
+			b3->ctlrID.set("oibnhsieb");
+			b3->iplrID.set("uivanbirue");
+
+			blocks[1] = b2;
+			blocks[2] = b3;
+			for (int i = 0; i < 3; i++) {
+				Assert::IsTrue(obj->blocks.at(i).controller.assigned() == blocks[i]->controller);
+				Assert::IsTrue(obj->blocks.at(i).nodeName.get() == blocks[i]->nodeName.get());
+				Assert::IsTrue(obj->blocks.at(i).propertyType.get() == blocks[i]->propertyType.get());
+				Assert::IsTrue(obj->blocks.at(i).ctlrType.get() == blocks[i]->ctlrType.get());
+				Assert::IsTrue(obj->blocks.at(i).ctlrID.get() == blocks[i]->ctlrID.get());
+				Assert::IsTrue(obj->blocks.at(i).iplrID.get() == blocks[i]->iplrID.get());
+			}
 		}
 	};
 }

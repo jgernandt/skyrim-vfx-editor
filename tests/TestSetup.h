@@ -49,6 +49,12 @@ namespace objects
 	};
 
 	template<>
+	struct TestSetup<NiControllerSequence> : VerticalTraverser<NiControllerSequence, TestSetup>
+	{
+		bool operator() (NiControllerSequence& obj, File& file);
+	};
+
+	template<>
 	struct TestSetup<NiParticleSystem> : VerticalTraverser<NiParticleSystem, TestSetup>
 	{
 		bool operator() (NiParticleSystem& obj, File& file);

@@ -57,6 +57,12 @@ namespace objects
 	};
 
 	template<>
+	struct ConnectorTester<NiControllerSequence> : VerticalTraverser<NiControllerSequence, ConnectorTester>
+	{
+		bool operator() (const NiControllerSequence& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct ConnectorTester<NiParticleSystem> : VerticalTraverser<NiParticleSystem, ConnectorTester>
 	{
 		bool operator() (const NiParticleSystem& obj, const TestConstructor& ctor);

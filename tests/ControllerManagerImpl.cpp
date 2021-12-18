@@ -84,3 +84,33 @@ bool objects::ForwardTester<NiControllerManager>::operator()(const NiControllerM
 
 	return false;
 }
+
+
+bool objects::TestSetup<NiControllerSequence>::operator()(NiControllerSequence& obj, File& file)
+{
+	auto mngr = file.create<NiControllerManager>();
+	file.keepAlive(mngr);
+	obj.manager.assign(mngr);
+
+	return false;
+}
+
+bool objects::ConnectorTester<NiControllerSequence>::operator()(const NiControllerSequence& obj, const TestConstructor& ctor)
+{
+	//connect to manager
+	Assert::IsTrue(ctor.connections.size() == 1);
+	Assert::IsTrue(ctor.connections[0].object1 == &obj);
+	Assert::IsTrue(ctor.connections[0].field1 == node::ControllerSequence::Behaviour::ID);
+	Assert::IsTrue(ctor.connections[0].object2 == obj.manager.assigned().get());
+	Assert::IsTrue(ctor.connections[0].field2 == node::ControllerManager::Actions::ID);
+
+	//connect to events?
+
+	return false;
+}
+
+bool objects::FactoryTester<NiControllerSequence>::operator()(const NiControllerSequence& obj, const TestConstructor& ctor)
+{
+	nodeTest<node::ControllerSequence>(obj, ctor);
+	return false;
+}

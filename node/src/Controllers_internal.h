@@ -18,6 +18,7 @@
 
 #pragma once
 #include "Controllers.h"
+#include "ControllerManager.h"
 #include "Constructor.h"
 #include "AnimationManager.h"
 
@@ -30,6 +31,12 @@ namespace node
 	constexpr float DEFAULT_PHASE = 0.0f;
 	constexpr float DEFAULT_STARTTIME = 0.0f;
 	constexpr float DEFAULT_STOPTIME = 1.0f;
+
+	template<typename T>
+	struct InterpolatorFactory : VerticalTraverser<T, InterpolatorFactory>
+	{
+		bool operator() (const T&, IplrFactoryVisitor& v, File& file, const std::string& iplrID) { return true; }
+	};
 
 	template<>
 	class Default<FloatController>
@@ -197,6 +204,19 @@ namespace node
 		}
 	};
 
+	template<>
+	struct InterpolatorFactory<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, InterpolatorFactory>
+	{
+		bool operator() (const NiPSysEmitterCtlr&, IplrFactoryVisitor& v, File& file, const std::string& iplrID)
+		{
+			if (iplrID == "BirthRate")
+				v.iplr = file.create<NiFloatInterpolator>();
+			else if (iplrID == "EmitterActive")
+				v.iplr = file.create<NiBoolInterpolator>();
+			return false;
+		}
+	};
+
 
 	//NiPSysGravityStrengthCtlr////////////
 
@@ -252,6 +272,17 @@ namespace node
 				ctor.addNode(new_iplr.get(), Default<FloatController>{}.create(ctor.getFile(), new_iplr, &obj));
 			}
 
+			return false;
+		}
+	};
+
+	//Should be left to a NiPSysModifierFloatCtlr
+	template<>
+	struct InterpolatorFactory<NiPSysGravityStrengthCtlr> : VerticalTraverser<NiPSysGravityStrengthCtlr, InterpolatorFactory>
+	{
+		bool operator() (const NiPSysGravityStrengthCtlr&, IplrFactoryVisitor& v, File& file, const std::string& iplrID)
+		{
+			v.iplr = file.create<NiFloatInterpolator>();
 			return false;
 		}
 	};

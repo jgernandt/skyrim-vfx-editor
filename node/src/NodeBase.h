@@ -79,7 +79,7 @@ namespace node
 			return obj;
 		}
 
-		virtual void setAnimationManager(AnimationManager&) {}
+		virtual void setAnimationManager(const std::shared_ptr<AnimationManager>&) {}
 
 	protected:
 		//quick workaround to avoid relying on our destructor for safe disconnection

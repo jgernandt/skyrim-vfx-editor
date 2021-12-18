@@ -43,7 +43,7 @@ namespace node
 	class Constructor : public HorizontalTraverser<Constructor>
 	{
 	public:
-		Constructor(File& file, AnimationManager& am) : 
+		Constructor(File& file, const std::shared_ptr<AnimationManager>& am) : 
 			m_file{ file }, m_animationManager{ am } {}
 
 		template<typename T> void invoke(T& obj);
@@ -73,7 +73,7 @@ namespace node
 
 	private:
 		File& m_file;
-		AnimationManager& m_animationManager;
+		std::shared_ptr<AnimationManager> m_animationManager;
 
 		std::vector<ConnectionInfo> m_connections;
 		std::map<NiParticleSystem*, std::vector<NiPSysModifier*>> m_modConnections;

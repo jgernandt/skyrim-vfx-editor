@@ -29,6 +29,10 @@ namespace node
 	constexpr const char* BGED_NAME = "BGED";
 	constexpr bool DEFAULT_CONTROLS_BASE_SKELETON = false;
 
+	constexpr unsigned int DEFAULT_ARRAY_GROW_BY = 1;//no idea what this does
+	constexpr float DEFAULT_WEIGHT = 1.0f;
+	constexpr CycleType DEFAULT_CYCLE_TYPE = CycleType::CLAMP;
+
 	template<>
 	class Default<ControllerManager>
 	{
@@ -161,4 +165,111 @@ namespace node
 			return true;
 		}
 	};
+
+
+	template<>
+	class Default<ControllerSequence>
+	{
+	public:
+		std::unique_ptr<ControllerSequence> create(
+			File& file,	ni_ptr<NiControllerSequence> obj = ni_ptr<NiControllerSequence>())
+		{
+			if (!obj) {
+				obj = file.create<nif::NiControllerSequence>();
+				if (!obj)
+					throw std::runtime_error("Failed to create NiControllerSequence");
+
+				obj->arrayGrowBy.set(DEFAULT_ARRAY_GROW_BY);
+				obj->weight.set(DEFAULT_WEIGHT);
+				obj->cycleType.set(DEFAULT_CYCLE_TYPE);
+				obj->frequency.set(DEFAULT_FREQUENCY);
+				obj->startTime.set(DEFAULT_STARTTIME);
+				obj->stopTime.set(DEFAULT_STOPTIME);
+			}
+			if (!obj->textKeys.assigned()) {
+				auto new_keys = file.create<NiTextKeyExtraData>();
+				if (!new_keys)
+					throw std::runtime_error("Failed to create NiTextKeyExtraData");
+				obj->textKeys.assign(new_keys);
+			}
+			auto&& keys = obj->textKeys.assigned()->keys;
+
+			if (keys.size() == 0) {
+				keys.push_back();
+				keys.back().value.set("start");
+			}
+			else {
+				//find "start" and move to front, or add
+				int pos = 0;
+				for (auto&& key : keys) {
+					if (key.value.get() == "start")
+						break;
+					pos++;
+				}
+				if ((size_t)pos < keys.size())
+					keys.move(pos, 0);
+				else {
+					keys.push_front();
+					keys.front().value.set("start");
+				}
+			}
+			keys.front().time.set(obj->startTime.get());
+
+			if (keys.size() == 1) {
+				keys.push_back();
+				keys.back().value.set("end");
+			}
+			else {
+				//find "end" and move to back, or add
+				int pos = 0;
+				for (auto&& key : keys) {
+					if (key.value.get() == "end")
+						break;
+					pos++;
+				}
+				if ((size_t)pos < keys.size())
+					keys.move(pos, (int)keys.size() - 1);
+				else {
+					keys.push_back();
+					keys.back().value.set("end");
+				}
+			}
+			keys.back().time.set(obj->stopTime.get());
+
+			return std::make_unique<ControllerSequence>(file, obj);
+		}
+	};
+
+	template<>
+	class Connector<NiControllerSequence> : public VerticalTraverser<NiControllerSequence, Connector>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiControllerSequence& obj, C& ctor)
+		{
+			//Connect to the manager
+			if (auto manager = obj.manager.assigned())
+				ctor.addConnection({ &obj, manager.get(), ControllerSequence::Behaviour::ID, ControllerManager::Actions::ID });
+			return true;
+		}
+	};
+
+	template<>
+	class Factory<NiControllerSequence> : public VerticalTraverser<NiControllerSequence, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiControllerSequence& obj, C& ctor)
+		{
+			if (auto ptr = std::static_pointer_cast<NiControllerSequence>(ctor.getObject()); ptr.get() == &obj)
+				ctor.addNode(&obj, Default<ControllerSequence>{}.create(ctor.getFile(), ptr));
+			return false;
+		}
+	};
+
+	template<typename T> 
+	inline void IplrFactoryVisitor::invoke(const T& obj) 
+	{
+		InterpolatorFactory<T>{}.up(obj, *this, m_file, m_iplrID);
+	}
 }

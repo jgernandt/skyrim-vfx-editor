@@ -54,7 +54,7 @@ namespace node
 			Editor& m_editor;
 		};
 
-		AnimationManager m_animationMngr;
+		std::shared_ptr<AnimationManager> m_animationMngr;
 		nif::File* m_file{ nullptr };
 		ni_ptr<Property<std::string>> m_rootName;
 	};

@@ -21,6 +21,50 @@
 #include "CommonTests.h"
 #include "nodes_internal.h"
 
+namespace objects
+{
+	//We may have to prioritise interpolator factories for all controller types.
+	//NifSkope cannot handle NiInterpolator, unsure how the game would react to them.
+	//Also unsure how the game reacts no null iplrs in controller sequences. Need to test!
+
+	TEST_CLASS(InterpolatorFactory)
+	{
+	public:
+
+		template<typename T, typename IplrT>
+		void iplrFactoryTest(const std::string& iplrID = std::string())
+		{
+			nif::File file{ nif::File::Version::SKYRIM_SE };
+			auto obj = file.create<T>();
+			node::IplrFactoryVisitor v(file, iplrID);
+			obj->receive(v);
+			if constexpr (std::is_same<IplrT, void>::value) {
+				Assert::IsNull(v.iplr.get());
+			}
+			else {
+				Assert::IsNotNull(v.iplr.get());
+				Assert::IsTrue(v.iplr->type() == IplrT::TYPE);
+			}
+		}
+
+		TEST_METHOD(NiTimeController)
+		{
+			iplrFactoryTest<nif::NiTimeController, void>();
+		}
+
+		TEST_METHOD(NiPSysEmitterCtlr)
+		{
+			iplrFactoryTest<nif::NiPSysEmitterCtlr, nif::NiFloatInterpolator>("BirthRate");
+			iplrFactoryTest<nif::NiPSysEmitterCtlr, nif::NiBoolInterpolator>("EmitterActive");
+		}
+
+		TEST_METHOD(NiPSysGravityStrengthCtlr)
+		{
+			iplrFactoryTest<nif::NiPSysGravityStrengthCtlr, nif::NiFloatInterpolator>();
+		}
+	};
+}
+
 namespace nodes
 {
 	using namespace nif;
