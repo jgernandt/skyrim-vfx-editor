@@ -80,13 +80,40 @@ namespace nif
 	template<> struct type_map<Niflib::NiBlendInterpolator> { using type = NiBlendInterpolator; };
 	template<> struct type_map<NiBlendInterpolator> { using type = Niflib::NiBlendInterpolator; };
 
+	template<> struct ReadSyncer<NiBlendInterpolator> : VerticalTraverser<NiBlendInterpolator, ReadSyncer>
+	{
+		bool operator() (NiBlendInterpolator& object, const Niflib::NiBlendInterpolator* native, File& file);
+	};
+	template<> struct WriteSyncer<NiBlendInterpolator> : VerticalTraverser<NiBlendInterpolator, WriteSyncer>
+	{
+		bool operator() (const NiBlendInterpolator& object, Niflib::NiBlendInterpolator* native, const File& file);
+	};
+
 	//NiBlendBoolInterpolator
 	template<> struct type_map<Niflib::NiBlendBoolInterpolator> { using type = NiBlendBoolInterpolator; };
 	template<> struct type_map<NiBlendBoolInterpolator> { using type = Niflib::NiBlendBoolInterpolator; };
 
+	template<> struct ReadSyncer<NiBlendBoolInterpolator> : VerticalTraverser<NiBlendBoolInterpolator, ReadSyncer>
+	{
+		bool operator() (NiBlendBoolInterpolator& object, const Niflib::NiBlendBoolInterpolator* native, File& file);
+	};
+	template<> struct WriteSyncer<NiBlendBoolInterpolator> : VerticalTraverser<NiBlendBoolInterpolator, WriteSyncer>
+	{
+		bool operator() (const NiBlendBoolInterpolator& object, Niflib::NiBlendBoolInterpolator* native, const File& file);
+	};
+
 	//NiBlendFloatInterpolator
 	template<> struct type_map<Niflib::NiBlendFloatInterpolator> { using type = NiBlendFloatInterpolator; };
 	template<> struct type_map<NiBlendFloatInterpolator> { using type = Niflib::NiBlendFloatInterpolator; };
+
+	template<> struct ReadSyncer<NiBlendFloatInterpolator> : VerticalTraverser<NiBlendFloatInterpolator, ReadSyncer>
+	{
+		bool operator() (NiBlendFloatInterpolator& object, const Niflib::NiBlendFloatInterpolator* native, File& file);
+	};
+	template<> struct WriteSyncer<NiBlendFloatInterpolator> : VerticalTraverser<NiBlendFloatInterpolator, WriteSyncer>
+	{
+		bool operator() (const NiBlendFloatInterpolator& object, Niflib::NiBlendFloatInterpolator* native, const File& file);
+	};
 
 	//NiTimeController
 	template<> struct type_map<Niflib::NiTimeController> { using type = NiTimeController; };

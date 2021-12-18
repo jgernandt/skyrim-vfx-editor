@@ -205,6 +205,65 @@ bool common::Randomiser<NiFloatInterpolator>::operator()(const NiFloatInterpolat
 }
 
 
+bool common::EquivalenceTester<NiBlendInterpolator>::operator()(const NiBlendInterpolator& object, const Niflib::NiBlendInterpolator* native, File& file)
+{
+	Assert::IsTrue(object.managerControlled.get() == native->GetManagerControlled());
+	return true;
+}
+
+bool common::Randomiser<NiBlendInterpolator>::operator()(NiBlendInterpolator& object, File& file, std::mt19937& rng)
+{
+	object.managerControlled.set(!object.managerControlled.get());
+	return true;
+}
+
+bool common::Randomiser<NiBlendInterpolator>::operator()(const NiBlendInterpolator&, Niflib::NiBlendInterpolator* native, File& file, std::mt19937& rng)
+{
+	native->SetManagerControlled(!native->GetManagerControlled());
+	return true;
+}
+
+
+bool common::EquivalenceTester<NiBlendBoolInterpolator>::operator()(
+	const NiBlendBoolInterpolator& object, const Niflib::NiBlendBoolInterpolator* native, File& file)
+{
+	Assert::IsTrue(object.value.get() == static_cast<bool>(native->GetBoolValue()));
+	return true;
+}
+
+bool common::Randomiser<NiBlendBoolInterpolator>::operator()(NiBlendBoolInterpolator& object, File& file, std::mt19937& rng)
+{
+	object.value.set(!object.value.get());
+	return true;
+}
+
+bool common::Randomiser<NiBlendBoolInterpolator>::operator()(const NiBlendBoolInterpolator&, Niflib::NiBlendBoolInterpolator* native, File& file, std::mt19937& rng)
+{
+	native->SetBoolValue(!native->GetBoolValue());
+	return true;
+}
+
+
+bool common::EquivalenceTester<NiBlendFloatInterpolator>::operator()(
+	const NiBlendFloatInterpolator& object, const Niflib::NiBlendFloatInterpolator* native, File& file)
+{
+	Assert::IsTrue(object.value.get() == native->GetFloatValue());
+	return true;
+}
+
+bool common::Randomiser<NiBlendFloatInterpolator>::operator()(NiBlendFloatInterpolator& object, File& file, std::mt19937& rng)
+{
+	object.value.set(randf<float>(rng));
+	return true;
+}
+
+bool common::Randomiser<NiBlendFloatInterpolator>::operator()(const NiBlendFloatInterpolator&, Niflib::NiBlendFloatInterpolator* native, File& file, std::mt19937& rng)
+{
+	native->SetFloatValue(randf<float>(rng));
+	return true;
+}
+
+
 bool common::EquivalenceTester<NiTimeController>::operator()(const NiTimeController& object, const Niflib::NiTimeController* native, File& file)
 {
 	Assert::IsTrue(object.flags.raised() == native->GetFlags());

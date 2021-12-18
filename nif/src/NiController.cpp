@@ -155,6 +155,50 @@ bool nif::WriteSyncer<nif::NiFloatInterpolator>::operator()(const NiFloatInterpo
 }
 
 
+bool nif::ReadSyncer<nif::NiBlendInterpolator>::operator()(NiBlendInterpolator& object, const Niflib::NiBlendInterpolator* native, File& file)
+{
+	assert(native);
+	object.managerControlled.set(native->GetManagerControlled());
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiBlendInterpolator>::operator()(const NiBlendInterpolator& object, Niflib::NiBlendInterpolator* native, const File& file)
+{
+	assert(native);
+	native->SetManagerControlled(object.managerControlled.get());
+	return true;
+}
+
+
+bool nif::ReadSyncer<nif::NiBlendBoolInterpolator>::operator()(NiBlendBoolInterpolator& object, const Niflib::NiBlendBoolInterpolator* native, File& file)
+{
+	assert(native);
+	object.value.set(static_cast<bool>(native->GetBoolValue()));
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiBlendBoolInterpolator>::operator()(const NiBlendBoolInterpolator& object, Niflib::NiBlendBoolInterpolator* native, const File& file)
+{
+	assert(native);
+	native->SetBoolValue(static_cast<Niflib::byte>(object.value.get()));
+	return true;
+}
+
+bool nif::ReadSyncer<nif::NiBlendFloatInterpolator>::operator()(NiBlendFloatInterpolator& object, const Niflib::NiBlendFloatInterpolator* native, File& file)
+{
+	assert(native);
+	object.value.set(native->GetFloatValue());
+	return true;
+}
+
+bool nif::WriteSyncer<nif::NiBlendFloatInterpolator>::operator()(const NiBlendFloatInterpolator& object, Niflib::NiBlendFloatInterpolator* native, const File& file)
+{
+	assert(native);
+	native->SetFloatValue(object.value.get());
+	return true;
+}
+
+
 bool nif::ReadSyncer<nif::NiTimeController>::operator()(NiTimeController& object, const Niflib::NiTimeController* native, File& file)
 {
 	assert(native);

@@ -254,6 +254,27 @@ namespace common
 	};
 
 	template<>
+	struct Randomiser<NiBlendInterpolator> : VerticalTraverser<NiBlendInterpolator, Randomiser>
+	{
+		bool operator() (NiBlendInterpolator& object, File& file, std::mt19937& rng);
+		bool operator() (const NiBlendInterpolator&, Niflib::NiBlendInterpolator* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiBlendBoolInterpolator> : VerticalTraverser<NiBlendBoolInterpolator, Randomiser>
+	{
+		bool operator() (NiBlendBoolInterpolator& object, File& file, std::mt19937& rng);
+		bool operator() (const NiBlendBoolInterpolator&, Niflib::NiBlendBoolInterpolator* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
+	struct Randomiser<NiBlendFloatInterpolator> : VerticalTraverser<NiBlendFloatInterpolator, Randomiser>
+	{
+		bool operator() (NiBlendFloatInterpolator& object, File& file, std::mt19937& rng);
+		bool operator() (const NiBlendFloatInterpolator&, Niflib::NiBlendFloatInterpolator* native, File& file, std::mt19937& rng);
+	};
+
+	template<>
 	struct Randomiser<NiTimeController> : VerticalTraverser<NiTimeController, Randomiser>
 	{
 		bool operator() (NiTimeController& object, File& file, std::mt19937& rng);

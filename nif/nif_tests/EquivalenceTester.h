@@ -93,6 +93,24 @@ namespace common
 	};
 
 	template<>
+	struct EquivalenceTester<NiBlendInterpolator> : VerticalTraverser<NiBlendInterpolator, EquivalenceTester>
+	{
+		bool operator() (const NiBlendInterpolator& object, const Niflib::NiBlendInterpolator* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiBlendBoolInterpolator> : VerticalTraverser<NiBlendBoolInterpolator, EquivalenceTester>
+	{
+		bool operator() (const NiBlendBoolInterpolator& object, const Niflib::NiBlendBoolInterpolator* native, File& file);
+	};
+
+	template<>
+	struct EquivalenceTester<NiBlendFloatInterpolator> : VerticalTraverser<NiBlendFloatInterpolator, EquivalenceTester>
+	{
+		bool operator() (const NiBlendFloatInterpolator& object, const Niflib::NiBlendFloatInterpolator* native, File& file);
+	};
+
+	template<>
 	struct EquivalenceTester<NiTimeController> : VerticalTraverser<NiTimeController, EquivalenceTester>
 	{
 		bool operator() (const NiTimeController& object, const Niflib::NiTimeController* native, File& file);

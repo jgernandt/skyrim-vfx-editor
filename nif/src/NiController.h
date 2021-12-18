@@ -73,18 +73,25 @@ namespace nif
 
 	struct NiBlendInterpolator : NiTraversable<NiBlendInterpolator, NiInterpolator> 
 	{
+		Property<bool> managerControlled;
+		//Never mind the actual blend stuff right now. We'll only be doing manager controlled.
+
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
 	};
 
 	struct NiBlendBoolInterpolator : NiTraversable<NiBlendBoolInterpolator, NiBlendInterpolator> 
 	{
+		Property<bool> value;
+
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
 	};
 
 	struct NiBlendFloatInterpolator : NiTraversable<NiBlendFloatInterpolator, NiBlendInterpolator> 
 	{
+		Property<float> value;
+
 		static const ni_type TYPE;
 		virtual ni_type type() const override { return TYPE; }
 	};
