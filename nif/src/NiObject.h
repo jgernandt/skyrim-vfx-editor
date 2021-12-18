@@ -67,7 +67,17 @@ namespace nif
 			return static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
 		}
 		template<typename... Args>
+		bool down(const NiObject& object, Args&&... args)
+		{
+			return static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
+		}
+		template<typename... Args>
 		bool up(NiObject& object, Args&&... args)
+		{
+			return static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
+		}
+		template<typename... Args>
+		bool up(const NiObject& object, Args&&... args)
 		{
 			return static_cast<TraverserType<NiObject>&>(*this)(object, std::forward<Args>(args)...);
 		}
