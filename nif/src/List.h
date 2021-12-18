@@ -96,17 +96,17 @@ namespace nif
 		const T& front() const { return m_ctnr.front(); }
 
 		//TODO: use iterators instead of ints
-		//We could template insertions to forward ctor arguments
-		int insert(int i)
+		template<typename... Args>
+		int insert(int i, Args&&... args)
 		{
 			assert(i >= 0 && (size_t)i <= m_ctnr.size());
 
 			if (i == 0)
-				m_ctnr.emplace_front();
+				m_ctnr.emplace_front(std::forward<Args>(args)...);
 			else if (i == m_ctnr.size())
-				m_ctnr.emplace_back();
+				m_ctnr.emplace_back(std::forward<Args>(args)...);
 			else
-				m_ctnr.emplace(getIt(i));
+				m_ctnr.emplace(getIt(i), std::forward<Args>(args)...);
 
 			this->signal(Event<List<T>>{ Event<List<T>>::INSERT, i });
 
@@ -138,14 +138,16 @@ namespace nif
 			erase(0);
 		}
 
-		void push_back()
+		template<typename... Args>
+		void push_back(Args&&... args)
 		{
-			insert(size());
+			insert(size(), std::forward<Args>(args)...);
 		}
 
-		void push_front()
+		template<typename... Args>
+		void push_front(Args&&... args)
 		{
-			insert(0);
+			insert(0, std::forward<Args>(args)...);
 		}
 
 		void resize(int size)
