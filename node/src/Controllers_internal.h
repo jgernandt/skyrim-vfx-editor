@@ -162,7 +162,7 @@ namespace node
 						info.object1 = obj.interpolator.assigned().get();
 						info.field1 = FloatController::TARGET;
 						info.object2 = mod.get();
-						info.field2 = Emitter::BIRTH_RATE;
+						info.field2 = Emitter::BirthRate::ID;
 						ctor.addConnection(info);
 
 						break;

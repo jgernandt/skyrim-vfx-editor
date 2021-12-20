@@ -40,6 +40,8 @@ namespace node
 		void removeController(NiPSysModifierCtlr* ctlr);
 		std::vector<NiPSysModifierCtlr*> getControllers() const;
 
+		Ref<NiAVObject>& targetNode() { return m_targetNode; }
+
 	public:
 		constexpr static const char* TARGET = "Target";
 		constexpr static const char* NEXT_MODIFIER = "Next modifier";
@@ -57,7 +59,7 @@ namespace node
 		};
 
 	protected:
-		class Device final : public SequentialDevice<IModifiable>
+		class Device final : public SequentialReceiver<IModifiable>
 		{
 		public:
 			Device(const ni_ptr<NiPSysModifier>& obj);
@@ -93,25 +95,19 @@ namespace node
 		class TargetField final : public Field
 		{
 		public:
-			TargetField(const std::string& name, Modifier& node, Device& rcvr);
-
-		private:
-			Device& m_rcvr;
-			Sender<void> m_sndr;
+			TargetField(const std::string& name, Modifier& node);
 		};
 
 		class NextModField final : public Field
 		{
 		public:
-			NextModField(const std::string& name, Modifier& node, Device& sndr);
-
-		private:
-			Device& m_sndr;
-			Receiver<void> m_rcvr;
+			NextModField(const std::string& name, Modifier& node);
 		};
 
 	protected:
-		Device m_device;
+		Ref<NiAVObject> m_targetNode;//or Ptr?
+		Device m_modifiableDevice;
+		SequentialSender<Ref<NiAVObject>> m_targetNodeDevice;
 
 	private:
 		//Name should always match our order, to ensure local uniqueness

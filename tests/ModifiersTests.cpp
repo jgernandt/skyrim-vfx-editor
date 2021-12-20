@@ -62,7 +62,7 @@ namespace nodes
 			Assert::IsTrue(ctlr1->modifierName.get() == obj1->name.get());
 		}
 
-		TEST_METHOD(Connector_Target)
+		TEST_METHOD(Target)
 		{
 			//Test that
 			//*we can connect to a sender of IModifiable
@@ -74,11 +74,14 @@ namespace nodes
 
 			MockModifiable target1;
 			MockModifiable target2;
+
 			ConnectorTester<node::Modifier> tester(node::Default<node::DummyModifier>{}.create(file, obj));
 			tester.getNode()->addController(ctlr);
 
-			tester.tryConnect<void, node::IModifiable>(node::Modifier::TARGET, false, &target1);
-			tester.tryConnect<void, node::IModifiable>(node::Modifier::TARGET, false, &target2);
+			tester.tryConnect<Ref<NiAVObject>, node::IModifiable>(node::Modifier::TARGET, false, &target1);
+			auto ifc = tester.tryConnect<Ref<NiAVObject>, node::IModifiable>(node::Modifier::TARGET, false, &target2);
+
+			Assert::IsTrue(ifc == &static_cast<node::Modifier*>(tester.getNode())->targetNode());
 
 			//Test mod addition
 			Assert::IsTrue(target1.modsAdded.size() == target1.modsRemoved.size());
@@ -107,23 +110,43 @@ namespace nodes
 			Assert::IsTrue(target2.ctlrsRemoved.front() == ctlr.get());
 		}
 
-		TEST_METHOD(Connector_NextModifier)
+		TEST_METHOD(NextModifier)
 		{
 			//Test that
 			//*we can connect to a receiver of IModifiable
 			//*we expose no interface to them
 
 			File file{ File::Version::SKYRIM_SE };
-			ConnectorTester<node::Modifier> tester(node::Default<node::DummyModifier>{}.create(file));
 
-			tester.tryConnect<node::IModifiable, void>(node::Modifier::NEXT_MODIFIER, false, nullptr);
-			auto ifc = tester.tryConnect<node::IModifiable, void>(node::Modifier::NEXT_MODIFIER, false, nullptr);
+			//we need these, but aren't testing them here. They are tested in Sequence.
+			Ref<NiAVObject> target0;
+			Ref<NiAVObject> target;
+
+			ConnectorTester<node::Modifier> tester(node::Default<node::DummyModifier>{}.create(file));
+			tester.tryConnect<node::IModifiable, Ref<NiAVObject>>(node::Modifier::NEXT_MODIFIER, false, &target0);
+			auto ifc = tester.tryConnect<node::IModifiable, Ref<NiAVObject>>(node::Modifier::NEXT_MODIFIER, false, &target);
 
 			Assert::IsNull(ifc);
 		}
 
 		TEST_METHOD(Sequence)
 		{
+			class TestConnector :
+				public node::Receiver<Ref<NiAVObject>>,
+				public node::Sender<node::IModifiable>,
+				public gui::SingleConnector
+			{
+			public:
+				TestConnector(node::IModifiable& ifc) :
+					Sender<node::IModifiable>(ifc), SingleConnector(*this, *this) {}
+
+				virtual void onConnect(Ref<NiAVObject>& s) override { connections.push_back(&s); }
+				virtual void onDisconnect(Ref<NiAVObject>& s) override { disconnections.push_back(&s); }
+
+				std::vector<Ref<NiAVObject>*> connections;
+				std::vector<Ref<NiAVObject>*> disconnections;
+			};
+
 			File file{ File::Version::SKYRIM_SE };
 			MockModifiable target;
 			TestRoot root;
@@ -140,6 +163,7 @@ namespace nodes
 			node::Modifier* node1 = root.newChild<node::DummyModifier>(obj1);
 			node1->addController(ctlr1);
 
+			auto c2 = root.newChild<TestConnector>(target);
 
 			if (node::Field* f0 = node0->getField(node::Modifier::NEXT_MODIFIER)) {
 				if (node::Field* f1 = node1->getField(node::Modifier::TARGET))
@@ -150,7 +174,6 @@ namespace nodes
 			}
 			if (node::Field* f0 = node0->getField(node::Modifier::TARGET)) {
 				if (f0->connector) {
-					auto c2 = root.newChild<TestConnector>(target);
 					f0->connector->onClick();
 					c2->onRelease();
 				}
@@ -169,6 +192,12 @@ namespace nodes
 			target.ctlrsAdded.clear();
 			Assert::IsTrue(target.ctlrsRemoved.empty());
 
+			//And that both targetNode fields were sent to the receiver
+			Assert::IsTrue(c2->connections.size() == 2);
+			Assert::IsTrue(c2->disconnections.empty());
+			Assert::IsTrue(c2->connections[0] = &node0->targetNode());
+			Assert::IsTrue(c2->connections[1] = &node1->targetNode());
+			c2->connections.clear();
 
 			//Make another sequence
 
@@ -210,6 +239,13 @@ namespace nodes
 			target.ctlrsAdded.clear();
 			Assert::IsTrue(target.ctlrsRemoved.empty());
 
+			//And that the new mods have had their targetNodes assigned
+			Assert::IsTrue(c2->connections.size() == 2);
+			Assert::IsTrue(c2->disconnections.empty());
+			Assert::IsTrue(c2->connections[0] = &node2->targetNode());
+			Assert::IsTrue(c2->connections[1] = &node3->targetNode());
+			c2->connections.clear();
+
 			//Disconnect the last two 
 			if (node::Field* f2 = node2->getField(node::Modifier::TARGET))
 				if (f2->connector)
@@ -228,6 +264,13 @@ namespace nodes
 			Assert::IsTrue(target.ctlrsRemoved[1] == ctlr2.get());
 			target.ctlrsRemoved.clear();
 
+			//And their targetNodes unassigned
+			Assert::IsTrue(c2->connections.empty());
+			Assert::IsTrue(c2->disconnections.size() == 2);
+			Assert::IsTrue(c2->disconnections[0] = &node3->targetNode());
+			Assert::IsTrue(c2->disconnections[1] = &node2->targetNode());
+			c2->disconnections.clear();
+
 			//Remove the remaining two, for good measure
 			if (node::Field* f0 = node0->getField(node::Modifier::TARGET))
 				if (f0->connector)
@@ -244,6 +287,12 @@ namespace nodes
 			Assert::IsTrue(target.ctlrsRemoved[0] == ctlr1.get());
 			Assert::IsTrue(target.ctlrsRemoved[1] == ctlr0.get());
 			target.ctlrsRemoved.clear();
+
+			Assert::IsTrue(c2->connections.empty());
+			Assert::IsTrue(c2->disconnections.size() == 2);
+			Assert::IsTrue(c2->disconnections[0] = &node1->targetNode());
+			Assert::IsTrue(c2->disconnections[1] = &node0->targetNode());
+			c2->disconnections.clear();
 		}
 	};
 
@@ -271,14 +320,25 @@ namespace nodes
 			Assert::IsNotNull(ctlr.get());
 			Assert::IsTrue(ctlr->type() == NiPSysGravityStrengthCtlr::TYPE);
 
-			//This should remove the controller from the modifier
-			node->strength().iplr().assign(file.create<NiInterpolator>());
+			//should add the controller to the modifier
+			node->strength().iplr().assign(file.create<NiFloatInterpolator>());
+			Assert::IsTrue(!node->getControllers().empty());
+
+			//should remove it
 			node->strength().iplr().assign(nullptr);
 			Assert::IsTrue(node->getControllers().empty());
 
-			ctlr = node->strength().ctlr();
+			ControllableExp exp;
+			exp.iplr = &static_cast<NiPSysGravityStrengthCtlr*>(ctlr.get())->interpolator;
+			exp.node = &node->targetNode();
+			exp.ctlr = ctlr.get();
+			exp.ctlrIDProperty = &static_cast<NiPSysGravityStrengthCtlr*>(ctlr.get())->modifierName;
+			exp.propertyType = "";
+			exp.ctlrType = "NiPSysGravityStrengthCtlr";
+			exp.ctlrID = "";
+			exp.iplrID = "";
 
-			ControllableTest<float>(std::move(node), static_cast<NiSingleInterpController*>(ctlr.get()), node::GravityModifier::STRENGTH, file);
+			ControllableTest<float>(std::move(node), node::GravityModifier::STRENGTH, exp);
 		}
 	};
 

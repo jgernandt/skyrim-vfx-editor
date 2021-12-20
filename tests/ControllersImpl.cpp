@@ -63,7 +63,7 @@ bool objects::ConnectorTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitter
 	Assert::IsTrue(ctor.connections[0].object1 == obj.interpolator.assigned().get());
 	Assert::IsTrue(ctor.connections[0].field1 == node::ControllerBase::TARGET);
 	Assert::IsTrue(ctor.connections[0].object2 == target->modifiers.at(1).get());
-	Assert::IsTrue(ctor.connections[0].field2 == node::Emitter::BIRTH_RATE);
+	Assert::IsTrue(ctor.connections[0].field2 == node::Emitter::BirthRate::ID);
 	return false;
 }
 

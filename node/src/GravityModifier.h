@@ -33,14 +33,17 @@ namespace node
 		{
 		public:
 			StrengthField(const std::string& name, GravityModifier& node, ni_ptr<Property<float>>&& obj);
+			~StrengthField();
 
 			virtual Ref<NiInterpolator>& iplr() override;
+			virtual Ref<NiAVObject>& node() override;
 			virtual ni_ptr<NiTimeController> ctlr() override;
-			virtual ni_ptr<NiAVObject> object() override { return ni_ptr<NiAVObject>(); }
 			virtual std::string propertyType() override { return std::string(); }
-			virtual std::string ctlrType() override { return std::string(); }
-			virtual Property<std::string>* ctlrID() override { return nullptr; }
+			virtual std::string ctlrType() override;
+			virtual std::string ctlrID() override { return std::string(); }
 			virtual std::string iplrID() override { return std::string(); }
+
+			virtual ni_ptr<Property<std::string>> ctlrIDProperty() override;
 
 			virtual void onAssign(NiInterpolator* obj) override;
 

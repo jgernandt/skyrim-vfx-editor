@@ -27,6 +27,40 @@ namespace node
 		public Modifier, 
 		public PropertyListener<ColRGBA>
 	{
+	public:
+		class BirthRate final :
+			public Field,
+			public IControllable,
+			public AssignableListener<NiInterpolator>
+		{
+		public:
+			BirthRate(const std::string& name, Emitter& node,
+				const ni_ptr<NiPSysEmitterCtlr>& ctlr, const ni_ptr<NiFloatInterpolator>& iplr);
+
+			~BirthRate();
+
+			virtual Ref<NiInterpolator>& iplr() override;
+			virtual Ref<NiAVObject>& node() override;
+			virtual ni_ptr<NiTimeController> ctlr() override;
+			virtual std::string propertyType() override { return std::string(); }
+			virtual std::string ctlrType() override;
+			virtual std::string ctlrID() override { return std::string(); }
+			virtual std::string iplrID() override;
+			virtual ni_ptr<Property<std::string>> ctlrIDProperty() override;
+
+			virtual void onAssign(NiInterpolator* obj) override;
+
+			constexpr static const char* ID = "Birth rate";
+
+		private:
+			Emitter& m_node;
+			const ni_ptr<NiPSysEmitterCtlr> m_ctlr;
+			const ni_ptr<NiFloatInterpolator> m_iplr;
+
+			FloatCtlrReceiver m_rcvr;
+			Sender<IControllable> m_sndr;
+		};
+
 	protected:
 		Emitter(
 			const ni_ptr<NiPSysEmitter>& obj,
@@ -39,8 +73,9 @@ namespace node
 
 		virtual void onSet(const nif::ColRGBA& col) override;
 
+		BirthRate& birthRate() { return *m_birthRateField; }
+
 	public:
-		constexpr static const char* BIRTH_RATE = "Birth rate";
 		constexpr static const char* LIFE_SPAN = "Life span";
 		constexpr static const char* SIZE = "Size";
 		constexpr static const char* COLOUR = "Colour";
@@ -48,8 +83,9 @@ namespace node
 		constexpr static const char* AZIMUTH = "Azimuth";
 		constexpr static const char* ELEVATION = "Elevation";
 
+		constexpr static float WIDTH = 180.0f;
+
 	private:
-		class BirthRateField;
 		class LifeSpanField;
 		class SizeField;
 		class ColourField;
@@ -61,7 +97,7 @@ namespace node
 
 		bool m_colActive{ false };
 
-		std::unique_ptr<Field> m_birthRateField;
+		std::unique_ptr<BirthRate> m_birthRateField;
 		std::unique_ptr<Field> m_lifeSpanField;
 		std::unique_ptr<Field> m_sizeField;
 		std::unique_ptr<Field> m_colField;
@@ -121,7 +157,6 @@ namespace node
 		constexpr static const char* BOX_HEIGHT = "Height (Y)";
 		constexpr static const char* BOX_DEPTH = "Depth (Z)";
 
-		constexpr static float WIDTH = 180.0f;
 		constexpr static float HEIGHT = 385.0f;
 
 	private:
@@ -144,7 +179,6 @@ namespace node
 		constexpr static const char* CYL_RADIUS = "Radius (XY)";
 		constexpr static const char* CYL_LENGTH = "Length (Z)";
 
-		constexpr static float WIDTH = 180.0f;
 		constexpr static float HEIGHT = 365.0f;
 
 	private:
@@ -165,7 +199,6 @@ namespace node
 	public:
 		constexpr static const char* SPH_RADIUS = "Radius";
 
-		constexpr static float WIDTH = 180.0f;
 		constexpr static float HEIGHT = 345.0f;
 
 	private:

@@ -29,7 +29,7 @@ using namespace nif;
 class node::ParticleSystem::ModifiersField final :
 	public Field, public IModifiable, public SequenceListener<NiPSysModifier>
 {
-	Receiver<void> m_rcvr;
+	RefReceiver<NiAVObject> m_rcvr;
 	Sender<IModifiable> m_sndr;
 
 	const ni_ptr<NiParticleSystem> m_psys;
@@ -58,6 +58,7 @@ public:
 		const ni_ptr<NiPSysUpdateCtlr>& puc)
 		:
 		Field{ name },
+		m_rcvr{ psys },
 		m_sndr{ *this },
 		m_psys{ psys },
 		m_data{ data },

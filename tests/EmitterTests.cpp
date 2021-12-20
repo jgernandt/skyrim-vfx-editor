@@ -121,14 +121,24 @@ namespace nodes
 			Assert::IsTrue(target.reqsRemoved.empty());
 		}
 
-		TEST_METHOD(Connector_BirthRate)
+		TEST_METHOD(BirthRate)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto ctlr = file.create<NiPSysEmitterCtlr>();
-			std::unique_ptr<node::NodeBase> node = node::Default<node::BoxEmitter>{}.create(file, nullptr, ctlr);
+			std::unique_ptr<node::Emitter> node = node::Default<node::BoxEmitter>{}.create(file, nullptr, ctlr);
 			Assert::IsNotNull(ctlr->interpolator.assigned().get());
 
-			ControllableTest<float>(std::move(node), ctlr.get(), node::Emitter::BIRTH_RATE, file);
+			ControllableExp exp;
+			exp.iplr = &ctlr->interpolator;
+			exp.node = &node->targetNode();
+			exp.ctlr = ctlr.get();
+			exp.ctlrIDProperty = &ctlr->modifierName;
+			exp.propertyType = "";
+			exp.ctlrType = "NiPSysEmitterCtlr";
+			exp.ctlrID = "";
+			exp.iplrID = "BirthRate";
+
+			ControllableTest<float>(std::move(node), node::Emitter::BirthRate::ID, exp);
 
 			//Defaults should be restored when the controller node is disconnected
 			Assert::IsNotNull(ctlr->interpolator.assigned().get());

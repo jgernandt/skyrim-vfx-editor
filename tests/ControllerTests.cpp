@@ -155,16 +155,17 @@ namespace nodes
 			{
 			public:
 				virtual Ref<NiInterpolator>& iplr() override { return m_iplr; }
-
+				virtual Ref<NiAVObject>& node() { return m_node; }
 				virtual ni_ptr<NiTimeController> ctlr() override { return ni_ptr<NiTimeController>(); }
-				virtual ni_ptr<NiAVObject> object() override { return ni_ptr<NiAVObject>(); }
 				virtual std::string propertyType() override { return std::string(); }
 				virtual std::string ctlrType() override { return std::string(); }
-				virtual Property<std::string>* ctlrID() override { return nullptr; }
+				virtual std::string ctlrID() override { return std::string(); }
 				virtual std::string iplrID() override { return std::string(); }
+				virtual ni_ptr<Property<std::string>> ctlrIDProperty() override { return ni_ptr<Property<std::string>>(); }
 
 			private:
 				Ref<NiInterpolator> m_iplr;
+				Ref<NiAVObject> m_node;
 			};
 
 			File file{ File::Version::SKYRIM_SE };

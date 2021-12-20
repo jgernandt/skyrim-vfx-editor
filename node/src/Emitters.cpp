@@ -28,83 +28,80 @@ using namespace nif;
 constexpr float VAR_FRACTION = -0.5f;
 
 
-class node::Emitter::BirthRateField final : 
-	public Field, public AssignableListener<NiInterpolator>
+node::Emitter::BirthRate::BirthRate(const std::string& name, Emitter& node,
+	const ni_ptr<NiPSysEmitterCtlr>& ctlr, const ni_ptr<NiFloatInterpolator>& iplr)	:
+	Field{ name },
+	m_node{ node },
+	m_ctlr{ ctlr },
+	m_iplr{ iplr },
+	m_rcvr{ m_ctlr },
+	m_sndr{ *this }
 {
-public:
-	BirthRateField(
-		const std::string& name, 
-		NodeBase& node, 
-		const ni_ptr<NiPSysEmitterCtlr>& ctlr,
-		const ni_ptr<NiFloatInterpolator>& iplr)
-		:
-		Field{ name },
-		m_ctlr{ ctlr },
-		m_iplr{ iplr }, 
-		m_rcvr{ m_ctlr },
-		m_ifc{ *this },
-		m_sndr{ m_ifc }
-	{
-		assert(m_ctlr);
+	assert(m_ctlr);
 
-		if (!m_ctlr->interpolator.assigned())
-			m_ctlr->interpolator.assign(m_iplr);
+	if (!m_ctlr->interpolator.assigned())
+		m_ctlr->interpolator.assign(m_iplr);
 
-		m_ctlr->interpolator.addListener(*this);
+	m_ctlr->interpolator.addListener(*this);
 
-		connector = node.addConnector(std::string(), ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
+	connector = node.addConnector(std::string(), ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
 
-		//Switch widget off when connected
-		auto sw = node.newChild<gui::Switch>(std::bind(&gui::Connector::isConnected, connector));
+	//Switch widget off when connected
+	auto sw = node.newChild<gui::Switch>(std::bind(&gui::Connector::isConnected, connector));
 
-		auto br = sw->newChild<DragFloat>(make_ni_ptr(m_iplr, &NiFloatInterpolator::value), name);
-		br->setSensitivity(1.0f);
-		br->setLogarithmic();
-		br->setLowerLimit(0.0f);
-		br->setUpperLimit(1000.0f);
+	auto br = sw->newChild<DragFloat>(make_ni_ptr(m_iplr, &NiFloatInterpolator::value), name);
+	br->setSensitivity(1.0f);
+	br->setLogarithmic();
+	br->setLowerLimit(0.0f);
+	br->setUpperLimit(1000.0f);
 
-		sw->newChild<gui::Label>(name);
+	sw->newChild<gui::Label>(name);
 
-		widget = sw;
-	}
+	widget = sw;
+}
 
-	~BirthRateField()
-	{
-		m_ctlr->interpolator.removeListener(*this);
-	}
+node::Emitter::BirthRate::~BirthRate()
+{
+	m_ctlr->interpolator.removeListener(*this);
+}
 
-	virtual void onAssign(NiInterpolator* obj) override
-	{
-		//Assign our default iplr when null is assigned
-		if (!obj)
-			m_ctlr->interpolator.assign(m_iplr);
-	}
+void node::Emitter::BirthRate::onAssign(NiInterpolator* obj)
+{
+	//Assign our default iplr when null is assigned
+	if (!obj)
+		m_ctlr->interpolator.assign(m_iplr);
+}
 
-private:
-	class Controllable final : public IControllable
-	{
-		BirthRateField& m_parent;
+Ref<NiInterpolator>& node::Emitter::BirthRate::iplr()
+{
+	return m_ctlr->interpolator;
+}
 
-	public:
-		Controllable(BirthRateField& parent) : m_parent{ parent } {}
+Ref<NiAVObject>& node::Emitter::BirthRate::node()
+{
+	return m_node.m_targetNode;
+}
 
-		virtual Ref<NiInterpolator>& iplr() override { return m_parent.m_ctlr->interpolator; }
+ni_ptr<NiTimeController> node::Emitter::BirthRate::ctlr()
+{
+	return m_ctlr;
+}
 
-		virtual ni_ptr<NiTimeController> ctlr() override { return ni_ptr<NiTimeController>(); }
-		virtual ni_ptr<NiAVObject> object() override { return ni_ptr<NiAVObject>(); }
-		virtual std::string propertyType() override { return std::string(); }
-		virtual std::string ctlrType() override { return std::string(); }
-		virtual Property<std::string>* ctlrID() override { return nullptr; }
-		virtual std::string iplrID() override { return std::string(); }
-	};
-	
-	ni_ptr<NiPSysEmitterCtlr> m_ctlr;
-	ni_ptr<NiFloatInterpolator> m_iplr;
+ni_ptr<Property<std::string>> node::Emitter::BirthRate::ctlrIDProperty()
+{
+	return make_ni_ptr(std::static_pointer_cast<NiPSysModifierCtlr>(m_ctlr), &NiPSysModifierCtlr::modifierName);
+}
 
-	FloatCtlrReceiver m_rcvr;
-	Controllable m_ifc;
-	Sender<IControllable> m_sndr;
-};
+std::string node::Emitter::BirthRate::ctlrType()
+{
+	return "NiPSysEmitterCtlr";
+}
+
+std::string node::Emitter::BirthRate::iplrID()
+{
+	return "BirthRate";
+}
+
 
 class node::Emitter::LifeSpanField final : public Field
 {
@@ -271,7 +268,7 @@ node::Emitter::Emitter(
 {
 	assert(obj);
 
-	m_device.addController(ctlr);
+	m_modifiableDevice.addController(ctlr);
 	obj->colour.addListener(*this);//add colour requirement dynamically
 	onSet(obj->colour.get());
 
@@ -284,7 +281,7 @@ node::Emitter::Emitter(
 
 	newChild<gui::Separator>();
 
-	m_birthRateField = newField<BirthRateField>(BIRTH_RATE, *this, ctlr, iplr);
+	m_birthRateField = newField<BirthRate>(BirthRate::ID, *this, ctlr, iplr);
 	m_lifeSpanField = newField<LifeSpanField>(LIFE_SPAN, *this, 
 		make_ni_ptr(obj, &NiPSysEmitter::lifeSpan),
 		make_ni_ptr(obj, &NiPSysEmitter::lifeSpanVar));
@@ -312,6 +309,11 @@ node::Emitter::Emitter(
 	m_elevField = newField<ElevationField>(ELEVATION, *this,
 		make_ni_ptr(obj, &NiPSysEmitter::elevation),
 		make_ni_ptr(obj, &NiPSysEmitter::elevationVar));
+
+	//until we have some other way to determine connector position for loading placement
+	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
+	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
+	m_birthRateField->connector->setTranslation({ 0.0f, 90.0f });
 }
 
 node::Emitter::~Emitter()
@@ -323,9 +325,9 @@ void node::Emitter::onSet(const nif::ColRGBA& col)
 {
 	if (m_colActive != (col != nif::COL_WHITE)) {
 		if (m_colActive)
-			m_device.removeRequirement(ModRequirement::COLOUR);
+			m_modifiableDevice.removeRequirement(ModRequirement::COLOUR);
 		else
-			m_device.addRequirement(ModRequirement::COLOUR);
+			m_modifiableDevice.addRequirement(ModRequirement::COLOUR);
 		m_colActive = !m_colActive;
 	}
 }
@@ -341,6 +343,9 @@ node::VolumeEmitter::VolumeEmitter(
 	newChild<gui::Separator>();
 	m_emitterObjField = newField<EmitterObjectField>(EMITTER_OBJECT, *this,
 		make_ni_ptr(obj, &NiPSysVolumeEmitter::emitterObject));
+
+	//until we have some other way to determine connector position for loading placement
+	m_emitterObjField->connector->setTranslation({ 0.0f, 288.0f });
 }
 
 node::VolumeEmitter::EmitterObjectField::EmitterObjectField(
@@ -378,12 +383,6 @@ node::BoxEmitter::BoxEmitter(
 		make_ni_ptr(obj, &NiPSysBoxEmitter::height));
 	m_depthField = newField<EmitterMetricField>(BOX_DEPTH, *this,
 		make_ni_ptr(obj, &NiPSysBoxEmitter::depth));
-
-	//until we have some other way to determine connector position for loading placement
-	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
-	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
-	getField(BIRTH_RATE)->connector->setTranslation({ 0.0f, 90.0f });
-	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
 node::BoxEmitter::~BoxEmitter()
@@ -406,11 +405,6 @@ node::CylinderEmitter::CylinderEmitter(
 		make_ni_ptr(obj, &NiPSysCylinderEmitter::radius));
 	m_lengthField = newField<EmitterMetricField>(CYL_LENGTH, *this,
 		make_ni_ptr(obj, &NiPSysCylinderEmitter::length));
-
-	//until we have some other way to determine connector position for loading placement
-	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
-	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
-	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
 node::CylinderEmitter::~CylinderEmitter()
@@ -431,11 +425,6 @@ node::SphereEmitter::SphereEmitter(
 
 	m_radiusField = newField<EmitterMetricField>(SPH_RADIUS, *this,
 		make_ni_ptr(obj, &NiPSysSphereEmitter::radius));
-
-	//until we have some other way to determine connector position for loading placement
-	getField(NEXT_MODIFIER)->connector->setTranslation({ WIDTH, 38.0f });
-	getField(TARGET)->connector->setTranslation({ 0.0f, 62.0f });
-	getField(EMITTER_OBJECT)->connector->setTranslation({ 0.0f, 288.0f });
 }
 
 node::SphereEmitter::~SphereEmitter()

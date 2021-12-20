@@ -428,7 +428,7 @@ node::SimpleColourModifier::SimpleColourModifier(const ni_ptr<BSPSysSimpleColorM
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Colour modifier");
 
-	m_device.addRequirement(ModRequirement::COLOUR);
+	m_modifiableDevice.addRequirement(ModRequirement::COLOUR);
 
 	newChild<gui::Separator>();
 	newChild<gui::VerticalSpacing>(2);

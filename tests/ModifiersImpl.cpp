@@ -94,6 +94,8 @@ bool objects::TestSetup<NiPSysGravityModifier>::operator()(NiPSysGravityModifier
 	strengthCtlr->modifierName.set(obj.name.get());
 	auto target = obj.target.assigned();
 	target->controllers.insert(target->controllers.size(), strengthCtlr);
+	auto strengthIplr = file.create<NiFloatInterpolator>();
+	strengthCtlr->interpolator.assign(strengthIplr);
 
 	return false;
 }

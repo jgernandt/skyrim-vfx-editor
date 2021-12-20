@@ -24,7 +24,8 @@
 using namespace nif;
 
 node::Modifier::Modifier(const ni_ptr<NiPSysModifier>& obj) :
-	m_device(obj),
+	m_modifiableDevice(obj),
+	m_targetNodeDevice{ m_targetNode },
 	m_nameUpdater(make_ni_ptr(obj, &NiPSysModifier::name))
 {
 	assert(obj);
@@ -36,8 +37,8 @@ node::Modifier::Modifier(const ni_ptr<NiPSysModifier>& obj) :
 	obj->order.addListener(m_nameUpdater);
 	m_nameUpdater.onSet(obj->order.get());
 
-	m_targetField = newField<NextModField>(NEXT_MODIFIER, *this, m_device);
-	m_nextField = newField<TargetField>(TARGET, *this, m_device);
+	m_targetField = newField<NextModField>(NEXT_MODIFIER, *this);
+	m_nextField = newField<TargetField>(TARGET, *this);
 }
 
 node::Modifier::~Modifier()
@@ -46,17 +47,17 @@ node::Modifier::~Modifier()
 
 void node::Modifier::addController(const ni_ptr<nif::NiPSysModifierCtlr>& ctlr)
 {
-	m_device.addController(ctlr);
+	m_modifiableDevice.addController(ctlr);
 }
 
 void node::Modifier::removeController(NiPSysModifierCtlr* ctlr)
 {
-	m_device.removeController(ctlr);
+	m_modifiableDevice.removeController(ctlr);
 }
 
 std::vector<NiPSysModifierCtlr*> node::Modifier::getControllers() const
 {
-	return m_device.getControllers();
+	return m_modifiableDevice.getControllers();
 }
 
 
@@ -93,7 +94,7 @@ void node::Modifier::Device::onConnect(IModifiable& ifc)
 			ifc.addRequirement(req.first);
 
 	//pass on last
-	SequentialDevice::onConnect(ifc);
+	SequentialReceiver::onConnect(ifc);
 }
 
 void node::Modifier::Device::onDisconnect(IModifiable& ifc)
@@ -101,7 +102,7 @@ void node::Modifier::Device::onDisconnect(IModifiable& ifc)
 	assert(m_ifc == &ifc);
 
 	//pass on first
-	SequentialDevice::onDisconnect(ifc);
+	SequentialReceiver::onDisconnect(ifc);
 
 	for (auto&& req : m_reqs)
 		if (req.second > 0)
@@ -173,16 +174,18 @@ void node::Modifier::Device::removeRequirement(ModRequirement req)
 }
 
 
-node::Modifier::TargetField::TargetField(const std::string& name, Modifier& node, Device& rcvr) :
-	Field(name), m_rcvr{ rcvr }
+node::Modifier::TargetField::TargetField(const std::string& name, Modifier& node) :
+	Field(name)
 {
-	connector = node.addConnector(name, ConnectorType::UP, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
+	connector = node.addConnector(
+		name, ConnectorType::UP, std::make_unique<gui::SingleConnector>(node.m_targetNodeDevice, node.m_modifiableDevice));
 }
 
-node::Modifier::NextModField::NextModField(const std::string& name, Modifier& node, Device& sndr) :
-	Field(name), m_sndr{ sndr }
+node::Modifier::NextModField::NextModField(const std::string& name, Modifier& node) :
+	Field(name)
 {
-	connector = node.addConnector(name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(m_sndr, m_rcvr));
+	connector = node.addConnector(
+		name, ConnectorType::DOWN, std::make_unique<gui::SingleConnector>(node.m_modifiableDevice, node.m_targetNodeDevice));
 }
 
 

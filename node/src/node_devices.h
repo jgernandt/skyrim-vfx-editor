@@ -125,10 +125,10 @@ namespace node
 	//or if a device anywhere in the sequence is disconnected, the signal (if one is connected)
 	//will be sent to that device (and any subsequent) only.
 	template<typename Signal>
-	class SequentialDevice : public IReceiver<Signal>, public ISender<Signal>
+	class SequentialReceiver : public IReceiver<Signal>, public ISender<Signal>
 	{
 	public:
-		virtual ~SequentialDevice() = default;
+		virtual ~SequentialReceiver() = default;
 
 		virtual bool canReceive(gui::ISender& s) const final override
 		{
@@ -196,6 +196,91 @@ namespace node
 
 	private:
 		//could be vectors
+		IReceiver<Signal>* m_rcvr{ nullptr };
+		ISender<Signal>* m_sndr{ nullptr };
+	};
+
+	//Sends a signal to any connected receiver and forwards the connection request
+	template<typename Signal>
+	class SequentialSender : public IReceiver<Signal>, public ISender<Signal>
+	{
+	public:
+		SequentialSender(Signal& signal) : m_signal{ signal } {}
+		virtual ~SequentialSender() = default;
+
+		virtual bool canReceive(gui::ISender & s) const final override
+		{
+			if (ISender<Signal>* sender = dynamic_cast<ISender<Signal>*>(&s))
+				return sender != static_cast<const ISender<Signal>*>(this);
+			else
+				return false;
+		}
+		virtual void addSender(gui::ISender & s) final override
+		{
+			if (ISender<Signal>* sender = dynamic_cast<ISender<Signal>*>(&s)) {
+				//We need a self check, since it is possible to form a cycle
+				if (sender != static_cast<ISender<Signal>*>(this)) {
+					//If we have no sender, let them connect to us
+					if (!m_sndr) {
+						m_sndr = sender;
+						sender->addReceiver(*this);
+					}
+					//else this must be forwarded from further up front
+
+					//either way, forward to our receiver
+					if (m_rcvr)
+						m_rcvr->addSender(s);
+				}
+			}
+		}
+		virtual void removeSender(gui::ISender & s) final override
+		{
+			if (ISender<Signal>* sender = dynamic_cast<ISender<Signal>*>(&s)) {
+				//We need a self check, since it is possible to form a cycle
+				if (sender != static_cast<ISender<Signal>*>(this)) {
+					if (m_rcvr)
+						m_rcvr->removeSender(s);
+
+					if (sender == m_sndr) {
+						sender->removeReceiver(*this);
+						m_sndr = nullptr;
+					}
+				}
+			}
+		}
+
+		virtual void onConnect(Signal&) override
+		{
+			//do nothing
+		}
+		virtual void onDisconnect(Signal&) override {}
+
+		virtual void addReceiver(IReceiver<Signal>& r) override
+		{
+			if (&r != this) {
+				if (!m_rcvr)
+					m_rcvr = &r;
+
+				r.onConnect(m_signal);
+
+				if (m_sndr)
+					m_sndr->addReceiver(r);
+			}
+		}
+		virtual void removeReceiver(IReceiver<Signal>& r) override
+		{
+			if (&r != this) {
+				if (m_sndr)
+					m_sndr->removeReceiver(r);
+
+				r.onDisconnect(m_signal);
+
+				if (m_rcvr == &r)
+					m_rcvr = nullptr;
+			}
+		}
+	private:
+		Signal& m_signal;
 		IReceiver<Signal>* m_rcvr{ nullptr };
 		ISender<Signal>* m_sndr{ nullptr };
 	};

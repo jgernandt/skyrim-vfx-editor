@@ -143,19 +143,21 @@ namespace node
 		//Needed by a ControllerSequence.
 		//Node name and ctlrID (modifier name) may change, so they need to be observable.
 		//Property type, controller type and interpolator id are always constants, as far as I know.
+
+		virtual Ref<NiAVObject>& node() = 0;//for name and object palette
+
 		virtual ni_ptr<NiTimeController> ctlr() = 0;
-		//virtual Property<std::string>& nodeName() = 0;
-		//I think we need the AVObject (not just its name), since it also goes into the object palette.
-		virtual ni_ptr<NiAVObject> object() = 0;
-		//These have to return the respective type name. Should we return a type object instead?
+
 		virtual std::string propertyType() = 0;
 		virtual std::string ctlrType() = 0;
-		//Return by pointer here. Inconsistent, but many controllers will not have this property.
-		virtual Property<std::string>* ctlrID() = 0;
+		virtual std::string ctlrID() = 0;
 		virtual std::string iplrID() = 0;
 
+		//Controller ID can be either a constant (e.g. BSEffectShaderPropertyFloatController) or a Property (e.g. NiPSysModifierCtlr)
+		virtual ni_ptr<Property<std::string>> ctlrIDProperty() = 0;
+
 		//For the gui we might want:
-		//virtual std::string propertyName() = 0;
+		//virtual std::string displayName() = 0;
 		//virtual std::array<float, 2> numericLimits() = 0;//needs template?
 	};
 

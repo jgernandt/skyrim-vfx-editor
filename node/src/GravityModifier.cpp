@@ -49,6 +49,12 @@ node::GravityModifier::StrengthField::StrengthField(const std::string& name, Gra
 	sw->newChild<gui::Label>(name);
 }
 
+node::GravityModifier::StrengthField::~StrengthField()
+{
+	if (m_ctlr)
+		m_ctlr->interpolator.removeListener(*this);
+}
+
 Ref<NiInterpolator>& node::GravityModifier::StrengthField::iplr()
 {
 	//If there is no controller, create one.
@@ -60,6 +66,11 @@ Ref<NiInterpolator>& node::GravityModifier::StrengthField::iplr()
 	return m_ctlr->interpolator;
 }
 
+Ref<NiAVObject>& node::GravityModifier::StrengthField::node()
+{
+	return m_node.m_targetNode;
+}
+
 ni_ptr<NiTimeController> node::GravityModifier::StrengthField::ctlr()
 {
 	if (!m_ctlr)
@@ -67,24 +78,43 @@ ni_ptr<NiTimeController> node::GravityModifier::StrengthField::ctlr()
 	return m_ctlr;
 }
 
+ni_ptr<Property<std::string>> node::GravityModifier::StrengthField::ctlrIDProperty()
+{
+	return make_ni_ptr(std::static_pointer_cast<NiPSysModifierCtlr>(m_ctlr), &NiPSysModifierCtlr::modifierName);
+}
+
+std::string node::GravityModifier::StrengthField::ctlrType()
+{
+	return "NiPSysGravityStrengthCtlr";
+}
+
 void node::GravityModifier::StrengthField::onAssign(NiInterpolator* obj)
 {
 	//when null is assigned, release the controller
-	if (!obj) {
-		m_ctlr->interpolator.removeListener(*this);
+	if (obj) {
+		m_node.addController(m_ctlr);
+	}
+	else {
+		//We must not release the controller. ControllerSequence caches interpolators by controller,
+		//for undo/redo operations.
+		//We must still remove this controller from the modifier.
+		
+		//m_ctlr->interpolator.removeListener(*this);
 		m_node.removeController(m_ctlr.get());
-		m_rcvr.setController(nullptr);
-		m_ctlr.reset();
+		//m_rcvr.setController(nullptr);
+		//m_ctlr.reset();
 	}
 }
 
 void node::GravityModifier::StrengthField::setController(const ni_ptr<NiPSysGravityStrengthCtlr>& ctlr)
 {
-	assert(!m_ctlr);
-	m_ctlr = ctlr;
-	m_rcvr.setController(m_ctlr);
-	m_node.addController(m_ctlr);
-	m_ctlr->interpolator.addListener(*this);
+	if (ctlr) {
+		assert(!m_ctlr);
+		m_ctlr = ctlr;
+		m_rcvr.setController(m_ctlr);
+		m_ctlr->interpolator.addListener(*this);
+		onAssign(m_ctlr->interpolator.assigned().get());
+	}
 }
 
 class DecayField final : public Field

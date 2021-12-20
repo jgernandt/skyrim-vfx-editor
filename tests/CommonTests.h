@@ -269,8 +269,21 @@ namespace nodes
 		Assert::IsTrue(ifc == &expected);
 	}
 
+	struct ControllableExp
+	{
+		Ref<NiInterpolator>* iplr;
+		Ref<NiAVObject>* node;
+		NiTimeController* ctlr;
+		Property<std::string>* ctlrIDProperty;
+
+		std::string propertyType;
+		std::string ctlrType;
+		std::string ctlrID;
+		std::string iplrID;
+	};
+
 	template<typename T>
-	void ControllableTest(std::unique_ptr<node::NodeBase>&& node, NiSingleInterpController* ctlr, const char* connector, nif::File& file)
+	void ControllableTest(std::unique_ptr<node::NodeBase>&& node, const char* connector, const ControllableExp& exp)
 	{
 		class MockController : public node::IController<float>
 		{
@@ -299,6 +312,9 @@ namespace nodes
 		auto ifc = tester.tryConnect<node::IControllable, node::IController<T>>(connector, false, &target);
 		Assert::IsNotNull(ifc);
 
+		//The interface should expose the expected controller
+		Assert::IsTrue(ifc->ctlr() != nullptr && ifc->ctlr() == exp.ctlr);
+
 		//Setting the properties on target (but not target0) should set the corresponding on ctlr
 		std::uniform_int_distribution<unsigned short> I;
 		std::uniform_real_distribution<float> F;
@@ -309,11 +325,11 @@ namespace nodes
 		target0.phase().set(F(rng));
 		target0.startTime().set(F(rng));
 		target0.stopTime().set(F(rng));
-		Assert::IsFalse(ctlr->flags.raised() == target0.flags().raised());
-		Assert::IsFalse(ctlr->frequency.get() == target0.frequency().get());
-		Assert::IsFalse(ctlr->phase.get() == target0.phase().get());
-		Assert::IsFalse(ctlr->startTime.get() == target0.startTime().get());
-		Assert::IsFalse(ctlr->stopTime.get() == target0.stopTime().get());
+		Assert::IsFalse(exp.ctlr->flags.raised() == target0.flags().raised());
+		Assert::IsFalse(exp.ctlr->frequency.get() == target0.frequency().get());
+		Assert::IsFalse(exp.ctlr->phase.get() == target0.phase().get());
+		Assert::IsFalse(exp.ctlr->startTime.get() == target0.startTime().get());
+		Assert::IsFalse(exp.ctlr->stopTime.get() == target0.stopTime().get());
 
 		target.flags().clear(-1);//better clear any defaults
 		target.flags().raise(I(rng));
@@ -321,21 +337,21 @@ namespace nodes
 		target.phase().set(F(rng));
 		target.startTime().set(F(rng));
 		target.stopTime().set(F(rng));
-		Assert::IsTrue(ctlr->flags.raised() == target.flags().raised());
-		Assert::IsTrue(ctlr->frequency.get() == target.frequency().get());
-		Assert::IsTrue(ctlr->phase.get() == target.phase().get());
-		Assert::IsTrue(ctlr->startTime.get() == target.startTime().get());
-		Assert::IsTrue(ctlr->stopTime.get() == target.stopTime().get());
+		Assert::IsTrue(exp.ctlr->flags.raised() == target.flags().raised());
+		Assert::IsTrue(exp.ctlr->frequency.get() == target.frequency().get());
+		Assert::IsTrue(exp.ctlr->phase.get() == target.phase().get());
+		Assert::IsTrue(exp.ctlr->startTime.get() == target.startTime().get());
+		Assert::IsTrue(exp.ctlr->stopTime.get() == target.stopTime().get());
 
-		//Assigning to the interface should assign to ctlr->interpolator
-		auto iplr = file.create<NiInterpolator>();
-		Assert::IsNotNull(iplr.get());
-		ifc->iplr().assign(iplr);
-		Assert::IsTrue(ctlr->interpolator.assigned() == iplr);
-		ifc->iplr().assign(nullptr);
-		Assert::IsTrue(ctlr->interpolator.assigned() != iplr);
+		//Compare the return from the interface with the expected results
+		Assert::IsTrue(&ifc->iplr() == exp.iplr);
+		Assert::IsTrue(&ifc->node() == exp.node);
+		Assert::IsTrue(ifc->ctlrIDProperty().get() == exp.ctlrIDProperty);
 
-		//TODO: Test the other fields of the interface (no point until we start on nonlinear animations)
+		Assert::IsTrue(ifc->propertyType() == exp.propertyType);
+		Assert::IsTrue(ifc->ctlrType() == exp.ctlrType);
+		Assert::IsTrue(ifc->ctlrID() == exp.ctlrID);
+		Assert::IsTrue(ifc->iplrID() == exp.iplrID);
 
 		//Make sure listeners are removed
 		tester.disconnect<node::IController<float>>(&target);
@@ -347,11 +363,11 @@ namespace nodes
 		target.phase().set(F(rng));
 		target.startTime().set(F(rng));
 		target.stopTime().set(F(rng));
-		Assert::IsTrue(ctlr->flags.raised() != target.flags().raised());
-		Assert::IsTrue(ctlr->frequency.get() != target.frequency().get());
-		Assert::IsTrue(ctlr->phase.get() != target.phase().get());
-		Assert::IsTrue(ctlr->startTime.get() != target.startTime().get());
-		Assert::IsTrue(ctlr->stopTime.get() != target.stopTime().get());
+		Assert::IsTrue(exp.ctlr->flags.raised() != target.flags().raised());
+		Assert::IsTrue(exp.ctlr->frequency.get() != target.frequency().get());
+		Assert::IsTrue(exp.ctlr->phase.get() != target.phase().get());
+		Assert::IsTrue(exp.ctlr->startTime.get() != target.startTime().get());
+		Assert::IsTrue(exp.ctlr->stopTime.get() != target.stopTime().get());
 	}
 }
 

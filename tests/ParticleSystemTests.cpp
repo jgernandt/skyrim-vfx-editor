@@ -221,7 +221,7 @@ namespace nodes
 			Assert::IsTrue(psys->controllers.at(1)->type() == NiPSysUpdateCtlr::TYPE);
 		}
 
-		TEST_METHOD(Connector_Shader)
+		TEST_METHOD(Shader)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiParticleSystem>();
@@ -230,7 +230,7 @@ namespace nodes
 
 		//Modifiers should send Modifiable, single connector.
 		//Split into smaller tests! We're testing *everything* here.
-		TEST_METHOD(Connector_Modifiers)
+		TEST_METHOD(Modifiers)
 		{
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiParticleSystem>();
@@ -240,9 +240,16 @@ namespace nodes
 			auto pm = file.create<NiPSysPositionModifier>();
 			auto puc = file.create<NiPSysUpdateCtlr>();
 
+			Ref<NiAVObject> target0;
+			Ref<NiAVObject> target;
+
 			ConnectorTester tester(node::Default<node::ParticleSystem>{}.create(file, obj, data, nullptr, adm, bum, pm, puc));
-			tester.tryConnect<node::IModifiable, void>(node::ParticleSystem::MODIFIERS, false, nullptr);
-			node::IModifiable* ifc = tester.tryConnect<node::IModifiable, void>(node::ParticleSystem::MODIFIERS, false, nullptr);
+			tester.tryConnect<node::IModifiable, Ref<NiAVObject>>(node::ParticleSystem::MODIFIERS, false, &target0);
+			node::IModifiable* ifc = tester.tryConnect<node::IModifiable, Ref<NiAVObject>>(node::ParticleSystem::MODIFIERS, false, &target);
+
+			//target (not target0) should be assigned to
+			Assert::IsTrue(!target0.assigned());
+			Assert::IsTrue(target.assigned() == obj);
 
 			Assert::IsNotNull(ifc);
 

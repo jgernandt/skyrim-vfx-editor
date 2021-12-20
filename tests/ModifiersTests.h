@@ -64,13 +64,18 @@ namespace nodes
 	};
 
 	class TestConnector :
-		public node::Receiver<void>,
+		public node::Receiver<Ref<NiAVObject>>,
 		public node::Sender<node::IModifiable>,
 		public gui::SingleConnector
 	{
 	public:
 		TestConnector(node::IModifiable& ifc) :
 			Sender<node::IModifiable>(ifc), SingleConnector(*this, *this) {}
+
+		virtual void onConnect(Ref<NiAVObject>& s) override { signal = &s; }
+		virtual void onDisconnect(Ref<NiAVObject>& s) override {}
+
+		Ref<NiAVObject>* signal = nullptr;
 	};
 
 	template<typename T, node::ModRequirement Req>

@@ -76,7 +76,7 @@ node::RotationModifier::RotationModifier(const ni_ptr<NiPSysRotationModifier>& o
 	setSize({ WIDTH, HEIGHT });
 	setTitle("Rotation modifier");
 
-	m_device.addRequirement(ModRequirement::ROTATION);
+	m_modifiableDevice.addRequirement(ModRequirement::ROTATION);
 
 	newChild<gui::Separator>();
 
