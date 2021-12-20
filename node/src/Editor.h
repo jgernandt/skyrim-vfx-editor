@@ -30,7 +30,6 @@ namespace node
 		public gui::Composite
 	{
 	public:
-		Editor(const gui::Floats<2>& size);
 		Editor(const gui::Floats<2>& size, nif::File& file);
 		~Editor();
 

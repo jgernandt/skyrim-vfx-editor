@@ -116,7 +116,7 @@ app::Document::Document(const gui::Floats<2>& size, const std::filesystem::path&
 	}
 	catch (const std::exception& e) {
 		m_file = std::make_unique<nif::File>();
-		m_nodeEditor = newChild<node::Editor>(m_size);
+		m_nodeEditor = newChild<node::Editor>(m_size, *m_file);
 		newChild<gui::MessageBox>("Error", e.what());
 	}
 }

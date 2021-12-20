@@ -83,11 +83,6 @@ void node::Editor::NodeRoot::addNode()
 	}
 }
 
-node::Editor::Editor(const gui::Floats<2>& size)
-{
-	m_size = size;
-}
-
 node::Editor::Editor(const gui::Floats<2>& size, nif::File& file) : m_file{ &file }
 {
 	m_size = size;
