@@ -26,6 +26,18 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
+bool objects::FactoryTester<NiFloatInterpolator>::operator()(const NiFloatInterpolator& obj, const TestConstructor& ctor)
+{
+	nodeTest<node::FloatController>(obj, ctor);
+	return false;
+}
+
+bool objects::FactoryTester<NiBlendFloatInterpolator>::operator()(const NiBlendFloatInterpolator& obj, const TestConstructor& ctor)
+{
+	nodeTest<node::NLFloatController>(obj, ctor);
+	return false;
+}
+
 //Modifier controller tests should all be similar:
 //*setup a target and target modifier
 //*check that we requested a connection from our iplr to the target field on the target modifier
@@ -69,6 +81,7 @@ bool objects::ConnectorTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitter
 
 bool objects::FactoryTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& obj, const TestConstructor& ctor)
 {
+	/*Switch to having the interpolators create nodes
 	if (auto&& iplr = obj.interpolator.assigned()) {
 		if (iplr->type() == NiFloatInterpolator::TYPE) {
 			if (static_cast<NiFloatInterpolator*>(iplr.get())->data.assigned())
@@ -82,9 +95,38 @@ bool objects::FactoryTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCt
 			Assert::IsTrue(!ctor.node.second);
 	}
 	else
-		Assert::IsTrue(!ctor.node.second);
+		Assert::IsTrue(!ctor.node.second);*/
+
+	Assert::IsTrue(!ctor.node.second);
 
 	//Later, may also want to look at the visibility interpolator
+
+	return false;
+}
+
+bool objects::ForwardTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& obj, const TestConstructor& ctor)
+{
+	//should forward to the interpolator if it is Float and has data or if it is BlendFloat
+	if (auto&& iplr = obj.interpolator.assigned()) {
+		if (iplr->type() == NiFloatInterpolator::TYPE) {
+			if (static_cast<NiFloatInterpolator*>(iplr.get())->data.assigned()) {
+				Assert::IsTrue(ctor.forwards.size() == 1);
+				Assert::IsTrue(ctor.forwards.front() == iplr.get());
+			}
+			else
+				Assert::IsTrue(ctor.forwards.size() == 0);
+		}
+		else if (iplr->type() == NiBlendFloatInterpolator::TYPE) {
+			Assert::IsTrue(ctor.forwards.size() == 1);
+			Assert::IsTrue(ctor.forwards.front() == iplr.get());
+		}
+		else
+			Assert::IsTrue(ctor.forwards.size() == 0);
+	}
+	else
+		Assert::IsTrue(ctor.forwards.size() == 0);
+
+	//TODO: visiplr
 
 	return false;
 }
@@ -142,8 +184,7 @@ void objects::AnimationTest<NiPSysEmitterCtlr>::run()
 
 void objects::FactoryTest<NiPSysEmitterCtlr>::run()
 {
-	//Should produce a FloatController if we have an interpolator with data attached. Else, nothing.
-	//Should probably produce some other type of controller if we have a BlendFloat attached, but that's for another time.
+	//Factory behaviour might depend on the attached interpolator. We need to test all cases.
 
 	File file(File::Version::SKYRIM_SE);
 	auto obj = file.create<NiPSysEmitterCtlr>();
@@ -179,6 +220,45 @@ void objects::FactoryTest<NiPSysEmitterCtlr>::run()
 		ctor.pushObject(obj);
 		node::Factory<NiPSysEmitterCtlr>{}.up(*obj, ctor);
 		FactoryTester<NiPSysEmitterCtlr>{}.up(*obj, ctor);
+	}
+}
+
+void objects::ForwardTest<NiPSysEmitterCtlr>::run()
+{
+	//Forwarding behaviour might depend on the attached interpolator. We need to test all cases.
+
+	File file(File::Version::SKYRIM_SE);
+	auto obj = file.create<NiPSysEmitterCtlr>();
+	TestSetup<NiPSysEmitterCtlr>{}.up(*obj, file);
+
+	{//has data
+		auto iplr = file.create<NiFloatInterpolator>();
+		obj->interpolator.assign(iplr);
+		auto data = file.create<NiFloatData>();
+		iplr->data.assign(data);
+
+		TestConstructor ctor(file);
+		ctor.pushObject(obj);
+		node::Forwarder<NiPSysEmitterCtlr>{}.up(*obj, ctor);
+		ForwardTester<NiPSysEmitterCtlr>{}.up(*obj, ctor);
+	}
+	{//no data
+		auto iplr = file.create<NiFloatInterpolator>();
+		obj->interpolator.assign(iplr);
+
+		TestConstructor ctor(file);
+		ctor.pushObject(obj);
+		node::Forwarder<NiPSysEmitterCtlr>{}.up(*obj, ctor);
+		ForwardTester<NiPSysEmitterCtlr>{}.up(*obj, ctor);
+	}
+	{//blend
+		auto iplr = file.create<NiBlendFloatInterpolator>();
+		obj->interpolator.assign(iplr);
+
+		TestConstructor ctor(file);
+		ctor.pushObject(obj);
+		node::Forwarder<NiPSysEmitterCtlr>{}.up(*obj, ctor);
+		ForwardTester<NiPSysEmitterCtlr>{}.up(*obj, ctor);
 	}
 }
 
@@ -238,11 +318,19 @@ bool objects::ConnectorTester<NiPSysGravityStrengthCtlr>::operator()(const NiPSy
 
 bool objects::FactoryTester<NiPSysGravityStrengthCtlr>::operator()(const NiPSysGravityStrengthCtlr& obj, const TestConstructor& ctor)
 {
-	auto&& iplr = obj.interpolator.assigned(); 
-	if (ni_type type = iplr->type(); type == NiBlendFloatInterpolator::TYPE)
-		nodeTest<node::NLFloatController>(*obj.interpolator.assigned(), ctor);
-	else
-		nodeTest<node::FloatController>(*obj.interpolator.assigned(), ctor);
+	//auto&& iplr = obj.interpolator.assigned(); 
+	//if (ni_type type = iplr->type(); type == NiBlendFloatInterpolator::TYPE)
+	//	nodeTest<node::NLFloatController>(*obj.interpolator.assigned(), ctor);
+	//else
+	//	nodeTest<node::FloatController>(*obj.interpolator.assigned(), ctor);
+	Assert::IsTrue(!ctor.node.second);
+	return false;
+}
+
+bool objects::ForwardTester<NiPSysGravityStrengthCtlr>::operator()(const NiPSysGravityStrengthCtlr& obj, const TestConstructor& ctor)
+{
+	Assert::IsTrue(ctor.forwards.size() == 1);
+	Assert::IsTrue(ctor.forwards.front() == obj.interpolator.assigned().get());
 	return false;
 }
 
@@ -274,5 +362,34 @@ void objects::FactoryTest<NiPSysGravityStrengthCtlr>::run()
 		ctor.pushObject(obj);
 		node::Factory<NiPSysGravityStrengthCtlr>{}.up(*obj, ctor);
 		FactoryTester<NiPSysGravityStrengthCtlr>{}.up(*obj, ctor);
+	}
+}
+void objects::ForwardTest<NiPSysGravityStrengthCtlr>::run()
+{
+	File file(File::Version::SKYRIM_SE);
+	auto obj = file.create<NiPSysGravityStrengthCtlr>();
+	TestSetup<NiPSysGravityStrengthCtlr>{}.up(*obj, file);
+
+	{//normal
+		auto iplr = file.create<NiFloatInterpolator>();
+		obj->interpolator.assign(iplr);
+		auto data = file.create<NiFloatData>();
+		iplr->data.assign(data);
+
+		TestConstructor ctor(file);
+		ctor.pushObject(obj);
+		node::Forwarder<NiPSysGravityStrengthCtlr>{}.up(*obj, ctor);
+		ForwardTester<NiPSysGravityStrengthCtlr>{}.up(*obj, ctor);
+
+		Assert::IsTrue(iplr->data.assigned() == data);
+	}
+	{//blend
+		auto iplr = file.create<NiBlendFloatInterpolator>();
+		obj->interpolator.assign(iplr);
+
+		TestConstructor ctor(file);
+		ctor.pushObject(obj);
+		node::Forwarder<NiPSysGravityStrengthCtlr>{}.up(*obj, ctor);
+		ForwardTester<NiPSysGravityStrengthCtlr>{}.up(*obj, ctor);
 	}
 }

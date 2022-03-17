@@ -144,7 +144,51 @@ namespace node
 	};
 
 
+	//NiFloatInterpolator////////////
+	template<>
+	class Factory<NiFloatInterpolator> : public VerticalTraverser<NiFloatInterpolator, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiFloatInterpolator& obj, C& ctor)
+		{
+			assert(ctor.getObject().get() == &obj);
+
+			//We're not passing the controller here, but that should be fine? It will be connected later.
+			auto node = Default<FloatController>{}.create(
+				ctor.getFile(), std::static_pointer_cast<NiFloatInterpolator>(ctor.getObject()), nullptr);
+			ctor.addNode(&obj, std::move(node));
+
+			return false;
+		}
+	};
+
+	//NiBlendFloatInterpolator////////////
+	template<>
+	class Factory<NiBlendFloatInterpolator> : public VerticalTraverser<NiBlendFloatInterpolator, Factory>
+	{
+	public:
+		template<typename C>
+		bool operator() (NiBlendFloatInterpolator& obj, C& ctor)
+		{
+			assert(ctor.getObject().get() == &obj);
+
+			auto node = Default<NLFloatController>{}.create(
+				ctor.getFile(), std::static_pointer_cast<NiBlendFloatInterpolator>(ctor.getObject()));
+			ctor.addNode(&obj, std::move(node));
+
+			return false;
+		}
+	};
+
+
 	//NiPSysEmitterCtlr////////////
+	/*
+	Should connect our interpolators to the correct fields of the modifier node (these connections may be unused)
+	Should not create any nodes
+	Should forward to our interpolators, if they have data OR they are blends
+	Should create a NiFloatInterpolator if ID is "BirthRate" or a NiBoolInterpolator if ID is "EmitterActive"
+	*/
 
 	template<>
 	class Connector<NiPSysEmitterCtlr> : public VerticalTraverser<NiPSysEmitterCtlr, Connector>
@@ -165,6 +209,8 @@ namespace node
 						info.field2 = Emitter::BirthRate::ID;
 						ctor.addConnection(info);
 
+						//TODO: visibility interpolator
+
 						break;
 					}
 				}
@@ -175,32 +221,32 @@ namespace node
 	};
 
 	template<>
-	class Factory<NiPSysEmitterCtlr> : public VerticalTraverser<NiPSysEmitterCtlr, Factory>
+	class Forwarder<NiPSysEmitterCtlr> : public VerticalTraverser<NiPSysEmitterCtlr, Forwarder>
 	{
 	public:
 		template<typename C>
 		bool operator() (NiPSysEmitterCtlr& obj, C& ctor)
 		{
-			//If we have a float iplr with data, create a controller node.
-			//That we invoke a factory on the interpolator is perhaps not entirely consistent
-			//with how we do this elsewhere, but seems like the cleanest solution. We are the
-			//one that knows what type of node (if any) to create. 
-			//Not the interpolator, not the modifier, not the particle system.
 			if (auto&& iplr = obj.interpolator.assigned()) {
 				if (ni_type type = iplr->type(); type == NiFloatInterpolator::TYPE) {
 					if (static_cast<NiFloatInterpolator*>(iplr.get())->data.assigned()) {
-						auto node = Default<FloatController>{}.create(
-							ctor.getFile(), std::static_pointer_cast<NiFloatInterpolator>(iplr), &obj);
-						ctor.addNode(iplr.get(), std::move(node));
+						//forward
+						ctor.pushObject(iplr);
+						iplr->receive(ctor);
+						ctor.popObject();
 					}
 				}
 				else if (type == NiBlendFloatInterpolator::TYPE) {
-					ctor.addNode(iplr.get(), Default<NLFloatController>{}.create(
-						ctor.getFile(), std::static_pointer_cast<NiBlendFloatInterpolator>(iplr)));
+					//forward
+					ctor.pushObject(iplr);
+					iplr->receive(ctor);
+					ctor.popObject();
 				}
 			}
 
-			return false;
+			//TODO: visibility interpolator
+
+			return true;
 		}
 	};
 
@@ -219,6 +265,12 @@ namespace node
 
 
 	//NiPSysGravityStrengthCtlr////////////
+	/*
+	Should connect our interpolator to the Strength field of the modifier
+	Should not create any nodes
+	Should forward to our interpolator
+	Should create a NiFloatInterpolator (should be inherited functionality)
+	*/
 
 	template<>
 	class Connector<NiPSysGravityStrengthCtlr> : public VerticalTraverser<NiPSysGravityStrengthCtlr, Connector>
@@ -251,28 +303,19 @@ namespace node
 	};
 
 	template<>
-	class Factory<NiPSysGravityStrengthCtlr> : public VerticalTraverser<NiPSysGravityStrengthCtlr, Factory>
+	class Forwarder<NiPSysGravityStrengthCtlr> : public VerticalTraverser<NiPSysGravityStrengthCtlr, Forwarder>
 	{
 	public:
 		template<typename C>
 		bool operator() (NiPSysGravityStrengthCtlr& obj, C& ctor)
 		{
 			if (auto&& iplr = obj.interpolator.assigned()) {
-				if (ni_type type = iplr->type(); type == NiFloatInterpolator::TYPE) {
-					ctor.addNode(iplr.get(), Default<FloatController>{}.create(
-						ctor.getFile(), std::static_pointer_cast<NiFloatInterpolator>(iplr), &obj));
-				}
-				else if (type == NiBlendFloatInterpolator::TYPE) {
-					ctor.addNode(iplr.get(), Default<NLFloatController>{}.create(
-						ctor.getFile(), std::static_pointer_cast<NiBlendFloatInterpolator>(iplr)));
-				}
-			}
-			else {
-				auto new_iplr = ctor.getFile().create<NiFloatInterpolator>();
-				ctor.addNode(new_iplr.get(), Default<FloatController>{}.create(ctor.getFile(), new_iplr, &obj));
+				ctor.pushObject(iplr);
+				iplr->receive(ctor);
+				ctor.popObject();
 			}
 
-			return false;
+			return true;
 		}
 	};
 

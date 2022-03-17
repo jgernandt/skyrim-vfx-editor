@@ -69,6 +69,18 @@ namespace objects
 		bool operator() (const NiPSysModifier& obj, const TestConstructor& ctor);
 	};
 
+	template<>
+	struct ForwardTester<NiPSysEmitterCtlr> : VerticalTraverser<NiPSysEmitterCtlr, ForwardTester>
+	{
+		bool operator() (const NiPSysEmitterCtlr& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct ForwardTester<NiPSysGravityStrengthCtlr> : VerticalTraverser<NiPSysGravityStrengthCtlr, ForwardTester>
+	{
+		bool operator() (const NiPSysGravityStrengthCtlr& obj, const TestConstructor& ctor);
+	};
+
 
 	template<typename T>
 	struct ForwardTest
@@ -86,5 +98,17 @@ namespace objects
 			node::Forwarder<T>{}.down(*obj, c);
 			ForwardTester<T>{}.up(*obj, c);
 		}
+	};
+
+	template<>
+	struct ForwardTest<NiPSysEmitterCtlr>
+	{
+		void run();
+	};
+
+	template<>
+	struct ForwardTest<NiPSysGravityStrengthCtlr>
+	{
+		void run();
 	};
 }

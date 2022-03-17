@@ -70,6 +70,18 @@ namespace objects
 	};
 
 	template<>
+	struct FactoryTester<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, FactoryTester>
+	{
+		bool operator() (const NiFloatInterpolator& obj, const TestConstructor& ctor);
+	};
+
+	template<>
+	struct FactoryTester<NiBlendFloatInterpolator> : VerticalTraverser<NiBlendFloatInterpolator, FactoryTester>
+	{
+		bool operator() (const NiBlendFloatInterpolator& obj, const TestConstructor& ctor);
+	};
+
+	template<>
 	struct FactoryTester<NiControllerManager> : VerticalTraverser<NiControllerManager, FactoryTester>
 	{
 		bool operator() (const NiControllerManager& obj, const TestConstructor& ctor);

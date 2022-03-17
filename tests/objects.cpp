@@ -70,6 +70,22 @@ namespace objects
 		TEST_METHOD(Forwarder) { ForwardTest<nif::BSEffectShaderProperty>{}.run(); }
 	};
 
+	TEST_CLASS(NiFloatInterpolator)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiFloatInterpolator>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiFloatInterpolator>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiFloatInterpolator>{}.run(); }
+	};
+
+	TEST_CLASS(NiBlendFloatInterpolator)
+	{
+	public:
+		TEST_METHOD(Connector) { ConnectorTest<nif::NiBlendFloatInterpolator>{}.run(); }
+		TEST_METHOD(Factory) { FactoryTest<nif::NiBlendFloatInterpolator>{}.run(); }
+		TEST_METHOD(Forwarder) { ForwardTest<nif::NiBlendFloatInterpolator>{}.run(); }
+	};
+
 	TEST_CLASS(NiControllerManager)
 	{
 	public:
