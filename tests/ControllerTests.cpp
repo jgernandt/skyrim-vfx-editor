@@ -69,105 +69,112 @@ namespace nodes
 {
 	using namespace nif;
 
+	class MockControllable final : public node::IControllable
+	{
+	public:
+		MockControllable()
+		{
+			m_ctlr = std::make_shared<NiTimeController>();
+			m_ctlrIDProperty = std::make_shared<Property<std::string>>();
+		}
+
+		virtual Ref<NiInterpolator>& iplr() override { return m_iplr; }
+		virtual Ref<NiAVObject>& node() { return m_node; }
+		virtual ni_ptr<NiTimeController> ctlr() override { return m_ctlr; }
+		virtual std::string propertyType() override { return std::string(); }
+		virtual std::string ctlrType() override { return std::string(); }
+		virtual std::string ctlrID() override { return std::string(); }
+		virtual std::string iplrID() override { return std::string(); }
+		virtual ni_ptr<Property<std::string>> ctlrIDProperty() override { return m_ctlrIDProperty; }
+
+	private:
+		Ref<NiInterpolator> m_iplr;
+		Ref<NiAVObject> m_node;
+		ni_ptr<NiTimeController> m_ctlr;
+		ni_ptr<Property<std::string>> m_ctlrIDProperty;
+	};
+
+	class Listener : public PropertyListener<float>
+	{
+	public:
+		virtual void onSet(const float& f) override
+		{
+			m_signalled = true;
+			m_set = f;
+		}
+
+		bool wasSet()
+		{
+			bool result = m_signalled;
+			m_signalled = false;
+			m_set = std::numeric_limits<float>::quiet_NaN();
+			return result;
+		}
+
+		bool wasSet(float f)
+		{
+			bool result = m_signalled && m_set == f;
+			m_signalled = false;
+			m_set = std::numeric_limits<float>::quiet_NaN();
+			return result;
+		}
+
+	private:
+		float m_set{ std::numeric_limits<float>::quiet_NaN() };
+		bool m_signalled{ false };
+	};
+
+	class FlagsListener : public FlagSetListener<ControllerFlags>
+	{
+	public:
+		virtual void onRaise(ControllerFlags flags) override
+		{
+			m_set = flags;
+		}
+		virtual void onClear(ControllerFlags flags) override
+		{
+			m_cleared = flags;
+		}
+
+		bool wasRaised()
+		{
+			bool result = m_set != 0;
+			m_set = 0;
+			return result;
+		}
+		bool wasRaised(ControllerFlags flags)
+		{
+			bool result = m_set == flags;
+			m_set = 0;
+			return result;
+		}
+		bool wasCleared()
+		{
+			bool result = m_cleared != 0;
+			m_cleared = 0;
+			return result;
+		}
+		bool wasCleared(ControllerFlags flags)
+		{
+			bool result = m_cleared == flags;
+			m_cleared = 0;
+			return result;
+		}
+
+	private:
+		ControllerFlags m_set{ 0 };
+		ControllerFlags m_cleared{ 0 };
+	};
+
 	TEST_CLASS(FloatController)
 	{
 		std::mt19937 m_engine;
 
 	public:
-
-		class Listener : public PropertyListener<float>
-		{
-		public:
-			virtual void onSet(const float& f) override
-			{
-				m_signalled = true;
-				m_set = f;
-			}
-
-			bool wasSet()
-			{
-				bool result = m_signalled;
-				m_signalled = false;
-				m_set = std::numeric_limits<float>::quiet_NaN();
-				return result;
-			}
-
-			bool wasSet(float f)
-			{
-				bool result = m_signalled && m_set == f;
-				m_signalled = false;
-				m_set = std::numeric_limits<float>::quiet_NaN();
-				return result;
-			}
-
-		private:
-			float m_set{ std::numeric_limits<float>::quiet_NaN() };
-			bool m_signalled{ false };
-		};
-
-		class FlagsListener : public FlagSetListener<ControllerFlags>
-		{
-		public:
-			virtual void onRaise(ControllerFlags flags) override
-			{
-				m_set = flags;
-			}
-			virtual void onClear(ControllerFlags flags) override
-			{
-				m_cleared = flags;
-			}
-
-			bool wasRaised()
-			{
-				bool result = m_set != 0;
-				m_set = 0;
-				return result;
-			}
-			bool wasRaised(ControllerFlags flags)
-			{
-				bool result = m_set == flags;
-				m_set = 0;
-				return result;
-			}
-			bool wasCleared()
-			{
-				bool result = m_cleared != 0;
-				m_cleared = 0;
-				return result;
-			}
-			bool wasCleared(ControllerFlags flags)
-			{
-				bool result = m_cleared == flags;
-				m_cleared = 0;
-				return result;
-			}
-
-		private:
-			ControllerFlags m_set{ 0 };
-			ControllerFlags m_cleared{ 0 };
-		};
-
 		//Target connector should receive IControllable (single) and send IController<float>.
 		//Multiconnector would probably work here, but doesn't seem very useful. Let's wait with that.
 		TEST_METHOD(Connector_Target)
 		{
-			class MockControllable final : public node::IControllable
-			{
-			public:
-				virtual Ref<NiInterpolator>& iplr() override { return m_iplr; }
-				virtual Ref<NiAVObject>& node() { return m_node; }
-				virtual ni_ptr<NiTimeController> ctlr() override { return ni_ptr<NiTimeController>(); }
-				virtual std::string propertyType() override { return std::string(); }
-				virtual std::string ctlrType() override { return std::string(); }
-				virtual std::string ctlrID() override { return std::string(); }
-				virtual std::string iplrID() override { return std::string(); }
-				virtual ni_ptr<Property<std::string>> ctlrIDProperty() override { return ni_ptr<Property<std::string>>(); }
-
-			private:
-				Ref<NiInterpolator> m_iplr;
-				Ref<NiAVObject> m_node;
-			};
-
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiFloatInterpolator>();
 
@@ -263,6 +270,59 @@ namespace nodes
 			tester.disconnect<node::IControllable>(&target);
 			Assert::IsTrue(target.iplr().assigned() == nullptr);
 		}
+	};
 
+	TEST_CLASS(NLFloatController)
+	{
+	public:
+		TEST_METHOD(Target)
+		{
+			File file{ File::Version::SKYRIM_SE };
+			auto obj = file.create<NiBlendFloatInterpolator>();
+
+			auto node = node::Default<node::NLFloatController>{}.create(file, obj);
+			auto am = std::make_shared<node::AnimationManager>();
+			node->setAnimationManager(am);
+			Assert::IsTrue(am->blocks().size() == 0);
+
+			MockControllable target0;
+			MockControllable target;
+
+			auto av0 = file.create<NiAVObject>();
+			target0.node().assign(av0);
+			target.node().assign(av0);
+
+			ConnectorTester<node::NLFloatController> tester(std::move(node));
+
+			tester.tryConnect<node::IController<float>, node::IControllable>(node::NLFloatController::TARGET, false, &target0);
+			auto ifc = tester.tryConnect<node::IController<float>, node::IControllable>(node::NLFloatController::TARGET, false, &target);
+			Assert::IsNotNull(ifc);
+			//we only care about flags here
+			Assert::IsTrue(ifc->flags().hasRaised(CTLR_MNGR_CTRLD));
+
+			Assert::IsFalse(target0.iplr().assigned() == obj);
+			Assert::IsTrue(target.iplr().assigned() == obj);
+
+			//Should also register this block with the AnimationManager, if the target is assigned.
+			//This would be nicer to test if we could mock out the manager too. 
+			//We only really want to know if register/unregisterBlock was called.
+			Assert::IsTrue(am->blocks().size() == 1);
+			Assert::IsTrue(am->blocks().front().controller == target.ctlr());
+			Assert::IsTrue(am->blocks().front().target.assigned() == av0);
+			auto av1 = file.create<NiAVObject>();
+			target.node().assign(av1);
+			Assert::IsTrue(am->blocks().size() == 1);
+			Assert::IsTrue(am->blocks().front().controller == target.ctlr());
+			Assert::IsTrue(am->blocks().front().target.assigned() == av1);
+			target.node().assign(nullptr);
+			Assert::IsTrue(am->blocks().size() == 0);
+			target.node().assign(av0);
+			Assert::IsTrue(am->blocks().size() == 1);
+
+			//disconnect
+			tester.disconnect<node::IControllable>(&target);
+			Assert::IsTrue(target.iplr().assigned() == nullptr);
+			Assert::IsTrue(am->blocks().size() == 0);
+		}
 	};
 }
