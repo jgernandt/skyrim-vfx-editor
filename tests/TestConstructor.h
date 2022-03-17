@@ -39,6 +39,7 @@ namespace objects
 
 		//For FactoryTester
 		std::pair<NiObject*, std::unique_ptr<node::NodeBase>> node;
+		std::map<NiInterpolator*, NiTimeController*> controllerMap;
 
 		//For ForwardTester
 		std::vector<NiObject*> forwards;
@@ -75,5 +76,14 @@ namespace objects
 		ni_ptr<NiObject> getObject() const { return !objects.empty() ? objects.back() : ni_ptr<NiObject>(); }
 
 		File& getFile() { return m_file; }
+
+		void mapController(NiInterpolator* iplr, NiTimeController* ctlr) { controllerMap.insert({ iplr, ctlr }); }
+		NiTimeController* getController(NiInterpolator* iplr) const
+		{
+			if (auto it = controllerMap.find(iplr); it != controllerMap.end())
+				return it->second;
+			else
+				return nullptr;
+		}
 	};
 }

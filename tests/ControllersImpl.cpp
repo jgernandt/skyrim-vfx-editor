@@ -26,15 +26,47 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace nif;
 
-bool objects::FactoryTester<NiFloatInterpolator>::operator()(const NiFloatInterpolator& obj, const TestConstructor& ctor)
+
+void objects::FactoryTest<NiFloatInterpolator>::run()
 {
-	nodeTest<node::FloatController>(obj, ctor);
-	return false;
+	nif::File file(nif::File::Version::SKYRIM_SE);
+	auto obj = file.create<NiFloatInterpolator>();
+
+	objects::TestConstructor ctor(file);
+	ctor.pushObject(obj);
+
+	auto ctlr = file.create<NiTimeController>();
+	//randomise controller settings
+	std::mt19937 rng;
+	std::uniform_int_distribution<nif::ControllerFlags> I;
+	std::uniform_real_distribution<float> F;
+	ctlr->flags.raise(I(rng));
+	ctlr->frequency.set(F(rng));
+	ctlr->phase.set(F(rng));
+	ctlr->startTime.set(F(rng));
+	ctlr->stopTime.set(F(rng));
+
+	ctor.mapController(obj.get(), ctlr.get());
+
+	node::Factory<NiFloatInterpolator>{}.up(*obj, ctor);
+
+	Assert::IsTrue(ctor.node.first == obj.get());
+	node::FloatController* node = dynamic_cast<node::FloatController*>(ctor.node.second.get());
+	Assert::IsNotNull(node);
+
+	//test controller settings
+	Assert::IsTrue(node->flags().raised() == ctlr->flags.raised());
+	Assert::IsTrue(node->frequency().get() == ctlr->frequency.get());
+	Assert::IsTrue(node->phase().get() == ctlr->phase.get());
+	Assert::IsTrue(node->startTime().get() == ctlr->startTime.get());
+	Assert::IsTrue(node->stopTime().get() == ctlr->stopTime.get());
 }
 
-bool objects::FactoryTester<NiBlendFloatInterpolator>::operator()(const NiBlendFloatInterpolator& obj, const TestConstructor& ctor)
+bool objects::FactoryTester<NiBlendFloatInterpolator>::operator()(
+	const NiBlendFloatInterpolator& obj, const TestConstructor& ctor)
 {
 	nodeTest<node::NLFloatController>(obj, ctor);
+
 	return false;
 }
 
@@ -76,30 +108,18 @@ bool objects::ConnectorTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitter
 	Assert::IsTrue(ctor.connections[0].field1 == node::ControllerBase::TARGET);
 	Assert::IsTrue(ctor.connections[0].object2 == target->modifiers.at(1).get());
 	Assert::IsTrue(ctor.connections[0].field2 == node::Emitter::BirthRate::ID);
+
+	//and map us to our interpolator (should be inherited from NiPSysModifierCtlr?)
+	Assert::IsTrue(ctor.getController(obj.interpolator.assigned().get()) == &obj);
+
 	return false;
 }
 
 bool objects::FactoryTester<NiPSysEmitterCtlr>::operator()(const NiPSysEmitterCtlr& obj, const TestConstructor& ctor)
 {
-	/*Switch to having the interpolators create nodes
-	if (auto&& iplr = obj.interpolator.assigned()) {
-		if (iplr->type() == NiFloatInterpolator::TYPE) {
-			if (static_cast<NiFloatInterpolator*>(iplr.get())->data.assigned())
-				nodeTest<node::FloatController>(*iplr, ctor);
-			else
-				Assert::IsTrue(!ctor.node.second);
-		}
-		else if (iplr->type() == NiBlendFloatInterpolator::TYPE)
-			nodeTest<node::NLFloatController>(*iplr, ctor);
-		else
-			Assert::IsTrue(!ctor.node.second);
-	}
-	else
-		Assert::IsTrue(!ctor.node.second);*/
-
 	Assert::IsTrue(!ctor.node.second);
 
-	//Later, may also want to look at the visibility interpolator
+	//TODO: visibility interpolator
 
 	return false;
 }
@@ -313,6 +333,10 @@ bool objects::ConnectorTester<NiPSysGravityStrengthCtlr>::operator()(const NiPSy
 	Assert::IsTrue(ctor.connections[0].field1 == node::FloatController::TARGET);
 	Assert::IsTrue(ctor.connections[0].object2 == target->modifiers.at(1).get());
 	Assert::IsTrue(ctor.connections[0].field2 == node::GravityModifier::STRENGTH);
+
+	//map us to our interpolator (should be inherited from NiPSysModifierCtlr?)
+	Assert::IsTrue(ctor.getController(obj.interpolator.assigned().get()) == &obj);
+
 	return false;
 }
 

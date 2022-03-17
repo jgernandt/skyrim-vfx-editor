@@ -165,3 +165,16 @@ ni_ptr<NiObject> node::Constructor::getObject() const
 {
 	return !m_objectStack.empty() ? m_objectStack.back() : ni_ptr<NiObject>();
 }
+
+void node::Constructor::mapController(NiInterpolator* iplr, NiTimeController* ctlr)
+{
+	m_controllerMap.insert({ iplr, ctlr });
+}
+
+NiTimeController* node::Constructor::getController(NiInterpolator* iplr) const
+{
+	if (auto it = m_controllerMap.find(iplr); it != m_controllerMap.end())
+		return it->second;
+	else
+		return nullptr;
+}

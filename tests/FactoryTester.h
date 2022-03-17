@@ -70,12 +70,6 @@ namespace objects
 	};
 
 	template<>
-	struct FactoryTester<NiFloatInterpolator> : VerticalTraverser<NiFloatInterpolator, FactoryTester>
-	{
-		bool operator() (const NiFloatInterpolator& obj, const TestConstructor& ctor);
-	};
-
-	template<>
 	struct FactoryTester<NiBlendFloatInterpolator> : VerticalTraverser<NiBlendFloatInterpolator, FactoryTester>
 	{
 		bool operator() (const NiBlendFloatInterpolator& obj, const TestConstructor& ctor);
@@ -191,6 +185,12 @@ namespace objects
 			node::Factory<T>{}.up(*obj, c);
 			FactoryTester<T>{}.up(*obj, c);
 		}
+	};
+
+	template<>
+	struct FactoryTest<NiFloatInterpolator>
+	{
+		void run();
 	};
 
 	template<>

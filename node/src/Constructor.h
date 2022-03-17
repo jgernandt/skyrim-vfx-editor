@@ -71,6 +71,10 @@ namespace node
 
 		File& getFile() { return m_file; }
 
+		//System for passing controller settings to interpolators (temporary? can do better?)
+		void mapController(NiInterpolator* iplr, NiTimeController* ctlr);
+		NiTimeController* getController(NiInterpolator* iplr) const;
+
 	private:
 		File& m_file;
 		std::shared_ptr<AnimationManager> m_animationManager;
@@ -90,6 +94,8 @@ namespace node
 		std::vector<std::string> m_warnings;
 
 		std::vector<std::function<void()>> m_postProcess;
+
+		std::map<NiInterpolator*, NiTimeController*> m_controllerMap;
 	};
 
 	/*class Constructor

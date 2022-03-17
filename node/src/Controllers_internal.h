@@ -154,9 +154,8 @@ namespace node
 		{
 			assert(ctor.getObject().get() == &obj);
 
-			//We're not passing the controller here, but that should be fine? It will be connected later.
 			auto node = Default<FloatController>{}.create(
-				ctor.getFile(), std::static_pointer_cast<NiFloatInterpolator>(ctor.getObject()), nullptr);
+				ctor.getFile(), std::static_pointer_cast<NiFloatInterpolator>(ctor.getObject()), ctor.getController(&obj));
 			ctor.addNode(&obj, std::move(node));
 
 			return false;
@@ -185,6 +184,7 @@ namespace node
 	//NiPSysEmitterCtlr////////////
 	/*
 	Should connect our interpolators to the correct fields of the modifier node (these connections may be unused)
+	Should map itself to its interpolators
 	Should not create any nodes
 	Should forward to our interpolators, if they have data OR they are blends
 	Should create a NiFloatInterpolator if ID is "BirthRate" or a NiBoolInterpolator if ID is "EmitterActive"
@@ -215,6 +215,11 @@ namespace node
 					}
 				}
 			}
+
+			if (auto&& iplr = obj.interpolator.assigned())
+				ctor.mapController(iplr.get(), &obj);
+			if (auto&& iplr = obj.visIplr.assigned())
+				ctor.mapController(iplr.get(), &obj);
 
 			return true;
 		}
@@ -267,6 +272,7 @@ namespace node
 	//NiPSysGravityStrengthCtlr////////////
 	/*
 	Should connect our interpolator to the Strength field of the modifier
+	Should map itself to its interpolator (should be inherited functionality)
 	Should not create any nodes
 	Should forward to our interpolator
 	Should create a NiFloatInterpolator (should be inherited functionality)
@@ -297,6 +303,9 @@ namespace node
 					}
 				}
 			}
+
+			if (auto&& iplr = obj.interpolator.assigned())
+				ctor.mapController(iplr.get(), &obj);
 
 			return true;
 		}

@@ -20,6 +20,7 @@
 #define PCH_H
 
 #include <array>
+#include <random>
 #include <vector>
 
 #define EIGEN_MPL2_ONLY
