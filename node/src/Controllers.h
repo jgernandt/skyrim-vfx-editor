@@ -69,10 +69,6 @@ namespace node
 
 	protected:
 		const ni_ptr<NiTimeController> m_ctlr;//dummy controller
-
-		//bleh
-		class TargetField;
-		std::unique_ptr<TargetField> m_target;
 	};
 
 	class FloatController final : public ControllerBase
@@ -90,6 +86,9 @@ namespace node
 
 	private:
 		const ni_ptr<NiFloatInterpolator> m_iplr;
+
+		class TargetField;
+		std::unique_ptr<TargetField> m_target;
 	};
 
 	class NLFloatController final : public ControllerBase
@@ -100,10 +99,17 @@ namespace node
 		NLFloatController(const ni_ptr<NiBlendFloatInterpolator>& obj);
 		~NLFloatController();
 
+		virtual void setAnimationManager(const std::shared_ptr<AnimationManager>& animMngr) override;
+
 		constexpr static float WIDTH = 120.0f;
 		constexpr static float HEIGHT = 96.0f;
 
 	private:
 		const ni_ptr<NiBlendFloatInterpolator> m_iplr;
+
+		std::weak_ptr<AnimationManager> m_animationManager;
+
+		class TargetField;
+		std::unique_ptr<TargetField> m_target;
 	};
 }

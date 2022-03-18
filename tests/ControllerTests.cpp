@@ -87,11 +87,15 @@ namespace nodes
 		virtual std::string iplrID() override { return std::string(); }
 		virtual ni_ptr<Property<std::string>> ctlrIDProperty() override { return m_ctlrIDProperty; }
 
-	private:
 		Ref<NiInterpolator> m_iplr;
 		Ref<NiAVObject> m_node;
 		ni_ptr<NiTimeController> m_ctlr;
 		ni_ptr<Property<std::string>> m_ctlrIDProperty;
+
+		std::string m_propertyType;
+		std::string m_ctlrType;
+		std::string m_ctlrID;
+		std::string m_iplrID;
 	};
 
 	class Listener : public PropertyListener<float>
@@ -277,6 +281,16 @@ namespace nodes
 	public:
 		TEST_METHOD(Target)
 		{
+			/*
+			When connecting to a target, should:
+			-assign our interpolator to them
+			-raise their MNGR_CTRLD flag
+			-register their details with the AnimationManager
+
+			When disconnecting, should:
+			-unassign the interpolator
+			-unregister them with the AnimationManager
+			*/
 			File file{ File::Version::SKYRIM_SE };
 			auto obj = file.create<NiBlendFloatInterpolator>();
 
@@ -287,6 +301,10 @@ namespace nodes
 
 			MockControllable target0;
 			MockControllable target;
+			target.m_propertyType = "lgnoaesrgn";
+			target.m_ctlrType = "vbanoareb";
+			target.m_ctlrID = "wanbeaoiu";
+			target.m_iplrID = "oabneobr";
 
 			auto av0 = file.create<NiAVObject>();
 			target0.node().assign(av0);
@@ -307,8 +325,15 @@ namespace nodes
 			//This would be nicer to test if we could mock out the manager too. 
 			//We only really want to know if register/unregisterBlock was called.
 			Assert::IsTrue(am->blocks().size() == 1);
-			Assert::IsTrue(am->blocks().front().controller == target.ctlr());
-			Assert::IsTrue(am->blocks().front().target.assigned() == av0);
+			auto&& block = am->blocks().front();
+			Assert::IsTrue(block.controller == target.ctlr());
+			Assert::IsTrue(block.propertyType.get() == target.propertyType());
+			Assert::IsTrue(block.ctlrType.get() == target.ctlrType());
+			Assert::IsTrue(block.ctlrID.get() == target.ctlrID());
+			Assert::IsTrue(block.iplrID.get() == target.iplrID());
+
+			//These seems like tests of AnimationManager, but as of right now the NLFloatController
+			//needs to relay changes of target (which is incredibly stupid).
 			auto av1 = file.create<NiAVObject>();
 			target.node().assign(av1);
 			Assert::IsTrue(am->blocks().size() == 1);
