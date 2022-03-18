@@ -93,6 +93,26 @@ namespace node
 		}
 	};
 
+	template<>
+	class Default<NLFloatController>
+	{
+	public:
+		std::unique_ptr<NLFloatController> create(
+			File& file,
+			ni_ptr<NiBlendFloatInterpolator> iplr = ni_ptr<NiBlendFloatInterpolator>())
+		{
+			if (!iplr) {
+				iplr = file.create<nif::NiBlendFloatInterpolator>();
+				if (!iplr)
+					throw std::runtime_error("Failed to create NiBlendFloatInterpolator");
+
+				iplr->managerControlled.set(true);
+			}
+
+			return std::make_unique<NLFloatController>(iplr);
+		}
+	};
+
 
 	template<>
 	class AnimationInit<NiTimeController> : public VerticalTraverser<NiTimeController, AnimationInit>

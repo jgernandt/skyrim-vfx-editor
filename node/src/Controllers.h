@@ -94,8 +94,6 @@ namespace node
 	class NLFloatController final : public ControllerBase
 	{
 	public:
-		using default_object = NiBlendFloatInterpolator;
-
 		NLFloatController(const ni_ptr<NiBlendFloatInterpolator>& obj);
 		~NLFloatController();
 
