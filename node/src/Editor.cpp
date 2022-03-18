@@ -215,6 +215,7 @@ std::unique_ptr<gui::IComponent> node::Editor::NodeRoot::createAddMenu()
 	anim->newChild<gui::MenuItem>("Behaviour", std::bind(&NodeRoot::addNode<ControllerManager>, this));
 	anim->newChild<gui::MenuItem>("Action", std::bind(&NodeRoot::addNode<ControllerSequence>, this));
 	anim->newChild<gui::MenuItem>("Float keys", std::bind(&NodeRoot::addNode<FloatController>, this));
+	anim->newChild<gui::MenuItem>("Nonlinear animation", std::bind(&NodeRoot::addNode<NLFloatController>, this));
 
 	return root;
 }
