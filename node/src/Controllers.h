@@ -1,4 +1,4 @@
-//Copyright 2021 Jonas Gernandt
+//Copyright 2021, 2022 Jonas Gernandt
 //
 //This file is part of SVFX Editor, a program for creating visual effects
 //in the NetImmerse format.
