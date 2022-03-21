@@ -225,17 +225,19 @@ void node::NLFloatController::TargetField::ControllableReceiver::registerBlock()
 {
 	assert(m_connected && !m_registeredBlock);
 
-	if (auto animMngr = m_node.m_animationManager.lock()) {
-		AnimationManager::BlockInfo info;
-		info.ctlr = m_connected->ctlr();
-		info.ctlrIDProperty = m_connected->ctlrIDProperty();
-		info.target = m_connected->node().assigned();
-		info.propertyType = m_connected->propertyType();
-		info.ctlrType = m_connected->ctlrType();
-		info.ctlrID = m_connected->ctlrID();
-		info.iplrID = m_connected->iplrID();
+	if (auto&& target = m_connected->node().assigned()) {
+		if (auto animMngr = m_node.m_animationManager.lock()) {
+			AnimationManager::BlockInfo info;
+			info.ctlr = m_connected->ctlr();
+			info.ctlrIDProperty = m_connected->ctlrIDProperty();
+			info.target = m_connected->node().assigned();
+			info.propertyType = m_connected->propertyType();
+			info.ctlrType = m_connected->ctlrType();
+			info.ctlrID = m_connected->ctlrID();
+			info.iplrID = m_connected->iplrID();
 
-		m_registeredBlock = animMngr->registerBlock(info);
+			m_registeredBlock = animMngr->registerBlock(info);
+		}
 	}
 }
 

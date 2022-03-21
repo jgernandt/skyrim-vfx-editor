@@ -32,12 +32,14 @@ node::AnimationManager::Block* node::AnimationManager::registerBlock(const Block
 	Block* result = nullptr;
 
 	if (info.ctlr && info.target) {
-		//first check for duplicates (same ctlr, same nodeName, ctlrId and iplrID)
-		//when a BlendIplr node is first connected after loading a file, its block will already exist
+		//First check for duplicates (same ctlr and iplrID).
+		//When a BlendIplr node is first connected after loading a file, its block will already exist.
+		//However, node name and ctlrID may not match, since those fields may be connected later.
+		//Controller and interpolator ID should be enough to uniquely identify the block.
 		for (auto&& block : m_blocks) {
 			if (info.ctlr == block.controller && 
-				info.target->name.get() == block.nodeName.get() &&
-				info.ctlrID == block.ctlrID.get() &&
+				//info.target->name.get() == block.nodeName.get() &&
+				//info.ctlrID == block.ctlrID.get() &&
 				info.iplrID == block.iplrID.get())
 				return &block;
 		}
