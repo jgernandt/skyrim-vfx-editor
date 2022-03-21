@@ -1,4 +1,4 @@
-//Copyright 2021 Jonas Gernandt
+//Copyright 2021, 2022 Jonas Gernandt
 //
 //This file is part of SVFX Editor, a program for creating visual effects
 //in the NetImmerse format.
@@ -17,11 +17,13 @@
 //along with SVFX Editor. If not, see <https://www.gnu.org/licenses/>.
 
 #include "pch.h"
+#include "ActionEditor.h"
 #include "AnimationManager.h"
+#include "CompositionActions.h"
 #include "ControllerManager.h"
-#include "widget_types.h"
-#include "style.h"
 #include "nodes_internal.h"//InterpolatorFactory
+#include "style.h"
+#include "widget_types.h"
 
 node::ControllerManager::ControllerManager(
 	const ni_ptr<NiControllerManager>& manager, const ni_ptr<BSBehaviorGraphExtraData>& bged) :
@@ -161,6 +163,11 @@ node::ControllerSequence::ControllerSequence(File& file, const ni_ptr<NiControll
 
 	newChild<gui::Text>("Name");
 	newChild<StringInput>(make_ni_ptr(m_obj, &NiControllerSequence::name));
+
+	newChild<gui::VerticalSpacing>();
+
+	auto button = newChild<gui::Button>("Edit", std::bind(&ControllerSequence::openActionEditor, this));
+	button->setSize({ -1.0f, 0.0f });
 
 	//until we have some other way to determine connector position for loading placement
 	m_behaviour->connector->setTranslation({ 0.0f, 38.0f });
@@ -335,6 +342,13 @@ void node::ControllerSequence::onSet(const float&)
 void node::ControllerSequence::onSet(const std::string& accumRootName)
 {
 	m_obj->accumRootName.set(accumRootName);
+}
+
+void node::ControllerSequence::openActionEditor()
+{
+	auto c = std::make_unique<ActionEditor>();
+	c->open();
+	asyncInvoke<gui::AddChild>(std::move(c), this, false);
 }
 
 node::ControllerSequence::Behaviour::Behaviour(const std::string& name, ControllerSequence& node) :

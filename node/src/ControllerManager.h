@@ -1,4 +1,4 @@
-//Copyright 2021 Jonas Gernandt
+//Copyright 2021, 2022 Jonas Gernandt
 //
 //This file is part of SVFX Editor, a program for creating visual effects
 //in the NetImmerse format.
@@ -155,7 +155,10 @@ namespace node
 		virtual void onSet(const std::string& accumRootName) override;
 
 		constexpr static float WIDTH = 150.0f;
-		constexpr static float HEIGHT = 116.0f;
+		constexpr static float HEIGHT = 136.0f;
+
+	private:
+		void openActionEditor();
 
 	private:
 		File& m_file;

@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ActionEditor.h" />
     <ClInclude Include="src\AnimationCurve.h" />
     <ClInclude Include="src\AnimationManager.h" />
     <ClInclude Include="src\AVObject.h" />
@@ -59,6 +60,7 @@
     <ClInclude Include="src\widget_types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\ActionEditor.cpp" />
     <ClCompile Include="src\AnimationCurve.cpp" />
     <ClCompile Include="src\AnimationManager.cpp" />
     <ClCompile Include="src\AVObject.cpp" />
