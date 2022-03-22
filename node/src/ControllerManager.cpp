@@ -346,7 +346,7 @@ void node::ControllerSequence::onSet(const std::string& accumRootName)
 
 void node::ControllerSequence::openActionEditor()
 {
-	auto c = std::make_unique<ActionEditor>();
+	auto c = std::make_unique<ActionEditor>(m_obj);
 	c->open();
 	asyncInvoke<gui::AddChild>(std::move(c), this, false);
 }
