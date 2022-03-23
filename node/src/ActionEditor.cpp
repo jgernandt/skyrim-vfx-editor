@@ -18,10 +18,10 @@
 
 #include "pch.h"
 #include "ActionEditor.h"
-
+#include "AnimationCurve.h"
 #include "widget_types.h"
 
-node::ActionEditor::ActionEditor(const ni_ptr<NiControllerSequence>& action)
+node::ActionEditor::ActionEditor(File& file, const ni_ptr<NiControllerSequence>& action)
 {
 	//Set up the layout
 	setSize({ 942.0f, 480.0f });
@@ -31,7 +31,7 @@ node::ActionEditor::ActionEditor(const ni_ptr<NiControllerSequence>& action)
 	plotPanel->setTranslation({ 150.0f, 16.0f });
 	auto plot = plotPanel->newChild<gui::Plot>();
 
-	auto blocksPanel = newChild<BlockPanel>(action, plot);
+	auto blocksPanel = newChild<BlockPanel>(file, action, plot);
 	blocksPanel->setSize({ 142.0f, 464.0f });
 	blocksPanel->setTranslation({ 8.0f, 16.0f });
 
@@ -48,16 +48,53 @@ node::ActionEditor::ActionEditor(const ni_ptr<NiControllerSequence>& action)
 	activePanel->setTranslation({ 790.0f, 220.0f });
 }
 
-node::ActionEditor::BlockPanel::BlockPanel(const ni_ptr<NiControllerSequence>& action, gui::Plot* plot)
+node::ActionEditor::BlockPanel::BlockPanel(File& file, const ni_ptr<NiControllerSequence>& action, gui::Plot* plot) :
+	m_file{ file }, m_action{ action }, m_plot{ plot }
 {
-	//Display a list of blocks and a visibility toggle for each one
-	//Add/remove an AnimationCurve to plot for each visible block
+	assert(m_action && m_plot);
 
-	//Placeholder
-	for (auto&& block : action->blocks) {
+	m_animationCurves.reserve(m_action->blocks.size());
+
+	AnimationCurveFactory acf(
+		m_file,
+		make_ni_ptr(m_action, &NiControllerSequence::cycleType),
+		make_ni_ptr(m_action, &NiControllerSequence::startTime),
+		make_ni_ptr(m_action, &NiControllerSequence::stopTime));
+
+	for (auto&& block : m_action->blocks) {
+		//Placeholder. We'll want a more user-friendly display name later.
 		std::string displayName = block.nodeName.get() + ':' + block.ctlrType.get();
 		newChild<gui::Text>(displayName);
+
+		//Add an AnimationCurve. Will have to be delegated, since we don't know the type of interpolator.
+		//The exact type of the AnimationCurve is also unknown.
+		std::unique_ptr<gui::IComponent> curve;
+		if (auto&& iplr = block.interpolator.assigned()) {
+			assert(!acf.animationCurve);
+			iplr->receive(acf);
+			curve = std::move(acf.animationCurve);
+		}
+		m_animationCurves.push_back(curve.get());//may be null
+		if (curve) {
+			//This is a supported type. We should add it to the plot and allow its visibility to be toggled.
+
+			//Required changes to AnimationCurve:
+			//-drawing the rectangle that marks the clip time must be moved elsewhere
+			//-we don't want to call setAxisLimits. That should be dealt with in some other way.
+			static_cast<AnimationCurve*>(m_animationCurves.back())->setAxisLimits({ 0.0f, 1.0f });
+
+			m_plot->getPlotArea().getAxes().addChild(std::move(curve));
+
+			//Add a visibility toggle widget. How this could work:
+			//The widget property (define a custom one) has a pointer or index to its AnimationCurve and to us.
+			//On toggle, call a function on us with the curve as argument. This function adds/removes it from the plot.
+		}
+		else {
+			//This type of interpolator is not supported. We should still list it, but not allow any interaction.
+		}
 	}
+
+	//Listen to action->blocks. On insert/erase, add/remove an AnimationCurve and item to the list.
 }
 
 node::ActionEditor::PropertyPanel::PropertyPanel(
@@ -86,4 +123,31 @@ node::ActionEditor::PropertyPanel::PropertyPanel(
 	auto sp = newChild<DragFloat>(tStop, "Stop time");
 	sp->setSensitivity(0.01f);
 	sp->setNumberFormat("%.2f");
+}
+
+node::AnimationCurveFactory::AnimationCurveFactory(
+	File& file,
+	const ni_ptr<Property<CycleType>>& cycleType, 
+	const ni_ptr<Property<float>>& tStart, 
+	const ni_ptr<Property<float>>& tStop) :
+	m_file{ file }, m_cycleType{ cycleType }, m_tStart{ tStart }, m_tStop{ tStop }
+{
+}
+
+template<>
+void node::AnimationCurveFactory::invoke(NiFloatInterpolator& iplr)
+{
+	//If we're missing data, add a single key at the value of the interpolator
+	if (!iplr.data.assigned()) {
+		auto data = m_file.create<NiFloatData>();
+		data->keyType.set(KEY_CONSTANT);
+		data->keys.push_back();
+		data->keys.back().time.set(m_tStart ? m_tStart->get() : 0.0f);
+		data->keys.back().value.set(iplr.value.get());
+
+		iplr.data.assign(data);
+		iplr.value.set(0.0f);
+	}
+
+	animationCurve = std::make_unique<AnimationCurve>(iplr.data.assigned(), m_cycleType, m_tStart, m_tStop);
 }

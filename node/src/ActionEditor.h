@@ -28,7 +28,7 @@ namespace node
 	//Essentially a FloatKeyEditor that has multiple AnimationCurves, 
 	// as well as a panel that lists the components of the action.
 	//We'll make it a Popup for now, but I think this would be nicer as a full or split screen panel
-	class ActionEditor :
+	class ActionEditor final :
 		public gui::Popup,
 		public gui::MouseHandler,
 		public gui::KeyListener
@@ -38,7 +38,13 @@ namespace node
 		class BlockPanel : public gui::Subwindow
 		{
 		public:
-			BlockPanel(const ni_ptr<NiControllerSequence>& action, gui::Plot* plot);
+			BlockPanel(File& file, const ni_ptr<NiControllerSequence>& action, gui::Plot* plot);
+
+		private:
+			File& m_file;
+			const ni_ptr<NiControllerSequence> m_action;
+			gui::Plot* m_plot;
+			std::vector<gui::IComponent*> m_animationCurves;
 		};
 
 		//This panel should have controls for Action-wide properties: cycle type, frequency, time limits
@@ -55,6 +61,27 @@ namespace node
 		//We also have an Active component panel, but that is provided by said component itself
 
 	public:
-		ActionEditor(const ni_ptr<NiControllerSequence>& action);
+		ActionEditor(File& file, const ni_ptr<NiControllerSequence>& action);
+	};
+
+	class AnimationCurveFactory final : public HorizontalTraverser<AnimationCurveFactory>
+	{
+	public:
+		AnimationCurveFactory(
+			File& file,
+			const ni_ptr<Property<CycleType>>& cycleType,
+			const ni_ptr<Property<float>>& tStart,
+			const ni_ptr<Property<float>>& tStop);
+
+		template<typename T> void invoke(T&) {}
+		template<> void invoke(NiFloatInterpolator& iplr);
+
+		std::unique_ptr<gui::IComponent> animationCurve;
+
+	private:
+		File& m_file;
+		const ni_ptr<Property<CycleType>>& m_cycleType;
+		const ni_ptr<Property<float>>& m_tStart;
+		const ni_ptr<Property<float>>& m_tStop;
 	};
 }
