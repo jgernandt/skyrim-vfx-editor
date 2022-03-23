@@ -1,4 +1,4 @@
-//Copyright 2021 Jonas Gernandt
+//Copyright 2021, 2022 Jonas Gernandt
 //
 //This file is part of SVFX Editor, a program for creating visual effects
 //in the NetImmerse format.
@@ -35,6 +35,27 @@ namespace node
 	{
 	public:
 		using Selection = std::set<KeyHandle*>;
+
+		//AnimationCurve uses a Property<CycleType> (since that's what NiControllerSequence has).
+		//This adapts a NiTimeController's FlagSet to that format.
+		class CycleTypeAdapter final :
+			public FlagSetListener<ControllerFlags>,
+			public PropertyListener<CycleType>
+		{
+		public:
+			CycleTypeAdapter(const ni_ptr<FlagSet<ControllerFlags>>& flags);
+			~CycleTypeAdapter();
+
+			virtual void onSet(const CycleType& c) override;
+			virtual void onRaise(ControllerFlags flags) override;
+			virtual void onClear(ControllerFlags flags) override;
+
+			const ni_ptr<Property<CycleType>>& getProperty() const { return m_cycleType; }
+
+		private:
+			const ni_ptr<Property<CycleType>> m_cycleType;
+			const ni_ptr<FlagSet<ControllerFlags>> m_flags;
+		};
 
 		class FrequencyListener final : public PropertyListener<float>
 		{
@@ -84,6 +105,8 @@ namespace node
 
 	private:
 		const ni_ptr<NiTimeController> m_ctlr;
+
+		CycleTypeAdapter m_cycleTypeAdapter;
 
 		FrequencyListener m_freqLsnr;
 		PhaseListener m_phaseLsnr;

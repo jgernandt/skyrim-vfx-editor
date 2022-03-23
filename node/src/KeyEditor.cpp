@@ -1,4 +1,4 @@
-//Copyright 2021 Jonas Gernandt
+//Copyright 2021, 2022 Jonas Gernandt
 //
 //This file is part of SVFX Editor, a program for creating visual effects
 //in the NetImmerse format.
@@ -145,7 +145,10 @@ public:
 };
 
 node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data) :
-	m_ctlr{ ctlr }, m_freqLsnr{ ctlr ? &ctlr->phase : nullptr }, m_phaseLsnr{ ctlr ? &ctlr->frequency : nullptr }
+	m_ctlr{ ctlr }, 
+	m_cycleTypeAdapter{ make_ni_ptr(ctlr, &NiTimeController::flags) },
+	m_freqLsnr{ ctlr ? &ctlr->phase : nullptr }, 
+	m_phaseLsnr{ ctlr ? &ctlr->frequency : nullptr }
 {
 	assert(ctlr && data);
 
@@ -156,7 +159,11 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	plot_panel->setTranslation({ 8.0f, 16.0f });
 	m_plot = plot_panel->newChild<gui::Plot>();
 
-	auto series = std::make_unique<AnimationCurve>(ctlr, data);
+	auto series = std::make_unique<AnimationCurve>(
+		data,
+		m_cycleTypeAdapter.getProperty(),
+		make_ni_ptr(ctlr, &NiTimeController::startTime),
+		make_ni_ptr(ctlr, &NiTimeController::stopTime));
 	m_curve = series.get();
 	m_plot->getPlotArea().getAxes().addChild(std::move(series));
 
@@ -561,6 +568,71 @@ void node::FloatKeyEditor::updateAxisUnits()
 
 	m_plot->getPlotArea().getAxes().setMajorUnits(major);
 	m_plot->getPlotArea().getAxes().setMinorUnits(minor);
+}
+
+node::FloatKeyEditor::CycleTypeAdapter::CycleTypeAdapter(const ni_ptr<FlagSet<ControllerFlags>>& flags) :
+	m_cycleType{ std::make_shared<Property<CycleType>>() }, m_flags{ flags }
+{
+	assert(m_flags);
+	m_cycleType->addListener(*this);
+	m_flags->addListener(*this);
+	onRaise(m_flags->raised());
+}
+
+node::FloatKeyEditor::CycleTypeAdapter::~CycleTypeAdapter()
+{
+	m_cycleType->removeListener(*this);
+	m_flags->removeListener(*this);
+}
+
+void node::FloatKeyEditor::CycleTypeAdapter::onSet(const CycleType& c)
+{
+	switch (c) {
+	case CycleType::REPEAT:
+		m_flags->clear(CTLR_LOOP_MASK);
+		break;
+	case CycleType::REVERSE:
+		m_flags->clear(CTLR_LOOP_CLAMP);
+		m_flags->raise(CTLR_LOOP_REVERSE);
+		break;
+	case CycleType::CLAMP:
+		m_flags->clear(CTLR_LOOP_REVERSE);
+		m_flags->raise(CTLR_LOOP_CLAMP);
+		break;
+	}
+}
+
+void node::FloatKeyEditor::CycleTypeAdapter::onRaise(ControllerFlags flags)
+{
+	if (flags & CTLR_LOOP_MASK) {
+		ControllerFlags raised = m_flags->raised() & CTLR_LOOP_MASK;
+		if (raised == CTLR_LOOP_REVERSE)
+			m_cycleType->set(CycleType::REVERSE);
+		else if (raised == CTLR_LOOP_CLAMP)
+			m_cycleType->set(CycleType::CLAMP);
+		else {
+			assert(raised == CTLR_LOOP_MASK);
+			//This shouldn't happen, but it could. Just deal with it.
+			//Setting CLAMP will clear the REVERSE flag, which will try to set CLAMP again (which will be ignored).
+			m_cycleType->set(CycleType::CLAMP);
+		}
+	}
+}
+
+void node::FloatKeyEditor::CycleTypeAdapter::onClear(ControllerFlags flags)
+{
+	if (flags & CTLR_LOOP_MASK) {
+		ControllerFlags raised = m_flags->raised() & CTLR_LOOP_MASK;
+		if (raised == CTLR_LOOP_REVERSE)
+			m_cycleType->set(CycleType::REVERSE);
+		else if (raised == CTLR_LOOP_CLAMP)
+			m_cycleType->set(CycleType::CLAMP);
+		else {
+			//This is the normal case. The other two are just safeguards against a pathological case.
+			assert(raised == 0);
+			m_cycleType->set(CycleType::REPEAT);
+		}
+	}
 }
 
 //Phase and frequency are the inverse transform of the data series

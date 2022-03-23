@@ -1,4 +1,4 @@
-//Copyright 2021 Jonas Gernandt
+//Copyright 2021, 2022 Jonas Gernandt
 //
 //This file is part of SVFX Editor, a program for creating visual effects
 //in the NetImmerse format.
@@ -33,8 +33,8 @@ namespace node
 	class AnimationCurve final :
 		public gui::Composite,
 		public nif::VectorListener<Key<float>>,
-		public PropertyListener<float>,
-		public FlagSetListener<ControllerFlags>
+		public PropertyListener<CycleType>,
+		public PropertyListener<float>
 	{
 	public:
 		class MoveOperation : public gui::ICommand
@@ -45,7 +45,11 @@ namespace node
 		};
 
 	public:
-		AnimationCurve(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data);
+		AnimationCurve(
+			const ni_ptr<NiFloatData>& data,
+			const ni_ptr<Property<CycleType>>& cycleType,
+			const ni_ptr<Property<float>>& tStart,
+			const ni_ptr<Property<float>>& tStop);
 		~AnimationCurve();
 
 		virtual void frame(gui::FrameDrawer& fd) override;
@@ -54,9 +58,8 @@ namespace node
 		virtual void onErase(int pos) override;
 		virtual void onMove(int from, int to) override;
 
+		virtual void onSet(const CycleType&) override;
 		virtual void onSet(const float&) override;
-		virtual void onRaise(ControllerFlags flags) override;
-		virtual void onClear(ControllerFlags flags) override;
 
 		SelectionState getSelectionState() const { return m_selectionState; }
 		void setSelectionState(SelectionState state) { m_selectionState = state; }
@@ -83,8 +86,11 @@ namespace node
 		void addCurvePoints(gui::FrameDrawer& fd, int i, const gui::Floats<2>& lims, const gui::Floats<2>& resolution);
 
 	private:
-		const ni_ptr<NiTimeController> m_ctlr;
 		const ni_ptr<NiFloatData> m_data;
+		const ni_ptr<Property<CycleType>> m_cycleType;
+		const ni_ptr<Property<float>> m_startTime;
+		const ni_ptr<Property<float>> m_stopTime;
+
 		gui::Floats<2> m_axisLims;
 		SelectionState m_selectionState{ SelectionState::NOT_SELECTED };
 

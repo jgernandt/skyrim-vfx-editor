@@ -1,4 +1,4 @@
-//Copyright 2021 Jonas Gernandt
+//Copyright 2021, 2022 Jonas Gernandt
 //
 //This file is part of SVFX Editor, a program for creating visual effects
 //in the NetImmerse format.
@@ -365,14 +365,18 @@ public:
 };
 
 
-node::AnimationCurve::AnimationCurve(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data) :
-	m_ctlr{ ctlr }, m_data{ data }
+node::AnimationCurve::AnimationCurve(
+	const ni_ptr<NiFloatData>& data,
+	const ni_ptr<Property<CycleType>>& cycleType,
+	const ni_ptr<Property<float>>& tStart,
+	const ni_ptr<Property<float>>& tStop) :
+	m_data{ data }, m_cycleType{ cycleType }, m_startTime{ tStart }, m_stopTime{ tStop }
 {
-	assert(m_data && m_ctlr);
+	assert(m_data && m_cycleType && m_startTime && m_stopTime);
 	m_data->keys.addListener(*this);
-	m_ctlr->flags.addListener(*this);
-	m_ctlr->startTime.addListener(*this);
-	m_ctlr->stopTime.addListener(*this);
+	m_cycleType->addListener(*this);
+	m_startTime->addListener(*this);
+	m_stopTime->addListener(*this);
 
 	int i = 0;
 	for (auto&& key : m_data->keys)
@@ -382,9 +386,9 @@ node::AnimationCurve::AnimationCurve(const ni_ptr<NiTimeController>& ctlr, const
 node::AnimationCurve::~AnimationCurve()
 {
 	m_data->keys.removeListener(*this);
-	m_ctlr->flags.removeListener(*this);
-	m_ctlr->startTime.removeListener(*this);
-	m_ctlr->stopTime.removeListener(*this);
+	m_cycleType->removeListener(*this);
+	m_startTime->removeListener(*this);
+	m_stopTime->removeListener(*this);
 
 	//we need the children destroyed while we still exist
 	clearChildren();
@@ -392,8 +396,6 @@ node::AnimationCurve::~AnimationCurve()
 
 void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 {
-	assert(m_data && m_ctlr);
-
 	//We can optimise later, just get this working first.
 	//Later we might want to cache these values.
 	//We should also do clip checking in y.
@@ -439,8 +441,8 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 
 		auto popper = fd.pushTransform(m_translation, m_scale);
 
-		float startTime = m_ctlr->startTime.get();
-		float stopTime = m_ctlr->stopTime.get();
+		float startTime = m_startTime->get();
+		float stopTime = m_stopTime->get();
 
 		//Rebuild curve if
 		//*clip was rebuilt
@@ -454,7 +456,7 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 			int offset;//number of clips to offset
 			int N;//repetitions
 
-			bool clamp = m_ctlr->flags.hasRaised(CTLR_LOOP_CLAMP);
+			bool clamp = m_cycleType->get() == CycleType::CLAMP;
 
 			if (clamp) {
 				offset = 0;
@@ -600,21 +602,14 @@ void node::AnimationCurve::onMove(int from, int to)
 	static_cast<AnimationKey*>(getChildren()[high].get())->setDirty();
 }
 
-void node::AnimationCurve::onSet(const float&)
+void node::AnimationCurve::onSet(const CycleType&)
 {
 	m_clipDirty = true;
 }
 
-void node::AnimationCurve::onRaise(ControllerFlags flags)
+void node::AnimationCurve::onSet(const float&)
 {
-	if (flags & CTLR_LOOP_MASK)
-		m_clipDirty = true;
-}
-
-void node::AnimationCurve::onClear(ControllerFlags flags)
-{
-	if (flags & CTLR_LOOP_MASK)
-		m_clipDirty = true;
+	m_clipDirty = true;
 }
 
 node::AnimationKey* node::AnimationCurve::getActive() const
@@ -692,9 +687,9 @@ std::unique_ptr<gui::ICommand> node::AnimationCurve::getEraseOp(const std::vecto
 void node::AnimationCurve::buildClip(const gui::Floats<2>& lims, const gui::Floats<2>& resolution)
 {
 	KeyType type = m_data->keyType.get();
-	bool reverse = m_ctlr->flags.hasRaised(CTLR_LOOP_REVERSE);
-	float tStart = m_ctlr->startTime.get();
-	float tStop = m_ctlr->stopTime.get();
+	bool reverse = m_cycleType->get() == CycleType::REVERSE;
+	float tStart = m_startTime->get();
+	float tStop = m_stopTime->get();
 
 	m_clipLength = reverse ? 2.0f * (tStop - tStart) : tStop - tStart;
 
