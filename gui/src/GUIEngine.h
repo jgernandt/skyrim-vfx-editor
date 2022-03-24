@@ -57,6 +57,8 @@ namespace gui
 			virtual void drawLine(const Floats<2>& p1, const Floats<2>& p2, bool global = false) override;
 
 			[[nodiscard]] virtual util::CallWrapper pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) override;
+			virtual Floats<4> getClipArea() const override;
+
 			[[nodiscard]] virtual util::CallWrapper pushTransform(const Floats<2>& translation, const Floats<2>& scale) override;
 
 			virtual Floats<2> getCurrentTranslation() const override;

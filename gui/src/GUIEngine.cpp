@@ -263,6 +263,16 @@ void gui::backend::ImGuiWinD3D10::popClipArea()
 	ImGui::PopClipRect();
 }
 
+gui::Floats<4> gui::backend::ImGuiWinD3D10::getClipArea() const
+{
+	ImGuiWindow* window = ImGui::GetCurrentWindow();
+	assert(window);
+	Floats<4> result;
+	result << ImGuiWinD3D10::toLocal({ window->ClipRect.Min.x, window->ClipRect.Min.y }), 
+		ImGuiWinD3D10::toLocal({ window->ClipRect.Max.x, window->ClipRect.Max.y });
+	return result;
+}
+
 util::CallWrapper gui::backend::ImGuiWinD3D10::pushTransform(const Floats<2>& translation, const Floats<2>& scale)
 {
 	if (m_transform.empty())

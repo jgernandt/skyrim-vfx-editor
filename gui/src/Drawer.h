@@ -108,8 +108,10 @@ namespace gui
 		virtual void drawCircle(const Floats<2>& centre, float radius, bool global = false) = 0;
 		virtual void drawLine(const Floats<2>& p1, const Floats<2>& p2, bool global = false) = 0;
 
-		//Push a clip region to use for future draw calls. Returns an object that restores the previous region on destruction.
+		//Push a clip region (local coords) to use for future draw calls. Returns an object that restores the previous region on destruction.
 		[[nodiscard]] virtual util::CallWrapper pushClipArea(const Floats<2>& p1, const Floats<2>& p2, bool intersect = true) = 0;
+		//Return the current clip rectangle ((x1, y1, x2, y2) in local coords).
+		virtual Floats<4> getClipArea() const = 0;
 
 		//Push a transform to use for future draw/transform calls. Returns an object that restores the previous transform on destruction.
 		[[nodiscard]] virtual util::CallWrapper pushTransform(const Floats<2>& translation, const Floats<2>& scale) = 0;
