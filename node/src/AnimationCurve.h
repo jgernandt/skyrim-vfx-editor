@@ -79,8 +79,6 @@ namespace node
 		std::unique_ptr<gui::ICommand> getEraseOp(const std::vector<AnimationKey*>& keys) const;
 		std::unique_ptr<gui::ICommand> getInsertOp(const gui::Floats<2>& pos) const;
 
-		void setAxisLimits(const gui::Floats<2>& lims) { m_axisLims = lims; }
-
 	private:
 		void buildClip(const gui::Floats<2>& lims, const gui::Floats<2>& resolution);
 		void addCurvePoints(gui::FrameDrawer& fd, int i, const gui::Floats<2>& lims, const gui::Floats<2>& resolution);
@@ -91,7 +89,6 @@ namespace node
 		const ni_ptr<Property<float>> m_startTime;
 		const ni_ptr<Property<float>> m_stopTime;
 
-		gui::Floats<2> m_axisLims;
 		SelectionState m_selectionState{ SelectionState::NOT_SELECTED };
 
 		std::vector<gui::Floats<2>> m_curvePoints;
@@ -263,5 +260,30 @@ namespace node
 		virtual std::unique_ptr<AnimationCurve::MoveOperation> getMoveOp(
 			std::vector<AnimationKey*>&& keys, const gui::Floats<2>& pos) override;
 		virtual void onSet(const float&) override;
+	};
+
+	class ClipTransformer final : 
+		public gui::Composite,
+		public PropertyListener<float>
+	{
+	public:
+		ClipTransformer(const ni_ptr<Property<float>>& phase, const ni_ptr<Property<float>>& freq);
+		~ClipTransformer();
+		virtual void onSet(const float&) override;
+
+	private:
+		const ni_ptr<Property<float>> m_phase;
+		const ni_ptr<Property<float>> m_frequency;
+	};
+
+	class ClipLimits final : public gui::Component
+	{
+	public:
+		ClipLimits(const ni_ptr<Property<float>>& tStart, const ni_ptr<Property<float>>& tStop);
+		virtual void frame(gui::FrameDrawer& fd) override;
+
+	private:
+		const ni_ptr<Property<float>> m_startTime;
+		const ni_ptr<Property<float>> m_stopTime;
 	};
 }

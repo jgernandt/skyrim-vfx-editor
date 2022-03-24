@@ -43,7 +43,7 @@ namespace node
 		private:
 			File& m_file;
 			const ni_ptr<NiControllerSequence> m_action;
-			gui::Plot* m_plot;
+			gui::IComponent* m_curveRoot{ nullptr };
 			std::vector<gui::IComponent*> m_animationCurves;
 		};
 

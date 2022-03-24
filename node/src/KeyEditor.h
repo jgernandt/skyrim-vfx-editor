@@ -57,30 +57,6 @@ namespace node
 			const ni_ptr<FlagSet<ControllerFlags>> m_flags;
 		};
 
-		class FrequencyListener final : public PropertyListener<float>
-		{
-		public:
-			FrequencyListener(Property<float>* phase) : m_phase{ phase } {}
-			virtual void onSet(const float& f) override;
-			void setTarget(gui::IComponent* target) { m_target = target; }
-
-		private:
-			Property<float>* m_phase;
-			IComponent* m_target{ nullptr };
-		};
-
-		class PhaseListener final : public PropertyListener<float>
-		{
-		public:
-			PhaseListener(Property<float>* frequency) : m_frequency{ frequency } {}
-			virtual void onSet(const float& f) override;
-			void setTarget(gui::IComponent* target) { m_target = target; }
-
-		private:
-			Property<float>* m_frequency;
-			IComponent* m_target{ nullptr };
-		};
-
 	public:
 		FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data);
 
@@ -107,9 +83,6 @@ namespace node
 		const ni_ptr<NiTimeController> m_ctlr;
 
 		CycleTypeAdapter m_cycleTypeAdapter;
-
-		FrequencyListener m_freqLsnr;
-		PhaseListener m_phaseLsnr;
 
 		gui::Plot* m_plot{ nullptr };
 		gui::Composite* m_activePanel{ nullptr };

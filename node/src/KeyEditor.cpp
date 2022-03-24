@@ -75,6 +75,7 @@ public:
 
 	virtual void visit(gui::Composite& c) override
 	{
+		//Transform target rectangle to our local space
 		if (m_current.empty()) {
 			m_current.push({});
 			m_current.top() << c.fromGlobalSpace(m_rect.head(2)), c.fromGlobalSpace(m_rect.tail(2));
@@ -85,6 +86,7 @@ public:
 			m_current.top() << c.fromParentSpace(prev.head(2)), c.fromParentSpace(prev.tail(2));
 		}
 
+		//If the cursor was inside our rectangle, pass on to our children
 		gui::Floats<2> size = c.getSize();
 		gui::Floats<2> pos = 0.5f * gui::Floats<2>(m_current.top()[2] + m_current.top()[0], m_current.top()[3] + m_current.top()[1]).abs();
 		if ((size[0] == 0.0f || size[1] == 0.0f) || //Treat 0 size as infinite. Makes sense?
@@ -128,7 +130,9 @@ public:
 
 	gui::IComponent* result{ nullptr };
 private:
+	//The target rectangle in the local space of the current component
 	std::stack<gui::Floats<4>> m_current;
+	//The target rectangle in global space (could be pushed onto m_current at start? Only if we start from global space?)
 	gui::Floats<4> m_rect;
 };
 
@@ -146,9 +150,7 @@ public:
 
 node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const ni_ptr<NiFloatData>& data) :
 	m_ctlr{ ctlr }, 
-	m_cycleTypeAdapter{ make_ni_ptr(ctlr, &NiTimeController::flags) },
-	m_freqLsnr{ ctlr ? &ctlr->phase : nullptr }, 
-	m_phaseLsnr{ ctlr ? &ctlr->frequency : nullptr }
+	m_cycleTypeAdapter{ make_ni_ptr(ctlr, &NiTimeController::flags) }
 {
 	assert(ctlr && data);
 
@@ -159,13 +161,27 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	plot_panel->setTranslation({ 8.0f, 16.0f });
 	m_plot = plot_panel->newChild<gui::Plot>();
 
+	//Add a component that carries clip-space transforms
+	auto clipTransform = std::make_unique<ClipTransformer>(
+		make_ni_ptr(ctlr, &NiTimeController::phase),
+		make_ni_ptr(ctlr, &NiTimeController::frequency));
+
+	//Add clip limit indicators
+	clipTransform->addChild(
+		std::make_unique<ClipLimits>(
+			make_ni_ptr(ctlr, &NiTimeController::startTime),
+			make_ni_ptr(ctlr, &NiTimeController::stopTime)));
+
+	//Add curve
 	auto series = std::make_unique<AnimationCurve>(
 		data,
 		m_cycleTypeAdapter.getProperty(),
 		make_ni_ptr(ctlr, &NiTimeController::startTime),
 		make_ni_ptr(ctlr, &NiTimeController::stopTime));
 	m_curve = series.get();
-	m_plot->getPlotArea().getAxes().addChild(std::move(series));
+	clipTransform->insertChild(0, std::move(series));
+
+	m_plot->getPlotArea().getAxes().addChild(std::move(clipTransform));
 
 	//determine limits
 	gui::Floats<2> xlims = 
@@ -204,7 +220,6 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	}
 
 	updateAxisUnits();
-	m_curve->setAxisLimits(xlims);
 
 	m_plot->getPlotArea().addKeyListener(*this);
 	m_plot->getPlotArea().setMouseHandler(this);
@@ -256,23 +271,10 @@ node::FloatKeyEditor::FloatKeyEditor(const ni_ptr<NiTimeController>& ctlr, const
 	m_activePanel = newChild<gui::Subwindow>();
 	m_activePanel->setSize({ 142.0f, 200.0f });
 	m_activePanel->setTranslation({ 648.0f, 220.0f });
-	
-	//Clip-space transform listeners
-	m_freqLsnr.setTarget(m_curve);
-	ctlr->frequency.addListener(m_freqLsnr);
-	m_freqLsnr.onSet(ctlr->frequency.get());
-
-	m_phaseLsnr.setTarget(m_curve);
-	ctlr->phase.addListener(m_phaseLsnr);
-	m_phaseLsnr.onSet(ctlr->phase.get());
 }
 
 node::FloatKeyEditor::~FloatKeyEditor()
 {
-	assert(m_ctlr);
-	m_ctlr->frequency.removeListener(m_freqLsnr);
-	m_ctlr->phase.removeListener(m_phaseLsnr);
-
 	m_plot->getPlotArea().removeKeyListener(*this);
 }
 
@@ -481,7 +483,6 @@ bool node::FloatKeyEditor::onMouseWheel(float delta)
 		m_plot->getPlotArea().getAxes().scale({ scaleFactor, scaleFactor });
 
 		updateAxisUnits();
-		m_curve->setAxisLimits(m_plot->getPlotArea().getXLimits());
 	}
 	return true;
 }
@@ -518,8 +519,6 @@ void node::FloatKeyEditor::pan(const gui::Floats<2>& pos)
 	assert(m_plot);
 	gui::Floats<2> delta = m_plot->getPlotArea().fromGlobalSpace(pos) - m_clickPoint;
 	m_plot->getPlotArea().getAxes().setTranslation(m_startT + delta);
-
-	m_curve->setAxisLimits(m_plot->getPlotArea().getXLimits());
 }
 
 void node::FloatKeyEditor::zoom(const gui::Floats<2>& pos)
@@ -534,7 +533,6 @@ void node::FloatKeyEditor::zoom(const gui::Floats<2>& pos)
 	m_plot->getPlotArea().getAxes().setScale(m_startS * factor);
 
 	updateAxisUnits();
-	m_curve->setAxisLimits(m_plot->getPlotArea().getXLimits());
 }
 
 void node::FloatKeyEditor::updateAxisUnits()
@@ -633,21 +631,4 @@ void node::FloatKeyEditor::CycleTypeAdapter::onClear(ControllerFlags flags)
 			m_cycleType->set(CycleType::REPEAT);
 		}
 	}
-}
-
-//Phase and frequency are the inverse transform of the data series
-void node::FloatKeyEditor::FrequencyListener::onSet(const float& freq)
-{
-	assert(m_phase);
-	if (m_target) {
-		m_target->setScaleX(1.0f / freq);
-		m_target->setTranslationX(-m_phase->get() / freq);
-	}
-}
-
-void node::FloatKeyEditor::PhaseListener::onSet(const float& phase)
-{
-	assert(m_frequency);
-	if (m_target)
-		m_target->setTranslationX(-phase / m_frequency->get());
 }

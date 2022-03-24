@@ -400,8 +400,9 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 	//Later we might want to cache these values.
 	//We should also do clip checking in y.
 
-	//Should be recalculated on setting axis lims and transforms
-	gui::Floats<2> lims = { (m_axisLims[0] - m_translation[0]) / m_scale[0], (m_axisLims[1] - m_translation[0]) / m_scale[0] };
+	//Get our limits in local space. Just assume we are clipped to some area (don't care what).
+	gui::Floats<4> clipRect = fd.getClipArea();
+	gui::Floats<2> lims{ clipRect[0], clipRect[2] };
 
 	if (lims[0] == lims[1])
 		return;
@@ -513,18 +514,10 @@ void node::AnimationCurve::frame(gui::FrameDrawer& fd)
 				animationKey(keys().size() - 1).eval(0.0f);
 		}
 
-		gui::Floats<2> tl1{ fd.toGlobal({ lims[0], 0.0f })[0], std::numeric_limits<float>::max() };
-		gui::Floats<2> br1{ fd.toGlobal({ startTime, 0.0f })[0], -std::numeric_limits<float>::max() };
-		gui::Floats<2> tl2{ fd.toGlobal({ stopTime, 0.0f })[0], std::numeric_limits<float>::max() };
-		gui::Floats<2> br2{ fd.toGlobal({ lims[1], 0.0f })[0], -std::numeric_limits<float>::max() };
-
 		gui::ColRGBA lineCol = { 1.0f, 0.0f, 0.0f, 1.0f };
 		float lineWidth = 3.0f;
 		if (m_curvePoints.size() >= 2)
 			fd.curve(m_curvePoints, lineCol, lineWidth, true);
-
-		fd.rectangle(tl1.floor(), br1.floor(), { 0.0f, 0.0f, 0.0f, 0.075f }, true);
-		fd.rectangle(tl2.floor(), br2.floor(), { 0.0f, 0.0f, 0.0f, 0.075f }, true);
 
 #ifdef _DEBUG
 		gui::DebugWindow::print("Clip segments: %d", m_segments.size());
@@ -1506,4 +1499,48 @@ std::unique_ptr<node::AnimationCurve::MoveOperation> node::FwdTangentHandle::get
 void node::FwdTangentHandle::onSet(const float&)
 {
 	m_root->setDirty();
+}
+
+node::ClipTransformer::ClipTransformer(const ni_ptr<Property<float>>& phase, const ni_ptr<Property<float>>& freq) :
+	m_phase{ phase }, m_frequency{ freq }
+{
+	if (m_phase)
+		m_phase->addListener(*this);
+	if (m_frequency)
+		m_frequency->addListener(*this);
+}
+
+node::ClipTransformer::~ClipTransformer()
+{
+	if (m_phase)
+		m_phase->removeListener(*this);
+	if (m_frequency)
+		m_frequency->removeListener(*this);
+}
+
+void node::ClipTransformer::onSet(const float&)
+{
+	//Phase and frequency is our inverse translation and scale
+	if (m_phase)
+		m_translation[0] = -m_phase->get() / (m_frequency ? m_frequency->get() : 1.0f);
+	if (m_frequency)
+		m_scale[0] = 1.0f / m_frequency->get();
+}
+
+node::ClipLimits::ClipLimits(const ni_ptr<Property<float>>& tStart, const ni_ptr<Property<float>>& tStop) :
+	m_startTime{ tStart }, m_stopTime{ tStop }
+{
+	assert(m_startTime && m_stopTime);
+}
+
+void node::ClipLimits::frame(gui::FrameDrawer& fd)
+{
+	//draw two rectangles: from (-inf, inf) to (tStart, -inf) and from (tStop, inf) to (inf, -inf)
+	gui::Floats<2> tl1{ -std::numeric_limits<float>::max(), std::numeric_limits<float>::max() };
+	gui::Floats<2> br1{ TO_PIXEL(fd.toGlobal({ m_startTime->get(), 0.0f })[0]), -std::numeric_limits<float>::max() };
+	gui::Floats<2> tl2{ TO_PIXEL(fd.toGlobal({ m_stopTime->get(), 0.0f })[0]), std::numeric_limits<float>::max() };
+	gui::Floats<2> br2{ std::numeric_limits<float>::max(), -std::numeric_limits<float>::max() };
+
+	fd.rectangle(tl1, br1, { 0.0f, 0.0f, 0.0f, 0.075f }, true);
+	fd.rectangle(tl2, br2, { 0.0f, 0.0f, 0.0f, 0.075f }, true);
 }

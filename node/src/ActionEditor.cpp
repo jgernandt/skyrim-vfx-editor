@@ -49,9 +49,9 @@ node::ActionEditor::ActionEditor(File& file, const ni_ptr<NiControllerSequence>&
 }
 
 node::ActionEditor::BlockPanel::BlockPanel(File& file, const ni_ptr<NiControllerSequence>& action, gui::Plot* plot) :
-	m_file{ file }, m_action{ action }, m_plot{ plot }
+	m_file{ file }, m_action{ action }
 {
-	assert(m_action && m_plot);
+	assert(m_action && plot);
 
 	m_animationCurves.reserve(m_action->blocks.size());
 
@@ -60,6 +60,11 @@ node::ActionEditor::BlockPanel::BlockPanel(File& file, const ni_ptr<NiController
 		make_ni_ptr(m_action, &NiControllerSequence::cycleType),
 		make_ni_ptr(m_action, &NiControllerSequence::startTime),
 		make_ni_ptr(m_action, &NiControllerSequence::stopTime));
+
+	//Add a component that carries clip-space transforms
+	auto clipTransform = std::make_unique<ClipTransformer>(nullptr, make_ni_ptr(m_action, &NiControllerSequence::frequency));
+	m_curveRoot = clipTransform.get();
+	plot->getPlotArea().getAxes().addChild(std::move(clipTransform));
 
 	for (auto&& block : m_action->blocks) {
 		//Placeholder. We'll want a more user-friendly display name later.
@@ -78,12 +83,7 @@ node::ActionEditor::BlockPanel::BlockPanel(File& file, const ni_ptr<NiController
 		if (curve) {
 			//This is a supported type. We should add it to the plot and allow its visibility to be toggled.
 
-			//Required changes to AnimationCurve:
-			//-drawing the rectangle that marks the clip time must be moved elsewhere
-			//-we don't want to call setAxisLimits. That should be dealt with in some other way.
-			static_cast<AnimationCurve*>(m_animationCurves.back())->setAxisLimits({ 0.0f, 1.0f });
-
-			m_plot->getPlotArea().getAxes().addChild(std::move(curve));
+			m_curveRoot->addChild(std::move(curve));
 
 			//Add a visibility toggle widget. How this could work:
 			//The widget property (define a custom one) has a pointer or index to its AnimationCurve and to us.
@@ -93,6 +93,12 @@ node::ActionEditor::BlockPanel::BlockPanel(File& file, const ni_ptr<NiController
 			//This type of interpolator is not supported. We should still list it, but not allow any interaction.
 		}
 	}
+
+	//Add clip limit indicators
+	m_curveRoot->addChild(
+		std::make_unique<ClipLimits>(
+			make_ni_ptr(m_action, &NiControllerSequence::startTime),
+			make_ni_ptr(m_action, &NiControllerSequence::stopTime)));
 
 	//Listen to action->blocks. On insert/erase, add/remove an AnimationCurve and item to the list.
 }
